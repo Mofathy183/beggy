@@ -24,3 +24,5 @@ model Suitcases {
     //* table Name
     @@map("suitecases")
 }
+
+

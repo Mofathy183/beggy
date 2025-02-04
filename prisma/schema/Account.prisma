@@ -12,3 +12,5 @@ model Accoount {
     //* table name
     @@map("accounts")
 }
+
+

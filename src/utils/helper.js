@@ -4,7 +4,11 @@
 
 
 //* this will add to the database because birth is DateTime
-export const birthOfDate = (birth) => new Date(birth);
+export const birthOfDate = (birth) => {
+    if (!birth) return undefined;
+
+    return new Date(birth);
+}
 
 
 //* this will add to the database because profile picture has default value 

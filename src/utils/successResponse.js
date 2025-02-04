@@ -33,5 +33,13 @@ export const successUpdate = (res, update) => {
     const message = Array.isArray(update) ? "Users updated successfully" : "Update User Successfully";
     return res
     .status(statusCode.okCode)
-    .json(successfully(user, message, statusCode.okCode));
+    .json(successfully(update, message, statusCode.okCode));
+}
+
+
+export const successDelete = (res, deleted) => {
+    const message = Array.isArray(deleted) ? "All Users deleted successfully" : "delete User Successfully";
+    return res
+    .status(statusCode.okCode)
+    .json(successfully(deleted, message, statusCode.okCode));
 }

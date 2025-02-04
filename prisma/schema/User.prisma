@@ -1,18 +1,18 @@
 //** initialize the relationships in all the models with User
 
 model User {
-    id              String   @id @default(uuid())
-    firstName       String   @map("first_name")
-    lastName        String   @map("last_name")
-    username        String?  @unique
-    password        String?
-    email           String   @unique
-    profilePicture  String?   @default("../../public/profilePicture.webp")
-    gender          Gender
-    birth           DateTime
-    country         String
-    createdAt       DateTime @default(now()) @map("created_at")
-    updatedAt       DateTime @updatedAt @map("updated_at")
+    id             String   @id @default(uuid())
+    firstName      String   @map("first_name")
+    lastName       String   @map("last_name")
+    username       String?  @unique
+    password       String?
+    email          String   @unique
+    profilePicture String?  @default("public/profilePicture.webp")
+    gender         Gender
+    birth          DateTime
+    country        String
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt @map("updated_at")
 
     //* the relationships
     account   Accoount[]
@@ -23,3 +23,4 @@ model User {
     //* the nama of the table
     @@map("users")
 }
+

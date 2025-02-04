@@ -1,7 +1,20 @@
-import { addUser, getUserById, getAllUsers, replaceResource, modifyResource } from "../../services/userService.js";
+import { 
+    addUser, 
+    getUserById, 
+    getAllUsers, 
+    replaceResource, 
+    modifyResource,
+    removeUser,
+    removeAllUsers
+} from "../../services/userService.js";
 import { userSchema, uuidValidator } from "../validators/userValidator.js";
 import { JoiErrorResponse, errorResponse, notFoundResponse } from "../../utils/errorResponse.js";
-import { successCreatUser, successFind, successUpdate } from "../../utils/successResponse.js";
+import { 
+    successCreatUser, 
+    successFind, 
+    successUpdate,
+    successDelete
+} from "../../utils/successResponse.js";
 
 
 export const createUser = async (req, res) => {
@@ -62,18 +75,17 @@ export const findAllUsers = async (req, res) => {
 
 //* for PUT requests
 export const updateUserById = async (req, res) => {
-    try {
+    try{
         const { id } = req.params;
-        if(!uuidValidator(id))
-            return notFoundResponse(res, "UUID is not valid", ["controllers", "updateUserById", "uuidValidator"]);
-        
-        const { body } = req;
-        
-        const updatedUser = await replaceResource(id, body);
-        
-        if (!updatedUser) return notFoundResponse(res, "User not found", ["services", "updateUserById", "user updated"]);
 
-        return successUpdate(res, updatedUser);
+        const { body } = req;
+
+        const userUpdated = await replaceResource(id, body);
+
+        if (!userUpdated) 
+            return notFoundResponse(res, "User Not Found to Update", ["controllers", "updateUserById", "try check userUpdate exsists"]);
+
+        return successUpdate(res, userUpdated);
     }
 
     catch (error) {
@@ -88,10 +100,12 @@ export const modifyUserById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        if(!uuidValidator(id))
-            return notFoundResponse(res, "UUID is not valid", ["controllers", "modifyUserById", "uuidValidator"]);
+        // if(!uuidValidator(id))
+        //     return notFoundResponse(res, "UUID is not valid", ["controllers", "modifyUserById", "uuidValidator"]);
 
         const { body } = req;
+
+        console.log(body);
 
         const updatedUser = await modifyResource(id, body);
 
@@ -100,5 +114,39 @@ export const modifyUserById = async (req, res) => {
 
     catch (error) {
         return errorResponse(res, error, ["controllers", "modifyUserById", "catch"], "Failed to modify user by id");
+    }
+}
+
+
+
+export const deleteUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const userDeleted = await removeUser(id);
+
+        if (!userDeleted) 
+            return notFoundResponse(res, "User Not Found to Delete", ["controllers", "deleteUserById", "try check userDelete exsists"]);
+
+        return successDelete(res, userDeleted);
+    }
+
+    catch (error) {
+        return errorResponse(res, error, ["controllers", "deleteUserById", "catch"], "Failed to delete user by id");
+    }
+}
+
+
+
+
+export const deleteAllUsers = async (req, res) => {
+    try {
+        const usersDeleted = await removeAllUsers();
+
+        return successDelete(res, usersDeleted);
+    }
+
+    catch (error) {
+        return errorResponse(res, error, ["controllers", "deleteAllUsers", "catch"], "Failed to delete all users");
     }
 }

@@ -47,7 +47,8 @@ export const VReqToUUID = (req, res, next) => {
 
     return res.json({
         success: false,
-        message: 'Invalid UUID'
+        message: 'Invalid UUID',
+        path: ["middlewares", "validateRequest", "VReqToUUID"]
     })
 }
 

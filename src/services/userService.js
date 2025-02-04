@@ -1,7 +1,7 @@
 import { userSchema, uuidValidator } from "../api/validators/userValidator.js";
 import { UserModel } from "../../prisma/prisma.js";
 import { birthOfDate, picture } from "../utils/helper.js";
-import { hashingPassword, verifyPassword } from "../utils/hash.js";
+import { hashingPassword } from "../utils/hash.js";
 import { errorHandler, JoiErrorHandler } from "../utils/errorHandler.js";
 
 export const addUser = async (body) => {
@@ -135,14 +135,12 @@ export const replaceResource = async (id, body) => {
             firstName,
             lastName,
             email,
-            username,
             password,
             gender,
             birth,
             country,
         } = body;
 
-//LN0en909t6$!?FK11
         const hashedPassword = await hashingPassword(password);
 
         
@@ -152,7 +150,6 @@ export const replaceResource = async (id, body) => {
                 firstName,
                 lastName,
                 email,
-                username,
                 password: hashedPassword,
                 gender,
                 profilePicture: picture(body),
@@ -165,14 +162,16 @@ export const replaceResource = async (id, body) => {
                 items: true,
             },
             omit: {
+                username: true,
                 password: true,
                 createdAt: true,
                 updatedAt: true,
             }
         })
 
+        
         if (!updatedUser) return errorHandler("User not found", ["services", "replaceResource", "user"]);
-
+        
         return updatedUser;
     }
     
@@ -189,37 +188,52 @@ export const modifyResource = async (id, body) => {
         if (!uuidValidator(id)) 
             return errorHandler("UUID is not valid", ["services", "getUserById", "uuidValidator"]);
 
-        if (body.password) {
-            const hashedPassword = await hashingPassword(body.password);
-            body.password = hashedPassword;
+        const {
+            firstName,
+            lastName,
+            email,
+            gender,
+            birth,
+            country,
+            confirmPassword
+        } = body;
+
+        let {            
+            password,
+        } = body;
+
+        if (password) {
+            if (password !== confirmPassword) 
+                return errorHandler("Plaess enter the same Password", ["services", "modifyResource", "password"]);
+
+            const hashedPassword = await hashingPassword(password);
+            password = hashedPassword;
         }
+
 
         const updatedUser = await UserModel.update({
             where: { id: id },
             data: {
-                firstName: body.firstName || undefined,
-                lastName: body.lastName || undefined,
-                email: body.email || undefined,
-                username: body.username || undefined,
-                password: body.password || undefined,
-                gender: body.gender || undefined,
+                firstName: firstName || undefined,
+                lastName: lastName || undefined,
+                email: email || undefined,
+                password: password || undefined,
+                gender: gender || undefined,
                 profilePicture: picture(body),
-                birth: birthOfDate(body.birth) || undefined,
-                country: body.country || undefined,
-            },
-            include: {
-                suitcases: true,
-                bags: true,
-                items: true,
+                birth: birthOfDate(birth),
+                country: country || undefined,
             },
             omit: {
+                username: true,
                 password: true,
                 createdAt: true,
                 updatedAt: true,
             }
         })
 
-        return updatedUser
+        if (!updatedUser) return errorHandler("User not found", ["services", "modifyResource", "user"]);
+
+        return updatedUser;
     }
 
     catch (error) {
@@ -228,24 +242,59 @@ export const modifyResource = async (id, body) => {
 }
 
 
+
+export const removeUser = async (id) => {
+    try {
+        if (!uuidValidator(id)) 
+            return errorHandler("UUID is not valid", ["services", "removeUser", "uuidValidator"]);
+
+        const deleteUser = await UserModel.delete({ where: { id: id } });
+
+        if (!deleteUser) return errorHandler("User not found", ["services", "removeUser", "user"]);
+
+        return deleteUser;
+    }
+
+    catch (error) {
+        return errorHandler(error, ["services", "removeUser", "catch"], "Failed to remove user by id")
+    }
+}
+
+
+
+
+export const removeAllUsers = async () => {
+    try {
+        const removeAll = await UserModel.deleteMany({ where: {} });
+        
+        if (!removeAll) return errorHandler("No users found", ["services", "removeAllUsers", "users"]);
+
+        return removeAll;
+    }
+
+    catch (error) {
+        return errorHandler(error, ["services", "removeAllUsers", "catch"], "Failed to remove all users")
+    }
+}
+
 // Test the function
 const body = {
-    firstName: "Jon",
-    lastName: "Donna",
-    email: "johndoe@example.com",
-    password: "P@ssw0rd123",
-    confirmPassword: "P@ssw0rd123",
-    gender: "male",
-    birth: "1990-12-01",
-    country: "France",
+    "firstName": "John",
+    "lastName": "Don",
+    "email": "johnd0nw00@example.com",
+    "password": "P@ssw0rd123",
+    "confirmPassword": "P@ssw0rd123",
+    "gender": "male",
+    "birth": "2002-10-15",
+    "country": "France"
 };
 
-(async () => {
-    try {
-        const newUser = await putUpdateUserById("4af12b76-4460-4be9-9fe5-d43cb3e72e95", body);
-        console.log(newUser);
-    } catch (error) {
-        console.log("Failed to add user");
-        console.error(error.message);
-    }
-})();
+// (async () => {
+//     try {
+//         const newUser = await replaceResource("4af12b76-4460-4be9-9fe5-d43cb3e72e95", body);
+//         console.log(newUser);
+//     } catch (error) {
+//         console.log("Failed to add user");
+//         console.error(error.message);
+//     }
+// })();
