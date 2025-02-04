@@ -1,0 +1,25 @@
+//*Important to make relationship between User and Bags (one to many)
+
+model Bags {
+    id        String   @id @default(uuid())
+    name      String
+    type      String
+    color     String
+    size      Size
+    capacity  Float
+    weight    Float
+    material  String?
+    feeatures String?
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    //* links user to has bag 
+    userId String @map("user_id")
+    User   User   @relation(fields: [userId], references: [id])
+
+    //* make the bag can have multiple items ([] this stablsh one to many relationship)
+    items Items[]
+
+    //* table name
+    @@map("bags")
+}

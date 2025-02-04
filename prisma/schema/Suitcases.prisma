@@ -1,0 +1,26 @@
+//* relationship (one to many) each user can have many Suitcases
+
+model Suitcases {
+    id        String    @id @default(uuid())
+    name      String
+    brand     String?
+    color     String
+    size      Size
+    capacity  Float
+    weight    Float
+    material  Material?
+    features  String?
+    wheels    Int?
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime  @updatedAt @map("updated_at")
+
+    //* user id for stablsh that the user has suitcases
+    userId String @map("user_id")
+    user   User   @relation(fields: [userId], references: [id])
+
+    //* make the suitcase can have multiple items ([] this stablsh one to many relationship)
+    items Items[]
+
+    //* table Name
+    @@map("suitecases")
+}
