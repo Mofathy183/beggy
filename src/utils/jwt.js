@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import { JWTConfig } from "../config/env.js";
 
-export const singToken = (userId, email) => {
-    const token = jwt.sign({id: userId, email: email}, JWTConfig.secret, {
+export const singToken = (id) => {
+    const token = jwt.sign({id: id}, JWTConfig.secret, {
         expiresIn: JWTConfig.expiresIn
     });
 
@@ -18,6 +18,14 @@ export const verifyToken = (token) => {
 
     catch (error) {
         console.error("Invalid Token,", error.message);
-        return null;
+        return false;
     }
 }
+
+
+// function create() {
+//     const token = verifyToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ0ZDc2OGZkLTQ0NTctNDcwOC1hYzIzLWIzMTA5OTg3YTRmMiIsImlhdCI6MTczODg1MDU0OSwiZXhwIjoxNzQ2NjI2NTQ5fQ.Uwgdx8cBlecNi9WHpYmc5nviJywocrFDr8FR_gV5hTQ");
+//     console.log(token);
+// }
+
+// create();

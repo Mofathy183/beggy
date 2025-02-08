@@ -16,3 +16,42 @@ export const birthOfDate = (birth) => {
 //* means that is value is undefined
 
 export const picture = (body) => body?.profilePicture || undefined
+
+
+//* this will add to the database because to handle the password change at feild 
+export const passwordChangeAt = () => {
+    const changeAt = new Date(Date.now())
+    return changeAt;
+};
+
+
+// console.log(passwordChangeAt())
+
+
+//* for conmpart it with the timestamp in token
+//* to make sure that the user has not change has password after issued the token 
+//* (if it before issued the token that means that the user has not change has password) 
+export const passwordChangeTimestamp = (changeAt) => {
+    const timestamp = parseInt(changeAt.getTime() / 1000, 10);
+    return timestamp;
+}
+
+
+
+export const passwordChangeAfter = (user, tokenTiemstamp) => {
+    //? if the user has changed password
+    //* that means the user has changed password
+    if(user.passwordChangeAt) {
+        const passwordTiemstamp = passwordChangeTimestamp(user.passwordChangeAt)
+
+        //? if the user has changed password after issued the token
+        //* return true the user has changed password after issued the token
+        //? else 
+        //* return false the user has not changed password
+        return passwordTiemstamp > tokenTiemstamp
+    }
+
+    //? if the user has not changed has password
+    //* return false
+    return false;
+}

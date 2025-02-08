@@ -1,17 +1,11 @@
 import { userSchema, uuidValidator } from "../api/validators/userValidator.js";
 import { UserModel } from "../../prisma/prisma.js";
-import { birthOfDate, picture } from "../utils/helper.js";
+import { birthOfDate, picture, passwordChangeAt } from "../utils/helper.js";
 import { hashingPassword } from "../utils/hash.js";
-import { errorHandler, JoiErrorHandler } from "../utils/errorHandler.js";
+import { errorHandler, JoiErrorHandler, prismaErrorHandler } from "../utils/errorHandler.js";
 
 export const addUser = async (body) => {
     try {
-        const { error } = userSchema.validate(body);
-
-        if (error) {
-            return JoiErrorHandler(error);
-        }
-
         const {
             firstName,
             lastName,
@@ -46,28 +40,32 @@ export const addUser = async (body) => {
                 profilePicture,
             },
             omit:{
-                username:true,
                 password: true,
                 createdAt: true,
                 updatedAt: true
             }
         });
 
+        if (newUser.error) return prismaErrorHandler(
+            newUser.error, 
+            ["services", "addUser", "prisma error form create user"]
+        );
+
         return newUser;
     } 
     
     catch (error) {
-        return errorHandler(error, ["services", "addUser", "catch"], "Failed to add user")
+        return errorHandler(
+            error, 
+            ["services", "addUser", "catch"], 
+            "Failed to add user"
+        );
     }
 };
 
 
 export const getUserById = async (id) => {
     try {
-        if (!uuidValidator(id)) 
-            return errorHandler("UUID is not valid", ["services", "getUserById", "uuidValidator"]);
-
-
         const user = await UserModel.findUnique({
             where: { id: id },
             include: {
@@ -76,20 +74,31 @@ export const getUserById = async (id) => {
                 items: true,
             },
             omit: {
-                username: true,
                 password: true,
                 createdAt: true,
                 updatedAt: true,
             }
         });
 
-        if (!user) return errorHandler("User not found", ["services", "getUserById", "user"]);
+        if (user.error) return prismaErrorHandler(
+            user.error, 
+            ["services", "getUserById", "prisma error from find unique by user id"]
+        );
+
+        if (!user) return errorHandler(
+            "User not found", 
+            ["services", "getUserById", "user"]
+        );
 
         return user;
     }
 
     catch (error) {
-        return errorHandler(error, ["services", "getUserById", "catch"], "Failed to get user by id")
+        return errorHandler(
+            error, 
+            ["services", "getUserById", "catch"], 
+            "Failed to get user by id"
+        )
     }
 }
 
@@ -104,20 +113,31 @@ export const getAllUsers = async () => {
                 items: true,
             },
             omit: {
-                username: true,
                 password: true,
                 createdAt: true,
                 updatedAt: true,
             }
         });
 
-        if (!users) return errorHandler("No users found", ["services", "getAllUsers", "users"]);
+        if (users.error) return prismaErrorHandler(
+            users.error, 
+            ["services", "getAllUsers", "prisma error from find all users"]
+        );
+
+        if (!users) return errorHandler(
+            "No users found", 
+            ["services", "getAllUsers", "users"]
+        );
 
         return users;
     }
 
     catch (error) {
-        return errorHandler(error, ["services", "getAllUsers", "catch"], "Failed to get all users")
+        return errorHandler(
+            error, 
+            ["services", "getAllUsers", "catch"], 
+            "Failed to get all users"
+        );
     }
 }
 
@@ -125,12 +145,6 @@ export const getAllUsers = async () => {
 //* for PUT requests
 export const replaceResource = async (id, body) => {
     try {
-        const { error } = userSchema.validate(body);
-
-        if (error) {
-            return JoiErrorHandler(error);
-        }
-
         const {
             firstName,
             lastName,
@@ -151,6 +165,7 @@ export const replaceResource = async (id, body) => {
                 lastName,
                 email,
                 password: hashedPassword,
+                passwordChangeAt: passwordChangeAt(),
                 gender,
                 profilePicture: picture(body),
                 birth: birthOfDate(birth),
@@ -162,12 +177,16 @@ export const replaceResource = async (id, body) => {
                 items: true,
             },
             omit: {
-                username: true,
                 password: true,
                 createdAt: true,
                 updatedAt: true,
             }
         })
+
+        if (updatedUser.error) return prismaErrorHandler(
+            updatedUser.error, 
+            ["services", "replaceResource", "prisma error from update all user data"]
+        );
 
         
         if (!updatedUser) return errorHandler("User not found", ["services", "replaceResource", "user"]);
@@ -185,9 +204,6 @@ export const replaceResource = async (id, body) => {
 //* for PATCH requests
 export const modifyResource = async (id, body) => {
     try {
-        if (!uuidValidator(id)) 
-            return errorHandler("UUID is not valid", ["services", "getUserById", "uuidValidator"]);
-
         const {
             firstName,
             lastName,
@@ -198,16 +214,15 @@ export const modifyResource = async (id, body) => {
             confirmPassword
         } = body;
 
-        let {            
-            password,
-        } = body;
-
-        if (password) {
-            if (password !== confirmPassword) 
-                return errorHandler("Plaess enter the same Password", ["services", "modifyResource", "password"]);
+        if (body.password) {
+            if (body.password !== confirmPassword) 
+                return errorHandler(
+                "Plaess enter the same Password", 
+                ["services", "modifyResource", "password"]
+            );
 
             const hashedPassword = await hashingPassword(password);
-            password = hashedPassword;
+            body.password = hashedPassword;
         }
 
 
@@ -217,27 +232,39 @@ export const modifyResource = async (id, body) => {
                 firstName: firstName || undefined,
                 lastName: lastName || undefined,
                 email: email || undefined,
-                password: password || undefined,
+                password: body.password || undefined,
                 gender: gender || undefined,
                 profilePicture: picture(body),
+                passwordResetAt: password ? passwordChangeAt() : undefined, 
                 birth: birthOfDate(birth),
                 country: country || undefined,
             },
             omit: {
-                username: true,
                 password: true,
                 createdAt: true,
                 updatedAt: true,
             }
         })
 
-        if (!updatedUser) return errorHandler("User not found", ["services", "modifyResource", "user"]);
+        if (updatedUser.error) return prismaErrorHandler(
+            updatedUser.error, 
+            ["services", "modifyResource", "prisma error from modify user data"]
+        );
+
+        if (!updatedUser) return errorHandler(
+            "User not found", 
+            ["services", "modifyResource", "user"]
+        );
 
         return updatedUser;
     }
 
     catch (error) {
-        return errorHandler(error, ["services", "modifyResource", "catch"], "Failed to modify resource by id")
+        return errorHandler(
+            error, 
+            ["services", "modifyResource", "catch"], 
+            "Failed to modify resource by id"
+        );
     }
 }
 
@@ -245,18 +272,26 @@ export const modifyResource = async (id, body) => {
 
 export const removeUser = async (id) => {
     try {
-        if (!uuidValidator(id)) 
-            return errorHandler("UUID is not valid", ["services", "removeUser", "uuidValidator"]);
-
         const deleteUser = await UserModel.delete({ where: { id: id } });
 
-        if (!deleteUser) return errorHandler("User not found", ["services", "removeUser", "user"]);
+        if (deleteUser.error) return prismaErrorHandler(
+            deleteUser.error, 
+            ["services", "removeUser", "prisma error from delete user by id"]
+        );
+
+        if (!deleteUser) return errorHandler(
+            "User not found", 
+            ["services", "removeUser", "user"]
+        );
 
         return deleteUser;
     }
 
     catch (error) {
-        return errorHandler(error, ["services", "removeUser", "catch"], "Failed to remove user by id")
+        return errorHandler(
+            error, 
+            ["services", "removeUser", "catch"], "Failed to remove user by id"
+        );
     }
 }
 
@@ -267,13 +302,25 @@ export const removeAllUsers = async () => {
     try {
         const removeAll = await UserModel.deleteMany({ where: {} });
         
-        if (!removeAll) return errorHandler("No users found", ["services", "removeAllUsers", "users"]);
+        if (removeAll.error) return prismaErrorHandler(
+            removeAll.error, 
+            ["services", "removeAllUsers", "prisma error from delete all users"]
+        );
+
+        if (!removeAll) return errorHandler(
+            "No users found", 
+            ["services", "removeAllUsers", "users"]
+        );
 
         return removeAll;
     }
 
     catch (error) {
-        return errorHandler(error, ["services", "removeAllUsers", "catch"], "Failed to remove all users")
+        return errorHandler(
+            error, 
+            ["services", "removeAllUsers", "catch"], 
+            "Failed to remove all users"
+        );
     }
 }
 

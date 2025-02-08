@@ -39,3 +39,11 @@ enum Providers {
     facebook
     instagram
 }
+
+
+enum Role {
+    admin
+    member
+    subscriber
+    user
+}

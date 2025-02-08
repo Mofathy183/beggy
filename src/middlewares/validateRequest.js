@@ -1,20 +1,26 @@
-import { userSchema, singUpSchema, loginSchema } from "../api/validators/userValidator.js";
+import { userSchema } from "../api/validators/userValidator.js";
 import { uuidValidator } from "../api/validators/userValidator.js";
+import { loginSchema, singUpSchema } from "../api/validators/authValidator.js";
+import { JoiErrorHandler } from  "../utils/errorHandler.js";
+import { statusCode } from "../config/statusCodes.js";
 
-//? if the user not add the required fields in the body request
-//! will prevent the request from being processed or continue
 
+// //? if the user not add the required fields in the body request
+// //! will prevent the request from being processed or continue
 const VReqTo = (req, res, next, schema) => {
     const { body } = req;
     const { error } = schema.validate(body);
 
-    //* first !! to convert the value to boolean the last ! is not
-    if(!!!error) return next();
+    // // //* first convert the value to boolean the last ! is not
+    //? check if there an error 
+    //* if there is not an error will continue the request
+    if(!error) return next();
 
-    return res.json({
+    //* if there is an error will send bad request with the error message
+    return res.status(statusCode.badRequestCode).json({
+        status: statusCode.badRequestCode,
         success: false,
-        message: error.details[0].message,
-        errors: error.details.length.map(err => {err.message})
+        JoiError: JoiErrorHandler(error)
     })
 }
 
@@ -45,7 +51,7 @@ export const VReqToUUID = (req, res, next) => {
 
     if(isValid) return next();
 
-    return res.json({
+    return res.status(statusCode.badRequestCode).json({
         success: false,
         message: 'Invalid UUID',
         path: ["middlewares", "validateRequest", "VReqToUUID"]

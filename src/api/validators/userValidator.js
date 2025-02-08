@@ -3,8 +3,6 @@ import validator from 'validator';
 
 const passwordRegExp = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!?%*&]{8,}$/;
 
-const usernameRegExp = /^[a-zA-Z0-9_]{6,20}$/
-
 //*######################################{JOI Check Feildes}############################################
 
 //* Check the Feildes for createing a new User for user model
@@ -25,48 +23,15 @@ export const userSchema = Joi.object({
     
     confirmPassword: Joi.ref('password'),
     
-    birth: Joi.date()
-    .required(),    
+    birth: Joi.date(),    
     
-    country: Joi.string()
-    .required(),
+    country: Joi.string(),
     
     gender: Joi.string()
-    .valid('male', 'female')
-    .required(),
+    .valid('male', 'female'),
     
     profilePicture: Joi.string(),
 })
-
-
-
-//* Check the Feildes Of Sing-up form
-export const singUpSchema = Joi.object({
-    username: Joi.string().required().pattern(new RegExp(usernameRegExp)).required(),
-    
-    email: Joi.string().email({tlds: {allow: false}}).message("Invalid email Format").required(),
-    
-    password: Joi.string()
-    .min(8)
-    .pattern(new RegExp(passwordRegExp))
-    .message("Password Must Be Between 8 and 20 Characters Long And Include At Least One Uppercase Letter, One Lowercase Letter, One Digit, And One Special Character From Them [@$!%*?&]")
-    .required(),
-    
-    confirmPassword: Joi.ref('password'),
-});
-
-
-
-//* Check the Feildes Of login form
-export const loginSchema = Joi.object({
-    email: Joi.string().email({tlds: {allow: false}}).message("Invalid email Format").required(),
-    
-    password: Joi.string()
-    .min(8)
-    .pattern(new RegExp(passwordRegExp))
-    .message("Password Must Be Between 8 and 20 Characters Long And Include At Least One Uppercase Letter, One Lowercase Letter, One Digit, And One Special Character From Them [@$!%*?&]")
-    .required(),
-});
 
 //*######################################{JOI Check Feildes}############################################
 

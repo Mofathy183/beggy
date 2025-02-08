@@ -17,8 +17,7 @@ export const logger = (req, res, next) => {
 
 
 export const errorMiddlewareHandler = (err, req, res, next) => {
-    console.error(err);
-    res
+    return res
         .status(err.status || statusCode.internalServerErrorCode)
         .json({
             status: err.status || statusCode.internalServerErrorCode,
