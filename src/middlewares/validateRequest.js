@@ -1,5 +1,5 @@
 import { statusCode } from '../config/status.js';
-import ErrorResponse from '../utils/error.js';
+import { ErrorResponse } from '../utils/error.js';
 import {
 	userSchema,
 	itemsSchema,

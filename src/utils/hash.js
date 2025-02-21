@@ -1,6 +1,6 @@
 import { hash, compare, genSalt } from 'bcrypt';
 import { bcryptConfig } from '../config/env.js';
-import ErrorHandler from './error.js';
+import { ErrorHandler } from './error.js';
 
 export const hashingPassword = async (password) => {
 	try {

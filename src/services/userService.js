@@ -5,7 +5,7 @@ import {
 	passwordChangeAt,
 } from '../utils/userHelper.js';
 import { hashingPassword } from '../utils/hash.js';
-import ErrorHandler from '../utils/error.js';
+import { ErrorHandler } from '../utils/error.js';
 
 export const addUser = async (body) => {
 	try {

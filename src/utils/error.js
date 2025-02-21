@@ -138,4 +138,4 @@ class ErrorResponse extends Error {
 	}
 }
 
-export default { ErrorResponse, ErrorHandler };
+export { ErrorResponse, ErrorHandler };

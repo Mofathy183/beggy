@@ -1,7 +1,7 @@
 import { AccountModel, UserModel } from '../../prisma/prisma.js';
 import { generateFakePassword } from '../utils/authHelper.js';
 import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
-import ErrorHandler from '../utils/error.js';
+import { ErrorHandler } from '../utils/error.js';
 
 export const authenticateUserWithGoogle = async (profile) => {
 	try {

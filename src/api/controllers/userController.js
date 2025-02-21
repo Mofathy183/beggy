@@ -8,7 +8,7 @@ import {
 	removeAllUsers,
 } from '../../services/userService.js';
 import { statusCode } from '../../config/status.js';
-import ErrorResponse from '../../utils/error.js';
+import { ErrorResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
 export const createUser = async (req, res, next) => {

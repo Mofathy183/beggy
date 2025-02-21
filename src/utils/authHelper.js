@@ -58,7 +58,7 @@ const deletePasswordTokenAndExpire = async (email) => {
 //*====================================={Email with NodeMailer}=====================================
 import nodemailer from 'nodemailer';
 import { nodemailerTransport } from '../config/env.js';
-import ErrorHandler from './error.js';
+import { ErrorHandler } from './error.js';
 
 export const sendEmail = async (options) => {
 	try {

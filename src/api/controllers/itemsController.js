@@ -1,7 +1,7 @@
 import { findItemsUserHas } from '../../services/itemsService.js';
 import { statusCode } from '../../config/status.js';
 import { sendCookies, storeSession } from '../../utils/authHelper.js';
-import ErrorResponse from '../../utils/error.js';
+import { ErrorResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
 export const getItemsBelongsToUser = async (req, res, next) => {

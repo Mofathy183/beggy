@@ -1,6 +1,6 @@
 import { statusCode } from '../../config/status.js';
 import { storeSession, sendProvidCookies } from '../../utils/authHelper.js';
-import ErrorResponse from '../../utils/error.js';
+import { ErrorResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
 export const authenticateWithGoogle = async (req, res, next) => {

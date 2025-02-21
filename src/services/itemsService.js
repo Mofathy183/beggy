@@ -1,5 +1,5 @@
 import { ItemsModel, UserModel } from '../../prisma/prisma.js';
-import ErrorHandler from '../utils/error.js';
+import { ErrorHandler } from '../utils/error.js';
 
 export const findItemsUserHas = async (userId, page, limit, offset) => {
 	try {

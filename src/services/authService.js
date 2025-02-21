@@ -1,4 +1,4 @@
-import ErrorHandler from '../utils/error.js';
+import { ErrorHandler } from '../utils/error.js';
 import { hashingPassword, verifyPassword } from '../utils/hash.js';
 import { UserModel } from '../../prisma/prisma.js';
 import {

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { JWTConfig } from '../config/env.js';
-import ErrorHandler from './error.js';
+import { ErrorHandler } from './error.js';
 
 export const signToken = (id) => {
 	const token = jwt.sign({ id: id }, JWTConfig.secret, {

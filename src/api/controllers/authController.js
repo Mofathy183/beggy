@@ -15,7 +15,7 @@ import {
 } from '../../utils/authHelper.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
-import ErrorResponse from '../../utils/error.js';
+import { ErrorResponse } from '../../utils/error.js';
 
 export const signUp = async (req, res, next) => {
 	try {

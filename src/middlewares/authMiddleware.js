@@ -12,7 +12,7 @@ import {
 	updatePasswordScheme,
 	updateUserDataSchema,
 } from '../api/validators/authValidator.js';
-import ErrorResponse from '../utils/error.js';
+import { ErrorResponse } from '../utils/error.js';
 
 export const headersMiddleware = async (req, res, next) => {
 	if (
