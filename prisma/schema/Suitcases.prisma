@@ -1,18 +1,20 @@
 //* relationship (one to many) each user can have many Suitcases
 
 model Suitcases {
-    id        String    @id @default(uuid())
+    id        String     @id @default(uuid())
     name      String
+    type      String
     brand     String?
     color     String
     size      Size
     capacity  Float
+    maxWidth  Float
     weight    Float
     material  Material?
-    features  String?
-    wheels    Int?
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime  @updatedAt @map("updated_at")
+    features  SuitcaseFeature[]
+    wheels    WheelType?
+    createdAt DateTime   @default(now()) @map("created_at")
+    updatedAt DateTime   @updatedAt @map("updated_at")
 
     //* user id for stablsh that the user has suitcases
     userId String @map("user_id")
@@ -22,7 +24,5 @@ model Suitcases {
     items Items[]
 
     //* table Name
-    @@map("suitecases")
+    @@map("suitcases")
 }
-
-

@@ -3,7 +3,7 @@
 model Accoount {
     id         String    @id @default(uuid())
     provider   Providers
-    providerId String    @map("provider_id")
+    providerId String    @unique @map("provider_id")
     createdAt  DateTime  @default(now()) @map("created_at")
     updatedAt  DateTime  @updatedAt @map("updated_at")
     userId     String    @map("user_id")
@@ -12,5 +12,3 @@ model Accoount {
     //* table name
     @@map("accounts")
 }
-
-

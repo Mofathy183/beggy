@@ -1,21 +1,22 @@
 //** initialize the relationships in all the models with User
 
 model User {
-    id                 String    @id @default(uuid())
-    firstName          String    @map("first_name")
-    lastName           String    @map("last_name")
-    password           String
-    email              String    @unique
-    role               Role      @default(user)
-    profilePicture     String?   @default("public/profilePicture.webp")
-    gender             Gender?
-    birth              DateTime?
-    country            String?
-    passwordChangeAt   DateTime? @map("password_change_at")
-    passwordResetToken String?   @map("password_reset_token")
-    passwordResetAt    DateTime? @map("passwoed_reset_at")
-    createdAt          DateTime  @default(now()) @map("created_at")
-    updatedAt          DateTime  @updatedAt @map("updated_at")
+    id                     String    @id @default(uuid())
+    firstName              String    @map("first_name")
+    lastName               String    @map("last_name")
+    password               String    
+    email                  String    @unique
+    role                   Role      @default(USER)
+    profilePicture         String?   @default("public/profilePicture.webp")
+    gender                 Gender?
+    birth                  DateTime?
+    country                String?
+    isActive               Boolean   @default(true) @map("is_active")
+    passwordChangeAt       DateTime? @map("password_change_at")
+    passwordResetToken     String?   @unique @map("password_reset_token")
+    passwordResetExpiredAt DateTime? @map("passwoed_reset_at")
+    createdAt              DateTime  @default(now()) @map("created_at")
+    updatedAt              DateTime  @updatedAt @map("updated_at")
 
     //* the relationships
     account   Accoount[]

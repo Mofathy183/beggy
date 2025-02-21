@@ -1,25 +1,27 @@
 //* relationship (one to many) the user can have many item and bags and suitcases can have many item 
 
 model Items {
-    id        String   @id @default(uuid())
+    id        String       @id @default(uuid())
     name      String
-    category  String
+    category  ItemCategory
     quantity  Int
     weight    Float
-    isFragile Boolean  @default(false) @map("is_fragile") // item that can be broken
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+    volume    Float
+    color     String?
+    isFragile Boolean      @default(false) @map("is_fragile") // item that can be broken
+    createdAt DateTime     @default(now()) @map("created_at")
+    updatedAt DateTime     @updatedAt @map("updated_at")
 
     //* link the bags and suitcases to the items in it
     bagId      String @map("bag_id")
     suitcaseId String @map("suitcase_id")
 
-    //?user can have many items
-    userId String? @map("user_id")
+    //* user can have many items
+    userId String @map("user_id")
 
     bags      Bags      @relation(fields: [bagId], references: [id])
     suitcases Suitcases @relation(fields: [suitcaseId], references: [id])
-    User      User?     @relation(fields: [userId], references: [id])
+    user      User      @relation(fields: [userId], references: [id])
 
     //* table name
     @@map("items")
