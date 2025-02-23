@@ -1,6 +1,7 @@
 import express from 'express';
 import session from 'express-session';
 import flash from 'express-flash';
+import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import expressSanitizer from 'express-sanitizer';
@@ -10,6 +11,7 @@ import {
 	croeMiddleware,
 	errorMiddlewareHandler,
 	routeErrorHandler,
+    csrfProtection,
 	AppResponse,
 } from './src/middlewares/appMiddleware.js';
 import rootRoute from './src/api/routes/rootRouter.js';
@@ -21,6 +23,12 @@ app.use(express.json({ limit: '10kb' }));
 
 // Body parser for express to read data from body into req.body
 app.use(express.urlencoded({ extended: true }));
+
+// Required to parse CSRF token from cookies
+app.use(cookieParser());
+
+// Enable CSRF protection with cookies
+app.use(csrfProtection);
 
 // Data Santitization against XSS
 app.use(expressSanitizer());

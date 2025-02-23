@@ -71,7 +71,7 @@ export const checkRoleMiddleware = (...roles) => {
 	return (req, res, next) => {
 		try {
 			const { userRole } = req.session;
-			const hasRole = roles.some((role) => userRole === role);
+			const hasRole = roles.some((role) => userRole === role.toUpperCase());
 
 			if (!hasRole)
 				return next(
@@ -156,6 +156,21 @@ export const paginateMiddleware = (req, res, next) => {
 
 	next();
 };
+
+
+export const csrfMiddleware = (error, req, res, next) => {
+    if (error.code !== "EBADCSRFTOKEN"){
+        return next(error);
+    }
+
+    return next(
+        new ErrorResponse(
+            error,
+            "Invalid CSRF token",
+            statusCode.forbiddenCode  // HTTP status code for forbidde
+        )
+    );
+}
 
 //*====================={Request Validations}====================
 export const VReqToSignUp = (req, res, next) => {

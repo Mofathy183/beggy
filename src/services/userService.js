@@ -123,8 +123,10 @@ export const getUserById = async (id) => {
 	}
 };
 
-export const getAllUsers = async (page, limit, offset) => {
+export const getAllUsers = async (pagination) => {
 	try {
+        const { page, limit, offset } = pagination;
+        
 		const users = await UserModel.findMany({
 			where: { isActive: true }, // Only return active users
 			include: {
@@ -147,7 +149,7 @@ export const getAllUsers = async (page, limit, offset) => {
 			take: limit,
 		});
 
-		if (!users || users.error)
+		if (users.error)
 			return new ErrorHandler(
 				'Users null',
 				'No users found' || users.error,
@@ -156,7 +158,7 @@ export const getAllUsers = async (page, limit, offset) => {
 
 		const totalUsers = await UserModel.count({ where: { isActive: true } });
 
-		if (!totalUsers || totalUsers.error)
+		if (totalUsers.error)
 			return new ErrorHandler(
 				'Total users null',
 				'No users found' || totalUsers.error,
@@ -411,13 +413,13 @@ export const removeAllUsers = async () => {
 //     "birth": "1998-02-08",
 //     "country": "Span"
 // };
-//marker22r0@example.com
+
 // (async () => {
 //     try {
-//         const user = await getUserById("41acce96-da75-4ae4-a8c8-b282c827cd51");
+//         const user = await getAllUsers({page:1, limit:10, offset:0});
 //         console.log(user);
 //     }
 //     catch (error) {
 //         console.error("Error creating user:", error);
 //     }
-// })()
+// })();

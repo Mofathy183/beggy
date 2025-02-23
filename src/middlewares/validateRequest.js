@@ -3,6 +3,8 @@ import { ErrorResponse } from '../utils/error.js';
 import {
 	userSchema,
 	itemsSchema,
+    itemsModifySchema,
+    itemsArraySchema,
 	uuidValidator,
 } from '../api/validators/validators.js';
 
@@ -10,7 +12,7 @@ import {
 // //! will prevent the request from being processed or continue
 export const VReqTo = (req, res, next, schema) => {
 	const { body } = req;
-	const { error } = schema.validate(body);
+	const { error } = schema.validate(body, { abortEarly: false });
 
 	//? check if there an error
 	//* if there is not an error will continue the request
@@ -24,20 +26,20 @@ export const VReqTo = (req, res, next, schema) => {
 
 //? if the id is not present or not valid
 //! will prevent the request from being processed or continue
-export const VReqToUUID = (req, res, next) => {
-	const { id } = req.params;
-	const isValid = uuidValidator(id);
+export const VReqToUUID = (req, res, next, value, paramName) => {
+    const { error } = uuidValidator(value);
 
-	if (isValid) return next();
+    if (error) {
+        return next(new ErrorResponse(
+            `${paramName} must be a valid UUID`,
+            'Validation failed',
+            statusCode.badRequestCode
+        ));
+    }
 
-	return next(
-		new ErrorResponse(
-			'Invalid UUID',
-			'Validation failed',
-			statusCode.badRequestCode // HTTP status code for Bad Request
-		)
-	);
+    next(); // UUID is valid, continue processing
 };
+
 
 //? if req.user if undfind or null means that Facebook authentication failed
 export const VReqUser = (req, res, next) => {
@@ -59,4 +61,13 @@ export const VReqToCreateUser = (req, res, next) => {
 
 export const VReqToCreateItem = (req, res, next) => {
 	return VReqTo(req, res, next, itemsSchema);
+};
+
+export const VReqToCreateManyItems = (req, res, next) => {
+    return VReqTo(req, res, next, itemsArraySchema);
+};
+
+
+export const VReqToModifyItem = (req, res, next) => {
+	return VReqTo(req, res, next, itemsModifySchema);
 };

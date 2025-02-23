@@ -89,3 +89,10 @@ export const facebookAuthConfig = {
 		'hometown',
 	],
 };
+
+
+export const AIConfig = {
+    headers: { Authorization: `Bearer ${process.env.AI_API_KEY}` },
+    url: "https://api.together.xyz/v1/chat/completions",
+    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+}

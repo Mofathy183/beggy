@@ -106,7 +106,7 @@ export const ItemsModel = prisma.items;
 
 async function main() {
     const user = await UserModel.findUnique({where: { id: "3598eed4-f1c3-4248-8600-d7115ba37376" } })
-    console.log( user.age, user.displayName)
+    console.log( user)
     return
 }
 

@@ -7,6 +7,7 @@ import {
 	updatePassword,
 	updateData,
 	deActivate,
+    csrfResponse
 } from '../controllers/authController.js';
 import {
 	VReqToSignUp,
@@ -64,5 +65,8 @@ authRoute.post('/login', VReqToLogin, login);
 
 //todo: route for logout => POST
 authRoute.post('/logout');
+
+
+authRoute.get("/csrf-token", csrfResponse)
 
 export default authRoute;

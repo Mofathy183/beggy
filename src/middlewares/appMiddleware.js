@@ -1,5 +1,6 @@
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import csurf from 'csurf';
 import { coreConfig } from '../config/env.js';
 import { statusCode } from '../config/status.js';
 import { ErrorResponse } from '../utils/error.js';
@@ -32,6 +33,12 @@ export const limter = rateLimit({
 	message: 'Too many requests from this IP, please try again later.',
 });
 
+
+//* CSRF protection
+export const csrfProtection = csurf({ cookie: true })
+
+
+
 //* for not idintfication routes
 export const routeErrorHandler = (req, res, next) => {
 	return next(
@@ -47,17 +54,12 @@ export const routeErrorHandler = (req, res, next) => {
 export const AppResponse = (sucORerr, req, res, next) => {
 	//? if there a success response
 	if (sucORerr instanceof SuccessResponse) {
-		//* handle it here
-		const data = sucORerr.isNumber
-			? { deleteCount: sucORerr.date }
-			: sucORerr.data;
-
 		return res.status(sucORerr.status).json({
 			success: true,
 			status: sucORerr.statment,
 			message: sucORerr.message,
-			data: data,
-			token: sucORerr.token,
+			data: sucORerr.data,
+			meta: sucORerr.meta
 		});
 	}
 

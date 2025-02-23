@@ -99,18 +99,9 @@ export const findUserById = async (req, res, next) => {
 
 export const findAllUsers = async (req, res, next) => {
 	try {
-		const { limit, page, offset } = req.pagination;
+		const { pagination } = req;
 
-		const { users, meta } = await getAllUsers(page, limit, offset);
-
-		if (!users)
-			return next(
-				new ErrorResponse(
-					'No users found',
-					'No users in the database',
-					statusCode.notFoundCode
-				)
-			);
+		const { users, meta } = await getAllUsers(pagination);
 
 		if (users.error)
 			return next(
@@ -120,6 +111,9 @@ export const findAllUsers = async (req, res, next) => {
 					statusCode.internalServerErrorCode
 				)
 			);
+
+        sendCookies(req.user.id, res)
+        storeSession(req.user.id, req.user.role, req);
 
 		return next(
 			new SuccessResponse(

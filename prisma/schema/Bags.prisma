@@ -1,18 +1,18 @@
 //*Important to make relationship between User and Bags (one to many)
 
 model Bags {
-    id        String    @id @default(uuid())
+    id        String       @id @default(uuid())
     name      String
-    type      String
-    color     String
+    type      BagType
+    color     String?      @default("black")
     size      Size
     capacity  Float
     maxWeight Float
     weight    Float
     material  Material?
     feeatures BagFeature[]
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime  @updatedAt @map("updated_at")
+    createdAt DateTime     @default(now()) @map("created_at")
+    updatedAt DateTime     @updatedAt @map("updated_at")
 
     //* links user to has bag 
     userId String @map("user_id")

@@ -332,3 +332,17 @@ export const deActivate = async (req, res, next) => {
 		);
 	}
 };
+
+
+
+export const csrfResponse = (req, res) => {
+    res.cookie('XSRF-TOKEN', req.csrfToken(), {
+        expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        httpOnly: false, // ✅ Allow frontend access
+        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+    });
+    
+    res.json({ csrfToken: req.csrfToken() });
+
+    return;
+}

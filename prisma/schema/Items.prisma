@@ -7,21 +7,21 @@ model Items {
     quantity  Int
     weight    Float
     volume    Float
-    color     String?
+    color     String?      @default("black")
     isFragile Boolean      @default(false) @map("is_fragile") // item that can be broken
     createdAt DateTime     @default(now()) @map("created_at")
     updatedAt DateTime     @updatedAt @map("updated_at")
 
     //* link the bags and suitcases to the items in it
-    bagId      String @map("bag_id")
-    suitcaseId String @map("suitcase_id")
+    bagId      String? @map("bag_id")
+    suitcaseId String? @map("suitcase_id")
 
     //* user can have many items
     userId String @map("user_id")
 
-    bags      Bags      @relation(fields: [bagId], references: [id])
-    suitcases Suitcases @relation(fields: [suitcaseId], references: [id])
-    user      User      @relation(fields: [userId], references: [id])
+    bags      Bags?      @relation(fields: [bagId], references: [id])
+    suitcases Suitcases? @relation(fields: [suitcaseId], references: [id])
+    user      User       @relation(fields: [userId], references: [id])
 
     //* table name
     @@map("items")
