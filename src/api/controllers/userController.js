@@ -1,9 +1,10 @@
 import {
 	addUser,
 	getUserById,
+	getUserPublicProfile,
 	getAllUsers,
-	replaceResource,
-	modifyResource,
+	getAllPublicUsers,
+	changeUserRole,
 	removeUser,
 	removeAllUsers,
 } from '../../services/userService.js';
@@ -55,6 +56,48 @@ export const createUser = async (req, res, next) => {
 	}
 };
 
+export const findUserPublicProfile = async (req, res, next) => {
+	try {
+		const { id } = req.params;
+
+		const user = await getUserPublicProfile(id);
+
+		if (!user)
+			return next(
+				new ErrorResponse(
+					'User not found',
+					"Couldn't find user by this id",
+					statusCode.notFoundCode
+				)
+			);
+
+		if (user.error)
+			return next(
+				new ErrorResponse(
+					user.error,
+					"Couldn't find user by this id",
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'User retrieved successfully',
+				user
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to retrieve public user profile',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
 export const findUserById = async (req, res, next) => {
 	try {
 		const { id } = req.params;
@@ -97,11 +140,23 @@ export const findUserById = async (req, res, next) => {
 	}
 };
 
-export const findAllUsers = async (req, res, next) => {
+export const findAllPublicUsers = async (req, res, next) => {
 	try {
-		const { pagination } = req;
+		const { pagination, searchFilter } = req;
 
-		const { users, meta } = await getAllUsers(pagination);
+		const { users, meta } = await getAllPublicUsers(
+			pagination,
+			searchFilter
+		);
+
+		if (!users)
+			return next(
+				new ErrorResponse(
+					'No users found',
+					"Couldn't find any users",
+					statusCode.notFoundCode
+				)
+			);
 
 		if (users.error)
 			return next(
@@ -112,8 +167,43 @@ export const findAllUsers = async (req, res, next) => {
 				)
 			);
 
-        sendCookies(req.user.id, res)
-        storeSession(req.user.id, req.user.role, req);
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Users found successfully',
+				users,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to retrieve all public users',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const findAllUsers = async (req, res, next) => {
+	try {
+		const { searchFilter, pagination, orderBy } = req;
+
+		const { users, meta } = await getAllUsers(
+			pagination,
+			searchFilter,
+			orderBy
+		);
+
+		if (users.error)
+			return next(
+				new ErrorResponse(
+					users.error,
+					"Couldn't find all users",
+					statusCode.internalServerErrorCode
+				)
+			);
 
 		return next(
 			new SuccessResponse(
@@ -134,59 +224,14 @@ export const findAllUsers = async (req, res, next) => {
 	}
 };
 
-//* for PUT requests
-export const updateUserById = async (req, res, next) => {
-	try {
-		const { id } = req.params;
-
-		const { body } = req;
-
-		const userUpdated = await replaceResource(id, body);
-
-		if (!userUpdated)
-			return next(
-				new ErrorResponse(
-					'User not found',
-					"Couldn't update user by this id",
-					statusCode.notFoundCode
-				)
-			);
-
-		if (userUpdated.error)
-			return next(
-				new ErrorResponse(
-					userUpdated.error,
-					"Couldn't update user by this id",
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'User updated successfully',
-				userUpdated
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to update user by id',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
 //* for PATCH requests
-export const modifyUserById = async (req, res, next) => {
+export const changeUserRoleById = async (req, res, next) => {
 	try {
 		const { id } = req.params;
 
 		const { body } = req;
 
-		const updatedUser = await modifyResource(id, body);
+		const updatedUser = await changeUserRole(id, body);
 
 		if (!updatedUser)
 			return next(

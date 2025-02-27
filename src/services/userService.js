@@ -81,7 +81,7 @@ export const addUser = async (body) => {
 	}
 };
 
-export const getUserById = async (id) => {
+export const getUserPublicProfile = async (id) => {
 	try {
 		const user = await UserModel.findUnique({
 			where: {
@@ -94,15 +94,54 @@ export const getUserById = async (id) => {
 				items: true,
 				account: true,
 			},
-			omit: {
-				password: true,
+			select: {
+				id: true,
+				firstName: true,
+				lastName: true,
+				displayName: true,
+				email: true,
+				gender: true,
+				birth: true,
+				country: true,
+				profilePicture: true,
 				createdAt: true,
 				updatedAt: true,
-				passwordChangeAt: true,
+			},
+		});
+
+		if (!user || user.error)
+			return new ErrorHandler(
+				'user',
+				'User not found' || user.error,
+				'User not found in the database' || user.error.message
+			);
+
+		return user;
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			error,
+			'Failed to get user public profile'
+		);
+	}
+};
+
+export const getUserById = async (id) => {
+	try {
+		const user = await UserModel.findUnique({
+			where: {
+				id: id,
+			},
+			include: {
+				suitcases: true,
+				bags: true,
+				items: true,
+				account: true,
+			},
+			omit: {
+				password: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
-				role: true,
-				isActive: true,
 			},
 		});
 
@@ -123,12 +162,66 @@ export const getUserById = async (id) => {
 	}
 };
 
-export const getAllUsers = async (pagination) => {
+export const getAllPublicUsers = async (pagination, searchFilter) => {
 	try {
-        const { page, limit, offset } = pagination;
-        
+		const { page, limit, offset } = pagination;
+
 		const users = await UserModel.findMany({
-			where: { isActive: true }, // Only return active users
+			where: { OR: searchFilter, isActive: true },
+			omit: {
+				password: true,
+				passwordChangeAt: true,
+				passwordResetExpiredAt: true,
+				passwordResetToken: true,
+				role: true,
+				gender: true,
+				birth: true,
+				country: true,
+				email: true,
+				createdAt: true,
+				updatedAt: true,
+				suitcases: true,
+				bags: true,
+				items: true,
+				account: true,
+			},
+			skip: offset,
+			take: limit,
+		});
+
+		if (!users || users.length === 0)
+			return new ErrorHandler(
+				'users',
+				'No users found',
+				'No users found in the database'
+			);
+
+		const totalCount = users.length;
+
+		const meta = {
+			totalCount,
+			page,
+			limit,
+			offset,
+			searchFilter,
+		};
+
+		return { users, meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			error,
+			'Failed to get all public users'
+		);
+	}
+};
+
+export const getAllUsers = async (pagination, searchFilter, orderBy) => {
+	try {
+		const { page, limit, offset } = pagination;
+
+		const users = await UserModel.findMany({
+			where: { OR: searchFilter },
 			include: {
 				suitcases: true,
 				bags: true,
@@ -137,16 +230,13 @@ export const getAllUsers = async (pagination) => {
 			},
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
-				role: true,
-				isActive: true,
 			},
 			skip: offset,
 			take: limit,
+			orderBy: orderBy,
 		});
 
 		if (users.error)
@@ -169,6 +259,8 @@ export const getAllUsers = async (pagination) => {
 			total: totalUsers,
 			page: page,
 			limit: limit,
+			searchFilter: searchFilter,
+			orderBy: orderBy,
 		};
 
 		return { users, meta };
@@ -181,122 +273,15 @@ export const getAllUsers = async (pagination) => {
 	}
 };
 
-//* for PUT requests
-export const replaceResource = async (id, body) => {
-	try {
-		const {
-			firstName,
-			lastName,
-			email,
-			password,
-			confirmPassword,
-			gender,
-			birth,
-			country,
-			profilePicture,
-		} = body;
-
-		if (password !== confirmPassword)
-			return new ErrorHandler(
-				'password',
-				'password is not the same in confirmPassword',
-				'Enter the same password in confirm password'
-			);
-
-		const hashedPassword = await hashingPassword(password);
-
-		const updatedUser = await UserModel.update({
-			where: { id: id },
-			data: {
-				firstName,
-				lastName,
-				email,
-				password: hashedPassword,
-				passwordChangeAt: passwordChangeAt(),
-				gender: gender,
-				profilePicture: haveProfilePicture(profilePicture),
-				birth: birthOfDate(birth),
-				country,
-			},
-			include: {
-				suitcases: true,
-				bags: true,
-				items: true,
-			},
-			omit: {
-				password: true,
-				createdAt: true,
-				updatedAt: true,
-				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
-				role: true,
-				isActive: true,
-			},
-		});
-
-		if (!updatedUser)
-			return new ErrorHandler(
-				'User null',
-				'User Cannot be updated',
-				'There is no user with that id to update'
-			);
-
-		if (updatedUser.error)
-			return new ErrorHandler(
-				'prisma',
-				updatedUser.error,
-				'User cannot be updated'
-			);
-
-		return updatedUser;
-	} catch (error) {
-		return new ErrorHandler(
-			'catch error',
-			error,
-			'Failed to update user by id'
-		);
-	}
-};
-
 //* for PATCH requests
-export const modifyResource = async (id, body) => {
+export const changeUserRole = async (id, body) => {
 	try {
-		const {
-			firstName,
-			lastName,
-			email,
-			gender,
-			birth,
-			country,
-			confirmPassword,
-			profilePicture,
-		} = body;
-
-		if (body.password) {
-			if (body.password !== confirmPassword)
-				return new ErrorHandler(
-					'password',
-					'password is not the same in confirmPassword',
-					'Enter the same password in confirm password'
-				);
-
-			const hashedPassword = await hashingPassword(password);
-			body.password = hashedPassword;
-		}
+		const { role } = body;
 
 		const updatedUser = await UserModel.update({
 			where: { id: id },
 			data: {
-				firstName: firstName || undefined,
-				lastName: lastName || undefined,
-				email: email || undefined,
-				password: body.password || undefined,
-				gender: gender || undefined,
-				profilePicture: haveProfilePicture(profilePicture),
-				passwordResetAt: body.password ? passwordChangeAt() : undefined,
-				birth: birthOfDate(birth),
-				country: country || undefined,
+				role: role.toUpperCase(),
 			},
 			omit: {
 				password: true,

@@ -1,20 +1,21 @@
-import axios from "axios";
-import { AIConfig } from "../config/env.js";
-import { ErrorHandler } from "../utils/error.js";
+import axios from 'axios';
+import { AIConfig } from '../config/env.js';
+import { ErrorHandler } from '../utils/error.js';
 
-const jsonRegExp = /```json\n([\s\S]+?)\n```/
+const jsonRegExp = /```json\n([\s\S]+?)\n```/;
 
 export const itemAutoFilling = async (body) => {
-    try {
-        const { name, quantity, category } = body;
+	try {
+		const { name, quantity, category } = body;
 
-        if (!name || !quantity || !category) return new ErrorHandler(
-            "input",
-            "Missing required fields: name and quantity",
-            "Missing required fields: name and quantity"
-        )
+		if (!name || !quantity || !category)
+			return new ErrorHandler(
+				'input',
+				'Missing required fields: name and quantity',
+				'Missing required fields: name and quantity'
+			);
 
-        const prompt = `Estimate the total weight and volume for an item based on the following details:
+		const prompt = `Estimate the total weight and volume for an item based on the following details:
         - **Item Name**: "${name}"
         - **Category**: "${category}" (e.g., electronics, clothing, tools, food, furniture)
         - **Quantity**: ${quantity} (number of units)
@@ -41,60 +42,60 @@ export const itemAutoFilling = async (body) => {
         \`\`\`
         Do not include any explanations.`;
 
-        const response = await axios.post(
-            AIConfig.url,
-            {
-                messages: [{ role: "user", content: prompt }],
-                model: AIConfig.model,
-            },
-            {
-                headers: AIConfig.headers,
-            }
-        );
+		const response = await axios.post(
+			AIConfig.url,
+			{
+				messages: [{ role: 'user', content: prompt }],
+				model: AIConfig.model,
+			},
+			{
+				headers: AIConfig.headers,
+			}
+		);
 
-        const output = response.data.choices[0].message.content;
+		const output = response.data.choices[0].message.content;
 
-        const jsonMatch = jsonRegExp.exec(output);
+		const jsonMatch = jsonRegExp.exec(output);
 
-        if (!jsonMatch) return new ErrorHandler(
-            "json",
-            "Failed to extract JSON output from AI response",
-            "Failed to extract JSON output from AI response"
-        );
+		if (!jsonMatch)
+			return new ErrorHandler(
+				'json',
+				'Failed to extract JSON output from AI response',
+				'Failed to extract JSON output from AI response'
+			);
 
-        const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
-        const volume = Number(parseFloat(jsonMatch.volume).toFixed(2));
+		const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
+		const volume = Number(parseFloat(jsonMatch.volume).toFixed(2));
 
-        if (isNaN(weight) || isNaN(volume)) return new ErrorHandler(
-            "json",
-            "Failed to parse JSON output from AI response",
-            "Failed to parse JSON output from AI response"
-        );
+		if (isNaN(weight) || isNaN(volume))
+			return new ErrorHandler(
+				'json',
+				'Failed to parse JSON output from AI response',
+				'Failed to parse JSON output from AI response'
+			);
 
-        return { volume: volume, weight: weight };
-    }
-
-    catch (error) {
-        return new ErrorHandler(
-            "axios",
-            error,
-            "Failed to fetch item details from AI API"
-        );
-    }
+		return { volume: volume, weight: weight };
+	} catch (error) {
+		return new ErrorHandler(
+			'axios',
+			error,
+			'Failed to fetch item details from AI API'
+		);
+	}
 };
 
-
 export const bagAutoFilling = async (body) => {
-    try {
-        const { name, type, size, material, feature } = body;
+	try {
+		const { name, type, size, material, feature } = body;
 
-        if (!name ||!type ||!size ||!material ||!feature) return new ErrorHandler(
-            "input",
-            "Missing required fields: name, type, size, material, and feature",
-            "Missing required fields: name, type, size, material, and feature"
-        );
+		if (!name || !type || !size || !material || !feature)
+			return new ErrorHandler(
+				'input',
+				'Missing required fields: name, type, size, material, and feature',
+				'Missing required fields: name, type, size, material, and feature'
+			);
 
-        const prompt = `Estimate the weight, maximum weight capacity, 
+		const prompt = `Estimate the weight, maximum weight capacity, 
         and total volume (capacity) for a bag based on the following details:
             - Bag Name: "${name}"
             - Bag Type: "${type}" (e.g., backpack, suitcase, duffel, tote)
@@ -125,61 +126,61 @@ export const bagAutoFilling = async (body) => {
             \`\`\`
         Do not include any explanations.`;
 
-        const response = await axios.post(
-            AIConfig.url,
-            {
-                messages: [{ role: "user", content: prompt }],
-                model: AIConfig.model,
-            },
-            {
-                headers: AIConfig.headers,
-            }
-        );
+		const response = await axios.post(
+			AIConfig.url,
+			{
+				messages: [{ role: 'user', content: prompt }],
+				model: AIConfig.model,
+			},
+			{
+				headers: AIConfig.headers,
+			}
+		);
 
-        const output = response.data.choices[0].message.content;
+		const output = response.data.choices[0].message.content;
 
-        const jsonMatch = jsonRegExp.exec(output);
+		const jsonMatch = jsonRegExp.exec(output);
 
-        if (!jsonMatch) return new ErrorHandler(
-            "json",
-            "Failed to extract JSON output from AI response",
-            "Failed to extract JSON output from AI response"
-        );
+		if (!jsonMatch)
+			return new ErrorHandler(
+				'json',
+				'Failed to extract JSON output from AI response',
+				'Failed to extract JSON output from AI response'
+			);
 
-        const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
-        const maxWeight = Number(parseFloat(jsonMatch.maxWeight).toFixed(2));
-        const capacity = Number(parseFloat(jsonMatch.capacity).toFixed(2));
+		const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
+		const maxWeight = Number(parseFloat(jsonMatch.maxWeight).toFixed(2));
+		const capacity = Number(parseFloat(jsonMatch.capacity).toFixed(2));
 
-        if (isNaN(weight) || isNaN(maxWeight) || isNaN(capacity)) return new ErrorHandler(
-            "json",
-            "Failed to parse JSON output from AI response",
-            "Failed to parse JSON output from AI response"
-        );
+		if (isNaN(weight) || isNaN(maxWeight) || isNaN(capacity))
+			return new ErrorHandler(
+				'json',
+				'Failed to parse JSON output from AI response',
+				'Failed to parse JSON output from AI response'
+			);
 
-        return { weight: weight, maxWeight: maxWeight, capacity: capacity };
-    }
-
-    catch (error) {
-        return new ErrorHandler(
-            "axios",
-            error,
-            "Failed to fetch bag details from AI API"
-        );
-    }
-}
-
+		return { weight: weight, maxWeight: maxWeight, capacity: capacity };
+	} catch (error) {
+		return new ErrorHandler(
+			'axios',
+			error,
+			'Failed to fetch bag details from AI API'
+		);
+	}
+};
 
 export const suitcaseAutoFilling = async (body) => {
-    try {
-        const { name, type, size, material, feature, brand, wheels } = body;
+	try {
+		const { name, type, size, material, feature, brand, wheels } = body;
 
-        if (!name ||!type ||!size) return new ErrorHandler(
-            "input",
-            "Missing required fields: name, type, and size",
-            "Missing required fields: name, type, and size"
-        );
+		if (!name || !type || !size)
+			return new ErrorHandler(
+				'input',
+				'Missing required fields: name, type, and size',
+				'Missing required fields: name, type, and size'
+			);
 
-        const prompt = `Estimate the suitcase's **capacity, maxWeight, and weight** based on the following details:
+		const prompt = `Estimate the suitcase's **capacity, maxWeight, and weight** based on the following details:
         - **Suitcase Name**: "${name}"
         - **Type**: "${type}" (e.g., carry-on, checked, duffel, hard-shell, soft-shell, backpack)
         - **Size**: "${size}" (e.g., small, medium, large, extra-large, 20-inch, 24-inch, 28-inch)
@@ -213,45 +214,45 @@ export const suitcaseAutoFilling = async (body) => {
         \`\`\`
         Do not include any explanations.`;
 
-        const response = await axios.post(
-            AIConfig.url,
-            {
-                messages: [{ role: "user", content: prompt }],
-                model: AIConfig.model,
-            },
-            {
-                headers: AIConfig.headers,
-            }
-        );
+		const response = await axios.post(
+			AIConfig.url,
+			{
+				messages: [{ role: 'user', content: prompt }],
+				model: AIConfig.model,
+			},
+			{
+				headers: AIConfig.headers,
+			}
+		);
 
-        const output = response.data.choices[0].message.content;
+		const output = response.data.choices[0].message.content;
 
-        const jsonMatch = jsonRegExp.exec(output);
+		const jsonMatch = jsonRegExp.exec(output);
 
-        if (!jsonMatch) return new ErrorHandler(
-            "json",
-            "Failed to extract JSON output from AI response",
-            "Failed to extract JSON output from AI response"
-        );
+		if (!jsonMatch)
+			return new ErrorHandler(
+				'json',
+				'Failed to extract JSON output from AI response',
+				'Failed to extract JSON output from AI response'
+			);
 
-        const capacity = Number(parseFloat(jsonMatch.capacity).toFixed(2));
-        const maxWeight = Number(parseFloat(jsonMatch.maxWeight).toFixed(2));
-        const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
+		const capacity = Number(parseFloat(jsonMatch.capacity).toFixed(2));
+		const maxWeight = Number(parseFloat(jsonMatch.maxWeight).toFixed(2));
+		const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
 
-        if (isNaN(capacity) || isNaN(maxWeight) || isNaN(weight)) return new ErrorHandler(
-            "json",
-            "Failed to parse JSON output from AI response",
-            "Failed to parse JSON output from AI response"
-        );
+		if (isNaN(capacity) || isNaN(maxWeight) || isNaN(weight))
+			return new ErrorHandler(
+				'json',
+				'Failed to parse JSON output from AI response',
+				'Failed to parse JSON output from AI response'
+			);
 
-        return { capacity: capacity, maxWeight: maxWeight, weight: weight };
-    }
-
-    catch (error) {
-        return new ErrorHandler(
-            "axios",
-            error,
-            "Failed to fetch suitcase details from AI API"
-        );
-    }
-}
+		return { capacity: capacity, maxWeight: maxWeight, weight: weight };
+	} catch (error) {
+		return new ErrorHandler(
+			'axios',
+			error,
+			'Failed to fetch suitcase details from AI API'
+		);
+	}
+};

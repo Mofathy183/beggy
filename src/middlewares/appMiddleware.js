@@ -33,11 +33,8 @@ export const limter = rateLimit({
 	message: 'Too many requests from this IP, please try again later.',
 });
 
-
 //* CSRF protection
-export const csrfProtection = csurf({ cookie: true })
-
-
+export const csrfProtection = csurf({ cookie: true });
 
 //* for not idintfication routes
 export const routeErrorHandler = (req, res, next) => {
@@ -59,7 +56,7 @@ export const AppResponse = (sucORerr, req, res, next) => {
 			status: sucORerr.statment,
 			message: sucORerr.message,
 			data: sucORerr.data,
-			meta: sucORerr.meta
+			meta: sucORerr.meta,
 		});
 	}
 

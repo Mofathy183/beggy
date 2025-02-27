@@ -14,103 +14,102 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-
 enum Material {
-    LEATHER @map("leather")
-    SYNTHETIC @map("synthetic")
-    FABRIC @map("fabric")
-    POLYESTER @map("polyester")
-    NYLON @map("nylon")
-    CANVAS @map("canvas")
+    LEATHER    @map("leather")
+    SYNTHETIC  @map("synthetic")
+    FABRIC     @map("fabric")
+    POLYESTER  @map("polyester")
+    NYLON      @map("nylon")
+    CANVAS     @map("canvas")
     HARD_SHELL @map("hard_shell")
-    METAL @map("metal")
+    METAL      @map("metal")
 }
 
 enum ItemCategory {
-    CLOTHES @map("clothes")
+    CLOTHES     @map("clothes")
     ELECTRONICS @map("electronics")
-    FOOD @map("food")
+    FOOD        @map("food")
     ACCESSORIES @map("accessories")
 }
 
 enum BagType {
-    BACKPACK @map("backpack")
-    DUFFEL @map("duffel")
-    TOTE @map("tote")
-    MESSENGER @map("messenger")
-    LAPTOP_BAG @map("laptop_bag")
-    TRAVEL_BAG @map("travel_bag")
-    HANDBAG @map("handbag")
-    CROSSBODY @map("crossbody")
+    BACKPACK     @map("backpack")
+    DUFFEL       @map("duffel")
+    TOTE         @map("tote")
+    MESSENGER    @map("messenger")
+    LAPTOP_BAG   @map("laptop_bag")
+    TRAVEL_BAG   @map("travel_bag")
+    HANDBAG      @map("handbag")
+    CROSSBODY    @map("crossbody")
     SHOULDER_BAG @map("shoulder_bag")
 }
 
 enum SuitcaseType {
-    CARRY_ON @map("carry_on")
+    CARRY_ON        @map("carry_on")
     CHECKED_LUGGAGE @map("checked_luggage")
-    HARD_SHELL @map("hard_shell")
-    SOFT_SHELL @map("soft_shell")
-    BUSINESS @map("business")
-    KIDS @map("kids")
-    EXPANDABLE @map("expandable")
+    HARD_SHELL      @map("hard_shell")
+    SOFT_SHELL      @map("soft_shell")
+    BUSINESS        @map("business")
+    KIDS            @map("kids")
+    EXPANDABLE      @map("expandable")
 }
 
 enum SuitcaseFeature {
-    NONE @map("none")
-    TSA_LOCK @map("tsa_lock")
-    WATERPROOF @map("waterproof")
-    EXPANDABLE @map("expandable")
-    USB_PORT @map("usb_port")
-    LIGHTWEIGHT @map("lightweight")
-    ANTI_THEFT @map("anti_theft")
-    SCRATCH_RESISTANT @map("scratch_resistant")
-    SPINNER_WHEELS @map("spinner_wheels")
+    NONE               @map("none")
+    TSA_LOCK           @map("tsa_lock")
+    WATERPROOF         @map("waterproof")
+    EXPANDABLE         @map("expandable")
+    USB_PORT           @map("usb_port")
+    LIGHTWEIGHT        @map("lightweight")
+    ANTI_THEFT         @map("anti_theft")
+    SCRATCH_RESISTANT  @map("scratch_resistant")
+    SPINNER_WHEELS     @map("spinner_wheels")
     COMPRESSION_STRAPS @map("compression_straps")
-    TELESCOPIC_HANDLE @map("telescopic_handle")
+    TELESCOPIC_HANDLE  @map("telescopic_handle")
 }
 
 enum BagFeature {
-    NONE @map("none")
-    WATERPROOF @map("waterproof")
+    NONE                      @map("none")
+    WATERPROOF                @map("waterproof")
     PADDED_LAPTOP_COMPARTMENT @map("padded_laptop_compartment")
-    USB_PORT @map("usb_port")
-    ANTI_THEFT @map("anti_theft")
-    MULTIPLE_POCKETS @map("multiple_pockets")
-    LIGHTWEIGHT @map("lightweight")
-    EXPANDABLE @map("expandable")
-    REINFORCED_STRAPS @map("reinforced_straps")
-    TROLLEY_SLEEVE @map("trolley_sleeve")
-    HIDDEN_POCKET @map("hidden_pocket")
+    USB_PORT                  @map("usb_port")
+    ANTI_THEFT                @map("anti_theft")
+    MULTIPLE_POCKETS          @map("multiple_pockets")
+    LIGHTWEIGHT               @map("lightweight")
+    EXPANDABLE                @map("expandable")
+    REINFORCED_STRAPS         @map("reinforced_straps")
+    TROLLEY_SLEEVE            @map("trolley_sleeve")
+    HIDDEN_POCKET             @map("hidden_pocket")
 }
 
 enum Size {
-    SMALL @map("small")
-    MEDIUM @map("medium")
-    LARGE @map("large")
+    SMALL       @map("small")
+    MEDIUM      @map("medium")
+    LARGE       @map("large")
     EXTRA_LARGE @map("extra_large")
 }
 
 enum WheelType {
-    NONE @map("0") 
-    TWO_WHEEL @map("2")
+    NONE       @map("0")
+    TWO_WHEEL  @map("2")
     FOUR_WHEEL @map("4")
-    SPINNER @map("3")
+    SPINNER    @map("3")
 }
 
 enum Gender {
-    MALE @map("male")
+    MALE   @map("male")
     FEMALE @map("female")
-    OTHER @map("other")
+    OTHER  @map("other")
 }
 
 enum Providers {
-    GOOGLE @map("google")
+    GOOGLE   @map("google")
     FACEBOOK @map("facebook")
 }
 
 enum Role {
-    ADMIN @map("admin")
-    MEMBER @map("member")
+    ADMIN      @map("admin")
+    MEMBER     @map("member")
     SUBSCRIBER @map("subscriber")
-    USER @map("user")
+    USER       @map("user")
 }

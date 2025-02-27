@@ -1,9 +1,9 @@
 import Joi from 'joi';
 import { Gender } from '@prisma/client';
 
+export const stringRegExp = /^[a-zA-Z\s]*$/;
 export const passwordRegExp =
 	/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!?#%*&]{8,20}$/;
-export const stringRegExp = /^[a-zA-Z\s]*$/;
 
 //* Check the Feildes Of Sing-up form
 export const singUpSchema = Joi.object({

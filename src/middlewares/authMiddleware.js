@@ -71,7 +71,9 @@ export const checkRoleMiddleware = (...roles) => {
 	return (req, res, next) => {
 		try {
 			const { userRole } = req.session;
-			const hasRole = roles.some((role) => userRole === role.toUpperCase());
+			const hasRole = roles.some(
+				(role) => userRole === role.toUpperCase()
+			);
 
 			if (!hasRole)
 				return next(
@@ -112,65 +114,19 @@ export const confirmDeleteMiddleware = (req, res, next) => {
 	next();
 };
 
-export const paginateMiddleware = (req, res, next) => {
-	const { page = 1, limit = 10 } = req.query;
-	const MAX_LIMIT = 10; // Maximum items per page
-
-	// Validate page and limit
-	const parsedPage = Number(page);
-	const parsedLimit = Number(limit);
-
-	if (!Number.isInteger(parsedPage) || !Number.isInteger(parsedLimit)) {
-		return next(
-			new ErrorResponse(
-				`Invalid page (${page}) or limit (${limit})`,
-				'Page and limit must be integers',
-				statusCode.badRequestCode
-			)
-		);
-	}
-
-	// Check if page and limit are within range
-	if (parsedPage < 1 || parsedLimit < 1 || parsedLimit > MAX_LIMIT) {
-		return next(
-			new ErrorResponse(
-				`Page (${page}) or limit (${limit}) out of range`,
-				`Page must be at least 1, and limit must be between 1 and ${MAX_LIMIT}`,
-				statusCode.badRequestCode
-			)
-		);
-	}
-
-	// Calculate offset
-	//* it is like when you prass next page in website
-	//* will skip the 10 thing you already seen in the previous page
-	//* and show the next page with 10 now things
-	const offset = (parsedPage - 1) * parsedLimit;
-
-	// Attach pagination info to req object
-	req.pagination = {
-		page: parsedPage,
-		limit: parsedLimit,
-		offset,
-	};
-
-	next();
-};
-
-
 export const csrfMiddleware = (error, req, res, next) => {
-    if (error.code !== "EBADCSRFTOKEN"){
-        return next(error);
-    }
+	if (error.code !== 'EBADCSRFTOKEN') {
+		return next(error);
+	}
 
-    return next(
-        new ErrorResponse(
-            error,
-            "Invalid CSRF token",
-            statusCode.forbiddenCode  // HTTP status code for forbidde
-        )
-    );
-}
+	return next(
+		new ErrorResponse(
+			error,
+			'Invalid CSRF token',
+			statusCode.forbiddenCode // HTTP status code for forbidde
+		)
+	);
+};
 
 //*====================={Request Validations}====================
 export const VReqToSignUp = (req, res, next) => {

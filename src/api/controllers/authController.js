@@ -12,6 +12,8 @@ import {
 	sendEmail,
 	sendCookies,
 	storeSession,
+	clearCookies,
+	deleteSession,
 } from '../../utils/authHelper.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
@@ -164,9 +166,9 @@ export const resetPassword = async (req, res, next) => {
 		const { body } = req;
 		const { token } = req.params;
 
-		const { safeUser, role } = await resetUserPassword(body, token);
+		const updatePassword = await resetUserPassword(body, token);
 
-		if (!safeUser)
+		if (!updatePassword)
 			return next(
 				new ErrorResponse(
 					'Failed to reset password',
@@ -175,20 +177,20 @@ export const resetPassword = async (req, res, next) => {
 				)
 			);
 
-		if (safeUser.error)
+		if (updatePassword.error)
 			return next(
 				new ErrorResponse(
-					safeUser.error,
+					updatePassword.error,
 					"Error Couldn't reset password",
 					statusCode.badRequestCode
 				)
 			);
 
 		//* store the user id and role in session
-		storeSession(safeUser.id, role, req);
+		storeSession(updatePassword.id, 'user', req);
 
 		//* Log the user in and send JWT token via cookie
-		sendCookies(safeUser.id, res);
+		sendCookies(updatePassword.id, res);
 
 		return next(
 			new SuccessResponse(
@@ -210,11 +212,12 @@ export const resetPassword = async (req, res, next) => {
 
 export const updatePassword = async (req, res, next) => {
 	try {
-		const { user, body } = req;
+		const { body } = req;
+		const { userId, userRole } = req.session;
 
-		const { safeUser, role } = await updateUserPassword(user.id, body);
+		const updatePassword = await updateUserPassword(userId, body);
 
-		if (!safeUser)
+		if (!updatePassword)
 			return next(
 				new ErrorResponse(
 					'Failed to update password',
@@ -223,26 +226,26 @@ export const updatePassword = async (req, res, next) => {
 				)
 			);
 
-		if (safeUser.error)
+		if (updatePassword.error)
 			return next(
 				new ErrorResponse(
-					safeUser.error,
+					updatePassword.error,
 					"Error Couldn't update password",
 					statusCode.badRequestCode
 				)
 			);
 
 		//* store user id and role in session
-		storeSession(safeUser.id, role, req);
+		storeSession(userId, userRole, req);
 
 		//* Log the useer in and send JWT token via cookie
-		sendCookies(safeUser.id, res);
+		sendCookies(userId, res);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
 				'Successfully updated password',
-				safeUser
+				updatePassword
 			)
 		);
 	} catch (error) {
@@ -258,33 +261,33 @@ export const updatePassword = async (req, res, next) => {
 
 export const updateData = async (req, res, next) => {
 	try {
-		const { user, body } = req;
+		const { body } = req;
+		const { userId, userRole } = req.session;
 
-		const { safeUser, role } = await updateUserData(user.id, body);
+		const updatedUserData = await updateUserData(userId, body);
 
-		if (!safeUser || safeUser.error)
+		if (!updatedUserData || updatedUserData.error)
 			return next(
 				new ErrorResponse(
-					'Failed to update user data' || safeUser.error,
+					'Failed to update user data' || updatedUserData.error,
 					'Failed to update',
-					safeUser.error
+					updatedUserData.error
 						? statusCode.badRequestCode
 						: statusCode.notFoundCode
 				)
 			);
 
 		//* store user id and role in session
-		storeSession(safeUser.id, role, req);
+		storeSession(userId, userRole, req);
 
 		//* Log the useer in and send JWT token via cookie
-		sendCookies(safeUser.id, res);
+		sendCookies(userId, res);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
 				'Successfully updated user data',
-				safeUser,
-				token
+				updatedUserData
 			)
 		);
 	} catch (error) {
@@ -300,9 +303,9 @@ export const updateData = async (req, res, next) => {
 
 export const deActivate = async (req, res, next) => {
 	try {
-		const { user } = req;
+		const { userId } = req.session;
 
-		const deActivateUser = await deactivateUserAccount(user.id);
+		const deActivateUser = await deactivateUserAccount(userId);
 
 		if (!deActivateUser || deActivateUser.error)
 			return next(
@@ -333,16 +336,53 @@ export const deActivate = async (req, res, next) => {
 	}
 };
 
+export const logout = async (req, res, next) => {
+	try {
+		const { userId } = req.session;
 
+		const deActivateUser = await deactivateUserAccount(userId);
+
+		if (!deActivateUser || deActivateUser.error) {
+			return next(
+				new ErrorResponse(
+					deActivateUser.error || 'Failed to deactivate user account',
+					'Failed to deactivate',
+					deActivateUser.error
+						? statusCode.badRequestCode
+						: statusCode.notFoundCode
+				)
+			);
+		}
+
+		clearCookies(res);
+		await deleteSession(req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.noContentCode,
+				'Successfully logged out',
+				null
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to logout',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
 
 export const csrfResponse = (req, res) => {
-    res.cookie('XSRF-TOKEN', req.csrfToken(), {
-        expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-        httpOnly: false, // ✅ Allow frontend access
-        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
-    });
-    
-    res.json({ csrfToken: req.csrfToken() });
+	res.cookie('XSRF-TOKEN', req.csrfToken(), {
+		expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+		httpOnly: false, // ✅ Allow frontend access
+		secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+	});
 
-    return;
-}
+	res.json({ csrfToken: req.csrfToken() });
+
+	return;
+};

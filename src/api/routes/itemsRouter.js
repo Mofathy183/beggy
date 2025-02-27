@@ -1,73 +1,64 @@
 import express from 'express';
-import { 
-    VReqToUUID, 
-    VReqToCreateItem,
-    VReqToModifyItem, 
-    VReqToCreateManyItems 
+import {
+	VReqToUUID,
+	VReqToCreateItem,
+	VReqToModifyItem,
+	VReqToCreateManyItems,
 } from '../../middlewares/validateRequest.js';
 import {
 	headersMiddleware,
 	checkRoleMiddleware,
-	paginateMiddleware,
 	VReqToHeaderToken,
-    confirmDeleteMiddleware
+	confirmDeleteMiddleware,
 } from '../../middlewares/authMiddleware.js';
-import { itemsSearchMiddleware } from "../../middlewares/middlewares.js";
-import { 
-//*====={items User Router}=========
-    getItemsBelongsToUser,
-    getItemBelongsToUser,
-    createItemForUser,
-    createItemsForUser,
-    replaceItemBelongsToUser,
-    modifyItemBelongsToUser,
-    deleteItemBelongsTo,
-    deleteAllItemsBelongsToUser,
-//*====={items User Router}=========
-//*====={items Router}=========
-    getItemsById,
-    getItemsByQuery,
-    getAllItems,
-    replaceItemById,
-    modifyItemById,
-    deleteItemById,
-    deleteAllItems,
-//*====={items Router}=========
+import {
+	paginateMiddleware,
+	searchMiddleware,
+	orderByMiddleware,
+} from '../../middlewares/middlewares.js';
+import {
+	//*====={items User Router}=========
+	getItemsBelongsToUser,
+	getItemBelongsToUser,
+	createItemForUser,
+	createItemsForUser,
+	replaceItemBelongsToUser,
+	modifyItemBelongsToUser,
+	deleteItemBelongsTo,
+	deleteAllItemsBelongsToUser,
+	//*====={items User Router}=========
+	//*====={items Router}=========
+	getItemsById,
+	getItemsByQuery,
+	getAllItems,
+	replaceItemById,
+	modifyItemById,
+	deleteItemById,
+	deleteAllItems,
+	//*====={items Router}=========
 } from '../controllers/itemsController.js';
 
 const itemsRoute = express.Router();
 
 //* Validate request parameters
-itemsRoute.param(
-    'id', 
-    (req, res, next, id) => 
-        VReqToUUID(req, res, next, id, 'id')
+itemsRoute.param('id', (req, res, next, id) =>
+	VReqToUUID(req, res, next, id, 'id')
 );
 
-itemsRoute.param(
-    'itemId', 
-    (req, res, next, itemId) => 
-        VReqToUUID(req, res, next, itemId, 'itemId')
+itemsRoute.param('itemId', (req, res, next, itemId) =>
+	VReqToUUID(req, res, next, itemId, 'itemId')
 );
-
-
 
 //*=========================================={Base Items Route}===================================
 
 //todo: route for get All items => GET
 //* GET "/" → Get all items
-itemsRoute.get(
-    '/',
-	paginateMiddleware,
-	getAllItems
-);
-
+itemsRoute.get('/', paginateMiddleware, getAllItems);
 
 //todo: route for get item by id => GET (params id)
-//* GET "/:id" → Get a single item by ID
+//* GET "/:itemId" → Get a single item by ID
 //* Get item by ID
-itemsRoute.get('/:id', getItemsById);
-
+itemsRoute.get('/:itemId', getItemsById);
 
 //todo: route for get all items by Querys => GET (query limit and pages)
 //* GET "/search" → Get items by query
@@ -75,50 +66,47 @@ itemsRoute.get('/:id', getItemsById);
 itemsRoute.get(
 	'/search',
 	paginateMiddleware,
-	itemsSearchMiddleware, // Applies search filters if any
+	searchMiddleware, // Applies search filters if any
+	orderByMiddleware, // Applies sorting if any
 	getItemsByQuery
 );
 
-
-//todo: route for replace (update) item by id => PUT param(id) 
-//* PUT /:id → Replace an item (admin/member)
+//todo: route for replace (update) item by id => PUT param(id)
+//* PUT /:itm → Replace an item (admin/member)
 //* Replace (update) an item by ID
 itemsRoute.put(
-	'/:id',
+	'/:itemId',
 	VReqToHeaderToken,
 	headersMiddleware,
-    checkRoleMiddleware('admin', 'member'),
+	checkRoleMiddleware('admin', 'member'),
 	VReqToCreateItem,
 	replaceItemById
 );
-
 
 //todo: route for modify (update) item by id => PATCH param(id)
 //* PATCH /:id → Modify an item (admin/member)
 //* Modify (update) an item by ID
 itemsRoute.patch(
-	'/:id',
+	'/:itemId',
 	VReqToHeaderToken,
 	headersMiddleware,
-    checkRoleMiddleware('admin', 'member'),
+	checkRoleMiddleware('admin', 'member'),
 	VReqToModifyItem,
 	modifyItemById
 );
-
 
 //todo: route for delete item by id => DELETE (params id)
 //* DELETE /:id → Delete an item (admin/member)
 //* Delete an item by ID
 itemsRoute.delete(
-	'/:id',
+	'/:itemId',
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
 	deleteItemById
 );
 
-
-//todo: route for delete All Items => DELETE 
+//todo: route for delete All Items => DELETE
 //* DELETE /delete-all → Delete all items (admin only)
 //* Delete all items (Admin only)
 itemsRoute.delete(
@@ -132,12 +120,10 @@ itemsRoute.delete(
 
 //*=========================================={Base Items Route}===================================
 
-
-
 //*=========================================={Items Route For User}===================================
 
 //todo: route to get items that user has by user => GET user muet by login
-// GET /user → Get all items for a user
+//* GET /user → Get all items for a user
 //* Get items that belong to a specific user
 itemsRoute.get(
 	'/user',
@@ -147,9 +133,8 @@ itemsRoute.get(
 	getItemsBelongsToUser
 );
 
-
 //todo: route to get item that user has by user id => GET (params id) user muet by login
-// PUT /user/:itemId → Replace a user’s item
+//* PUT /user/:itemId → Replace a user’s item
 //* Get items that belong to a specific user
 itemsRoute.get(
 	'/user/:itemId',
@@ -159,32 +144,29 @@ itemsRoute.get(
 	getItemBelongsToUser
 );
 
-
 //todo: route for create item for User => POST (params id) user muet by login
 //* POST "/user/:id" → Create an item for a user
 //* Create a single item for a user
 itemsRoute.post(
-    '/user/:id',
+	'/user',
 	VReqToHeaderToken,
 	headersMiddleware,
 	VReqToCreateItem,
 	createItemForUser
 );
 
-
 //todo: route for create items for User => POST (params id) user muet by login
-//* POST "/user/:id/multiple" → Create multiple items for a user
+//* POST "/user/multiple" → Create multiple items for a user
 //* Create multiple items for a user
 itemsRoute.post(
-	"/user/:id/multiple",
+	'/user/multiple',
 	VReqToHeaderToken,
 	headersMiddleware,
 	VReqToCreateManyItems,
 	createItemsForUser
 );
 
-
-//todo: route for replace (update) item user has by id of the item => PUT param(id) 
+//todo: route for replace (update) item user has by id of the item => PUT param(id)
 //* PUT /user/:itemId → Replace a user’s item
 //* Replace an item that belongs to a user
 itemsRoute.put(
@@ -194,7 +176,6 @@ itemsRoute.put(
 	VReqToCreateItem,
 	replaceItemBelongsToUser
 );
-
 
 //todo: route for modify (update) item by id of the item => PATCH param(id)
 //* PATCH /user/:itemId → Modify a user’s item
@@ -207,7 +188,6 @@ itemsRoute.patch(
 	modifyItemBelongsToUser
 );
 
-
 //todo: route for delete item user has by id of the item => DELETE (params id) user muet by login
 //* DELETE /user/:itemId → Delete a user’s item
 //* Delete a single item that belongs to a user
@@ -217,7 +197,6 @@ itemsRoute.delete(
 	headersMiddleware,
 	deleteItemBelongsTo
 );
-
 
 //todo: route for delete all items that user has by user id => DELETE (params id) user muet by login
 //* DELETE /user/all → Delete all user’s items
@@ -229,21 +208,6 @@ itemsRoute.delete(
 	deleteAllItemsBelongsToUser
 );
 
-
-
 //*=========================================={Items Route For User}===================================
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default itemsRoute;

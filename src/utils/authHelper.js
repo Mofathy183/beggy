@@ -98,7 +98,7 @@ export const sendCookies = (userId, res) => {
 
 	const refreshToken = signRefreshToken(userId);
 
-	res.cookie('jwt-token', token, cookieOptions);
+	res.cookie('jwt-access-token', token, cookieOptions);
 	res.cookie('jwt-refresh-token', refreshToken, cookieRefreshOptions);
 
 	return;
@@ -113,10 +113,40 @@ export const sendProvidCookies = (accessToken, userId, provider, res) => {
 	return;
 };
 
+//*=============================={Clear Cookies}==============================
+export const clearCookies = (res) => {
+	const cookies = [
+		'jwt-access-token',
+		'jwt-refresh-token',
+		'google-access-token',
+		'google-refresh-token',
+		'facebook-access-token',
+		'facebook-refresh-token',
+	];
+
+	cookies.forEach((cookie) => res.clearCookie(cookie));
+
+	return;
+};
+
 //*=============================={STORE SESSION}==============================
 export const storeSession = (userId, userRole, req) => {
 	req.session.userId = userId;
 	req.session.userRole = userRole;
 
 	return;
+};
+
+//*=============================={DELETE SESSION}==============================
+export const deleteSession = async (req) => {
+	return new Promise((resolve, reject) => {
+		req.session.destroy((error) => {
+			if (error) {
+				return reject(
+					new ErrorHandler('session', error, 'destroy session failed')
+				);
+			}
+			resolve();
+		});
+	});
 };

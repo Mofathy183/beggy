@@ -1,0 +1,142 @@
+import Joi from 'joi';
+import {
+	SuitcaseFeature,
+	SuitcaseType,
+	Size,
+	Material,
+	WheelType,
+} from '@prisma/client';
+import { productStringRegExp } from './itemValidator.js';
+import { stringRegExp } from './authValidator.js';
+
+// if happen error .prefs({ convert: false }) for float
+export const suitcaseSchema = Joi.object({
+	name: Joi.string()
+		.pattern(productStringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		)
+		.required(),
+
+	type: Joi.string()
+		.valid(...Object.values(SuitcaseType))
+		.uppercase()
+		.required(),
+
+	brand: Joi.string()
+		.pattern(productStringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	color: Joi.string()
+		.pattern(stringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	size: Joi.string() //* for Bags and Suitcases Only
+		.valid(...Object.values(Size))
+		.uppercase()
+		.required(),
+
+	capacity: Joi.number().precision(2).required(),
+	maxWidth: Joi.number().precision(2).required(),
+	weight: Joi.number().precision(2).required(),
+
+	material: Joi.string() //* for Bags and Suitcases Only
+		.valid(...Object.values(Material))
+		.uppercase(),
+
+	features: Joi.string()
+		.valid(...Object.values(SuitcaseFeature))
+		.uppercase(),
+
+	wheels: Joi.string() //* for Suitcases Only
+		.valid(...Object.values(WheelType))
+		.uppercase(),
+});
+
+export const suitcaseModifySchema = Joi.object({
+	name: Joi.string()
+		.pattern(productStringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	type: Joi.string()
+		.valid(...Object.values(SuitcaseType))
+		.uppercase(),
+
+	brand: Joi.string()
+		.pattern(productStringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	color: Joi.string()
+		.pattern(stringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	size: Joi.string() //* for Bags and Suitcases Only
+		.valid(...Object.values(Size))
+		.uppercase(),
+
+	capacity: Joi.number().precision(2),
+	maxWidth: Joi.number().precision(2),
+	weight: Joi.number().precision(2),
+
+	material: Joi.string() //* for Bags and Suitcases Only
+		.valid(...Object.values(Material))
+		.uppercase(),
+
+	features: Joi.string()
+		.valid(...Object.values(SuitcaseFeature))
+		.uppercase(),
+
+	wheels: Joi.string() //* for Suitcases Only
+		.valid(...Object.values(WheelType))
+		.uppercase(),
+});
+
+export const suitcaseSchemaMiddlware = Joi.object({
+	type: Joi.string()
+		.valid(...Object.values(SuitcaseType))
+		.uppercase(),
+
+	size: Joi.string() //* for Bags and Suitcases Only
+		.valid(...Object.values(Size))
+		.uppercase(),
+
+	material: Joi.string() //* for Bags and Suitcases Only
+		.valid(...Object.values(Material))
+		.uppercase(),
+
+	brand: Joi.string()
+		.pattern(productStringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	feeatures: Joi.string()
+		.valid(...Object.values(SuitcaseFeature))
+		.uppercase(),
+
+	wheels: Joi.string() //* for Suitcases Only
+		.valid(...Object.values(WheelType))
+		.uppercase(),
+
+	name: Joi.string()
+		.pattern(productStringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	color: Joi.string()
+		.pattern(productStringRegExp)
+		.message('must be a letter but not any special characters or numbers'),
+
+	createdAt: Joi.date().iso(),
+});

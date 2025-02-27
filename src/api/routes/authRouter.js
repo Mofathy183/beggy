@@ -7,7 +7,8 @@ import {
 	updatePassword,
 	updateData,
 	deActivate,
-    csrfResponse
+	logout,
+	csrfResponse,
 } from '../controllers/authController.js';
 import {
 	VReqToSignUp,
@@ -23,18 +24,20 @@ import {
 
 const authRoute = express.Router();
 
-authRoute.param('token', VReqToResetToken);
+authRoute.param('token', (req, res, next, token) =>
+	VReqToResetToken(req, res, next, token, 'token')
+);
 
-//todo: route for signup => POST
+//* route for signup => POST
 authRoute.post('/signup', VReqToSignUp, signUp);
 
-//todo: route for forgot Password => POST (email)
+//* route for forgot Password => POST (email)
 authRoute.patch('/forgot-password', VReqToForgotPassword, forgotPassword);
 
-//todo: route for reset Password => PATCH param(token) (new password and confirm password)
+//* route for reset Password => PATCH param(token) (new password and confirm password)
 authRoute.patch('/reset-password/:token', VReqToResetPassword, resetPassword);
 
-//todo: route for update password for only login users => PATCH (Old Password and new password and confirm password)
+//* route for update password for only login users => PATCH (Old Password and new password and confirm password)
 authRoute.patch(
 	'/update-password',
 	VReqToHeaderToken, // to validate the token in the header
@@ -43,15 +46,7 @@ authRoute.patch(
 	updatePassword
 );
 
-//todo: route for deactivate user acount => DELETE  (User must be login already to be deactivated)
-authRoute.delete(
-	'/deactivate',
-	VReqToHeaderToken, // to validate the token in the header
-	headersMiddleware,
-	deActivate // to deactivate the user account
-);
-
-//todo: route for update user data for only logged in users => PATCH (Not for Update user Password)
+//* route for update user data for only logged in users => PATCH (Not for Update user Password)
 authRoute.patch(
 	'/update-user-data',
 	VReqToHeaderToken, // to validate the token in the header
@@ -60,13 +55,26 @@ authRoute.patch(
 	updateData
 );
 
-//todo: route for login => POST
+//* route for deactivate user acount => DELETE  (User must be login already to be deactivated)
+authRoute.delete(
+	'/deactivate',
+	VReqToHeaderToken, // to validate the token in the header
+	headersMiddleware,
+	deActivate // to deactivate the user account
+);
+
+//* route for login => POST
 authRoute.post('/login', VReqToLogin, login);
 
-//todo: route for logout => POST
-authRoute.post('/logout');
+//* route for logout => POST
+authRoute.post(
+	'/logout',
+	VReqToHeaderToken, // to validate the token in the header
+	headersMiddleware,
+	logout // to log out the user
+);
 
-
-authRoute.get("/csrf-token", csrfResponse)
+//* to get csrf token to send with the request body
+authRoute.get('/csrf-token', csrfResponse);
 
 export default authRoute;

@@ -11,7 +11,7 @@ import {
 	croeMiddleware,
 	errorMiddlewareHandler,
 	routeErrorHandler,
-    csrfProtection,
+	csrfProtection,
 	AppResponse,
 } from './src/middlewares/appMiddleware.js';
 import rootRoute from './src/api/routes/rootRouter.js';

@@ -6,10 +6,10 @@ import {
 	authenticateWithFacebook,
 } from '../controllers/accountController.js';
 
-const accountRouter = express.Router();
+const accountRoute = express.Router();
 
 //todo: route for start OAuth Google authenticate => GET
-accountRouter.get(
+accountRoute.get(
 	'/google',
 	passport.authenticate('google', {
 		scope: ['profile', 'email'],
@@ -18,7 +18,7 @@ accountRouter.get(
 );
 
 //todo: route for callback OAuth Google authenticate => GET
-accountRouter.get(
+accountRoute.get(
 	'/google/callback',
 	passport.authenticate('google', {
 		scope: ['public_profile', 'emails'], // ask for user's profile and email
@@ -30,7 +30,7 @@ accountRouter.get(
 );
 
 //todo: route for start OAuth Facebook authenticate => GET
-accountRouter.get(
+accountRoute.get(
 	'/facebook',
 	passport.authenticate('facebook', {
 		scope: [
@@ -46,7 +46,7 @@ accountRouter.get(
 );
 
 //todo: route for callback OAuth Facebook authenticate => GET
-accountRouter.get(
+accountRoute.get(
 	'/facebook/callback',
 	passport.authenticate('facebook', {
 		session: true, // if fail to authenticate, redirect to login page  // save user's session in the cookie
@@ -56,4 +56,4 @@ accountRouter.get(
 	authenticateWithFacebook
 );
 
-export default accountRouter;
+export default accountRoute;

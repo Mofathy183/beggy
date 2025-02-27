@@ -2,52 +2,94 @@ import express from 'express';
 import {
 	createUser,
 	findUserById,
+	findUserPublicProfile,
 	findAllUsers,
-	updateUserById,
-	modifyUserById,
+	changeUserRoleById,
 	deleteUserById,
 	deleteAllUsers,
 } from '../controllers/userController.js';
 import {
 	VReqToUUID,
 	VReqToCreateUser,
+	VReqToUserRole,
 } from '../../middlewares/validateRequest.js';
 import {
 	headersMiddleware,
 	checkRoleMiddleware,
 	confirmDeleteMiddleware,
-	paginateMiddleware,
 	VReqToHeaderToken,
 } from '../../middlewares/authMiddleware.js';
+import {
+	paginateMiddleware,
+	orderByMiddleware,
+	searchMiddleware,
+	searchForUsersMiddleware,
+} from '../../middlewares/middlewares.js';
 
 const userRoute = express.Router();
 
 //* to check if the id in params is valid and exists
-userRoute.param('id', VReqToUUID);
+userRoute.param('id', (req, res, next, id) =>
+	VReqToUUID(req, res, next, id, 'id')
+);
 
-//todo: route for creating user => POST  //create-user
-userRoute.post('/', VReqToCreateUser, createUser);
+//*========================{Public Route}========================
+//* route to get user public profile by id => GET param (id)
+userRoute.get('/:id/public', findUserPublicProfile);
 
-//todo: route for find user by id => GET param(id)  //get-user
-userRoute.get('/:id', findUserById);
+//* route for search for users by query => GET
+userRoute.get(
+	'/search',
+	paginateMiddleware,
+	searchForUsersMiddleware,
+	findAllUsers
+);
+//*========================{Public Route}========================
 
-//todo: route for find all user => GET //get-users
+//*========================{Private Route}========================
+
+//* route for get user private profile by id => GET param (id)
+userRoute.get(
+	'/:id/private',
+	VReqToHeaderToken,
+	headersMiddleware,
+	checkRoleMiddleware('admin', 'member'),
+	findUserById
+);
+
+//* route for get all users => GET (Only Admin)
 userRoute.get(
 	'/',
 	VReqToHeaderToken,
-	headersMiddleware, // check if header his token
+	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
 	paginateMiddleware,
+	orderByMiddleware,
+	searchForUsersMiddleware,
 	findAllUsers
 );
 
-//todo: route for update user by id => PUT param(id)  //update
-userRoute.put('/:id', VReqToCreateUser, updateUserById);
+//* route for create user => POST (only Admin)
+userRoute.post(
+	'/',
+	VReqToHeaderToken,
+	headersMiddleware,
+	checkRoleMiddleware('admin'),
+	VReqToCreateUser,
+	createUser
+);
 
-//todo: route for update user by id => PATCH param(id) //update
-userRoute.patch('/:id', modifyUserById);
+//* route for change user role => PATCH (Admin and Member only)
+userRoute.patch(
+	'/:id/role',
+	VReqToHeaderToken,
+	headersMiddleware,
+	checkRoleMiddleware('admin'),
+	VReqToUserRole,
+	changeUserRoleById
+);
 
-//todo: route for delete user by id => DELETE param(id) //delete
+//* route for delete user by id => DELETE param(id) //delete
 userRoute.delete(
 	'/:id',
 	VReqToHeaderToken,
@@ -56,7 +98,7 @@ userRoute.delete(
 	deleteUserById
 );
 
-//todo: route for delete all users => DELETE  //delete
+//* route for delete all users => DELETE  //delete
 userRoute.delete(
 	'/',
 	VReqToHeaderToken,
@@ -66,4 +108,5 @@ userRoute.delete(
 	deleteAllUsers
 );
 
+//*========================{Private Route}========================
 export default userRoute;

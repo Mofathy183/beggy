@@ -231,6 +231,7 @@ export const resetUserPassword = async (body, token) => {
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
 				isActive: true,
+				role: true,
 			},
 		});
 
@@ -241,9 +242,7 @@ export const resetUserPassword = async (body, token) => {
 				'Failed to update user password'
 			);
 
-		const { role, ...safeUser } = updatePassword;
-
-		return { role, safeUser };
+		return updatePassword;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -307,6 +306,7 @@ export const updateUserPassword = async (userId, body) => {
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
 				isActive: true,
+				role: true,
 			},
 		});
 
@@ -324,9 +324,7 @@ export const updateUserPassword = async (userId, body) => {
 				'Failed to update user password'
 			);
 
-		const { role, ...safeUser } = updatePassword;
-
-		return { role, safeUser };
+		return updatePassword;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -367,6 +365,7 @@ export const updateUserData = async (userId, body) => {
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
 				isActive: true,
+				role: true,
 			},
 		});
 
@@ -384,9 +383,7 @@ export const updateUserData = async (userId, body) => {
 				'Failed to update user data'
 			);
 
-		const { role, ...safeUser } = updatePassword;
-
-		return { role, safeUser };
+		return updatedUserData;
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to update user data');
 	}
