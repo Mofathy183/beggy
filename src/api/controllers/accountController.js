@@ -5,7 +5,7 @@ import SuccessResponse from '../../utils/successResponse.js';
 
 export const authenticateWithGoogle = async (req, res, next) => {
 	try {
-		const { userData, accessToken } = req.user;
+		const { userData, accessToken, status } = req.user;
 
 		sendProvidCookies(accessToken, userData.id, 'google', res);
 
@@ -13,8 +13,8 @@ export const authenticateWithGoogle = async (req, res, next) => {
 
 		return next(
 			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully Logged in with Google',
+				status,
+				`Successfully ${status === 201 ? "Signing Up": "Logged In"} with Google`,
 				userData
 			)
 		);
@@ -31,7 +31,7 @@ export const authenticateWithGoogle = async (req, res, next) => {
 
 export const authenticateWithFacebook = async (req, res, next) => {
 	try {
-		const { userData, accessToken } = req.user;
+		const { userData, accessToken, status } = req.user;
 
 		sendProvidCookies(accessToken, userData.id, 'facebook', res);
 
@@ -39,8 +39,8 @@ export const authenticateWithFacebook = async (req, res, next) => {
 
 		return next(
 			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully Logged in with Facebook',
+				status,
+				`Successfully ${status === 201 ? "Signing Up": "Logged In"} with Facebook`,
 				userData
 			)
 		);

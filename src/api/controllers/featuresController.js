@@ -2,7 +2,10 @@ import {
 	itemAutoFilling,
 	bagAutoFilling,
 	suitcaseAutoFilling,
+    getLocation,
+    getWeather
 } from '../../services/featuresService.js';
+import { updateUserData } from "../../services/authService.js";
 import { statusCode } from '../../config/status.js';
 import { ErrorResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
@@ -16,8 +19,8 @@ export const autoFillItemFields = async (req, res, next) => {
 		if (!fields)
 			return next(
 				new ErrorResponse(
-					'Failed to auto-fill items',
-					'Failed to auto-fill items',
+					'Failed to auto-fill item',
+					'Failed to auto-fill item',
 					statusCode.badRequestCode
 				)
 			);
@@ -25,8 +28,8 @@ export const autoFillItemFields = async (req, res, next) => {
 		if (fields.error)
 			return next(
 				new ErrorResponse(
-					'Failed to auto-fill items',
-					'Failed to auto-fill items',
+					`Failed to auto-fill item ${fields.error}`,
+					`Failed to auto-fill item ${fields.error.message}`,
 					statusCode.badRequestCode
 				)
 			);
@@ -34,7 +37,7 @@ export const autoFillItemFields = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully auto-filled items',
+				'Successfully Auto-Filled Item',
 				fields
 			)
 		);
@@ -58,8 +61,8 @@ export const autoFillBagFields = async (req, res, next) => {
 		if (!fields)
 			return next(
 				new ErrorResponse(
-					'Failed to auto-fill bags',
-					'Failed to auto-fill bags',
+					'Failed to auto-fill bag',
+					'Failed to auto-fill bag',
 					statusCode.badRequestCode
 				)
 			);
@@ -67,8 +70,8 @@ export const autoFillBagFields = async (req, res, next) => {
 		if (fields.error)
 			return next(
 				new ErrorResponse(
-					'Failed to auto-fill bags',
-					'Failed to auto-fill bags',
+					'Failed to auto-fill bag '+fields.error,
+					'Failed to auto-fill bag '+fields.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -76,7 +79,7 @@ export const autoFillBagFields = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully auto-filled bags',
+				'Successfully Auto-Filled Bag',
 				fields
 			)
 		);
@@ -100,8 +103,8 @@ export const autoFillSuitcaseFields = async (req, res, next) => {
 		if (!fields)
 			return next(
 				new ErrorResponse(
-					'Failed to auto-fill suitcases',
-					'Failed to auto-fill suitcases',
+					'Failed to auto-fill suitcase',
+					'Failed to auto-fill suitcase',
 					statusCode.badRequestCode
 				)
 			);
@@ -109,8 +112,8 @@ export const autoFillSuitcaseFields = async (req, res, next) => {
 		if (fields.error)
 			return next(
 				new ErrorResponse(
-					'Failed to auto-fill suitcases',
-					'Failed to auto-fill suitcases',
+					'Failed to auto-fill suitcase ' + fields.error,
+					'Failed to auto-fill suitcase ' + fields.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -118,7 +121,7 @@ export const autoFillSuitcaseFields = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully auto-filled suitcases',
+				'Successfully Auto-Filled Suitcase',
 				fields
 			)
 		);
@@ -132,3 +135,101 @@ export const autoFillSuitcaseFields = async (req, res, next) => {
 		);
 	}
 };
+
+
+export const location = async (req, res, next) => {
+    try {
+        const { userIp, userId } = req.session;
+
+        const ip = String(userIp).replace(/^::ffff:/, "");
+
+        const { country, city } = await getLocation(ip);
+
+        if (country.error || city.error) return next(
+            new ErrorResponse(
+                'Failed to retrieve location ' + country.error + ' ' + city.error,
+                'Failed to retrieve location ' + country.error.message + ' ' + country.error.message,
+                statusCode.badRequestCode
+            )
+        )
+
+        if (!country || !city) return next(
+            new ErrorResponse(
+                'Failed to retrieve location',
+                'Failed to retrieve location',
+                statusCode.badRequestCode
+            )
+        )
+
+        const updatedUserData = await updateUserData(userId, { country: country, city: city });
+
+        if (!updatedUserData || updatedUserData.error) return next(
+            new ErrorResponse(
+                'Failed to update user data' || updatedUserData.error,
+                'Failed to update',
+                updatedUserData.error
+            )
+        );
+
+
+        return next(
+            new SuccessResponse(
+                statusCode.okCode,
+                'Successfully updated user City and Country',
+                updatedUserData
+            )
+        )
+    }
+
+    catch (error) {
+        next(
+            new ErrorResponse(
+                'Failed to retrieve location',
+                'Failed to retrieve location',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
+
+export const weather = async (req, res, next) => {
+    try {
+        const { userId } = req.session;
+
+        const weatherData = await getWeather(userId);
+
+        if (!weatherData) return next(
+            new ErrorResponse(
+                "Failed to get weather",
+                "weather data not found",
+                statusCode.badRequestCode
+            )
+        );
+
+        if (weatherData.error) return next(
+            new ErrorResponse(
+                weatherData.error,
+                weatherData.error.message,
+                statusCode.badRequestCode
+            )
+        );
+
+        return next(
+            new SuccessResponse(
+                statusCode.okCode,
+                "Successfully fetched weather information",
+                weatherData
+            )
+        )
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                "Failed to retrieve weather "+ error.message,
+                statusCode.internalServerErrorCode
+            )
+        )
+    }
+}

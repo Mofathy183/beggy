@@ -1,5 +1,5 @@
-import { verifyToken } from '../utils/jwt.js';
-import { UserModel } from '../../prisma/prisma.js';
+import { verifyRefreshToken, verifyToken } from '../utils/jwt.js';
+import prisma from '../../prisma/prisma.js';
 import { passwordChangeAfter } from '../utils/userHelper.js';
 import { storeSession } from '../utils/authHelper.js';
 import { statusCode } from '../config/status.js';
@@ -28,23 +28,30 @@ export const headersMiddleware = async (req, res, next) => {
 		);
 	}
 
-	//* there two cases are vailed by VReqToAuthToken
-	const token = req.headers.authorization.split(' ')[1];
-	const isAuthenticated = verifyToken(token);
+    //* if user are authenticated will pass the verification jwt token data to req.auth
+    const isAuthenticated = req.auth 
 
 	//? check if the id in the token is the same as the user has
-	const userAuth = await UserModel.findUnique({
+	const userAuth = await prisma.user.findUnique({
 		where: { id: isAuthenticated.id },
 	});
 
-	if (!userAuth || userAuth.error)
+	if (!userAuth)
 		return next(
 			new ErrorResponse(
-				'User not found' || userAuth.error,
+				'User not found',
 				'User not found in the database. Please login again',
 				statusCode.unauthorizedCode
 			)
 		);
+    
+    if (userAuth.error) return next(
+        new ErrorResponse(
+            userAuth.error,
+            'Failed to find user by this id '+ userAuth.error.message,
+            statusCode.internalServerErrorCode
+        )
+    )
 
 	//? check if the user changed their password after login
 	const passwordHasChanged = passwordChangeAfter(
@@ -114,19 +121,6 @@ export const confirmDeleteMiddleware = (req, res, next) => {
 	next();
 };
 
-export const csrfMiddleware = (error, req, res, next) => {
-	if (error.code !== 'EBADCSRFTOKEN') {
-		return next(error);
-	}
-
-	return next(
-		new ErrorResponse(
-			error,
-			'Invalid CSRF token',
-			statusCode.forbiddenCode // HTTP status code for forbidde
-		)
-	);
-};
 
 //*====================={Request Validations}====================
 export const VReqToSignUp = (req, res, next) => {
@@ -181,12 +175,34 @@ export const VReqToHeaderToken = (req, res, next) => {
 
 	const isAuth = verifyToken(token);
 
-	if (token && isAuth) return next();
+	if (token && isAuth){
+        req.auth = isAuth;
+        return next();
+    }
 
 	return next(
 		new ErrorResponse(
 			'Header "Authorization" is required',
 			'Authorization must start with "Bearer " and be a valid JWT token',
+			statusCode.unauthorizedCode
+		)
+	);
+};
+
+export const VReqToHeaderRefreshToken = (req, res, next) => {
+	const token = req.headers.authorization?.split(' ')[1];
+
+	const isAuth = verifyRefreshToken(token);
+
+    if (token && isAuth){
+        req.auth = isAuth;
+        return next();
+    }
+
+	return next(
+		new ErrorResponse(
+			'Header "Authorization" is required',
+			'Authorization must start with "Bearer " and be a valid JWT refresh token',
 			statusCode.unauthorizedCode
 		)
 	);

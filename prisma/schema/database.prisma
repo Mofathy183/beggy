@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
     provider = "postgresql"
-    url      = env("DATABASE_URL")
+    url      = env("DATABASE_TEST_URL")
 }
 
 enum Material {
@@ -26,10 +26,13 @@ enum Material {
 }
 
 enum ItemCategory {
-    CLOTHES     @map("clothes")
     ELECTRONICS @map("electronics")
-    FOOD        @map("food")
     ACCESSORIES @map("accessories")
+    FURNITURE   @map("furniture")
+    MEDICINE    @map("medicine")
+    CLOTHING    @map("clothing")
+    BOOKS       @map("books")
+    FOOD        @map("food")
 }
 
 enum BagType {
@@ -90,10 +93,10 @@ enum Size {
 }
 
 enum WheelType {
-    NONE       @map("0")
-    TWO_WHEEL  @map("2")
-    FOUR_WHEEL @map("4")
-    SPINNER    @map("3")
+    NONE       @map("none")
+    TWO_WHEEL  @map("two_wheel")
+    FOUR_WHEEL @map("four_wheel")
+    SPINNER    @map("spinner")
 }
 
 enum Gender {

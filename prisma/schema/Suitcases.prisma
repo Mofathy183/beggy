@@ -8,7 +8,7 @@ model Suitcases {
     color     String?           @default("black")
     size      Size
     capacity  Float
-    maxWidth  Float
+    maxWeight  Float
     weight    Float
     material  Material?
     features  SuitcaseFeature[]
@@ -16,13 +16,24 @@ model Suitcases {
     createdAt DateTime          @default(now()) @map("created_at")
     updatedAt DateTime          @updatedAt @map("updated_at")
 
-    //* user id for stablsh that the user has suitcases
-    userId String @map("user_id")
-    user   User   @relation(fields: [userId], references: [id])
+    userId String? @map("user_id")
+    user   User?   @relation(fields: [userId], references: [id])
 
-    //* make the suitcase can have multiple items ([] this stablsh one to many relationship)
-    items Items[]
+    suitcaseItems SuitcaseItems[]
 
-    //* table Name
     @@map("suitcases")
+}
+
+model SuitcaseItems {
+    suitcaseId String @map("suitcase_id")
+    itemId     String @map("item_id")
+
+    suitcase Suitcases @relation(fields: [suitcaseId], references: [id], onDelete: Cascade)
+    item     Items     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@id([suitcaseId, itemId]) // Composite Primary Key
+    @@map("suitcase_items") // Table name in DB
 }

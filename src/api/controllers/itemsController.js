@@ -7,6 +7,7 @@ import {
 	findItemsByQuery,
 	findAllItems,
 	removeAllItems,
+    removeItemById,
 	removeItemUserHas,
 	removeAllItemsUserHas,
 	replaceItemResource,
@@ -19,87 +20,38 @@ import { sendCookies, storeSession } from '../../utils/authHelper.js';
 import { ErrorResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
-export const createItemForUser = async (req, res, next) => {
+
+export const getAllItems = async (req, res, next) => {
 	try {
-		const { body } = req;
-		const { userId, userRole } = req.session;
+		const { pagination } = req;
 
-		const item = await addItemToUser(userId, body);
+		const { items, meta } = await findAllItems(pagination);
 
-		if (!item)
+        if (!items) return next(
+            new ErrorResponse(
+                'No items found',
+                'Failed to find all items',
+                statusCode.notFoundCode
+            )
+        );
+
+		if (items.error)
 			return next(
 				new ErrorResponse(
-					'Item is not defined',
-					'Item not defined',
-					statusCode.badRequestCode
+					items.error || 'Failed to find all items',
+					'Failed to find all items' + items.error.message,
+					statusCode.internalServerErrorCode
 				)
 			);
 
-		if (item.error)
-			return next(
-				new ErrorResponse(
-					item.error,
-					'Failed to create item for user',
-					statusCode.badRequestCode
-				)
-			);
-
-		sendCookies(userId, res);
-		storeSession(userId, userRole, req);
+		sendCookies(req.session.userId, res);
+		storeSession(req.session.userId, req.session.userRole, req);
 
 		return next(
 			new SuccessResponse(
-				statusCode.createdCode,
-				'Item created successfully and add it to user',
-				item
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to Create item for User',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const createItemsForUser = async (req, res, next) => {
-	try {
-		const { body } = req;
-		const { userId, userRole } = req.session;
-
-		const { createdItems, meta } = await addItemsToUSer(userId, body);
-
-		if (!createdItems || createdItems.length === 0) {
-			return next(
-				new ErrorResponse(
-					'No items provided',
-					'No items were created',
-					statusCode.badRequestCode
-				)
-			);
-		}
-
-		if (createdItems.error)
-			return next(
-				new ErrorResponse(
-					createdItems.error,
-					'Failed to create items for user',
-					statusCode.badRequestCode
-				)
-			);
-
-		sendCookies(userId, res);
-
-		storeSession(userId, userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.createdCode,
-				'Items created successfully and added to user',
-				createdItems,
+				statusCode.okCode,
+				'Successfully found all items',
+				items,
 				meta
 			)
 		);
@@ -107,12 +59,262 @@ export const createItemsForUser = async (req, res, next) => {
 		return next(
 			new ErrorResponse(
 				error,
-				'Failed to Create items for User',
+				'Failed to get all items',
 				statusCode.internalServerErrorCode
 			)
 		);
 	}
 };
+
+export const getItemsById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+
+		const item = await findItemById(itemId);
+
+		if (!item)
+			return next(
+				new ErrorResponse(
+					'Item not found',
+					'Failed to find item by id',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (item.error)
+			return next(
+				new ErrorResponse(
+					'Failed to find item by id '+item.error,
+					'Failed to find item by id '+ item.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+        return next(
+            new SuccessResponse(
+                statusCode.okCode,
+                'Successfully found item by id',
+                item
+            )
+        );
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to get item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const getItemsByQuery = async (req, res, next) => {
+	try {
+		const { pagination, orderBy, searchFilter } = req;
+
+		const { items, meta } = await findItemsByQuery(
+			pagination,
+			searchFilter,
+			orderBy
+		);
+
+		if (items.error)
+			return next(
+				new ErrorResponse(
+					items.error || 'Failed to find all items',
+					'Failed to find all items',
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully found all items by Search',
+				items,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to get all items',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const replaceItemById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+		const { body } = req;
+		const { userId, userRole } = req.session;
+
+		const itemUpdate = await replaceItemResource(itemId, body);
+
+        if (!itemUpdate) return next(
+            new ErrorResponse(
+                'Item not found',
+                'Failed to find item by id',
+                statusCode.notFoundCode
+            )
+        );
+
+		if (itemUpdate.error)
+			return next(
+				new ErrorResponse(
+					itemUpdate.error,
+					'Failed to replace item by itemId ' + itemUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Replaced Item by ID',
+				itemUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to replace item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const modifyItemById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+		const { body } = req;
+		const { userId, userRole } = req.session;
+
+		const itemUpdate = await modifyItemResource(itemId, body);
+
+        if (!itemUpdate) return next(
+            new ErrorResponse(
+                'Item not found',
+                'Failed to find item by id',
+                statusCode.notFoundCode
+            )
+        );
+
+		if (itemUpdate.error)
+			return next(
+				new ErrorResponse(
+					itemUpdate.error,
+					'Failed to modify item by id' + itemUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Modified Item by ID',
+				itemUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to modify item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const deleteItemById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+		const { userId, userRole } = req.session;
+
+		const { deletedItem, meta } = await removeItemById(itemId);
+
+		if (deletedItem.error)
+			return next(
+				new ErrorResponse(
+					'Failed to delete item by id '+ deletedItem.error,
+					'Failed to delete item by id '+ deletedItem.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Deleted Item by ID',
+				deletedItem,
+                meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to delete item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const deleteAllItems = async (req, res, next) => {
+	try {
+		const { userId, userRole } = req.session;
+
+		const { deleteCount, meta } = await removeAllItems();
+
+		if (deleteCount.error)
+			return next(
+				new ErrorResponse(
+					'Failed to delete all items '+ deleteCount.error,
+					'Failed to delete all items '+ deleteCount.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Delete All Items',
+				deleteCount,
+                meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to delete all items',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+
+//*============================{For Items User Route}==================================
 
 export const getItemsBelongsToUser = async (req, res, next) => {
 	try {
@@ -133,18 +335,19 @@ export const getItemsBelongsToUser = async (req, res, next) => {
 		if (userItems.error)
 			next(
 				new ErrorResponse(
-					'Error finding items' || userItems.error,
-					"Couldn't find items user has" || userItems.error.message,
+					'Error finding items '+ userItems.error,
+					"Couldn't find items user has "+ userItems.error.message,
 					statusCode.badRequestCode
 				)
 			);
 
-		sendCookies(userId, res), storeSession(userId, userRole, req);
+		sendCookies(userId, res)
+        storeSession(userId, userRole, req);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully found items user has',
+				'Successfully Found All Items User Has',
 				userItems,
 				meta
 			)
@@ -179,18 +382,19 @@ export const getItemBelongsToUser = async (req, res, next) => {
 		if (item.error)
 			return next(
 				new ErrorResponse(
-					'Error finding item' || item.error,
-					"Couldn't find item user has" || item.error.message,
+					'Error finding item '+ item.error,
+					"Couldn't find item user has "+ item.error.message,
 					statusCode.badRequestCode
 				)
 			);
 
-		sendCookies(userId, res), storeSession(userId, userRole, req);
+		sendCookies(userId, res)
+        storeSession(userId, userRole, req);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully found item user has',
+				'Successfully Found Item User Has By ID',
 				item
 			)
 		);
@@ -205,128 +409,27 @@ export const getItemBelongsToUser = async (req, res, next) => {
 	}
 };
 
-export const getItemsById = async (req, res, next) => {
+export const createItemForUser = async (req, res, next) => {
 	try {
-		const { itemId } = req.params;
+		const { body } = req;
+		const { userId, userRole } = req.session;
 
-		const item = await findItemById(itemId);
+		const { item, meta} = await addItemToUser(userId, body);
 
 		if (!item)
 			return next(
 				new ErrorResponse(
-					'Item not found',
-					'Failed to find item by id',
-					statusCode.notFoundCode
+					'Item is not defined',
+					'Item not defined',
+					statusCode.badRequestCode
 				)
 			);
 
-		if (!item.error)
+		if (item.error)
 			return next(
 				new ErrorResponse(
-					item.error || 'Failed to find item by id',
-					'Failed to find item by id',
-					statusCode.internalServerErrorCode
-				)
-			);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to get item by id',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const getItemsByQuery = async (req, res, next) => {
-	try {
-		const { pagination, orderBy, searchFilter } = req;
-
-		const { items, meta } = await findItemsByQuery(
-			pagination,
-			searchFilter,
-			orderBy
-		);
-
-		if (!items.error)
-			return next(
-				new ErrorResponse(
-					items.error || 'Failed to find all items',
-					'Failed to find all items',
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully found all items',
-				items,
-				meta
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to get all items',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const getAllItems = async (req, res, next) => {
-	try {
-		const { pagination } = req;
-
-		const { items, meta } = await findAllItems(pagination);
-
-		if (!items.error)
-			return next(
-				new ErrorResponse(
-					items.error || 'Failed to find all items',
-					'Failed to find all items',
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		sendCookies(req.session.userId, res);
-		storeSession(req.session.userId, req.session.userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully found all items',
-				items,
-				meta
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to get all items',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const replaceItemById = async (req, res, next) => {
-	try {
-		const { itemId } = req.params;
-		const { body } = req;
-		const { userId, userRole } = req.session;
-
-		const itemUpdate = await replaceItemResource(itemId, body);
-
-		if (itemUpdate.error)
-			return next(
-				new ErrorResponse(
-					itemUpdate.error,
-					'Failed to replace item by itemId',
+					item.error,
+					'Failed to create item for user '+item.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -336,54 +439,56 @@ export const replaceItemById = async (req, res, next) => {
 
 		return next(
 			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully replaced item by id',
-				itemUpdate
+				statusCode.createdCode,
+				'Item Created Successfully For User',
+				item,
+                meta
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
 				error,
-				'Failed to replace item by id',
+				'Failed to Create item for User',
 				statusCode.internalServerErrorCode
 			)
 		);
 	}
 };
 
-export const modifyItemById = async (req, res, next) => {
+export const createItemsForUser = async (req, res, next) => {
 	try {
-		const { itemId } = req.params;
 		const { body } = req;
 		const { userId, userRole } = req.session;
 
-		const itemUpdate = await modifyItemResource(itemId, body);
+		const { createdItems, meta } = await addItemsToUSer(userId, body);
 
-		if (itemUpdate.error)
+		if (createdItems.error)
 			return next(
 				new ErrorResponse(
-					itemUpdate.error,
-					'Failed to modify item by id',
+					createdItems.error,
+					'Failed to create items for user '+ createdItems.error.message,
 					statusCode.badRequestCode
 				)
 			);
 
 		sendCookies(userId, res);
+
 		storeSession(userId, userRole, req);
 
 		return next(
 			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully modified item by id',
-				itemUpdate
+				statusCode.createdCode,
+				'Items Created Successfully For User',
+				createdItems,
+				meta
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
 				error,
-				'Failed to modify item by id',
+				'Failed to Create items for User',
 				statusCode.internalServerErrorCode
 			)
 		);
@@ -411,7 +516,7 @@ export const replaceItemBelongsToUser = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					itemUpdate.error,
-					'Failed to replace item Belongs to user',
+					'Failed to replace item Belongs to user '+itemUpdate.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -422,7 +527,7 @@ export const replaceItemBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully replaced item Belongs to user',
+				'Successfully Replaced Item Belongs to User',
 				itemUpdate
 			)
 		);
@@ -445,11 +550,19 @@ export const modifyItemBelongsToUser = async (req, res, next) => {
 
 		const itemUpdate = await modifyItemUserHas(userId, itemId, body);
 
+        if (!itemUpdate) return next(
+            new ErrorResponse(
+                'Item not found',
+                'Failed to find item by id',
+                statusCode.notFoundCode
+            )
+        )
+
 		if (itemUpdate.error)
 			return next(
 				new ErrorResponse(
 					itemUpdate.error,
-					'Failed to modify item Belongs to user',
+					'Failed to modify item Belongs to user '+itemUpdate.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -460,7 +573,7 @@ export const modifyItemBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully modified item Belongs to user',
+				'Successfully Modified Item Belongs to User',
 				itemUpdate
 			)
 		);
@@ -475,60 +588,14 @@ export const modifyItemBelongsToUser = async (req, res, next) => {
 	}
 };
 
-export const deleteAllItemsBelongsToUser = async (req, res, next) => {
-	try {
-		const { userId, userRole } = req.session;
-
-		const deleteCount = await removeAllItemsUserHas(userId);
-
-		if (deleteCount === 0)
-			return next(
-				new ErrorResponse(
-					'No items found to delete',
-					'Failed to delete all items Belongs to user',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (deleteCount.error)
-			return next(
-				new ErrorResponse(
-					deleteCount.error ||
-						'Failed to delete all items Belongs to user',
-					'Failed to delete all items Belongs to user',
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		sendCookies(userId, res);
-		storeSession(userId, userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.noContentCode,
-				'Successfully deleted all items Belongs to user',
-				deleteCount
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to delete all items Belongs to user',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
 export const deleteItemBelongsTo = async (req, res, next) => {
 	try {
 		const { itemId } = req.params;
 		const { userId, userRole } = req.session;
 
-		const deleteCount = await removeItemUserHas(userId, itemId);
+		const { deletedItem, meta } = await removeItemUserHas(userId, itemId);
 
-		if (!deleteCount)
+		if (!deletedItem)
 			return next(
 				new ErrorResponse(
 					'Item not found',
@@ -537,12 +604,11 @@ export const deleteItemBelongsTo = async (req, res, next) => {
 				)
 			);
 
-		if (deleteCount.error)
+		if (deletedItem.error)
 			return next(
 				new ErrorResponse(
-					deleteCount.error ||
-						'Failed to delete item Belongs to user',
-					'Failed to delete item Belongs to user',
+                    'Failed to delete item Belongs to user '+deletedItem.error,
+					'Failed to delete item Belongs to user '+deletedItem.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -553,8 +619,9 @@ export const deleteItemBelongsTo = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully deleted item Belongs to user',
-				deleteCount
+				'Successfully Deleted Item Belongs to User',
+				deletedItem,
+                meta
 			)
 		);
 	} catch (error) {
@@ -568,18 +635,17 @@ export const deleteItemBelongsTo = async (req, res, next) => {
 	}
 };
 
-export const deleteItemById = async (req, res, next) => {
+export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 	try {
-		const { itemId } = req.params;
 		const { userId, userRole } = req.session;
 
-		const deleteCount = await deleteItemById(itemId);
+		const { deletedItems, meta} = await removeAllItemsUserHas(userId);
 
-		if (deleteCount.error)
+		if (deletedItems.error)
 			return next(
 				new ErrorResponse(
-					deleteCount.error || 'Failed to delete item by id',
-					'Failed to delete item by id',
+                    'Failed to delete all items Belongs to user '+deletedItems.error,
+					'Failed to delete all items Belongs to user '+deletedItems.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -590,53 +656,20 @@ export const deleteItemById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully deleted item by id',
-				deleteCount
+				'Successfully Deleted All Items Belongs to User',
+				deletedItems,
+                meta
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
 				error,
-				'Failed to delete item by id',
+				'Failed to delete all items Belongs to user',
 				statusCode.internalServerErrorCode
 			)
 		);
 	}
 };
 
-export const deleteAllItems = async (req, res, next) => {
-	try {
-		const { userId, userRole } = req.session;
 
-		const deleteCount = await removeAllItems();
-
-		if (deleteCount.error)
-			return next(
-				new ErrorResponse(
-					deleteCount.error || 'Failed to delete all items',
-					'Failed to delete all items',
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		sendCookies(userId, res);
-		storeSession(userId, userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully deleted all items',
-				deleteCount
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to delete all items',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};

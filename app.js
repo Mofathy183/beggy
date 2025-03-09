@@ -8,11 +8,11 @@ import expressSanitizer from 'express-sanitizer';
 import { sessionConfig } from './src/config/env.js';
 import {
 	limter,
-	croeMiddleware,
-	errorMiddlewareHandler,
+	corsMiddleware,
 	routeErrorHandler,
 	csrfProtection,
 	AppResponse,
+    csrfMiddleware,
 } from './src/middlewares/appMiddleware.js';
 import rootRoute from './src/api/routes/rootRouter.js';
 import passport from './src/config/passport.js';
@@ -27,31 +27,29 @@ app.use(express.urlencoded({ extended: true }));
 // Required to parse CSRF token from cookies
 app.use(cookieParser());
 
-// Enable CSRF protection with cookies
-app.use(csrfProtection);
-
-// Data Santitization against XSS
-app.use(expressSanitizer());
 
 // Middleware
 
+// Enable CSRF protection with cookies
+app.use(csrfProtection);
+
+// CSRF Error middleware
+app.use(csrfMiddleware)
+
 // security middle
 app.use(helmet());
-
-// Serve static files from the public directory
-app.use(express.static('public'));
 
 // Logger middleware (morgan) to log requests to the console.
 app.use(morgan('dev'));
 
 // CORS middleware (Cross-Origin Resource Sharing) to allow requests from different origins.
-app.use(croeMiddleware);
+app.use(corsMiddleware);
 
 // Rate limiting middleware (express-rate-limit) to limit the number of requests from the same IP address.
 app.use(limter);
 
-// Error handling middleware
-app.use(errorMiddlewareHandler);
+// Data Santitization against XSS
+app.use(expressSanitizer());
 
 // Session middleware
 app.use(session(sessionConfig));
@@ -63,18 +61,26 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
+
 // Routes
 app.use('/api/beggy', rootRoute);
+app.post("/submit", (req, res) => {
+    res.status(200).json({
+        data: req.body.data,
+        message: "Form submitted successfully!"
+    })
+})
 
 // Handler undfined Routes
 app.all('*', routeErrorHandler);
 
-// Serve static files from the public directory
-app.use('/upload', express.static('public'));
 
 //* Handle Response from classes ErrorResponse and SuccessResponse
 app.use(AppResponse);
 
+// Serve static files from the public directory
+app.use('/upload', express.static('public'));
+
+
 export default app;
 
-//http://localhost:3000/api/beggy/auth/reset-password/7621c73309c96dcae21f9c61251436b71d29aa5ae18b0f3fd553d5cffdaaba4c

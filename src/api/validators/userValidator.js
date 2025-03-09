@@ -41,6 +41,12 @@ export const userSchema = Joi.object({
 			"Please Enter your Country\nAnd Don't add any special characters or numbers"
 		),
 
+	city: Joi.string()
+		.pattern(stringRegExp)
+		.message(
+			"Please Enter your City\nAnd Don't add any special characters or numbers"
+		),
+
 	gender: Joi.string()
 		.valid(...Object.values(Gender))
 		.uppercase(),
@@ -82,6 +88,12 @@ export const modifyUserSchema = Joi.object({
 			"Please Enter your Country\nAnd Don't add any special characters or numbers"
 		),
 
+    city: Joi.string()
+        .pattern(stringRegExp)
+        .message(
+            "Please Enter your City\nAnd Don't add any special characters or numbers"
+        ),
+
 	gender: Joi.string()
 		.valid(...Object.values(Gender))
 		.uppercase(),
@@ -89,9 +101,11 @@ export const modifyUserSchema = Joi.object({
 	profilePicture: Joi.string(),
 });
 
-export const roleSchema = Joi.string()
+export const roleSchema = Joi.object({
+    role: Joi.string()
 	.valid(...Object.values(Role))
-	.uppercase();
+	.uppercase()
+})
 
 //*######################################{UUID Validators}############################################
 

@@ -10,17 +10,28 @@ model Bags {
     maxWeight Float
     weight    Float
     material  Material?
-    feeatures BagFeature[]
+    features  BagFeature[]
     createdAt DateTime     @default(now()) @map("created_at")
     updatedAt DateTime     @updatedAt @map("updated_at")
 
-    //* links user to has bag 
-    userId String @map("user_id")
-    User   User   @relation(fields: [userId], references: [id])
+    userId String? @map("user_id")
+    user   User?   @relation(fields: [userId], references: [id])
 
-    //* make the bag can have multiple items ([] this stablsh one to many relationship)
-    items Items[]
+    bagItems BagItems[]
 
-    //* table name
     @@map("bags")
+}
+
+model BagItems {
+    bagId  String @map("bag_id")
+    itemId String @map("item_id")
+
+    bag  Bags  @relation(fields: [bagId], references: [id], onDelete: Cascade)
+    item Items @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@id([bagId, itemId]) // Composite Primary Key
+    @@map("bag_items") // Table name in DB
 }

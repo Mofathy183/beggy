@@ -1,8 +1,7 @@
-import { UserModel } from '../../prisma/prisma.js';
+import prisma from '../../prisma/prisma.js';
 import {
 	birthOfDate,
 	haveProfilePicture,
-	passwordChangeAt,
 } from '../utils/userHelper.js';
 import { hashingPassword } from '../utils/hash.js';
 import { ErrorHandler } from '../utils/error.js';
@@ -18,6 +17,7 @@ export const addUser = async (body) => {
 			gender,
 			birth,
 			country,
+            city,
 			profilePicture,
 		} = body;
 
@@ -32,7 +32,7 @@ export const addUser = async (body) => {
 		const hashPassword = await hashingPassword(password);
 
 		// Create new user in Prisma
-		const newUser = await UserModel.create({
+		const newUser = await prisma.user.create({
 			data: {
 				firstName,
 				lastName,
@@ -41,6 +41,7 @@ export const addUser = async (body) => {
 				gender: gender,
 				birth: birthOfDate(birth),
 				country,
+                city,
 				profilePicture: haveProfilePicture(profilePicture),
 			},
 			include: {
@@ -72,7 +73,7 @@ export const addUser = async (body) => {
 			return new ErrorHandler(
 				'prisma',
 				newUser.error,
-				'User already exists'
+				'User already exists '+ newUser.error.message
 			);
 
 		return newUser;
@@ -83,16 +84,12 @@ export const addUser = async (body) => {
 
 export const getUserPublicProfile = async (id) => {
 	try {
-		const user = await UserModel.findUnique({
+		const user = await prisma.user.findUnique({
 			where: {
-				id: id,
-				isActive: true, // Only return active users
-			},
-			include: {
-				suitcases: true,
-				bags: true,
-				items: true,
-				account: true,
+                id: id,
+                AND: {
+                    isActive: true, // Only return active users
+                }
 			},
 			select: {
 				id: true,
@@ -102,18 +99,30 @@ export const getUserPublicProfile = async (id) => {
 				email: true,
 				gender: true,
 				birth: true,
+                age: true,
 				country: true,
+                city: true,
 				profilePicture: true,
+                suitcases: true,
+				bags: true,
+				items: true,
+				account: true,
 				createdAt: true,
 				updatedAt: true,
 			},
 		});
 
-		if (!user || user.error)
+        if (!user) return new ErrorHandler(
+            'user',
+            'User not found',
+            'User not found in the database'
+        )
+
+		if (!user.error)
 			return new ErrorHandler(
-				'user',
-				'User not found' || user.error,
-				'User not found in the database' || user.error.message
+				'prisma',
+				'User not found '+user.error,
+				'User not found in the database '+user.error.message
 			);
 
 		return user;
@@ -128,7 +137,7 @@ export const getUserPublicProfile = async (id) => {
 
 export const getUserById = async (id) => {
 	try {
-		const user = await UserModel.findUnique({
+		const user = await prisma.user.findUnique({
 			where: {
 				id: id,
 			},
@@ -145,12 +154,18 @@ export const getUserById = async (id) => {
 			},
 		});
 
-		if (!user || user.error)
+		if (!user)
 			return new ErrorHandler(
 				'User null',
-				'User not found' || user.error,
+				'User not found',
 				'There is no user with that id'
 			);
+
+        if (user.error) return new ErrorHandler(
+            'prisma',
+            user.error,
+            'User not found '+user.error.message
+        )
 
 		return user;
 	} catch (error) {
@@ -166,7 +181,7 @@ export const getAllPublicUsers = async (pagination, searchFilter) => {
 	try {
 		const { page, limit, offset } = pagination;
 
-		const users = await UserModel.findMany({
+		const users = await prisma.user.findMany({
 			where: { OR: searchFilter, isActive: true },
 			omit: {
 				password: true,
@@ -176,7 +191,6 @@ export const getAllPublicUsers = async (pagination, searchFilter) => {
 				role: true,
 				gender: true,
 				birth: true,
-				country: true,
 				email: true,
 				createdAt: true,
 				updatedAt: true,
@@ -189,24 +203,23 @@ export const getAllPublicUsers = async (pagination, searchFilter) => {
 			take: limit,
 		});
 
-		if (!users || users.length === 0)
-			return new ErrorHandler(
-				'users',
-				'No users found',
-				'No users found in the database'
-			);
+        if (users.error) return new ErrorHandler(
+            'prisma',
+            users.error,
+            'Failed to get all public users '+users.error.message
+        )
 
-		const totalCount = users.length;
+		const totalCount = await prisma.user.count({ where: { isActive: true } });
 
 		const meta = {
-			totalCount,
-			page,
-			limit,
-			offset,
-			searchFilter,
+			total: totalCount,
+			page: page,
+			limit: limit,
+			searchFilter: searchFilter,
+			orderBy: orderBy,
 		};
 
-		return { users, meta };
+		return { users: users, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -220,7 +233,7 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 	try {
 		const { page, limit, offset } = pagination;
 
-		const users = await UserModel.findMany({
+		const users = await prisma.user.findMany({
 			where: { OR: searchFilter },
 			include: {
 				suitcases: true,
@@ -241,12 +254,12 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 
 		if (users.error)
 			return new ErrorHandler(
-				'Users null',
-				'No users found' || users.error,
-				'No users found in the database'
+				'prsima',
+				'No users found '+ users.error,
+				'No users found in the database '+ users.error.message
 			);
 
-		const totalUsers = await UserModel.count({ where: { isActive: true } });
+		const totalUsers = await prisma.user.count({ where: { isActive: true } });
 
 		if (totalUsers.error)
 			return new ErrorHandler(
@@ -263,7 +276,7 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 			orderBy: orderBy,
 		};
 
-		return { users, meta };
+		return { users: users, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
@@ -278,10 +291,10 @@ export const changeUserRole = async (id, body) => {
 	try {
 		const { role } = body;
 
-		const updatedUser = await UserModel.update({
+		const updatedUser = await prisma.user.update({
 			where: { id: id },
 			data: {
-				role: role.toUpperCase(),
+				role: role,
 			},
 			omit: {
 				password: true,
@@ -290,7 +303,6 @@ export const changeUserRole = async (id, body) => {
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
-				role: true,
 				isActive: true,
 			},
 		});
@@ -306,7 +318,7 @@ export const changeUserRole = async (id, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedUser.error,
-				'User cannot be modified'
+				'User cannot be modified '+ updatedUser.error.message
 			);
 
 		return updatedUser;
@@ -321,7 +333,7 @@ export const changeUserRole = async (id, body) => {
 
 export const removeUser = async (id) => {
 	try {
-		const deleteUser = await UserModel.delete({
+		const deleteUser = await prisma.user.delete({
 			where: { id: id },
 			omit: {
 				password: true,
@@ -346,7 +358,7 @@ export const removeUser = async (id) => {
 			return new ErrorHandler(
 				'prisma',
 				deleteUser.error,
-				'User cannot be deleted for datebase'
+				'User cannot be deleted for datebase '+deleteUser.error.message
 			);
 
 		return deleteUser;
@@ -361,20 +373,13 @@ export const removeUser = async (id) => {
 
 export const removeAllUsers = async () => {
 	try {
-		const removeAll = await UserModel.deleteMany({ where: {} });
-
-		if (!removeAll || removeAll.count === 0)
-			return new ErrorHandler(
-				'Delete null zero',
-				'No users to delete',
-				'No users found in the database to delete'
-			);
+		const removeAll = await prisma.user.deleteMany();
 
 		if (removeAll.error)
 			return new ErrorHandler(
 				'prisma',
 				removeAll.error,
-				'Connot remove all users for database'
+				'Connot remove all users for database '+removeAll.error.message
 			);
 
 		return removeAll;
@@ -386,25 +391,3 @@ export const removeAllUsers = async () => {
 		);
 	}
 };
-
-//* Test the function
-// const body = {
-//     "firstName": "Mark",
-//     "lastName": "Rose",
-//     "email": "target@example.com",
-//     "password": "P@assW00rd",
-//     "confirmPassword": "P@assW00rd",
-//     "gender": "male",
-//     "birth": "1998-02-08",
-//     "country": "Span"
-// };
-
-// (async () => {
-//     try {
-//         const user = await getAllUsers({page:1, limit:10, offset:0});
-//         console.log(user);
-//     }
-//     catch (error) {
-//         console.error("Error creating user:", error);
-//     }
-// })();

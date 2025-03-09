@@ -34,9 +34,12 @@ export const bagSchema = Joi.object({
 		.valid(...Object.values(Material))
 		.uppercase(),
 
-	feeatures: Joi.string()
-		.valid(...Object.values(BagFeature))
-		.uppercase(),
+	features: Joi.array()
+    .items(
+        Joi.string()
+        .valid(...Object.values(BagFeature))
+        .uppercase()
+    )
 });
 
 export const bagModifySchema = Joi.object({
@@ -68,10 +71,22 @@ export const bagModifySchema = Joi.object({
 		.valid(...Object.values(Material))
 		.uppercase(),
 
-	feeatures: Joi.string()
-		.valid(...Object.values(BagFeature))
-		.uppercase(),
+	features: Joi.array()
+    .items(
+        Joi.string()
+        .valid(...Object.values(BagFeature))
+        .uppercase()
+    ),
+
+	removeFeatures: Joi.array()
+    .items(
+        Joi.string()
+        .valid(...Object.values(BagFeature))
+        .uppercase()
+    )
 });
+
+
 
 export const bagShcemaMiddleware = Joi.object({
 	type: Joi.string()

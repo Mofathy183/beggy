@@ -32,7 +32,7 @@ export const createUser = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					newUser.error,
-					'Invalid user data',
+					'Invalid user data '+ newUser.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -75,7 +75,7 @@ export const findUserPublicProfile = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					user.error,
-					"Couldn't find user by this id",
+					"Couldn't find user by this id "+user.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -117,7 +117,7 @@ export const findUserById = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					user.error,
-					"Couldn't find user by this id",
+					"Couldn't find user by this id "+user.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -162,7 +162,7 @@ export const findAllPublicUsers = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					users.error,
-					"Couldn't find all users",
+					"Couldn't find all users "+users.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -200,7 +200,7 @@ export const findAllUsers = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					users.error,
-					"Couldn't find all users",
+					"Couldn't find all users "+users.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -245,8 +245,8 @@ export const changeUserRoleById = async (req, res, next) => {
 		if (updatedUser.error)
 			return next(
 				new ErrorResponse(
-					userUpdated.error,
-					"Couldn't modify user by this id",
+					updatedUser.error,
+					"Couldn't modify user by this id "+updatedUser.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -254,7 +254,7 @@ export const changeUserRoleById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'User modified successfully',
+				'Change User Role Successfully',
 				updatedUser
 			)
 		);
@@ -288,7 +288,7 @@ export const deleteUserById = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					userDeleted.error,
-					"Couldn't delete user by this id",
+					"Couldn't delete user by this id "+userDeleted.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -328,7 +328,7 @@ export const deleteAllUsers = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					usersDeleted.error,
-					"Couldn't delete all users",
+					"Couldn't delete all users "+ usersDeleted.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);

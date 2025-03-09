@@ -3,6 +3,8 @@ import {
 	VReqToUUID,
 	VReqToCreateSuitcase,
 	VReqToModifySuitcase,
+    VReqToBodyItemId,
+    VReqToBodyItemsIds
 } from '../../middlewares/validateRequest.js';
 import {
 	headersMiddleware,
@@ -32,6 +34,8 @@ import {
 	modifySuitcaseBelongsToUser,
 	deleteSuitcaseBelongsToUserById,
 	deleteAllSuitcasesBelongsToUser,
+    createItemForUserSuitcase,
+    createItemsForUserSuitcase
 	//*====={suitcases Router}=========
 } from '../controllers/suitcaseController.js';
 
@@ -158,9 +162,27 @@ suitcaseRoute.post(
 	createSuitcaseForUser
 );
 
-//* route for create suitcases for User => POST (params id) user muet by login
-//* POST "/user/multiple" → Create multiple suitcases for a user
-//* Create multiple suitcases for a user
+//* route for create item for User suitcase => POST (body itemId) (params id) user muet by login
+//* POST "/user/item/:suitcaseId" → Create an item for user suitcase
+//* Create a single item for a user suitcase
+suitcaseRoute.post(
+    '/user/item/:suitcaseId',
+    VReqToHeaderToken,
+    headersMiddleware,
+    VReqToBodyItemId,
+    createItemForUserSuitcase
+);
+
+//* route for create items for User suitcase => POST (params id) user muet by login
+//* POST "/user/items/:suitcaseId" → Create multiple items for a user suitcase
+//* Create multiple items for a user suitcase
+suitcaseRoute.post(
+    '/user/items/:suitcaseId',
+    VReqToHeaderToken,
+    headersMiddleware,
+    VReqToBodyItemsIds,
+    createItemsForUserSuitcase
+);
 
 //* route for replace (update) suitcase user has by id of the suitcase => PUT param(id)
 //* PUT /user/:suitcaseId → Replace a user’s suitcase

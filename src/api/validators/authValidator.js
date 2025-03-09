@@ -73,7 +73,7 @@ export const resetPasswordScheme = Joi.object({
 });
 
 export const updatePasswordScheme = Joi.object({
-	oldPassword: Joi.string()
+	currentPassword: Joi.string()
 		.min(8)
 		.pattern(new RegExp(passwordRegExp))
 		.message(

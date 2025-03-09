@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { AIConfig } from '../config/env.js';
+import { AIConfig, openweatherApiConfig } from '../config/env.js';
 import { ErrorHandler } from '../utils/error.js';
+import prisma from '../../prisma/prisma.js';
 
 const jsonRegExp = /```json\n([\s\S]+?)\n```/;
 
@@ -55,17 +56,38 @@ export const itemAutoFilling = async (body) => {
 
 		const output = response.data.choices[0].message.content;
 
+        if (!output) {
+            return new ErrorHandler(
+                'response',
+                'Empty response from AI API',
+                'AI API returned an empty response'
+            );
+        }
+
 		const jsonMatch = jsonRegExp.exec(output);
 
 		if (!jsonMatch)
 			return new ErrorHandler(
-				'json',
-				'Failed to extract JSON output from AI response',
-				'Failed to extract JSON output from AI response'
-			);
+                'json',
+                'Failed to extract JSON output from AI response',
+                'Failed to extract JSON output from AI response'
+            );
 
-		const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
-		const volume = Number(parseFloat(jsonMatch.volume).toFixed(2));
+        let jsonParsed;
+        try {
+            jsonParsed = JSON.parse(jsonMatch[1].trim());
+        }
+        catch (err) {
+            console.error("Failed to parse JSON output from AI response", err);
+            return new ErrorHandler(
+                'json',
+                'Failed to parse JSON output from AI response',
+                'Failed to parse JSON output from AI response'
+            )
+        }
+
+		const weight = Number(parseFloat(jsonParsed.weight).toFixed(2));
+		const volume = Number(parseFloat(jsonParsed.volume).toFixed(2));
 
 		if (isNaN(weight) || isNaN(volume))
 			return new ErrorHandler(
@@ -88,7 +110,7 @@ export const bagAutoFilling = async (body) => {
 	try {
 		const { name, type, size, material, feature } = body;
 
-		if (!name || !type || !size || !material || !feature)
+		if (!name || !type || !size)
 			return new ErrorHandler(
 				'input',
 				'Missing required fields: name, type, size, material, and feature',
@@ -139,18 +161,39 @@ export const bagAutoFilling = async (body) => {
 
 		const output = response.data.choices[0].message.content;
 
+        if (!output) {
+            return new ErrorHandler(
+                'response',
+                'Empty response from AI API',
+                'AI API returned an empty response'
+            );
+        }
+
 		const jsonMatch = jsonRegExp.exec(output);
 
 		if (!jsonMatch)
 			return new ErrorHandler(
-				'json',
-				'Failed to extract JSON output from AI response',
-				'Failed to extract JSON output from AI response'
-			);
+                'json',
+                'Failed to extract JSON output from AI response',
+                'Failed to extract JSON output from AI response'
+            );
 
-		const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
-		const maxWeight = Number(parseFloat(jsonMatch.maxWeight).toFixed(2));
-		const capacity = Number(parseFloat(jsonMatch.capacity).toFixed(2));
+        let jsonParsed;
+        try {
+            jsonParsed = JSON.parse(jsonMatch[1].trim());
+        }
+        catch (err) {
+            console.error("Failed to parse JSON output from AI response", err);
+            return new ErrorHandler(
+                'json',
+                'Failed to parse JSON output from AI response',
+                'Failed to parse JSON output from AI response'
+            )
+        }
+
+		const weight = Number(parseFloat(jsonParsed.weight).toFixed(2));
+		const maxWeight = Number(parseFloat(jsonParsed.maxWeight).toFixed(2));
+		const capacity = Number(parseFloat(jsonParsed.capacity).toFixed(2));
 
 		if (isNaN(weight) || isNaN(maxWeight) || isNaN(capacity))
 			return new ErrorHandler(
@@ -227,18 +270,39 @@ export const suitcaseAutoFilling = async (body) => {
 
 		const output = response.data.choices[0].message.content;
 
+        if (!output) {
+            return new ErrorHandler(
+                'response',
+                'Empty response from AI API',
+                'AI API returned an empty response'
+            );
+        }
+
 		const jsonMatch = jsonRegExp.exec(output);
 
 		if (!jsonMatch)
 			return new ErrorHandler(
-				'json',
-				'Failed to extract JSON output from AI response',
-				'Failed to extract JSON output from AI response'
-			);
+                'json',
+                'Failed to extract JSON output from AI response',
+                'Failed to extract JSON output from AI response'
+            );
 
-		const capacity = Number(parseFloat(jsonMatch.capacity).toFixed(2));
-		const maxWeight = Number(parseFloat(jsonMatch.maxWeight).toFixed(2));
-		const weight = Number(parseFloat(jsonMatch.weight).toFixed(2));
+        let jsonParsed;
+        try {
+            jsonParsed = JSON.parse(jsonMatch[1].trim());
+        }
+        catch (err) {
+            console.error("Failed to parse JSON output from AI response", err);
+            return new ErrorHandler(
+                'json',
+                'Failed to parse JSON output from AI response',
+                'Failed to parse JSON output from AI response'
+            )
+        }
+
+		const capacity = Number(parseFloat(jsonParsed.capacity).toFixed(2));
+		const maxWeight = Number(parseFloat(jsonParsed.maxWeight).toFixed(2));
+		const weight = Number(parseFloat(jsonParsed.weight).toFixed(2));
 
 		if (isNaN(capacity) || isNaN(maxWeight) || isNaN(weight))
 			return new ErrorHandler(
@@ -256,3 +320,85 @@ export const suitcaseAutoFilling = async (body) => {
 		);
 	}
 };
+
+export const getLocation = async (userIp) => {
+    try {
+        // If IP is local or private, get the public IP
+        if (userIp.startsWith("192.168.") || userIp.startsWith("10.") || userIp === "127.0.0.1") {
+            const ipResponse = await axios.get("https://api64.ipify.org?format=json");
+            userIp = ipResponse.data.ip;
+        }
+
+        const geoResponse = await axios.get(`http://ip-api.com/json/${userIp}`);
+        let { city, country } = geoResponse.data;
+
+        // Validate the response
+        if (!city || !country) {
+            throw new ErrorHandler(
+                'ip-api',
+                'Failed to retrieve location data from IP geolocation API',
+                'Failed to retrieve location data from IP geolocation API'
+            );
+        }
+
+        // Format the response (Capitalize first letter)
+        city = city.charAt(0).toUpperCase() + city.slice(1);
+        country = country.charAt(0).toUpperCase() + country.slice(1);
+
+        return { city, country };
+    } 
+    catch (error) {
+        throw new ErrorHandler(
+            'Catch axios',
+            error,
+            'Failed to fetch location data from IP geolocation API '+ error.message
+        );
+    }
+};
+
+export const getWeather = async (userId) => {
+    try {  
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select : {
+                city: true,
+                country: true
+            }
+        });
+
+        if (!user) return new ErrorHandler(
+            "User not found",
+            "User not found",
+            "There no user with that id"
+        );
+
+        if (!user.city && !user.country) return new ErrorHandler(
+            "City and country must be provided",
+            "Please provide a city and country to get weather",
+            "Please provide a city and country to get weather"
+        );
+
+        const { baseURL, apiKey, units } = openweatherApiConfig
+
+        const url = `${baseURL}?q=${user.city},${user.country}&appid=${apiKey}&units=${units}`;
+
+        const response = await axios.get(url);
+
+        if (!response) return new ErrorHandler(
+            'OpenWeatherMap API',
+            'Failed to fetch weather data from OpenWeatherMap',
+            'Failed to fetch weather data from OpenWeatherMap'
+        )
+
+        return response.data
+    }
+
+    catch (error) {
+        return new ErrorHandler(
+            'Catch axios',
+            error,
+            'Failed to fetch weather data from OpenWeatherMap'
+        );
+    }
+}
+

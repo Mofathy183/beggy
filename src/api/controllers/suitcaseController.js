@@ -16,6 +16,8 @@ import {
 	modifySuitcaseUserHas,
 	removeSuitcaseUserHasById,
 	removeAllSuitcasesUserHas,
+    addItemToUserSuitcase,
+    addItemsToUserSuitcase
 } from '../../services/suitcaseService.js';
 
 export const getAllSuitcasesByQuery = async (req, res, next) => {
@@ -422,6 +424,104 @@ export const createSuitcaseForUser = async (req, res, next) => {
 		);
 	}
 };
+
+export const createItemForUserSuitcase = async (req, res, next) => {
+    try {
+        const { userId, userRole } = req.session;
+        const { suitcaseId } = req.params;
+        const { body } = req;
+
+        const newItem = await addItemToUserSuitcase(userId, suitcaseId, body);
+
+        if (!newItem)
+            return next(
+                new ErrorResponse(
+                    'Failed to create item for suitcase for user',
+                    'Failed to create item for suitcase for user',
+                    statusCode.badRequestCode
+                )
+            );
+
+        if (newItem.error)
+            return next(
+                new ErrorResponse(
+                    newItem.error,
+                    'Failed to create item for suitcase for user',
+                    statusCode.badRequestCode
+                )
+            );
+
+        sendCookies(userId, res);
+        storeSession(userId, userRole, req);
+
+        return next(
+            new SuccessResponse(
+                statusCode.createdCode,
+                'Item created successfully and added to suitcase for user',
+                newItem
+            )
+        );
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to create item for suitcase for user',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
+
+export const createItemsForUserSuitcase = async (req, res, next) => {
+    try {
+        const { userId, userRole } = req.session;
+        const { suitcaseId } = req.params;
+        const { body } = req;
+
+        const newItems = await addItemsToUserSuitcase(userId, suitcaseId, body);
+
+        if (!newItems)
+            return next(
+                new ErrorResponse(
+                    'Failed to create items for suitcase for user',
+                    'Failed to create items for suitcase for user',
+                    statusCode.badRequestCode
+                )
+            );
+
+        if (newItems.error)
+            return next(
+                new ErrorResponse(
+                    newItems.error,
+                    'Failed to create items for suitcase for user',
+                    statusCode.badRequestCode
+                )
+            );
+
+        sendCookies(userId, res);
+        storeSession(userId, userRole, req);
+
+        return next(
+            new SuccessResponse(
+                statusCode.createdCode,
+                'Items created successfully and added to suitcase for user',
+                newItems
+            )
+        );
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to create items for suitcase for user',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
 
 export const replaceSuitcaseBelongsToUser = async (req, res, next) => {
 	try {

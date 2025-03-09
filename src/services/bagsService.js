@@ -1,67 +1,53 @@
 import { ErrorHandler } from '../utils/error.js';
-import { BagsModel } from '../../prisma/prisma.js';
+import prisma from '../../prisma/prisma.js';
 
 export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 	try {
 		const { page, limit, offset } = pagination;
 
-		const bags = await BagsModel.findMany({
-			where: { OR: searchFilter },
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWeight: true,
-				weight: true,
-				material: true,
-				feeatures: true,
-				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						age: true,
-					},
-				},
-				items: {
-					select: {
-						id: true,
-						name: true,
-						category: true,
-						quantity: true,
-						weight: true,
-						volume: true,
-						color: true,
-						isFragile: true,
-					},
-				},
-				skip: offset,
-				take: limit,
-				orderBy: orderBy,
-			},
-		});
-
-		if (!bags)
-			return new ErrorHandler(
-				'bags not found',
-				'Failed to find bags in the database',
-				'prisma Error'
-			);
+        const bags = await prisma.bags.findMany({
+            where: searchFilter,
+            select: {
+                id: true,
+                name: true,
+                type: true,
+                color: true,
+                size: true,
+                capacity: true,
+                maxWeight: true,
+                weight: true,
+                material: true,
+                features: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true,
+                user: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        displayName: true
+                    },
+                },
+                bagItems: true,
+            },
+            take: limit,
+            skip: offset,
+            orderBy: orderBy,
+        })
 
 		if (bags.error)
 			return new ErrorHandler(
 				'prisma',
 				bags.error,
-				'Failed to find bags in the database'
+				'Failed to find bags in the database '+bags.error.message
 			);
 
+        const totalCount = await prisma.bags.count()
+
 		const meta = {
-			totalCount: bags.length,
+			totalCount: totalCount,
+            totalFind: bags.length,
 			page: page,
 			limit: limit,
 			offset: offset,
@@ -69,7 +55,7 @@ export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 			orderBy: orderBy,
 		};
 
-		return { bags, meta };
+		return { bags: bags, meta: meta };
 	} catch (error) {
 		new ErrorHandler('catch', error, 'Failed to get all bags');
 	}
@@ -77,12 +63,12 @@ export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 
 export const findBagById = async (bagId) => {
 	try {
-		const bag = await BagsModel.findUnique({
+		const bag = await prisma.bags.findUnique({
 			where: { id: bagId },
 			omit: {
-				items: true,
 				user: true,
 				userId: true,
+                bagItems: true
 			},
 		});
 
@@ -97,10 +83,17 @@ export const findBagById = async (bagId) => {
 			return new ErrorHandler(
 				'prisma',
 				bag.error,
-				'Failed to find bag in the database'
+				'Failed to find bag in the database '+bag.error.message
 			);
 
-		return bag;
+        const totalCount = await prisma.bags.count();
+
+        const meta = {
+            totalCount: totalCount,
+            totalFind: bag ? 1 : 0,
+        }
+
+		return { bag: bag, meta: meta };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to get bag by id');
 	}
@@ -117,10 +110,10 @@ export const replaceBagResource = async (bagId, body) => {
 			maxWeight,
 			weight,
 			material,
-			feeatures,
+			features,
 		} = body;
 
-		const bagUpdate = await BagsModel.update({
+		const bagUpdate = await prisma.bags.update({
 			where: { id: bagId },
 			data: {
 				name: name,
@@ -131,11 +124,11 @@ export const replaceBagResource = async (bagId, body) => {
 				maxWeight: maxWeight,
 				weight: weight,
 				material: material,
-				feeatures: feeatures,
+				features: features,
 			},
 			omit: {
 				user: true,
-				items: true,
+				bagItems: true,
 			},
 		});
 
@@ -150,7 +143,7 @@ export const replaceBagResource = async (bagId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				bagUpdate.error,
-				'Failed to update bag in the database'
+				'Failed to update bag in the database '+bagUpdate.error.message
 			);
 
 		return bagUpdate;
@@ -174,10 +167,10 @@ export const modifyBagResource = async (bagId, body) => {
 			maxWeight,
 			weight,
 			material,
-			feeatures,
+			features,
 		} = body;
 
-		const bagUpdate = await BagsModel.update({
+		const bagUpdate = await prisma.bags.update({
 			where: { id: bagId },
 			data: {
 				name: name || undefined,
@@ -188,11 +181,11 @@ export const modifyBagResource = async (bagId, body) => {
 				maxWeight: maxWeight || undefined,
 				weight: weight || undefined,
 				material: material || undefined,
-				feeatures: feeatures || undefined,
+				features: features || undefined,
 			},
 			omit: {
 				user: true,
-				items: true,
+				bagItems: true,
 			},
 		});
 
@@ -207,7 +200,7 @@ export const modifyBagResource = async (bagId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				bagUpdate.error,
-				'Failed to update bag in the database'
+				'Failed to update bag in the database '+bagUpdate.error.message
 			);
 
 		return bagUpdate;
@@ -222,11 +215,11 @@ export const modifyBagResource = async (bagId, body) => {
 
 export const removeBagById = async (bagId) => {
 	try {
-		const bagDelete = await BagsModel.delete({
+		const bagDelete = await prisma.bags.delete({
 			where: { id: bagId },
 			omit: {
 				user: true,
-				items: true,
+				bagItems: true,
 			},
 		});
 
@@ -241,10 +234,17 @@ export const removeBagById = async (bagId) => {
 			return new ErrorHandler(
 				'prisma',
 				bagDelete.error,
-				'Failed to delete bag in the database'
+				'Failed to delete bag in the database '+bagDelete.error.message
 			);
 
-		return bagDelete;
+        const totalCount = await prisma.bags.count()
+
+        const meta = {
+            totalCount: totalCount,
+            totalDelete: bagDelete ? 1 : 0,
+        };
+
+		return { bagDelete: bagDelete, meta: meta };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to remove bag by id');
 	}
@@ -252,14 +252,7 @@ export const removeBagById = async (bagId) => {
 
 export const removeAllBags = async () => {
 	try {
-		const deleteCount = await BagsModel.deleteMany({ where: {} });
-
-		if (!deleteCount || deleteCount.count === 0)
-			return new ErrorHandler(
-				'Bags not deleted',
-				'Delete null zero',
-				'No bags to delete'
-			);
+		const deleteCount = await prisma.bags.deleteMany({ where: {} });
 
 		if (deleteCount.error)
 			return new ErrorHandler(
@@ -268,23 +261,26 @@ export const removeAllBags = async () => {
 				'Failed to delete all bags from the database'
 			);
 
-		return deleteCount;
+        const meta = {
+            totalCount: deleteCount.count,
+            totalDelete: deleteCount.count,
+        };
+
+		return { deleteCount: deleteCount, meta: meta };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to remove all bags');
 	}
 };
 
-export const findBagsUserHas = async (
-	userId,
-	searchFilter,
-	pagination,
-	orderBy
-) => {
-	try {
-		const { page, limit, offset } = pagination;
 
-		const userBags = await BagsModel.findMany({
-			where: { userId: userId, OR: searchFilter },
+//*========================={Bags Route For User}=====================================
+
+export const findBagsUserHas = async (userId, searchFilter, pagination, orderBy) => {
+    try{
+        const { page, limit, offset } = pagination;
+
+		const userBags = await prisma.bags.findMany({
+            where: { userId: userId, ...searchFilter },
 			select: {
 				id: true,
 				name: true,
@@ -295,7 +291,7 @@ export const findBagsUserHas = async (
 				maxWeight: true,
 				weight: true,
 				material: true,
-				feeatures: true,
+				features: true,
 				userId: true,
 				user: {
 					select: {
@@ -303,21 +299,11 @@ export const findBagsUserHas = async (
 						firstName: true,
 						lastName: true,
 						displayName: true,
+                        birth: true,
 						age: true,
 					},
 				},
-				items: {
-					select: {
-						id: true,
-						name: true,
-						category: true,
-						quantity: true,
-						weight: true,
-						volume: true,
-						color: true,
-						isFragile: true,
-					},
-				},
+                bagItems: true 
 			},
 			skip: offset,
 			take: limit,
@@ -335,11 +321,14 @@ export const findBagsUserHas = async (
 			return new ErrorHandler(
 				'prisma',
 				userBags.error,
-				'Failed to find bags in the database'
+				'Failed to find bags in the database '+ userBags.error.message
 			);
 
+        const totalCount = await prisma.bags.count({ where: { userId: userId } });
+
 		const meta = {
-			totalCount: userBags.length,
+			totalCount: totalCount,
+            totalFind: userBags.length,
 			page: page,
 			limit: limit,
 			offset: offset,
@@ -347,7 +336,8 @@ export const findBagsUserHas = async (
 			orderBy: orderBy,
 		};
 
-		return { userBags, meta };
+
+		return { userBags: userBags, meta: meta };
 	} catch (error) {
 		new ErrorHandler('catch', error, 'Failed to get bags user has');
 	}
@@ -355,7 +345,7 @@ export const findBagsUserHas = async (
 
 export const findBagUserHasById = async (userId, bagId) => {
 	try {
-		const userBag = await BagsModel.findUnique({
+		const userBag = await prisma.bags.findUnique({
 			where: { userId: userId, id: bagId },
 			select: {
 				id: true,
@@ -367,7 +357,7 @@ export const findBagUserHasById = async (userId, bagId) => {
 				maxWeight: true,
 				weight: true,
 				material: true,
-				feeatures: true,
+				features: true,
 				userId: true,
 				user: {
 					select: {
@@ -378,18 +368,7 @@ export const findBagUserHasById = async (userId, bagId) => {
 						age: true,
 					},
 				},
-				items: {
-					select: {
-						id: true,
-						name: true,
-						category: true,
-						quantity: true,
-						weight: true,
-						volume: true,
-						color: true,
-						isFragile: true,
-					},
-				},
+                bagItems: true,
 			},
 		});
 
@@ -407,7 +386,14 @@ export const findBagUserHasById = async (userId, bagId) => {
 				'Failed to find bag in the database'
 			);
 
-		return userBag;
+        const totalCount = await prisma.bags.count({ where: { userId: userId } });
+
+        const meta = {
+            totalCount: totalCount,
+            totalFind: userBag ? 1 : 0,
+        }
+
+		return { userBag: userBag, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -428,10 +414,10 @@ export const addBagToUser = async (userId, body) => {
 			maxWeight,
 			weight,
 			material,
-			feeatures,
+			features,
 		} = body;
 
-		const userBag = await BagsModel.create({
+		const newBag = await prisma.bags.create({
 			data: {
 				name: name,
 				type: type,
@@ -441,7 +427,7 @@ export const addBagToUser = async (userId, body) => {
 				maxWeight: maxWeight,
 				weight: weight,
 				material: material,
-				feeatures: feeatures,
+				features: features,
 				userId: userId,
 			},
 			select: {
@@ -454,7 +440,7 @@ export const addBagToUser = async (userId, body) => {
 				maxWeight: true,
 				weight: true,
 				material: true,
-				feeatures: true,
+				features: true,
 				userId: true,
 				user: {
 					select: {
@@ -465,40 +451,262 @@ export const addBagToUser = async (userId, body) => {
 						age: true,
 					},
 				},
-				items: {
-					select: {
-						id: true,
-						name: true,
-						category: true,
-						quantity: true,
-						weight: true,
-						volume: true,
-						color: true,
-						isFragile: true,
-					},
-				},
+				bagItems: true,
 			},
 		});
 
-		if (!userBag)
+		if (!newBag)
 			return new ErrorHandler(
 				'bag not created',
 				'Failed to create bag in the database',
 				'prisma Error'
 			);
 
-		if (userBag.error)
+		if (newBag.error)
 			return new ErrorHandler(
 				'prisma',
-				userBag.error,
-				'Failed to create bag in the database'
+				newBag.error,
+				'Failed to create bag in the database '+newBag.error.message
 			);
 
-		return userBag;
+        const totalCount = await prisma.bags.count({ where: { userId: userId } });
+
+        const meta = {
+            totalCount: totalCount,
+            totalCreate: newBag ? 1 : 0,
+        }
+
+		return { meta: meta, newBag: newBag };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to add bag to user');
 	}
 };
+
+export const addItemToUserBag = async (userId, bagId, body) => {
+    try {
+        const { itemId } = body;
+
+        const bag = await prisma.bags.findUnique({
+            where: { userId: userId, id: bagId },
+        });
+
+        if (!bag) return new ErrorHandler(
+            'bag not found', 
+            'Failed to find bag in the database', 
+            'prisma Error'
+        );
+
+        if (bag.error) return new ErrorHandler(
+            'prisma', 
+            bag.error, 
+            'Failed to find bag in the database '+bag.error.message
+        );
+
+        const userItem = await prisma.items.findUnique({
+            where: { userId: userId, id: itemId },
+        });
+
+        if (!userItem) return new ErrorHandler(
+            'item not found', 
+            'Failed to find item in the database', 
+            'prisma Error'
+        );
+
+        if (userItem.error) return new ErrorHandler(
+            'prisma', 
+            userItem.error, 
+            'Failed to find item in the database '+userItem.error.message
+        );
+
+        if (
+            !(bag.capacity >= ( (userItem.volume * userItem.quantity) / 100 )) 
+            && 
+            !(bag.weight >= ( (userItem.weight * userItem.quantity) / 100 ) )
+        ) return new ErrorHandler(
+            'bag capacity or weight exceeded', 
+            'The bag does not have enough capacity or weight to accommodate the item', 
+            'Bag capacity or weight exceeded'
+        );
+
+        const bagItem = await prisma.bagItems.upsert({
+            where: { 
+                bagId_itemId: { bagId, itemId }
+            },
+            update: { 
+                itemId: itemId
+            },
+            create: {                
+                bagId: bagId, 
+                itemId: itemId
+            }
+        });
+
+        if (!bagItem) return new ErrorHandler(
+            'item not added in Bag', 
+            'Failed to add item to the bag in the database', 
+            'prisma Error'
+        );
+
+        if (bagItem.error) return new ErrorHandler(
+            'prisma', 
+            bagItem.error, 
+            'Failed to add item to the bag in the database '+bagItem.error.message
+        );
+
+        
+        const userBag = await prisma.bags.findUnique({
+            where: { userId: userId, id: bagId },
+            include: {
+                bagItems:{
+                    select: {
+                        item: true
+                    }
+                }
+            }
+        });
+
+        if (!userBag) return new ErrorHandler(
+            'bag is not full', 
+            'The bag has enough capacity and weight to accommodate the item', 
+            'Bag is not full'
+        );
+        
+        if (userBag.error) return new ErrorHandler(
+            'prisma', 
+            userBag.error, 
+            'Failed to find bag in the database '+userBag.error.message
+        )
+        
+        if (userBag.isWeightExceeded || userBag.isCapacityExceeded) return new ErrorHandler(
+            'bag is exceeded capacity and weight', 
+            'Cannot add that item to bag ', 
+            'The bag will be exceeded capacity and weight if you add that item'
+        );
+        
+        
+        const totalCount = await prisma.bagItems.count({
+            where: {
+                bagId: bagId,
+            }
+        })
+
+        const meta = {
+            totalCount: totalCount,
+            totalAdd: bagItem ? 1 : 0,
+        }
+
+        return {userBag: userBag, meta: meta};
+    }
+
+    catch (error) {
+        return new ErrorHandler(
+            'catch', 
+            error, 
+            'Failed to add item to user bag'
+        );
+    }
+}
+
+export const addItemsToUserBag = async (userId, bagId, body) => {
+    try {
+        const bag = await prisma.bags.findUnique({
+            where: { id: bagId, userId: userId },
+        });
+
+        if (!bag) return new ErrorHandler(
+            'bag not found', 
+            'Failed to find bag in the database', 
+            'prisma Error'
+        );
+
+        if (bag.error) return new ErrorHandler(
+            'prisma', 
+            bag.error, 
+            'Failed to find bag in the database '+bag.error.message, 
+        );
+
+        const userItems = await prisma.items.findMany({
+            where: { userId: userId },
+        });
+
+        if (!userItems) return new ErrorHandler(
+            'items not found', 
+            'Failed to find items in the database', 
+            'prisma Error'
+        );
+
+        if (userItems.error) return new ErrorHandler(
+            'prisma', 
+            userItems.error, 
+            'Failed to find items in the database '+userItems.error.message, 
+        );
+
+        const userItemsIds = userItems.map((item, index) => {
+            let itemId = body.itemsIds[index].itemId;
+            let canFit = bag.capacity >= item.volume && bag.weight >= item.weight;
+
+            return canFit ? { itemId } : {};
+        })
+
+        if (userItemsIds.length === 0) return new ErrorHandler(
+            'bag capacity or weight exceeded', 
+            'The bag does not have enough capacity or weight to accommodate all the items', 
+            'Bag capacity or weight exceeded'
+        );
+
+        const bagItems = await prisma.bagItems.createMany({
+            data: userItemsIds.map((item) => ({
+                bagId,
+                itemId: item.itemId,
+            })),
+            skipDuplicates: true,
+        });
+
+        if (bagItems.error) return new ErrorHandler(
+            'prisma', 
+            bagItems.error, 
+            'Failed to add items to the bag in the database '+bagItems.error.message
+        );
+
+        const isBagFull = await prisma.bags.findUnique({
+            where: {id: bagId},
+            include: {
+                bagItems: {
+                    select: {
+                        item: true,
+                    }
+                }
+            }
+        })
+
+        if (isBagFull.isWeightExceeded || isBagFull.isCapacityExceeded) return new ErrorHandler(
+            'bag is exceeded capacity and weight', 
+            'Cannot add those items to bag ', 
+            'The bag will be exceeded capacity and weight if you add those items'
+        );
+
+        const totalCount = await prisma.bagItems.count({
+            where: {
+                bagId: bagId,
+            }
+        })
+
+        const meta = {
+            totalCount: totalCount,
+            totalAdd: bagItems ? bagItems.count : 0,
+        }
+
+        return { bagItems: isBagFull, meta: meta };
+    }
+
+    catch (error) {
+        return new ErrorHandler(
+            'catch', 
+            error, 
+            'Failed to add items to user bag'
+        );
+    }
+}
 
 export const replaceBagUserHas = async (userId, bagId, body) => {
 	try {
@@ -511,10 +719,10 @@ export const replaceBagUserHas = async (userId, bagId, body) => {
 			maxWeight,
 			weight,
 			material,
-			feeatures,
+			features,
 		} = body;
 
-		const updatedBag = await BagsModel.update({
+		const updatedBag = await prisma.bags.update({
 			where: { userId: userId, id: bagId },
 			data: {
 				name: name,
@@ -525,42 +733,15 @@ export const replaceBagUserHas = async (userId, bagId, body) => {
 				maxWeight: maxWeight,
 				weight: weight,
 				material: material,
-				feeatures: feeatures,
+				features: features,
 			},
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWeight: true,
-				weight: true,
-				material: true,
-				feeatures: true,
-				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						age: true,
-					},
-				},
-				items: {
-					select: {
-						id: true,
-						name: true,
-						category: true,
-						quantity: true,
-						weight: true,
-						volume: true,
-						color: true,
-						isFragile: true,
-					},
-				},
-			},
+            include: {
+                bagItems: {
+                    select: {
+                        item: true,
+                    }
+                }
+            }
 		});
 
 		if (!updatedBag)
@@ -574,7 +755,7 @@ export const replaceBagUserHas = async (userId, bagId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedBag.error,
-				'Failed to update bag in the database'
+				'Failed to update bag in the database '+updatedBag.error.message
 			);
 
 		return updatedBag;
@@ -598,10 +779,43 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 			maxWeight,
 			weight,
 			material,
-			feeatures,
+			features,
+            removeFeatures
 		} = body;
 
-		const updatedBag = await BagsModel.update({
+        const bag = await prisma.bags.findUnique({
+            where: {id: bagId, userId: userId},
+            select: {
+                userId: true,
+                features: true
+            }
+        });
+
+        if (!bag) return new ErrorHandler(
+            'bag not found', 
+            'Failed to find bag in the database', 
+            'prisma Error'
+        );
+
+        if (bag.error) return new ErrorHandler(
+            'prisma', 
+            bag.error, 
+            'Failed to find bag in the database '+bag.error.message, 
+        );
+
+        // Normalize `removeFeatures` for case-insensitive matching
+        let removeSet = [...new Set([...removeFeatures.map(f => f.toUpperCase())])];
+        console.log("Removing features: ", removeSet);
+
+        // Filter out features that need to be removed
+        let newFeatures = bag.features?.filter(f => !removeSet.includes(f.toUpperCase())) || [];
+        console.log("New features: ", newFeatures);
+
+        // Convert `features` to uppercase to match `bag.features`
+        let updatedFeatures = [...new Set([...features.map(f => f.toUpperCase()), ...newFeatures])];
+        console.log("Updated features: ", updatedFeatures);
+
+		const updatedBag = await prisma.bags.update({
 			where: { userId: userId, id: bagId },
 			data: {
 				name: name || undefined,
@@ -612,42 +826,17 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 				maxWeight: maxWeight || undefined,
 				weight: weight || undefined,
 				material: material || undefined,
-				feeatures: feeatures || undefined,
+				features: features.length || newFeatures.length 
+                ? updatedFeatures
+                : undefined,
 			},
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWeight: true,
-				weight: true,
-				material: true,
-				feeatures: true,
-				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						age: true,
-					},
-				},
-				items: {
-					select: {
-						id: true,
-						name: true,
-						category: true,
-						quantity: true,
-						weight: true,
-						volume: true,
-						color: true,
-						isFragile: true,
-					},
-				},
-			},
+            include: {
+                bagItems: {
+                    select: {
+                        item: true,
+                    }
+                }
+            }
 		});
 
 		if (!updatedBag)
@@ -661,7 +850,7 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedBag.error,
-				'Failed to modify bag in the database'
+				'Failed to modify bag in the database '+updatedBag.error.message
 			);
 
 		return updatedBag;
@@ -676,7 +865,7 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 
 export const removeBagUserHasById = async (userId, bagId) => {
 	try {
-		const deletedBag = await BagsModel.delete({
+		const deletedBag = await prisma.bags.delete({
 			where: { userId: userId, id: bagId },
 		});
 
@@ -691,10 +880,17 @@ export const removeBagUserHasById = async (userId, bagId) => {
 			return new ErrorHandler(
 				'prisma',
 				deletedBag.error,
-				'Failed to delete bag from the database'
+				'Failed to delete bag from the database '+deletedBag.error.message
 			);
 
-		return deletedBag;
+        const totalCount = await prisma.bags.count( { where: { userId: userId } } );
+
+        const meta = {
+            totalCount: totalCount,
+            totalDelete: deletedBag ? 1 : 0,
+        }
+
+		return { deletedBag: deletedBag, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -704,27 +900,183 @@ export const removeBagUserHasById = async (userId, bagId) => {
 	}
 };
 
-export const removeAllBagsUserHas = async (userId) => {
-	try {
-		const deletedBags = await BagsModel.deleteMany({
-			where: { userId: userId },
-		});
+export const removeItemFromUserBag = async (userId, bagId, body) => {
+    try {
+        const { itemId } = body;
 
-		if (!deletedBags || deletedBags.count === 0)
-			return new ErrorHandler(
-				'bags not deleted',
-				'Failed to delete all bags from the database',
-				'prisma Error'
-			);
+        const deletedBagItem = await prisma.bagItems.delete({
+            where: { bagId_itemId: { bagId, itemId } },
+        });
+
+        if (!deletedBagItem)
+            return new ErrorHandler(
+                'bag item not deleted',
+                'Failed to delete item from the database',
+                'prisma Error'
+            );
+
+        if (deletedBagItem.error)
+            return new ErrorHandler(
+                'prisma',
+                deletedBagItem.error,
+                'Failed to delete item from the database '+deletedBagItem.error.message
+            );
+
+        const bagItems = await prisma.bags.findUnique({
+            where: { id: bagId, userId: userId },
+            include: {
+                bagItems: {
+                    select: {
+                        item: true,
+                    }
+                }
+            }
+        });
+
+        const totalCount = await prisma.bagItems.count({where: {bagId: bagId}});
+
+        const meta = {
+            totalCount: totalCount,
+            totalDelete: deletedBagItem ? 1 : 0,
+        }
+
+        return { bagItems: bagItems, meta: meta };
+    }
+
+    catch (error) {
+        return new ErrorHandler(
+            "Catch",
+            error,
+            "Failed to remove item from user bag"
+        )
+    }
+}
+
+export const removeItemsFromUserBag = async(userId, bagId, body) => {
+    try {
+        const { itemIds } = body;
+
+        const deletedBagItems = await prisma.bagItems.deleteMany({
+            where: {
+                itemId: { in: itemIds },
+                bagId: bagId,
+            },
+        });
+
+        if (deletedBagItems.error)
+            return new ErrorHandler(
+                'prisma',
+                deletedBagItems.error,
+                'Failed to delete items from the database '+deletedBagItems.error.message
+            );
+
+        const bagItems = await prisma.bags.findUnique({
+            where: { id: bagId, userId: userId },
+            include: {
+                bagItems: {
+                    select: {
+                        item: true,
+                    }
+                }
+            }
+        })
+
+        const totalCount = await prisma.bagItems.count({
+            where: {
+                bagId: bagId,
+            }
+        })
+
+        const meta = {
+            totalCount: totalCount,
+            totalDelete: deletedBagItems.count,
+        }
+
+        return { bagItems: bagItems, meta: meta };
+    }
+
+    catch (error) {
+        return new ErrorHandler(
+            'catch',
+            error,
+            'Failed to remove items from user bag'
+        );
+    }
+}
+
+export const removeAllItemsFromUserBag = async (userId, bagId) => {
+    try {
+        const deletedBagItems = await prisma.bagItems.deleteMany({
+            where: {
+                bagId: bagId,
+            },
+        });
+
+        if (deletedBagItems.error)
+            return new ErrorHandler(
+                'prisma',
+                deletedBagItems.error,
+                'Failed to delete all items from the database '+deletedBagItems.error.message
+            );
+
+        const bagItems = await prisma.bags.findUnique({
+            where: { id: bagId, userId: userId },
+            include: {
+                bagItems: {
+                    select: {
+                        item: true,
+                    }
+                }
+            }
+        })
+
+        const totalCount = await prisma.bagItems.count({
+            where: {
+                bagId: bagId,
+            }
+        })
+
+        const meta = {
+            totalCount: totalCount,
+            totalDelete: deletedBagItems.count,
+        }
+
+        return { bagItems: bagItems, meta: meta };
+    }
+
+    catch (error) {
+        return new ErrorHandler(
+            'catch',
+            error,
+            'Failed to remove all items from user bag'
+        );
+    }
+}
+
+export const removeAllBagsUserHas = async (userId, searchFilter) => {
+	try {
+		const deletedBags = await prisma.bags.deleteMany({
+            where: { 
+                ...searchFilter,
+                userId: userId
+            },
+		});
 
 		if (deletedBags.error)
 			return new ErrorHandler(
 				'prisma',
 				deletedBags.error,
-				'Failed to delete all bags from the database'
+				'Failed to delete all bags from the database '+deletedBags.error.message
 			);
+        
+        const totalCount = await prisma.bags.count( { where: { userId: userId } } );
 
-		return deletedBags;
+        const meta = {
+            totalCount: totalCount,
+            totalDelete: deletedBags.count,
+        }
+
+		return { deletedBags: deletedBags, meta: meta};
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',

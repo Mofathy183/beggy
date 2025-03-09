@@ -1,4 +1,5 @@
 import express from 'express';
+import { csrfProtection } from "../../middlewares/appMiddleware.js";
 import {
 	signUp,
 	login,
@@ -9,6 +10,7 @@ import {
 	deActivate,
 	logout,
 	csrfResponse,
+    getAccessToken,
 } from '../controllers/authController.js';
 import {
 	VReqToSignUp,
@@ -19,6 +21,7 @@ import {
 	VReqToResetToken,
 	VReqToUpdatePassword,
 	VReqToHeaderToken,
+    VReqToHeaderRefreshToken,
 	headersMiddleware,
 } from '../../middlewares/authMiddleware.js';
 
@@ -77,4 +80,11 @@ authRoute.post(
 //* to get csrf token to send with the request body
 authRoute.get('/csrf-token', csrfResponse);
 
+//* to get new access token => POST refresh token in the request body
+authRoute.post(
+    '/refresh-token',
+    VReqToHeaderRefreshToken,
+    headersMiddleware,
+    getAccessToken
+);
 export default authRoute;

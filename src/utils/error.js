@@ -109,12 +109,12 @@ class ErrorHandler extends Error {
 
 		this.whichError();
 
-		console.log(this.whichError());
+		// console.log(this.whichError());
 	}
 
 	whichError() {
 		if (this.name === 'prisma') {
-			console.log('Prisma');
+			// console.log('Prisma');
 			return prismaErrorHandler(
 				this.error,
 				this.stack, //* you can use this.stack becouce it's already set by captureStackTrace

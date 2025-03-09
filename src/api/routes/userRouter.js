@@ -35,7 +35,7 @@ userRoute.param('id', (req, res, next, id) =>
 
 //*========================{Public Route}========================
 //* route to get user public profile by id => GET param (id)
-userRoute.get('/:id/public', findUserPublicProfile);
+userRoute.get('/public/:id', findUserPublicProfile);
 
 //* route for search for users by query => GET
 userRoute.get(
@@ -50,7 +50,7 @@ userRoute.get(
 
 //* route for get user private profile by id => GET param (id)
 userRoute.get(
-	'/:id/private',
+	'/private/:id',
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
@@ -81,7 +81,7 @@ userRoute.post(
 
 //* route for change user role => PATCH (Admin and Member only)
 userRoute.patch(
-	'/:id/role',
+	'/role/:id',
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin'),

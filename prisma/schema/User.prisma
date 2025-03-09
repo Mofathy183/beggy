@@ -4,13 +4,14 @@ model User {
     id                     String    @id @default(uuid())
     firstName              String    @map("first_name")
     lastName               String    @map("last_name")
-    password               String    
+    password               String
     email                  String    @unique
     role                   Role      @default(USER)
     profilePicture         String?   @default("public/profilePicture.webp")
     gender                 Gender?
     birth                  DateTime?
     country                String?
+    city                   String?
     isActive               Boolean   @default(true) @map("is_active")
     passwordChangeAt       DateTime? @map("password_change_at")
     passwordResetToken     String?   @unique @map("password_reset_token")
@@ -19,7 +20,7 @@ model User {
     updatedAt              DateTime  @updatedAt @map("updated_at")
 
     //* the relationships
-    account   Accoount[]
+    account   Account[]
     bags      Bags[]
     suitcases Suitcases[]
     items     Items[]

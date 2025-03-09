@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { ItemCategory } from '@prisma/client';
 import { stringRegExp } from './authValidator.js';
 
-export const productStringRegExp = /^[a-zA-Z\s-]*$/;
+export const productStringRegExp = /^(?=.*[a-zA-Z])(?!^\d+$)[a-zA-Z0-9\s-]+$/;
 
 export const itemShcemaMiddleware = Joi.object({
 	category: Joi.string()
@@ -55,6 +55,30 @@ export const itemsArraySchema = Joi.array()
 	.items(itemsSchema)
 	.min(1)
 	.max(5)
-	.required();
+.required();
+
+export const itemSchemaForItemId = Joi.object({
+    itemId:  Joi.string().uuid().required()
+})
+
+export const itemSchemaForItemsIds = Joi.object({
+    itemsIds: Joi.array().min(1).max(5).items(
+        Joi.object({
+            itemId: Joi.string().uuid().required()
+        })
+    ).required()
+})
+
+export const itemSchemaForItemsIdsForDelete = Joi.object({
+    itemsIds: Joi.array()
+    .min(1).max(5)
+    .items(
+        Joi.string()
+        .uuid()
+        .required()
+    )
+    .required()
+})
+
 
 //*######################################{JOI Check Items Feildes}############################################

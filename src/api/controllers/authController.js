@@ -15,6 +15,7 @@ import {
 	clearCookies,
 	deleteSession,
 } from '../../utils/authHelper.js';
+import { verifyRefreshToken } from '../../utils/jwt.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import { ErrorResponse } from '../../utils/error.js';
@@ -25,14 +26,24 @@ export const signUp = async (req, res, next) => {
 
 		const { safeUser, role } = await singUpUser(body);
 
-		if (!safeUser || safeUser.error)
+		if (!safeUser)
 			return next(
 				new ErrorResponse(
-					"User couldn't sign up" || safeUser.error,
+					"User couldn't sign up",
 					'Invalid user',
 					statusCode.notFoundCode
 				)
 			);
+        
+
+        if (safeUser.error) return next(
+            new ErrorResponse(
+                safeUser.error,
+                'Invalid user data '+safeUser.error.message,
+                statusCode.badRequestCode
+            )
+        )
+        
 
 		//* for add the user id to session
 		storeSession(safeUser.id, role, req);
@@ -77,7 +88,7 @@ export const login = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					safeUser.error,
-					'Invalid user data',
+					'Invalid user data '+safeUser.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -134,14 +145,21 @@ export const forgotPassword = async (req, res, next) => {
 			message,
 		});
 
-		if (sended.error || !sended)
-			return next(
-				new ErrorResponse(
-					sended.error || 'Failed to send email',
-					'Failed to send reset password email to user',
-					statusCode.internalServerErrorCode
-				)
-			);
+		if (!sended) return next(
+            new ErrorResponse(
+                'Failed to send email',
+                'Failed to send reset password email to user',
+                statusCode.internalServerErrorCode
+            )
+        )
+
+        if (sended.error) return next(
+            new ErrorResponse(
+                sended.error,
+                'Failed to send email '+sended.error.message,
+                statusCode.internalServerErrorCode
+            )
+        )
 
 		return next(
 			new SuccessResponse(
@@ -181,13 +199,13 @@ export const resetPassword = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					updatePassword.error,
-					"Error Couldn't reset password",
+					"Error Couldn't reset password "+updatePassword.error.message,
 					statusCode.badRequestCode
 				)
 			);
 
 		//* store the user id and role in session
-		storeSession(updatePassword.id, 'user', req);
+		storeSession(updatePassword.id, updatePassword.role, req);
 
 		//* Log the user in and send JWT token via cookie
 		sendCookies(updatePassword.id, res);
@@ -230,7 +248,7 @@ export const updatePassword = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					updatePassword.error,
-					"Error Couldn't update password",
+					"Error Couldn't update password "+updatePassword.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -266,16 +284,21 @@ export const updateData = async (req, res, next) => {
 
 		const updatedUserData = await updateUserData(userId, body);
 
-		if (!updatedUserData || updatedUserData.error)
-			return next(
-				new ErrorResponse(
-					'Failed to update user data' || updatedUserData.error,
-					'Failed to update',
-					updatedUserData.error
-						? statusCode.badRequestCode
-						: statusCode.notFoundCode
-				)
-			);
+		if (!updatedUserData) return next(
+            new ErrorResponse(
+                'Failed to update user data',
+                'Failed to update',
+                statusCode.badRequestCode
+            )
+        );
+
+        if (updatedUserData.error) return next(
+            new ErrorResponse(
+                updatedUserData.error,
+                "Error Couldn't update user data "+updatedUserData.error.message,
+                statusCode.badRequestCode
+            )
+        );
 
 		//* store user id and role in session
 		storeSession(userId, userRole, req);
@@ -307,22 +330,27 @@ export const deActivate = async (req, res, next) => {
 
 		const deActivateUser = await deactivateUserAccount(userId);
 
-		if (!deActivateUser || deActivateUser.error)
-			return next(
-				new ErrorResponse(
-					'Failed to deactivate user account' || deActivateUser.error,
-					'Failed to deactivate',
-					deActivateUser.error
-						? statusCode.badRequestCode
-						: statusCode.notFoundCode
-				)
-			);
+        if (!deActivateUser) return next(
+            new ErrorResponse(
+                'Failed to deactivate user account',
+                'Failed to deactivate',
+                statusCode.notFoundCode
+            )
+        )
+
+        if (deActivateUser.error) return next(
+            new ErrorResponse(
+                deActivateUser.error,
+                'Failed to deactivate '+deActivateUser.error.message,
+                statusCode.badRequestCode
+            )
+        )
 
 		return next(
 			new SuccessResponse(
-				statusCode.noContentCode,
+				statusCode.okCode,
 				'Successfully deactivated User Account',
-				null
+				deActivateUser
 			)
 		);
 	} catch (error) {
@@ -342,26 +370,30 @@ export const logout = async (req, res, next) => {
 
 		const deActivateUser = await deactivateUserAccount(userId);
 
-		if (!deActivateUser || deActivateUser.error) {
-			return next(
-				new ErrorResponse(
-					deActivateUser.error || 'Failed to deactivate user account',
-					'Failed to deactivate',
-					deActivateUser.error
-						? statusCode.badRequestCode
-						: statusCode.notFoundCode
-				)
-			);
-		}
+        if (!deActivateUser) return next(
+            new ErrorResponse(
+                'Failed to deactivate user account',
+                'Failed to deactivate',
+                statusCode.notFoundCode
+            )
+        );
+
+        if (deActivateUser.error) return next(
+            new ErrorResponse(
+                deActivateUser.error,
+                'Failed to deactivate '+deActivateUser.error.message,
+                statusCode.badRequestCode
+            )
+        );
 
 		clearCookies(res);
 		await deleteSession(req);
 
 		return next(
 			new SuccessResponse(
-				statusCode.noContentCode,
+				statusCode.okCode,
 				'Successfully logged out',
-				null
+				deActivateUser
 			)
 		);
 	} catch (error) {
@@ -375,14 +407,68 @@ export const logout = async (req, res, next) => {
 	}
 };
 
-export const csrfResponse = (req, res) => {
-	res.cookie('XSRF-TOKEN', req.csrfToken(), {
+export const verifyCsrfToken = (req, res, next) => {
+    const token = req.cookies['XSRF-TOKEN'];
+    if (!token || token!== req.csrfToken()) {
+        return next(
+            new ErrorResponse(
+                'Invalid CSRF token',
+                'Failed to validate CSRF token',
+                statusCode.badRequestCode
+            )
+        );
+    }
+    return next();
+}
+
+export const getAccessToken = (req, res, next) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) return next(
+        new ErrorResponse(
+            'Missing refresh token',
+            'Failed to get access token',
+            statusCode.badRequestCode
+        )
+    )
+
+    if (!verifyRefreshToken(refreshToken)) return next(
+        new ErrorResponse(
+            'Invalid refresh token',
+            'User must be logged in again to get access token',
+            statusCode.badRequestCode
+        )
+    )
+
+    const { userId } = req.session;
+
+    sendCookies(userId, res)
+
+    return next(
+        new SuccessResponse(
+            statusCode.okCode,
+            'Access token generated',
+            "Access token sending via Cookie"
+        )
+    )
+
+}
+
+export const csrfResponse = (req, res, next) => {
+    const csrfToken = req.csrfToken();
+
+	res.cookie('XSRF-TOKEN', csrfToken, {
 		expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
 		httpOnly: false, // ✅ Allow frontend access
 		secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+        sameSite: "strict"
 	});
 
-	res.json({ csrfToken: req.csrfToken() });
-
-	return;
+    return next(
+        new SuccessResponse(
+            statusCode.okCode, 
+            'CSRF token generated', {
+            csrfToken: csrfToken,
+        })
+    )
 };

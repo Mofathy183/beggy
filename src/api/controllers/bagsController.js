@@ -16,6 +16,11 @@ import {
 	modifyBagUserHas,
 	removeBagUserHasById,
 	removeAllBagsUserHas,
+    removeItemsFromUserBag,
+    removeItemFromUserBag,
+    removeAllItemsFromUserBag,
+    addItemToUserBag,
+    addItemsToUserBag,
 } from '../../services/bagsService.js';
 
 export const getAllBagsByQuery = async (req, res, next) => {
@@ -27,20 +32,11 @@ export const getAllBagsByQuery = async (req, res, next) => {
 			orderBy
 		);
 
-		if (!bags)
-			return next(
-				new ErrorResponse(
-					'No bags found',
-					'Failed to retrieve any bags',
-					statusCode.notFoundCode
-				)
-			);
-
 		if (bags.error)
 			return next(
 				new ErrorResponse(
 					bags.error,
-					'Failed to retrieve bags',
+					'Failed to retrieve bags '+bags.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -48,7 +44,7 @@ export const getAllBagsByQuery = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully retrieved bags',
+				`Successfully Retrieved All Bags${searchFilter? " By Search": ""}`,
 				bags,
 				meta
 			)
@@ -56,8 +52,8 @@ export const getAllBagsByQuery = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error.message || 'Failed to retrieve bags',
-				'Failed to retrieve bags',
+				error,
+				'Failed to retrieve bags '+error.message,
 				statusCode.internalServerErrorCode
 			)
 		);
@@ -67,7 +63,7 @@ export const getAllBagsByQuery = async (req, res, next) => {
 export const getBagById = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
-		const bag = await findBagById(bagId);
+		const { bag, meta } = await findBagById(bagId);
 
 		if (!bag)
 			return next(
@@ -82,7 +78,7 @@ export const getBagById = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					bag.error,
-					'Failed to retrieve bag',
+					'Failed to retrieve bag '+bag.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -90,8 +86,9 @@ export const getBagById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully retrieved bag',
-				bag
+				'Successfully Retrieved Bag By ID',
+				bag,
+                meta
 			)
 		);
 	} catch (error) {
@@ -125,7 +122,7 @@ export const replaceBagById = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					bagUpdate.error,
-					'Failed to replace bag',
+					'Failed to replace bag '+bagUpdate.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -133,7 +130,7 @@ export const replaceBagById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully replaced bag',
+				'Successfully Replaced Bag By ID',
 				bagUpdate
 			)
 		);
@@ -159,7 +156,7 @@ export const modifyBagById = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					'Bag not found',
-					'Failed to replace bag',
+					'Failed to Modify bag',
 					statusCode.notFoundCode
 				)
 			);
@@ -168,7 +165,7 @@ export const modifyBagById = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					bagUpdate.error,
-					'Failed to replace bag',
+					'Failed to Modify bag '+ bagUpdate.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -176,7 +173,7 @@ export const modifyBagById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully replaced bag',
+				'Successfully Replaced Bag By ID',
 				bagUpdate
 			)
 		);
@@ -195,7 +192,7 @@ export const deleteBagById = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
 
-		const bagDelete = await removeBagById(bagId);
+		const { bagDelete, meta } = await removeBagById(bagId);
 
 		if (!bagDelete)
 			return next(
@@ -210,7 +207,7 @@ export const deleteBagById = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					bagDelete.error,
-					'Failed to delete bag',
+					'Failed to delete bag '+bagDelete.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -218,8 +215,9 @@ export const deleteBagById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully deleted bag',
-				bagDelete
+				'Successfully Deleted Bag By ID',
+				bagDelete,
+                meta
 			)
 		);
 	} catch (error) {
@@ -235,22 +233,13 @@ export const deleteBagById = async (req, res, next) => {
 
 export const deleteAllBags = async (req, res, next) => {
 	try {
-		const bagsDelete = await removeAllBags();
+		const { deleteCount, meta } = await removeAllBags();
 
-		if (!bagsDelete)
+		if (deleteCount.error)
 			return next(
 				new ErrorResponse(
-					'No bags found',
-					'Failed to delete all bags',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (bagsDelete.error)
-			return next(
-				new ErrorResponse(
-					bagsDelete.error,
-					'Failed to delete all bags',
+					deleteCount.error,
+					'Failed to delete all bags '+deleteCount.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -258,8 +247,9 @@ export const deleteAllBags = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully deleted all bags',
-				bagsDelete
+				'Successfully Delete All Bags',
+				deleteCount,
+                meta
 			)
 		);
 	} catch (error) {
@@ -273,10 +263,16 @@ export const deleteAllBags = async (req, res, next) => {
 	}
 };
 
+
+
 export const getBagsBelongsToUser = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
-		const { searchFilter, pagination, orderBy } = req;
+		const { 
+            searchFilter = undefined, 
+            pagination, 
+            orderBy = undefined 
+        } = req;
 
 		const { userBags, meta } = await findBagsUserHas(
 			userId,
@@ -298,7 +294,7 @@ export const getBagsBelongsToUser = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					userBags.error,
-					'Failed to retrieve bags',
+					'Failed to retrieve bags '+userBags.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -310,16 +306,16 @@ export const getBagsBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully retrieved bags for user',
-				userBags,
-				meta
+				'Successfully Retrieved Bags User Has',
+                userBags,
+                meta
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
 				error,
-				'Failed to retrieve items',
+				'Failed to retrieve items '+error.message,
 				statusCode.internalServerErrorCode
 			)
 		);
@@ -331,12 +327,14 @@ export const getBagBelongsToUser = async (req, res, next) => {
 		const { bagId } = req.params;
 		const { userId, userRole } = req.session;
 
-		const userBag = await findBagUserHasById(userId, bagId);
+		const { userBag, meta } = await findBagUserHasById(userId, bagId);
+
+        console.log("found", userBag);
 
 		if (!userBag)
 			return next(
 				new ErrorResponse(
-					'Bag not found for user',
+					'Bag not found for user'+ userBag,
 					'Bag not found',
 					statusCode.notFoundCode
 				)
@@ -357,8 +355,9 @@ export const getBagBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully retrieved bag for user',
-				userBag
+				'Successfully Retrieved Bag User Has',
+				userBag,
+                meta
 			)
 		);
 	} catch (error) {
@@ -377,7 +376,7 @@ export const createBagForUser = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 		const { body } = req;
 
-		const newBag = await addBagToUser(userId, body);
+		const { meta, newBag } = await addBagToUser(userId, body);
 
 		if (!newBag)
 			return next(
@@ -392,7 +391,7 @@ export const createBagForUser = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					newBag.error,
-					'Failed to create bag for user',
+					'Failed to create bag for user '+newBag.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -403,8 +402,9 @@ export const createBagForUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.createdCode,
-				'Bag created successfully and added to user',
-				newBag
+				'Successfully Created Bag For User',
+				newBag,
+                meta
 			)
 		);
 	} catch (error) {
@@ -417,6 +417,106 @@ export const createBagForUser = async (req, res, next) => {
 		);
 	}
 };
+
+export const createItemForUserBag = async (req, res, next) => {
+    try {
+        const { bagId } = req.params;
+        const { userId, userRole } = req.session;
+        const { body } = req;
+
+        const { userBag, meta } = await addItemToUserBag(userId, bagId, body);
+
+        if (!userBag)
+            return next(
+                new ErrorResponse(
+                    'Failed to create item for bag',
+                    'Failed to create item',
+                    statusCode.badRequestCode
+                )
+            );
+
+        if (userBag.error)
+            return next(
+                new ErrorResponse(
+                    userBag.error,
+                    'Failed to create item for bag '+userBag.error.message,
+                    statusCode.internalServerErrorCode
+                )
+            );
+
+        sendCookies(userId, res);
+        storeSession(userId, userRole, req);
+
+        return next(
+            new SuccessResponse(
+                statusCode.createdCode,
+                "Successfully Added User's Item To User's Bag",
+                userBag,
+                meta
+            )
+        );
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to create item for bag',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
+
+export const createItemsForUserBag = async (req, res, next) => {
+    try {
+        const { bagId } = req.params;
+        const { userId, userRole } = req.session;
+        const { body } = req;
+
+        const { bagItems, meta } = await addItemsToUserBag(userId, bagId, body);
+
+        if (!bagItems)
+            return next(
+                new ErrorResponse(
+                    'Failed to create items for bag',
+                    'Failed to create items',
+                    statusCode.badRequestCode
+                )
+            );
+
+        if (bagItems.error)
+            return next(
+                new ErrorResponse(
+                    bagItems.error,
+                    'Failed to create items for bag '+bagItems.error.message,
+                    statusCode.internalServerErrorCode
+                )
+            );
+
+        sendCookies(userId, res);
+        storeSession(userId, userRole, req);
+
+        return next(
+            new SuccessResponse(
+                statusCode.createdCode,
+                "Successfully Added User's Items To User's Bag",
+                bagItems,
+                meta
+            )
+        );
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to create items for bag',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
 
 export const replaceBagBelongsToUser = async (req, res, next) => {
 	try {
@@ -439,7 +539,7 @@ export const replaceBagBelongsToUser = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					bagUpdate.error,
-					'Failed to replace bag for user',
+					'Failed to replace bag for user '+bagUpdate.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -450,7 +550,7 @@ export const replaceBagBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Bag replaced successfully for user',
+				"Successfully Replace User's Bag",
 				bagUpdate
 			)
 		);
@@ -486,7 +586,7 @@ export const modifyBagBelongsToUser = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					bagUpdate.error,
-					'Failed to modify bag for user',
+					'Failed to modify bag for user '+bagUpdate.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -497,7 +597,7 @@ export const modifyBagBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Bag modified successfully for user',
+				"Successfully Modified User's Bag",
 				bagUpdate
 			)
 		);
@@ -517,9 +617,9 @@ export const deleteBagBelongsToUserById = async (req, res, next) => {
 		const { bagId } = req.params;
 		const { userId, userRole } = req.session;
 
-		const deleteBag = await removeBagUserHasById(userId, bagId);
+		const { deletedBag, meta } = await removeBagUserHasById(userId, bagId);
 
-		if (!deleteBag)
+		if (!deletedBag)
 			return next(
 				new ErrorResponse(
 					'Bag not found for user',
@@ -528,11 +628,11 @@ export const deleteBagBelongsToUserById = async (req, res, next) => {
 				)
 			);
 
-		if (deleteBag.error)
+		if (deletedBag.error)
 			return next(
 				new ErrorResponse(
-					deleteBag.error,
-					'Failed to delete bag for user',
+					deletedBag.error,
+					'Failed to delete bag for user '+deletedBag.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -543,8 +643,9 @@ export const deleteBagBelongsToUserById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Bag deleted successfully for user',
-				deleteBag
+				"Successfully Deleted User's Bag",
+				deletedBag,
+                meta
 			)
 		);
 	} catch (error) {
@@ -558,13 +659,161 @@ export const deleteBagBelongsToUserById = async (req, res, next) => {
 	}
 };
 
+export const deleteItemFromUserBag = async (req, res, next) => {
+    try {
+        const { bagId } = req.params;
+        const { userId, userRole } = req.session;
+        const { body } = req;
+
+        const { bagItems, meta } = await removeItemFromUserBag(userId, bagId, body);
+
+        if (!bagItems) return next(
+            new ErrorResponse(
+                'Failed to delete item from bag',
+                'Failed to delete item',
+                statusCode.notFoundCode
+            )
+        )
+
+        if (bagItems.error) return next(
+            new ErrorResponse(
+                bagItems.error,
+                'Failed to delete item from bag '+bagItems.error.message,
+                statusCode.badRequestCode
+            )
+        )
+
+        sendCookies(userId, res);
+        storeSession(userId, userRole, req);
+
+        return next(
+            new SuccessResponse(
+                statusCode.okCode,
+                "Successfully Deleted Item From User's Bag",
+                bagItems,
+                meta
+            )
+        );
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to delete item from bag',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
+
+export const deleteItemsFromUserBag = async (req, res, next) => {
+    try {
+        const { bagId } = req.params;
+        const { userId, userRole } = req.session;
+        const { body } = req;
+
+        const { bagItems, meta } = await removeItemsFromUserBag(userId, bagId, body);
+
+        if (!bagItems)
+            return next(
+                new ErrorResponse(
+                    'Failed to delete items from bag',
+                    'Failed to delete items',
+                    statusCode.notFoundCode
+                )
+            );
+
+        if (bagItems.error)
+            return next(
+                new ErrorResponse(
+                    bagItems.error,
+                    'Failed to delete items from bag '+bagItems.error.message,
+                    statusCode.badRequestCode
+                )
+            );
+
+        sendCookies(userId, res);
+        storeSession(userId, userRole, req);
+
+        return next(
+            new SuccessResponse(
+                statusCode.okCode,
+                "Successfully Deleted Items From User's Bag",
+                bagItems,
+                meta
+            )
+        );
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to delete items from bag',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
+
+export const deleteAllItemsFromUserBag = async (req, res, next) => {
+    try {
+        const { userId, userRole } = req.session;
+        const { bagId } = req.params;
+
+        const { bagItems, meta } = await removeAllItemsFromUserBag(userId, bagId);
+
+        if (!bagItems)
+            return next(
+                new ErrorResponse(
+                    'Failed to delete all items from bag',
+                    'Failed to delete all items',
+                    statusCode.notFoundCode
+                )
+            );
+
+        if (bagItems.error)
+            return next(
+                new ErrorResponse(
+                    bagItems.error,
+                    'Failed to delete all items from bag '+bagItems.error.message,
+                    statusCode.badRequestCode
+                )
+            );
+
+        sendCookies(userId, res);
+        storeSession(userId, userRole, req);
+
+        return next(
+            new SuccessResponse(
+                statusCode.okCode,
+                "Successfully Deleted All Items From User's Bag",
+                bagItems,
+                meta
+            )
+        );
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to delete all items from bag',
+                statusCode.internalServerErrorCode
+            )
+        );
+    }
+}
+
 export const deleteAllBagsBelongsToUser = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
+        const { searchFilter = undefined } = req;
 
-		const deleteAllBags = await removeAllBagsUserHas(userId);
+		const { deletedBags, meta } = await removeAllBagsUserHas(userId, searchFilter);
 
-		if (!deleteAllBags)
+		if (!deletedBags)
 			return next(
 				new ErrorResponse(
 					'No bags found for user',
@@ -573,11 +822,11 @@ export const deleteAllBagsBelongsToUser = async (req, res, next) => {
 				)
 			);
 
-		if (deleteAllBags.error)
+		if (deletedBags.error)
 			return next(
 				new ErrorResponse(
-					deleteAllBags.error,
-					'Failed to delete all bags for user',
+					deletedBags.error,
+					'Failed to delete all bags for user '+deletedBags.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -588,8 +837,9 @@ export const deleteAllBagsBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'All bags deleted successfully for user',
-				deleteAllBags
+				`Successfully Deleted All User's Bags${searchFilter ? " By Search Filter": ""}`,
+				deletedBags,
+                meta
 			)
 		);
 	} catch (error) {

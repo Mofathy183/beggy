@@ -95,3 +95,9 @@ export const AIConfig = {
 	url: 'https://api.together.xyz/v1/chat/completions',
 	model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
 };
+
+export const openweatherApiConfig = {
+    apiKey: process.env.OPENWEATHER_API_KEY,
+    baseURL: process.env.OPENWEATHER_API_URL,
+    units: 'metric'
+}

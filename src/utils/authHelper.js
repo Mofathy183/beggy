@@ -33,10 +33,10 @@ export const generateResetToken = () => {
 
 //* delete the resetToken and resetExpired from the database
 //* using the email to find the user and delete the reset token and resetExpired
-import { UserModel } from '../../prisma/prisma.js';
+import prisma from '../../prisma/prisma.js';
 const deletePasswordTokenAndExpire = async (email) => {
 	try {
-		await UserModel.update({
+		await prisma.user.update({
 			where: { email: email },
 			data: {
 				passwordResetExpiredAt: null,

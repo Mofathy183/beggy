@@ -6,25 +6,29 @@ import { statusCode } from '../config/status.js';
 import { ErrorResponse } from '../utils/error.js';
 import SuccessResponse from '../utils/successResponse.js';
 
-export const croeMiddleware = cors({
+export const corsMiddleware = cors({
 	origin: coreConfig.origin,
 	method: 'POST, GET, PUT, DELETE, OPTIONS, PATCH',
 });
 
-// export const logger = (req, res, next) => {
-// 	const tiemstamps = new Date().toISOString();
-// 	console.log(`${tiemstamps}\n${req.method}\n${res.url}`);
-// 	next();
-// };
+export const csrfMiddleware = (error, req, res, next) => {
+    if (error.code === 'EBADCSRFTOKEN') {
+        return next(
+            new ErrorResponse(
+                error,
+                'Invalid CSRF token',
+                statusCode.forbiddenCode // HTTP status code for forbidde
+            )
+        );
+    }
 
-export const errorMiddlewareHandler = (err, req, res, next) => {
-	return next(
-		new ErrorResponse(
-			err.message || 'Internal Server Error',
-			err.status || statusCode.internalServerErrorCode
-		)
-	);
+    return next(error);
 };
+
+
+//* CSRF protection
+export const csrfProtection = csurf({ cookie: true });
+
 
 //* Apply middleware rate limit for all requests
 export const limter = rateLimit({
@@ -33,8 +37,7 @@ export const limter = rateLimit({
 	message: 'Too many requests from this IP, please try again later.',
 });
 
-//* CSRF protection
-export const csrfProtection = csurf({ cookie: true });
+
 
 //* for not idintfication routes
 export const routeErrorHandler = (req, res, next) => {
