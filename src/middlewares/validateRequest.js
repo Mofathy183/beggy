@@ -4,9 +4,9 @@ import {
 	itemsSchema,
 	itemsModifySchema,
 	itemsArraySchema,
-    itemSchemaForItemId,
-    itemSchemaForItemsIds,
-    itemSchemaForItemsIdsForDelete
+	itemSchemaForItemId,
+	itemSchemaForItemsIds,
+	itemSchemaForItemsIdsForDelete,
 } from '../api/validators/itemValidator.js';
 import {
 	userSchema,
@@ -15,15 +15,12 @@ import {
 	roleSchema,
 } from '../api/validators/userValidator.js';
 import {
-    itemAutoFillingSchame,
-    bagAutoFillingSchame,
-    suitcaseAutoFillingSchame,
-    locationPermissionScheme
-} from "../api/validators/featuresVaildator.js"
-import { 
-    bagSchema, 
-    bagModifySchema,
-} from '../api/validators/bagValidator.js';
+	itemAutoFillingSchame,
+	bagAutoFillingSchame,
+	suitcaseAutoFillingSchame,
+	locationPermissionScheme,
+} from '../api/validators/featuresVaildator.js';
+import { bagSchema, bagModifySchema } from '../api/validators/bagValidator.js';
 import {
 	suitcaseSchema,
 	suitcaseModifySchema,
@@ -39,21 +36,21 @@ export const VReqTo = (req, res, next, schema) => {
 	//* if there is not an error will continue the request
 	if (!error) return next();
 
-    const JoiError = {
-        errors: error.details.map(err => ({
-            field: err.context.key,
-            message: err.message
-        }))
-    }
+	const JoiError = {
+		errors: error.details.map((err) => ({
+			field: err.context.key,
+			message: err.message,
+		})),
+	};
 
-    const showError = error.details ? JoiError : error;
+	const showError = error.details ? JoiError : error;
 	//* if there is an error will send bad request with the error message
 	return next(
 		new ErrorResponse(
-            showError, 
-            `Validation failed ${error.message && error.message}}`, 
-            statusCode.badRequestCode
-        )
+			showError,
+			`Validation failed ${error.message && error.message}}`,
+			statusCode.badRequestCode
+		)
 	);
 };
 
@@ -119,15 +116,15 @@ export const VReqToModifyItem = (req, res, next) => {
 };
 
 export const VReqToBodyItemId = (req, res, next) => {
-    return VReqTo(req, res, next, itemSchemaForItemId);
+	return VReqTo(req, res, next, itemSchemaForItemId);
 };
 
 export const VReqToBodyItemsIds = (req, res, next) => {
-    return VReqTo(req, res, next, itemSchemaForItemsIds);
+	return VReqTo(req, res, next, itemSchemaForItemsIds);
 };
 
 export const VReqToBodyItemsIdsForDelete = (req, res, next) => {
-    return VReqTo(req, res, next, itemSchemaForItemsIdsForDelete);
+	return VReqTo(req, res, next, itemSchemaForItemsIdsForDelete);
 };
 
 //* ======================={ITEM VRequests Validation}========================
@@ -154,24 +151,20 @@ export const VReqToModifySuitcase = (req, res, next) => {
 
 //* ======================={SUITCASE VRequests Validation}========================
 
-
 //* ======================={FEATURES VRequests Validation}========================
 export const VReqToItemAutoFilling = (req, res, next) => {
-    return VReqTo(req, res, next, itemAutoFillingSchame);
+	return VReqTo(req, res, next, itemAutoFillingSchame);
 };
-
 
 export const VReqToBagAutoFilling = (req, res, next) => {
-    return VReqTo(req, res, next, bagAutoFillingSchame);
+	return VReqTo(req, res, next, bagAutoFillingSchame);
 };
-
 
 export const VReqToSuitcaseAutoFilling = (req, res, next) => {
-    return VReqTo(req, res, next, suitcaseAutoFillingSchame);
+	return VReqTo(req, res, next, suitcaseAutoFillingSchame);
 };
 
-
 export const VReqTolocationPermission = (req, res, next) => {
-    return VReqTo(req, res, next, locationPermissionScheme);
+	return VReqTo(req, res, next, locationPermissionScheme);
 };
 //* ======================={FEATURES VRequests Validation}========================

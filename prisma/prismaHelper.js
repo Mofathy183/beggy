@@ -28,31 +28,29 @@ export const getAge = (birth) => {
 };
 //*==========================={User Helpers}========================
 
-
 //*==========================={Suitcases and Bags Helpers}========================
 
 export const getCurrentWeight = (items) => {
 	if (!items || items.length === 0) return 0;
 
 	const currentWeight = items.reduce((acc, item) => {
-		return acc + (item.item.weight * item.item.quantity);
+		return acc + item.item.weight * item.item.quantity;
 	}, 0);
-
 
 	return Number(parseFloat(currentWeight).toFixed(2));
 };
 
 export const getIsWeightExceeded = (items, maxWeight) => {
-    if (!maxWeight || !maxWeight) return false;
+	if (!maxWeight || !maxWeight) return false;
 
 	const currentWeight = getCurrentWeight(items);
 
-    if (currentWeight) return false;
+	if (currentWeight) return false;
 
 	//* if the current weight is greater than the max weight
 	//* that means the current weight is exceeded the max weight
 	//* so return true, else return false
-    //* if Exeeded "True", If Not "False"
+	//* if Exeeded "True", If Not "False"
 	return currentWeight > maxWeight;
 };
 
@@ -60,23 +58,23 @@ export const getCurrentCapacity = (items) => {
 	if (!items || items.length === 0) return 0;
 
 	const currentCapacity = items.reduce((acc, item) => {
-		return acc + (item.item.volume * item.item.quantity);
+		return acc + item.item.volume * item.item.quantity;
 	}, 0);
 
 	return Number(parseFloat(currentCapacity).toFixed(2));
 };
 
 export const getIsCapacityExceeded = (items, capacity) => {
-    if (!capacity || !capacity) return false;
-    
+	if (!capacity || !capacity) return false;
+
 	const currentCapacity = getCurrentCapacity(items);
 
-    if (!currentCapacity) return false;
+	if (!currentCapacity) return false;
 
 	//* if the current weight is greater than the max weight
 	//* that means the current weight is exceeded the max weight
 	//* so return true, else return false
-    //* if Exeeded "True", If Not "False"
+	//* if Exeeded "True", If Not "False"
 	return currentCapacity > capacity;
 };
 

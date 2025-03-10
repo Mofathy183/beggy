@@ -10,11 +10,11 @@ export const findAllSuitcasesByQuery = async (
 		const { page, limit, offset } = pagination;
 
 		const suitcases = await prisma.suitcases.findMany({
-			where: { OR: searchFilter },
+			where: { ...searchFilter },
 			omit: {
 				user: true,
 				userId: true,
-				items: true,
+				suitcaseItems: true,
 			},
 			take: limit,
 			skip: offset,
@@ -32,7 +32,8 @@ export const findAllSuitcasesByQuery = async (
 			return new ErrorHandler(
 				'prisma',
 				suitcases.error,
-				'Failed to find suitcases in the database'
+				'Failed to find suitcases in the database ' +
+					suitcases.error.message
 			);
 
 		const meta = {
@@ -57,7 +58,7 @@ export const findSuitcaseById = async (suitcaseId) => {
 			omit: {
 				user: true,
 				userId: true,
-				items: true,
+				suitcaseItems: true,
 			},
 		});
 
@@ -72,7 +73,8 @@ export const findSuitcaseById = async (suitcaseId) => {
 			return new ErrorHandler(
 				'prisma',
 				suitcase.error,
-				'Failed to find suitcase in the database'
+				'Failed to find suitcase in the database ' +
+					suitcase.error.message
 			);
 
 		return suitcase;
@@ -94,7 +96,7 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 			color,
 			size,
 			capacity,
-			maxWidth,
+			maxweight,
 			weight,
 			material,
 			features,
@@ -110,7 +112,7 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 				color: color,
 				size: size,
 				capacity: capacity,
-				maxWidth: maxWidth,
+				maxweight: maxweight,
 				weight: weight,
 				material: material,
 				features: features,
@@ -119,7 +121,7 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 			omit: {
 				user: true,
 				userId: true,
-				items: true,
+				suitcaseItems: true,
 			},
 		});
 
@@ -134,7 +136,8 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedSuitcase.error,
-				'Failed to modify suitcase in the database'
+				'Failed to modify suitcase in the database ' +
+					updatedSuitcase.error.message
 			);
 
 		return updatedSuitcase;
@@ -156,12 +159,57 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 			color,
 			size,
 			capacity,
-			maxWidth,
+			maxweight,
 			weight,
 			material,
 			features,
+			removeFeatures,
 			wheels,
 		} = body;
+
+		const suitcase = await prisma.suitcases.findUnique({
+			where: { id: suitcaseId },
+			select: {
+				features: true,
+			},
+		});
+
+		if (!suitcase)
+			return new ErrorHandler(
+				'suitcase not found',
+				'Failed to find suitcase in the database',
+				'prisma Error'
+			);
+
+		if (suitcase.error)
+			return new ErrorHandler(
+				'prisma',
+				suitcase.error,
+				'Failed to find suitcase in the database ' +
+					suitcase.error.message
+			);
+
+		// Normalize `removeFeatures` for case-insensitive matching
+		let removeSet = [
+			...new Set([...removeFeatures.map((f) => f.toUpperCase())]),
+		];
+		console.log('Removing features: ', removeSet);
+
+		// Filter out features that need to be removed
+		let newFeatures =
+			suitcase.features?.filter(
+				(f) => !removeSet.includes(f.toUpperCase())
+			) || [];
+		console.log('New features: ', newFeatures);
+
+		// Convert `features` to uppercase to match `suitcase.features`
+		let updatedFeatures = [
+			...new Set([
+				...features.map((f) => f.toUpperCase()),
+				...newFeatures,
+			]),
+		];
+		console.log('Updated features: ', updatedFeatures);
 
 		const updatedSuitcase = await prisma.suitcases.update({
 			where: { id: suitcaseId },
@@ -172,25 +220,19 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 				color: color || undefined,
 				size: size || undefined,
 				capacity: capacity || undefined,
-				maxWidth: maxWidth || undefined,
+				maxweight: maxweight || undefined,
 				weight: weight || undefined,
 				material: material || undefined,
-				features: features || undefined,
+				features:
+					features.length || newFeatures.length
+						? updatedFeatures
+						: undefined,
 				wheels: wheels || undefined,
 			},
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				brand: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWidth: true,
-				weight: true,
-				material: true,
-				features: true,
-				wheels: true,
+			omit: {
+				user: true,
+				userId: true,
+				suitcaseItems: true,
 			},
 		});
 
@@ -205,7 +247,8 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedSuitcase.error,
-				'Failed to modify suitcase in the database'
+				'Failed to modify suitcase in the database ' +
+					updatedSuitcase.error.message
 			);
 
 		return updatedSuitcase;
@@ -225,7 +268,7 @@ export const removeSuitcaseById = async (suitcaseId) => {
 			omit: {
 				user: true,
 				userId: true,
-				items: true,
+				suitcaseItems: true,
 			},
 		});
 
@@ -240,10 +283,18 @@ export const removeSuitcaseById = async (suitcaseId) => {
 			return new ErrorHandler(
 				'prisma',
 				deletedSuitcase.error,
-				'Failed to remove suitcase from the database'
+				'Failed to remove suitcase from the database ' +
+					deletedSuitcase.error.message
 			);
 
-		return deletedSuitcase;
+		const totalCount = await prisma.suitcases.count();
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: deletedSuitcase ? 1 : 0,
+		};
+
+		return { deletedSuitcase: deletedSuitcase, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -255,16 +306,24 @@ export const removeSuitcaseById = async (suitcaseId) => {
 
 export const removeAllSuitcases = async () => {
 	try {
-		const deleteCount = await prisma.suitcases.delete({ where: {} });
+		const deleteCount = await prisma.suitcases.deleteMany();
 
-		if (!deleteCount || deleteCount.count === 0)
+		if (deleteCount.error)
 			return new ErrorHandler(
-				'Suitcases not deleted',
-				'Failed to delete all suitcases in the database',
-				'prisma Error'
+				'prisma',
+				deleteCount.error,
+				'Failed to remove all suitcases from the database ' +
+					deleteCount.error.message
 			);
 
-		return deleteCount;
+		const totalCount = await prisma.suitcases.count();
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: deleteCount ? deleteCount.count : 0,
+		};
+
+		return { deleteCount: deleteCount, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -273,6 +332,8 @@ export const removeAllSuitcases = async () => {
 		);
 	}
 };
+
+//*===================================={suitcases Route For User}===================================
 
 export const findSuitcasesUserHas = async (
 	userId,
@@ -284,20 +345,13 @@ export const findSuitcasesUserHas = async (
 		const { page, limit, offset } = pagination;
 
 		const suitcases = await prisma.suitcases.findMany({
-			where: { userId: userId, OR: searchFilter },
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				brand: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWidth: true,
-				weight: true,
-				material: true,
-				features: true,
-				wheels: true,
+			where: { ...searchFilter, userId: userId },
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
 			},
 			take: limit,
 			skip: offset,
@@ -315,11 +369,16 @@ export const findSuitcasesUserHas = async (
 			return new ErrorHandler(
 				'prisma',
 				suitcases.error,
-				'Failed to find suitcases in the database'
+				'Failed to find suitcases in the database ' +
+					suitcases.error.message
 			);
 
+		const totalCount = await prisma.suitcases.count({
+			where: { userId: userId },
+		});
+
 		const meta = {
-			totalCount: suitcases.length,
+			totalCount: totalCount,
 			page: page,
 			limit: limit,
 			offset: offset,
@@ -341,19 +400,12 @@ export const findSuitcaseUserHasById = async (userId, suitcaseId) => {
 	try {
 		const suitcase = await prisma.suitcases.findUnique({
 			where: { userId: userId, id: suitcaseId },
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				brand: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWidth: true,
-				weight: true,
-				material: true,
-				features: true,
-				wheels: true,
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
 			},
 		});
 
@@ -368,7 +420,8 @@ export const findSuitcaseUserHasById = async (userId, suitcaseId) => {
 			return new ErrorHandler(
 				'prisma',
 				suitcase.error,
-				'Failed to find suitcase in the database'
+				'Failed to find suitcase in the database ' +
+					suitcase.error.message
 			);
 
 		return suitcase;
@@ -390,7 +443,7 @@ export const addSuitcaseToUser = async (userId, body) => {
 			color,
 			size,
 			capacity,
-			maxWidth,
+			maxWeight,
 			weight,
 			material,
 			features,
@@ -406,25 +459,18 @@ export const addSuitcaseToUser = async (userId, body) => {
 				color: color,
 				size: size,
 				capacity: capacity,
-				maxWidth: maxWidth,
+				maxWeight: maxWeight,
 				weight: weight,
 				material: material,
 				features: features,
 				wheels: wheels,
 			},
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				brand: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWidth: true,
-				weight: true,
-				material: true,
-				features: true,
-				wheels: true,
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
 			},
 		});
 
@@ -439,10 +485,20 @@ export const addSuitcaseToUser = async (userId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				newSuitcase.error,
-				'Failed to create suitcase in the database'
+				'Failed to create suitcase in the database ' +
+					newSuitcase.error.message
 			);
 
-		return newSuitcase;
+		const totalCount = await prisma.suitcases.count({
+			where: { userId: userId },
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalCreate: newSuitcase ? 1 : 0,
+		};
+
+		return { newSuitcase: newSuitcase, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -453,170 +509,254 @@ export const addSuitcaseToUser = async (userId, body) => {
 };
 
 export const addItemToUserSuitcase = async (userId, suitcaseId, body) => {
-    try {
-        const { itemId } = body;
+	try {
+		const { itemId } = body;
 
-        const userSuitcase = await prisma.suitcases.findUnique({
-            where: { userId: userId, id: suitcaseId },
-        })
+		const suitcase = await prisma.suitcases.findUnique({
+			where: { userId: userId, id: suitcaseId },
+		});
 
-        if (!userSuitcase) return new ErrorHandler(
-            'user suitcase not found',
-            'Failed to find user suitcase in the database',
-            'prisma Error',
-        )
+		if (!suitcase)
+			return new ErrorHandler(
+				'suitcase not found',
+				'Failed to find suitcase in the database',
+				'prisma Error'
+			);
 
-        if (userSuitcase.error) return new ErrorHandler(
-            'prisma',
-            userSuitcase.error,
-            'Failed to find user suitcase in the database',
-        )
+		if (suitcase.error)
+			return new ErrorHandler(
+				'prisma',
+				suitcase.error,
+				'Failed to find suitcase in the database ' +
+					suitcase.error.message
+			);
 
-        const userItem = await prisma.items.findUnique({
-            where: { userId: userId, id: itemId },
-        })
+		const userItem = await prisma.items.findUnique({
+			where: { userId: userId, id: itemId },
+		});
 
-        if (!userItem) return new ErrorHandler(
-            'user item not found',
-            'Failed to find user item in the database',
-            'prisma Error',
-        )
+		if (!userItem)
+			return new ErrorHandler(
+				'item not found',
+				'Failed to find item in the database',
+				'prisma Error'
+			);
 
-        if (userItem.error) return new ErrorHandler(
-            'prisma',
-            userItem.error,
-            'Failed to find user item in the database',
-        )
+		if (userItem.error)
+			return new ErrorHandler(
+				'prisma',
+				userItem.error,
+				'Failed to find item in the database ' + userItem.error.message
+			);
 
-        if (
-            (userSuitcase.capacity >= userItem.volume) && (userSuitcase.weight >= userItem.weight)
-        )return new ErrorHandler(
-            'item exceeds suitcase capacity or weight',
-            'Failed to add item to suitcase due to capacity or weight constraints',
-            'if you add this item to your suitcase will be exsceeded capacity and weight constraints',
-        );
+		if (
+			!(
+				suitcase.capacity >=
+				(userItem.volume * userItem.quantity) / 100
+			) &&
+			!(suitcase.weight >= (userItem.weight * userItem.quantity) / 100)
+		)
+			return new ErrorHandler(
+				'suitcase capacity or weight exceeded',
+				'The suitcase does not have enough capacity or weight to accommodate the item',
+				'suitcase capacity or weight exceeded'
+			);
 
-        const updatedSuitcase = await prisma.suitcaseItems.create({
-            data: {
-                suitcase: { connect: { id: suitcaseId } },
-                items: { connect: { id: itemId } },
-            },
-            include: {
-                suitcase: true,
-                item: true,
-            },
-        })
+		const suitcaseItem = await prisma.suitcaseItems.upsert({
+			where: {
+				suitcaseId_itemId: { suitcaseId, itemId },
+			},
+			update: {
+				itemId: itemId,
+			},
+			create: {
+				suitcaseId: suitcaseId,
+				itemId: itemId,
+			},
+		});
 
-        if (!updatedSuitcase) return new ErrorHandler(
-            'item not added',
-            'Failed to add item to suitcase in the database',
-            'prisma Error',
-        )
+		if (!suitcaseItem)
+			return new ErrorHandler(
+				'item not added in suitcase',
+				'Failed to add item to the suitcase in the database',
+				'prisma Error'
+			);
 
-        if (updatedSuitcase.error) return new ErrorHandler(
-            'prisma',
-            updatedSuitcase.error,
-            'Failed to add item to suitcase in the database',
-        )
+		if (suitcaseItem.error)
+			return new ErrorHandler(
+				'prisma',
+				suitcaseItem.error,
+				'Failed to add item to the suitcase in the database ' +
+					suitcaseItem.error.message
+			);
 
-        return updatedSuitcase;
-    }
+		const userSuitcase = await prisma.suitcases.findUnique({
+			where: { userId: userId, id: suitcaseId },
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
+			},
+		});
 
-    catch (error) {
-        return new ErrorHandler(
-            'item not added',
-            error,
-            'Failed to add item to suitcase in the database',
-        );
-    }
-}
+		if (!userSuitcase)
+			return new ErrorHandler(
+				'suitcase is not full',
+				'The suitcase has enough capacity and weight to accommodate the item',
+				'suitcase is not full'
+			);
+
+		if (userSuitcase.error)
+			return new ErrorHandler(
+				'prisma',
+				userSuitcase.error,
+				'Failed to find suitcase in the database ' +
+					userSuitcase.error.message
+			);
+
+		if (userSuitcase.isWeightExceeded || userSuitcase.isCapacityExceeded)
+			return new ErrorHandler(
+				'suitcase is exceeded capacity and weight',
+				'Cannot add that item to suitcase ',
+				'The suitcase will be exceeded capacity and weight if you add that item'
+			);
+
+		const totalCount = await prisma.suitcaseItems.count({
+			where: {
+				suitcaseId: suitcaseId,
+			},
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalAdd: suitcaseItem ? 1 : 0,
+		};
+
+		return { suitcaseItems: userSuitcase, meta: meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			error,
+			'Failed to add item to user bag'
+		);
+	}
+};
 
 export const addItemsToUserSuitcase = async (userId, suitcaseId, body) => {
-    try {
-        const userSuitcase = await prisma.suitcases.findUnique({
-            where: { userId: userId, id: suitcaseId },
-        });
+	try {
+		const suitcase = await prisma.suitcases.findUnique({
+			where: { id: suitcaseId, userId: userId },
+		});
 
-        if (!userSuitcase) return new ErrorHandler(
-            'suitcase not found', 
-            'Failed to find suitcase in the database', 
-            'prisma Error'
-        );
+		if (!suitcase)
+			return new ErrorHandler(
+				'suitcase not found',
+				'Failed to find suitcase in the database',
+				'prisma Error'
+			);
 
-        if (userSuitcase.error) return new ErrorHandler(
-            'prisma', 
-            userSuitcase.error, 
-            'Failed to find suitcase in the database'
-        );
+		if (suitcase.error)
+			return new ErrorHandler(
+				'prisma',
+				suitcase.error,
+				'Failed to find suitcase in the database ' +
+					suitcase.error.message
+			);
 
-        const userItems = await prisma.items.findMany({
-            where: { userId: userId },
-        });
+		const userItems = await prisma.items.findMany({
+			where: { userId: userId },
+		});
 
-        const userItemsIds = userItems.filter((id, index) => {
-            let itemId = body.itemsIds[index].itemId;
+		if (!userItems)
+			return new ErrorHandler(
+				'items not found',
+				'Failed to find items in the database',
+				'prisma Error'
+			);
 
-            return itemId && userSuitcase.capacity >= userItems[index].volume && userSuitcase.weight >= userItems[index].weight;
-        });
+		if (userItems.error)
+			return new ErrorHandler(
+				'prisma',
+				userItems.error,
+				'Failed to find items in the database ' +
+					userItems.error.message
+			);
 
-        if (userItemsIds.length === 0) return new ErrorHandler(
-            'suitcase capacity or weight exceeded', 
-            'The suitcase does not have enough capacity or weight to accommodate all the items', 
-            'suitcase capacity or weight exceeded'
-        );
+		const userItemsIds = userItems.map((item, index) => {
+			let itemId = body.itemsIds[index].itemId;
+			let canFit =
+				suitcase.capacity >= item.volume &&
+				suitcase.weight >= item.weight;
 
-        const updatedsuitcaseItems = await prisma.suitcases.create({
-            data: {
-                suitcase: { connect: { id: suitcaseId } },
-                items: { connectMany: userItemsIds.map(item => ({ id: item })) },
-            },
-            include: {
-                suitcase: true,
-                item: true,
-            },
-        });
+			return canFit ? { itemId } : {};
+		});
 
-        if (!updatedsuitcaseItems) return new ErrorHandler(
-            'items not added', 
-            'Failed to add items to the suitcase in the database', 
-            'prisma Error'
-        );
+		if (userItemsIds.length === 0)
+			return new ErrorHandler(
+				'suitcase capacity or weight exceeded',
+				'The suitcase does not have enough capacity or weight to accommodate all the items',
+				'suitcase capacity or weight exceeded'
+			);
 
-        if (updatedsuitcaseItems.error) return new ErrorHandler(
-            'prisma', 
-            updatedsuitcaseItems.error, 
-            'Failed to add items to the suitcase in the database'
-        );
+		const suitcaseItems = await prisma.suitcaseItems.createMany({
+			data: userItemsIds.map((item) => ({
+				suitcaseId,
+				itemId: item.itemId,
+			})),
+			skipDuplicates: true,
+		});
 
-        const issuitcaseFull = await prisma.suitcases.findUnique({
-            where: { userId: userId, id: suitcaseId },
-            select: {
-                capacity: true,
-                maxWeight: true,
-                weight: true,
-                suitcaseItems: true,
-                isWeightExceeded: true,
-                isCapacityExceeded: true
-            },
-        })
+		if (suitcaseItems.error)
+			return new ErrorHandler(
+				'prisma',
+				suitcaseItems.error,
+				'Failed to add items to the suitcase in the database ' +
+					suitcaseItems.error.message
+			);
 
-        if (!issuitcaseFull.isWeightExceeded &&!issuitcaseFull.isCapacityExceeded) return new ErrorHandler(
-            'suitcase is exceeded capacity and weight', 
-            'Cannot add those items to suitcase ', 
-            'The suitcase will be exceeded capacity and weight if you add those items'
-        );
+		const isSuitcaseFull = await prisma.suitcases.findUnique({
+			where: { id: suitcaseId },
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
+			},
+		});
 
-        return updatedsuitcaseItems;
-    }
+		if (
+			isSuitcaseFull.isWeightExceeded ||
+			isSuitcaseFull.isCapacityExceeded
+		)
+			return new ErrorHandler(
+				'suitcase is exceeded capacity and weight',
+				'Cannot add those items to suitcase ',
+				'The suitcase will be exceeded capacity and weight if you add those items'
+			);
 
-    catch (error) {
-        return new ErrorHandler(
-            'items not added',
-            error,
-            'Failed to add items to suitcase in the database',
-        );
-    }
-}
+		const totalCount = await prisma.suitcaseItems.count({
+			where: {
+				suitcaseId: suitcaseId,
+			},
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalAdd: suitcaseItems ? suitcaseItems.count : 0,
+		};
+
+		return { suitcaseItems: isSuitcaseFull, meta: meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			error,
+			'Failed to add items to user suitcase'
+		);
+	}
+};
 
 export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 	try {
@@ -627,7 +767,7 @@ export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 			color,
 			size,
 			capacity,
-			maxWidth,
+			maxWeight,
 			weight,
 			material,
 			features,
@@ -643,25 +783,18 @@ export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 				color: color,
 				size: size,
 				capacity: capacity,
-				maxWidth: maxWidth,
+				maxWeight: maxWeight,
 				weight: weight,
 				material: material,
 				features: features,
 				wheels: wheels,
 			},
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				brand: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWidth: true,
-				weight: true,
-				material: true,
-				features: true,
-				wheels: true,
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
 			},
 		});
 
@@ -676,7 +809,8 @@ export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedSuitcase.error,
-				'Failed to modify suitcase in the database'
+				'Failed to modify suitcase in the database ' +
+					updatedSuitcase.error.message
 			);
 
 		return updatedSuitcase;
@@ -698,12 +832,57 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 			color,
 			size,
 			capacity,
-			maxWidth,
+			maxWeight,
 			weight,
 			material,
 			features,
+			removeFeatures,
 			wheels,
 		} = body;
+
+		const suitcase = await prisma.suitcases.findUnique({
+			where: { id: suitcaseId },
+			select: {
+				features: true,
+			},
+		});
+
+		if (!suitcase)
+			return new ErrorHandler(
+				'suitcase not found',
+				'Failed to find suitcase in the database',
+				'prisma Error'
+			);
+
+		if (suitcase.error)
+			return new ErrorHandler(
+				'prisma',
+				suitcase.error,
+				'Failed to find suitcase in the database ' +
+					suitcase.error.message
+			);
+
+		// Normalize `removeFeatures` for case-insensitive matching
+		let removeSet = [
+			...new Set([...removeFeatures.map((f) => f.toUpperCase())]),
+		];
+		console.log('Removing features: ', removeSet);
+
+		// Filter out features that need to be removed
+		let newFeatures =
+			suitcase.features?.filter(
+				(f) => !removeSet.includes(f.toUpperCase())
+			) || [];
+		console.log('New features: ', newFeatures);
+
+		// Convert `features` to uppercase to match `suitcase.features`
+		let updatedFeatures = [
+			...new Set([
+				...features.map((f) => f.toUpperCase()),
+				...newFeatures,
+			]),
+		];
+		console.log('Updated features: ', updatedFeatures);
 
 		const updatedSuitcase = await prisma.suitcases.update({
 			where: { userId: userId, id: suitcaseId },
@@ -714,25 +893,21 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 				color: color || undefined,
 				size: size || undefined,
 				capacity: capacity || undefined,
-				maxWidth: maxWidth || undefined,
+				maxWeight: maxWeight || undefined,
 				weight: weight || undefined,
 				material: material || undefined,
-				features: features || undefined,
+				features:
+					features.length || newFeatures.length
+						? updatedFeatures
+						: undefined,
 				wheels: wheels || undefined,
 			},
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				brand: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWidth: true,
-				weight: true,
-				material: true,
-				features: true,
-				wheels: true,
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
 			},
 		});
 
@@ -747,7 +922,8 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedSuitcase.error,
-				'Failed to find suitcase in the database'
+				'Failed to find suitcase in the database ' +
+					updatedSuitcase.error.message
 			);
 
 		return updatedSuitcase;
@@ -777,10 +953,20 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 			return new ErrorHandler(
 				'prisma',
 				deletedSuitcase.error,
-				'Failed to delete suitcase in the database'
+				'Failed to delete suitcase in the database ' +
+					deletedSuitcase.error.message
 			);
 
-		return deletedSuitcase;
+		const totalCount = await prisma.suitcases.count({
+			where: { userId: userId },
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: deletedSuitcase ? 1 : 0,
+		};
+
+		return { deletedSuitcase: deletedSuitcase, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -790,27 +976,187 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 	}
 };
 
-export const removeAllSuitcasesUserHas = async (userId) => {
+export const removeItemFromUserSuitcase = async (userId, suitcaseId, body) => {
 	try {
-		const deletedSuitcases = await prisma.suitcases.deleteMany({
-			where: { userId: userId },
+		const { itemId } = body;
+
+		const deletedSuitcaseItem = await prisma.suitcaseItems.delete({
+			where: { suitcaseId_itemId: { suitcaseId, itemId } },
 		});
 
-		if (!deletedSuitcases || deletedSuitcases.count === 0)
+		if (!deletedSuitcaseItem)
 			return new ErrorHandler(
-				'suitcases not found',
-				'Failed to find suitcases in the database',
+				'suitcase item not deleted',
+				'Failed to delete item from the database',
 				'prisma Error'
 			);
+
+		if (deletedSuitcaseItem.error)
+			return new ErrorHandler(
+				'prisma',
+				deletedSuitcaseItem.error,
+				'Failed to delete item from the database ' +
+					deletedSuitcaseItem.error.message
+			);
+
+		const suitcaseItems = await prisma.suitcases.findUnique({
+			where: { id: suitcaseId, userId: userId },
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
+			},
+		});
+
+		const totalCount = await prisma.suitcaseItems.count({
+			where: { suitcaseId: suitcaseId },
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: deletedSuitcaseItem ? 1 : 0,
+		};
+
+		return { suitcaseItems: suitcaseItems, meta: meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'Catch',
+			error,
+			'Failed to remove item from user suitcase'
+		);
+	}
+};
+
+export const removeItemsFromUserSuitcase = async (userId, suitcaseId, body) => {
+	try {
+		const { itemsIds } = body;
+
+		const deletedSuitcaseItems = await prisma.suitcaseItems.deleteMany({
+			where: {
+				suitcaseId: suitcaseId,
+				itemId: { in: itemsIds },
+			},
+		});
+
+		if (deletedSuitcaseItems.error)
+			return new ErrorHandler(
+				'prisma',
+				deletedSuitcaseItems.error,
+				'Failed to delete items from the database ' +
+					deletedSuitcaseItems.error.message
+			);
+
+		const suitcaseItems = await prisma.suitcases.findUnique({
+			where: { id: suitcaseId, userId: userId },
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
+			},
+		});
+
+		const totalCount = await prisma.suitcaseItems.count({
+			where: {
+				suitcaseId: suitcaseId,
+			},
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: deletedSuitcaseItems.count,
+		};
+
+		return { suitcaseItems: suitcaseItems, meta: meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			error,
+			'Failed to remove items from user suitcase'
+		);
+	}
+};
+
+export const removeAllItemsFromUserSuitcase = async (
+	userId,
+	suitcaseId,
+	searchFilter
+) => {
+	try {
+		const deletedSuitcaseItems = await prisma.suitcaseItems.deleteMany({
+			where: {
+				item: searchFilter,
+				suitcaseId: suitcaseId,
+			},
+		});
+
+		if (deletedSuitcaseItems.error)
+			return new ErrorHandler(
+				'prisma',
+				deletedSuitcaseItems.error,
+				'Failed to delete all items from the database ' +
+					deletedSuitcaseItems.error.message
+			);
+
+		const suitcaseItems = await prisma.suitcases.findUnique({
+			where: { id: suitcaseId, userId: userId },
+			include: {
+				suitcaseItems: {
+					select: {
+						item: true,
+					},
+				},
+			},
+		});
+
+		const totalCount = await prisma.suitcaseItems.count({
+			where: {
+				suitcaseId: suitcaseId,
+			},
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: deletedSuitcaseItems.count,
+		};
+
+		return { suitcaseItems: suitcaseItems, meta: meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			error,
+			'Failed to remove all items from user suitcase'
+		);
+	}
+};
+
+export const removeAllSuitcasesUserHas = async (userId, searchFilter) => {
+	try {
+		const deletedSuitcases = await prisma.suitcases.deleteMany({
+			where: { ...searchFilter, userId: userId },
+		});
 
 		if (deletedSuitcases.error)
 			return new ErrorHandler(
 				'prisma',
 				deletedSuitcases.error,
-				'Failed to delete suitcases in the database'
+				'Failed to delete suitcases in the database ' +
+					deletedSuitcases.error.description
 			);
 
-		return deletedSuitcases;
+		const totalCount = await prisma.suitcases.count({
+			where: { userId: userId },
+		});
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: deletedSuitcases.count,
+		};
+
+		return { deletedSuitcases: deletedSuitcases, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',

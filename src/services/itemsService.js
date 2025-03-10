@@ -28,7 +28,7 @@ export const findAllItems = async (query) => {
 
 		const meta = {
 			totalCount: totalCount,
-            totalFind: items.length,
+			totalFind: items.length,
 			page: page,
 			limit: limit,
 			offset: offset,
@@ -77,8 +77,8 @@ export const findItemById = async (itemId) => {
 		if (item.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to find item in the database '+ item.error,
-				'Failed to find item in the database '+ item.error.message
+				'Failed to find item in the database ' + item.error,
+				'Failed to find item in the database ' + item.error.message
 			);
 
 		return item;
@@ -111,7 +111,7 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 
 		const meta = {
 			totalCount: totalCount,
-            totalSearch: items.length,
+			totalSearch: items.length,
 			page: page,
 			limit: limit,
 			searchFilter,
@@ -167,17 +167,19 @@ export const replaceItemResource = async (itemId, body) => {
 			},
 		});
 
-        if (!itemUpdate) return new ErrorHandler(
-            'item',
-            'Item not found',
-            'Item not found in the database'
-        )
+		if (!itemUpdate)
+			return new ErrorHandler(
+				'item',
+				'Item not found',
+				'Item not found in the database'
+			);
 
 		if (itemUpdate.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to update item in the database '+itemUpdate.error ,
-				'Failed to update item in the database '+itemUpdate.error.message
+				'Failed to update item in the database ' + itemUpdate.error,
+				'Failed to update item in the database ' +
+					itemUpdate.error.message
 			);
 
 		return itemUpdate;
@@ -229,17 +231,19 @@ export const modifyItemResource = async (itemId, body) => {
 			},
 		});
 
-        if (!itemUpdate) return new ErrorHandler(
-            'item',
-            'Item not found',
-            'Item not found in the database'
-        )
+		if (!itemUpdate)
+			return new ErrorHandler(
+				'item',
+				'Item not found',
+				'Item not found in the database'
+			);
 
 		if (itemUpdate.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to update item in the database '+ itemUpdate.error,
-				'Failed to update item in the database '+ itemUpdate.error.message
+				'Failed to update item in the database ' + itemUpdate.error,
+				'Failed to update item in the database ' +
+					itemUpdate.error.message
 			);
 
 		return itemUpdate;
@@ -254,29 +258,33 @@ export const modifyItemResource = async (itemId, body) => {
 
 export const removeItemById = async (itemId) => {
 	try {
-		const deletedItem = await prisma.items.delete({ where: { id: itemId } });
-        
-        if (!deletedItem) return new ErrorHandler(
-            'item',
-            'Item not found',
-            'Item not found in the database'
-        )
+		const deletedItem = await prisma.items.delete({
+			where: { id: itemId },
+		});
+
+		if (!deletedItem)
+			return new ErrorHandler(
+				'item',
+				'Item not found',
+				'Item not found in the database'
+			);
 
 		if (deletedItem.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to delete item from the database '+ deletedItem.error,
-				'Failed to delete item from the database '+ deletedItem.error.message
+				'Failed to delete item from the database ' + deletedItem.error,
+				'Failed to delete item from the database ' +
+					deletedItem.error.message
 			);
-        
-        const totalCount = await prisma.items.count();
 
-        const meta = {
-            totalCount: totalCount,
-            deleted: deletedItem.count,
-        }
+		const totalCount = await prisma.items.count();
 
-		return { deletedItem: deletedItem, meta: meta};
+		const meta = {
+			totalCount: totalCount,
+			deleted: deletedItem.count,
+		};
+
+		return { deletedItem: deletedItem, meta: meta };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to remove item by id');
 	}
@@ -289,24 +297,22 @@ export const removeAllItems = async () => {
 		if (deleteCount.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to delete all items '+ deleteCount.error,
-				'Failed to delete all items '+ deleteCount.error.message
+				'Failed to delete all items ' + deleteCount.error,
+				'Failed to delete all items ' + deleteCount.error.message
 			);
 
-        const totalCount = await prisma.items.count();
+		const totalCount = await prisma.items.count();
 
-        const meta = {
-            totalCount: totalCount,
-            deleted: deleteCount.count,
-        }
+		const meta = {
+			totalCount: totalCount,
+			deleted: deleteCount.count,
+		};
 
-		return { deleteCount : deleteCount, meta : meta};
+		return { deleteCount: deleteCount, meta: meta };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to remove all items');
 	}
 };
-
-
 
 //*============================{For Items User Route}==================================
 
@@ -349,10 +355,10 @@ export const findItemsUserHas = async (userId, pagination) => {
 
 		const meta = {
 			total: itemsCount,
-            totalSearch: userItems.length,
+			totalSearch: userItems.length,
 			page: page,
 			limit: limit,
-            offset: offset
+			offset: offset,
 		};
 
 		return { userItems: userItems, meta: meta };
@@ -402,8 +408,8 @@ export const findItemUserHas = async (userId, itemId) => {
 		if (item.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to find item in the database '+item.error,
-				'Failed to find item in the database '+item.error.message
+				'Failed to find item in the database ' + item.error,
+				'Failed to find item in the database ' + item.error.message
 			);
 
 		return item;
@@ -461,16 +467,18 @@ export const addItemToUser = async (userId, body) => {
 		if (item.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to create item in the database '+item.error,
-				'Failed to create item in the database '+item.error.message
+				'Failed to create item in the database ' + item.error,
+				'Failed to create item in the database ' + item.error.message
 			);
 
-        const totalCount = await prisma.items.count({where: {userId: userId}})
+		const totalCount = await prisma.items.count({
+			where: { userId: userId },
+		});
 
-        const meta = {
-            totalCount: totalCount,
-            created: 1
-        };
+		const meta = {
+			totalCount: totalCount,
+			created: 1,
+		};
 
 		return { item: item, meta: meta };
 	} catch (error) {
@@ -495,17 +503,21 @@ export const addItemsToUSer = async (userId, body) => {
 			data: items,
 		});
 
-        if(createdItems.error) return new ErrorHandler(
-            'prisma',
-            'Failed to create items in the database '+ createdItems.error,
-            'Failed to create items in the database '+ createdItems.error.message
-        )
+		if (createdItems.error)
+			return new ErrorHandler(
+				'prisma',
+				'Failed to create items in the database ' + createdItems.error,
+				'Failed to create items in the database ' +
+					createdItems.error.message
+			);
 
-        const totalCount = await prisma.items.count({where: {userId: userId}})
+		const totalCount = await prisma.items.count({
+			where: { userId: userId },
+		});
 
 		const meta = {
 			totalCount: totalCount,
-            created: createdItems.count
+			created: createdItems.count,
 		};
 
 		return { createdItems: createdItems, meta: meta };
@@ -553,17 +565,19 @@ export const replaceItemUserHas = async (userId, itemId, body) => {
 			},
 		});
 
-        if (!itemUpdate) return new ErrorHandler(
-            'item',
-            'Item not found',
-            'Item not found in the database'
-        )
+		if (!itemUpdate)
+			return new ErrorHandler(
+				'item',
+				'Item not found',
+				'Item not found in the database'
+			);
 
 		if (itemUpdate.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to update item in the database '+itemUpdate.error,
-				'Failed to update item in the database '+itemUpdate.error.message
+				'Failed to update item in the database ' + itemUpdate.error,
+				'Failed to update item in the database ' +
+					itemUpdate.error.message
 			);
 
 		return itemUpdate;
@@ -615,17 +629,19 @@ export const modifyItemUserHas = async (userId, itemId, body) => {
 			},
 		});
 
-        if (!itemUpdate) return new ErrorHandler(
-            'item',
-            'Item not found',
-            'Item not found in the database'
-        )
+		if (!itemUpdate)
+			return new ErrorHandler(
+				'item',
+				'Item not found',
+				'Item not found in the database'
+			);
 
 		if (itemUpdate.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to update item in the database '+ itemUpdate.error,
-				'Failed to update item in the database '+ itemUpdate.error.message
+				'Failed to update item in the database ' + itemUpdate.error,
+				'Failed to update item in the database ' +
+					itemUpdate.error.message
 			);
 
 		return itemUpdate;
@@ -647,14 +663,16 @@ export const removeAllItemsUserHas = async (userId) => {
 		if (deletedItems.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to delete all items from the database '+deletedItems.error,
-				'Failed to delete all items from the database '+deletedItems.error.message
+				'Failed to delete all items from the database ' +
+					deletedItems.error,
+				'Failed to delete all items from the database ' +
+					deletedItems.error.message
 			);
 
-        const meta = {
-            deleteCount: deletedItems.count,
-            deleted: deletedItems.count
-        };
+		const meta = {
+			deleteCount: deletedItems.count,
+			deleted: deletedItems.count,
+		};
 
 		return { deletedItems: deletedItems, meta: meta };
 	} catch (error) {
@@ -672,25 +690,29 @@ export const removeItemUserHas = async (userId, itemId) => {
 			where: { id: itemId, userId: userId },
 		});
 
-        if (!deletedItem) return new ErrorHandler(
-            'item',
-            'Item not found',
-            'Item not found in the database'
-        )
+		if (!deletedItem)
+			return new ErrorHandler(
+				'item',
+				'Item not found',
+				'Item not found in the database'
+			);
 
 		if (deletedItem.error)
 			return new ErrorHandler(
 				'prisma',
-				'Failed to delete item from the database '+ deletedItem.error,
-				'Failed to delete item from the database '+ deletedItem.error.message
+				'Failed to delete item from the database ' + deletedItem.error,
+				'Failed to delete item from the database ' +
+					deletedItem.error.message
 			);
-        
-        const totalCount = await prisma.items.count({where: {userId: userId}})
 
-        const meta = {
-            deleteCount: totalCount,
-            deleted: 1
-        };
+		const totalCount = await prisma.items.count({
+			where: { userId: userId },
+		});
+
+		const meta = {
+			deleteCount: totalCount,
+			deleted: 1,
+		};
 
 		return { deletedItem: deletedItem, meta: meta };
 	} catch (error) {
@@ -701,6 +723,3 @@ export const removeItemUserHas = async (userId, itemId) => {
 		);
 	}
 };
-
-
-

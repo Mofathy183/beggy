@@ -10,6 +10,7 @@ import {
 	checkRoleMiddleware,
 	VReqToHeaderToken,
 	confirmDeleteMiddleware,
+	VReqToConfirmDelete,
 } from '../../middlewares/authMiddleware.js';
 import {
 	paginateMiddleware,
@@ -56,11 +57,11 @@ itemsRoute.get('/', paginateMiddleware, getAllItems);
 //* GET /user → Get all items for a user
 //* Get items that belong to a specific user
 itemsRoute.get(
-    '/user',
-    VReqToHeaderToken,
-    headersMiddleware,
-    paginateMiddleware,
-    getItemsBelongsToUser
+	'/user',
+	VReqToHeaderToken,
+	headersMiddleware,
+	paginateMiddleware,
+	getItemsBelongsToUser
 );
 //*==================={ From Items Route For User }===================
 
@@ -108,12 +109,13 @@ itemsRoute.patch(
 //* DELETE /delete-all → Delete all items (admin only)
 //* Delete all items (Admin only)
 itemsRoute.delete(
-    '/delete-all',
-    VReqToHeaderToken,
-    headersMiddleware,
-    checkRoleMiddleware('admin'),
-    confirmDeleteMiddleware,
-    deleteAllItems
+	'/delete-all',
+	VReqToHeaderToken,
+	headersMiddleware,
+	checkRoleMiddleware('admin'),
+	VReqToConfirmDelete,
+	confirmDeleteMiddleware,
+	deleteAllItems
 );
 
 //* route for delete item by id => DELETE (params id)
@@ -129,18 +131,16 @@ itemsRoute.delete(
 
 //*=========================================={Base Items Route}===================================
 
-
 //*=========================================={Items Route For User}===================================
-
 
 //* route to get item that user has by user id => GET (params id) user muet by login
 //* PUT /user/:itemId → Replace a user’s item
 //* Get items that belong to a specific user
 itemsRoute.get(
-    '/user/:itemId',
-    VReqToHeaderToken,
-    headersMiddleware,
-    getItemBelongsToUser
+	'/user/:itemId',
+	VReqToHeaderToken,
+	headersMiddleware,
+	getItemBelongsToUser
 );
 
 //* route for create item for User => POST (params id) user muet by login
@@ -191,10 +191,12 @@ itemsRoute.patch(
 //* DELETE /user/all → Delete all user’s items
 //* Delete all items that belong to a user
 itemsRoute.delete(
-    '/user/all',
-    VReqToHeaderToken,
-    headersMiddleware,
-    deleteAllItemsBelongsToUser
+	'/user/all',
+	VReqToHeaderToken,
+	headersMiddleware,
+	VReqToConfirmDelete,
+	confirmDeleteMiddleware,
+	deleteAllItemsBelongsToUser
 );
 
 //* route for delete item user has by id of the item => DELETE (params id) user muet by login

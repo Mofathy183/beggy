@@ -41,16 +41,18 @@ export const suitcaseSchema = Joi.object({
 		.required(),
 
 	capacity: Joi.number().precision(2).required(),
-	maxWidth: Joi.number().precision(2).required(),
+	maxWeight: Joi.number().precision(2).required(),
 	weight: Joi.number().precision(2).required(),
 
 	material: Joi.string() //* for Bags and Suitcases Only
 		.valid(...Object.values(Material))
 		.uppercase(),
 
-	features: Joi.string()
-		.valid(...Object.values(SuitcaseFeature))
-		.uppercase(),
+	features: Joi.array().items(
+		Joi.string()
+			.valid(...Object.values(SuitcaseFeature))
+			.uppercase()
+	),
 
 	wheels: Joi.string() //* for Suitcases Only
 		.valid(...Object.values(WheelType))
@@ -85,58 +87,26 @@ export const suitcaseModifySchema = Joi.object({
 		.uppercase(),
 
 	capacity: Joi.number().precision(2),
-	maxWidth: Joi.number().precision(2),
+	maxWeight: Joi.number().precision(2),
 	weight: Joi.number().precision(2),
 
 	material: Joi.string() //* for Bags and Suitcases Only
 		.valid(...Object.values(Material))
 		.uppercase(),
 
-	features: Joi.string()
-		.valid(...Object.values(SuitcaseFeature))
-		.uppercase(),
+	features: Joi.array().items(
+		Joi.string()
+			.valid(...Object.values(SuitcaseFeature))
+			.uppercase()
+	),
+
+	removeFeatures: Joi.array().items(
+		Joi.string()
+			.valid(...Object.values(SuitcaseFeature))
+			.uppercase()
+	),
 
 	wheels: Joi.string() //* for Suitcases Only
 		.valid(...Object.values(WheelType))
 		.uppercase(),
-});
-
-export const suitcaseSchemaMiddlware = Joi.object({
-	type: Joi.string()
-		.valid(...Object.values(SuitcaseType))
-		.uppercase(),
-
-	size: Joi.string() //* for Bags and Suitcases Only
-		.valid(...Object.values(Size))
-		.uppercase(),
-
-	material: Joi.string() //* for Bags and Suitcases Only
-		.valid(...Object.values(Material))
-		.uppercase(),
-
-	brand: Joi.string()
-		.pattern(productStringRegExp)
-		.message(
-			'must be a letter or - but not any special characters or numbers'
-		),
-
-	feeatures: Joi.string()
-		.valid(...Object.values(SuitcaseFeature))
-		.uppercase(),
-
-	wheels: Joi.string() //* for Suitcases Only
-		.valid(...Object.values(WheelType))
-		.uppercase(),
-
-	name: Joi.string()
-		.pattern(productStringRegExp)
-		.message(
-			'must be a letter or - but not any special characters or numbers'
-		),
-
-	color: Joi.string()
-		.pattern(productStringRegExp)
-		.message('must be a letter but not any special characters or numbers'),
-
-	createdAt: Joi.date().iso(),
 });

@@ -18,7 +18,7 @@ rootRoute.use('/items', itemsRoute);
 
 rootRoute.use('/bags', bagsRoute);
 
-rootRoute.use('/suitcase', suitcaseRoute);
+rootRoute.use('/suitcases', suitcaseRoute);
 
 rootRoute.use('/features', featuresRoute);
 

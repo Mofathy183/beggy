@@ -33,7 +33,24 @@ userRoute.param('id', (req, res, next, id) =>
 	VReqToUUID(req, res, next, id, 'id')
 );
 
+//*========================{Private Route}========================
+
+//* route for get all users => GET (Only Admin)
+userRoute.get(
+	'/',
+	VReqToHeaderToken,
+	headersMiddleware,
+	checkRoleMiddleware('admin', 'member'),
+	paginateMiddleware,
+	orderByMiddleware,
+	searchForUsersMiddleware,
+	findAllUsers
+);
+
+//*========================{Private Route}========================
+
 //*========================{Public Route}========================
+
 //* route to get user public profile by id => GET param (id)
 userRoute.get('/public/:id', findUserPublicProfile);
 
@@ -55,18 +72,6 @@ userRoute.get(
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
 	findUserById
-);
-
-//* route for get all users => GET (Only Admin)
-userRoute.get(
-	'/',
-	VReqToHeaderToken,
-	headersMiddleware,
-	checkRoleMiddleware('admin', 'member'),
-	paginateMiddleware,
-	orderByMiddleware,
-	searchForUsersMiddleware,
-	findAllUsers
 );
 
 //* route for create user => POST (only Admin)

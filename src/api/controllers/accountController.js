@@ -14,7 +14,7 @@ export const authenticateWithGoogle = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				status,
-				`Successfully ${status === 201 ? "Signing Up": "Logged In"} with Google`,
+				`Successfully ${status === 201 ? 'Signing Up' : 'Logged In'} with Google`,
 				userData
 			)
 		);
@@ -40,7 +40,7 @@ export const authenticateWithFacebook = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				status,
-				`Successfully ${status === 201 ? "Signing Up": "Logged In"} with Facebook`,
+				`Successfully ${status === 201 ? 'Signing Up' : 'Logged In'} with Facebook`,
 				userData
 			)
 		);

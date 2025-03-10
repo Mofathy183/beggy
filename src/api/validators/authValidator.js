@@ -125,3 +125,7 @@ export const updateUserDataSchema = Joi.object({
 
 	profilePicture: Joi.string(),
 });
+
+export const confirmDeleteSchema = Joi.object({
+	confirmDelete: Joi.boolean().required(),
+});

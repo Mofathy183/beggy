@@ -1,5 +1,5 @@
 import express from 'express';
-import { csrfProtection } from "../../middlewares/appMiddleware.js";
+import { csrfProtection } from '../../middlewares/appMiddleware.js';
 import {
 	signUp,
 	login,
@@ -10,7 +10,7 @@ import {
 	deActivate,
 	logout,
 	csrfResponse,
-    getAccessToken,
+	getAccessToken,
 } from '../controllers/authController.js';
 import {
 	VReqToSignUp,
@@ -21,7 +21,7 @@ import {
 	VReqToResetToken,
 	VReqToUpdatePassword,
 	VReqToHeaderToken,
-    VReqToHeaderRefreshToken,
+	VReqToHeaderRefreshToken,
 	headersMiddleware,
 } from '../../middlewares/authMiddleware.js';
 
@@ -33,6 +33,9 @@ authRoute.param('token', (req, res, next, token) =>
 
 //* route for signup => POST
 authRoute.post('/signup', VReqToSignUp, signUp);
+
+//* route for login => POST
+authRoute.post('/login', VReqToLogin, login);
 
 //* route for forgot Password => POST (email)
 authRoute.patch('/forgot-password', VReqToForgotPassword, forgotPassword);
@@ -66,9 +69,6 @@ authRoute.delete(
 	deActivate // to deactivate the user account
 );
 
-//* route for login => POST
-authRoute.post('/login', VReqToLogin, login);
-
 //* route for logout => POST
 authRoute.post(
 	'/logout',
@@ -82,9 +82,9 @@ authRoute.get('/csrf-token', csrfResponse);
 
 //* to get new access token => POST refresh token in the request body
 authRoute.post(
-    '/refresh-token',
-    VReqToHeaderRefreshToken,
-    headersMiddleware,
-    getAccessToken
+	'/refresh-token',
+	VReqToHeaderRefreshToken,
+	headersMiddleware,
+	getAccessToken
 );
 export default authRoute;

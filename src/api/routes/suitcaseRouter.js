@@ -3,14 +3,16 @@ import {
 	VReqToUUID,
 	VReqToCreateSuitcase,
 	VReqToModifySuitcase,
-    VReqToBodyItemId,
-    VReqToBodyItemsIds
+	VReqToBodyItemId,
+	VReqToBodyItemsIds,
+	VReqToBodyItemsIdsForDelete,
 } from '../../middlewares/validateRequest.js';
 import {
 	headersMiddleware,
 	checkRoleMiddleware,
 	VReqToHeaderToken,
 	confirmDeleteMiddleware,
+	VReqToConfirmDelete,
 } from '../../middlewares/authMiddleware.js';
 import {
 	paginateMiddleware,
@@ -34,8 +36,11 @@ import {
 	modifySuitcaseBelongsToUser,
 	deleteSuitcaseBelongsToUserById,
 	deleteAllSuitcasesBelongsToUser,
-    createItemForUserSuitcase,
-    createItemsForUserSuitcase
+	deleteItemFromUserSuitcase,
+	deleteItemsFromUserSuitcase,
+	deleteAllItemsFromUserSuitcase,
+	createItemForUserSuitcase,
+	createItemsForUserSuitcase,
 	//*====={suitcases Router}=========
 } from '../controllers/suitcaseController.js';
 
@@ -61,11 +66,6 @@ suitcaseRoute.get(
 	getAllSuitcasesByQuery
 );
 
-//* route for get suitcase by id => GET (params id)
-//* GET "/:suitcaseId" → Get a single suitcase by ID
-//* Get suitcase by ID
-suitcaseRoute.get('/:suitcaseId', getSuitcaseById);
-
 //* route for get all suitcases by Querys => GET (query limit and pages)
 //* GET "/search" → Get suitcases by query
 //* Get all suitcases with optional search query
@@ -76,6 +76,26 @@ suitcaseRoute.get(
 	orderByMiddleware,
 	getAllSuitcasesByQuery
 );
+
+//*============================{suitcases Route For User}===================================
+//* route to get suitcases that user has by user => GET user muet by login
+//* GET /user → Get all Suitcases for a user
+//* Get suitcases that belong to a specific user option query
+suitcaseRoute.get(
+	'/user',
+	VReqToHeaderToken,
+	headersMiddleware,
+	paginateMiddleware,
+	searchMiddleware,
+	orderByMiddleware,
+	getSuitcasesBelongsToUser
+);
+//*============================{suitcases Route For User}===================================
+
+//* route for get suitcase by id => GET (params id)
+//* GET "/:suitcaseId" → Get a single suitcase by ID
+//* Get suitcase by ID
+suitcaseRoute.get('/:suitcaseId', getSuitcaseById);
 
 //* route for replace (update) suitcase by id => PUT param(id)
 //* PUT /:suitcaseId → Replace an suitcase (admin/member)
@@ -101,6 +121,19 @@ suitcaseRoute.patch(
 	modifySuitcaseById
 );
 
+//* route for delete All suitcases => DELETE
+//* DELETE /delete-all → Delete all suitcases (admin only)
+//* Delete all suitcases (Admin only)
+suitcaseRoute.delete(
+	'/delete-all',
+	VReqToHeaderToken,
+	headersMiddleware,
+	checkRoleMiddleware('admin'),
+	VReqToConfirmDelete,
+	confirmDeleteMiddleware,
+	deleteAllSuitcases
+);
+
 //* route for delete suitcase by id => DELETE (params id)
 //* DELETE /:suitcaseId → Delete an suitcase (admin/member)
 //* Delete an suitcase by ID
@@ -112,34 +145,9 @@ suitcaseRoute.delete(
 	deleteSuitcaseById
 );
 
-//* route for delete All suitcases => DELETE
-//* DELETE /delete-all → Delete all suitcases (admin only)
-//* Delete all suitcases (Admin only)
-suitcaseRoute.delete(
-	'/delete-all',
-	VReqToHeaderToken,
-	headersMiddleware,
-	checkRoleMiddleware('admin'),
-	confirmDeleteMiddleware,
-	deleteAllSuitcases
-);
-
 //*=========================================={Base suitcases Route}===================================
 
 //*=========================================={suitcases Route For User}===================================
-
-//* route to get suitcases that user has by user => GET user muet by login
-//* GET /user → Get all suitcases for a user
-//* Get suitcases that belong to a specific user option query
-suitcaseRoute.get(
-	'/user',
-	VReqToHeaderToken,
-	headersMiddleware,
-	paginateMiddleware,
-	searchMiddleware,
-	orderByMiddleware,
-	getSuitcasesBelongsToUser
-);
 
 //* route to get suitcase that user has by user id => GET (params id) user muet by login
 //* PUT /user/:suitcaseId → Replace a user’s suitcase
@@ -166,22 +174,22 @@ suitcaseRoute.post(
 //* POST "/user/item/:suitcaseId" → Create an item for user suitcase
 //* Create a single item for a user suitcase
 suitcaseRoute.post(
-    '/user/item/:suitcaseId',
-    VReqToHeaderToken,
-    headersMiddleware,
-    VReqToBodyItemId,
-    createItemForUserSuitcase
+	'/user/item/:suitcaseId',
+	VReqToHeaderToken,
+	headersMiddleware,
+	VReqToBodyItemId,
+	createItemForUserSuitcase
 );
 
 //* route for create items for User suitcase => POST (params id) user muet by login
 //* POST "/user/items/:suitcaseId" → Create multiple items for a user suitcase
 //* Create multiple items for a user suitcase
 suitcaseRoute.post(
-    '/user/items/:suitcaseId',
-    VReqToHeaderToken,
-    headersMiddleware,
-    VReqToBodyItemsIds,
-    createItemsForUserSuitcase
+	'/user/items/:suitcaseId',
+	VReqToHeaderToken,
+	headersMiddleware,
+	VReqToBodyItemsIds,
+	createItemsForUserSuitcase
 );
 
 //* route for replace (update) suitcase user has by id of the suitcase => PUT param(id)
@@ -206,16 +214,6 @@ suitcaseRoute.patch(
 	modifySuitcaseBelongsToUser
 );
 
-//* route for delete suitcase user has by id of the suitcase => DELETE (params id) user muet by login
-//* DELETE /user/:suitcaseId → Delete a user’s suitcase
-//* Delete a single suitcase that belongs to a user
-suitcaseRoute.delete(
-	'user/:suitcaseId',
-	VReqToHeaderToken,
-	headersMiddleware,
-	deleteSuitcaseBelongsToUserById
-);
-
 //* route for delete all suitcases that user has by user id => DELETE (params id) user muet by login
 //* DELETE /user/all → Delete all user’s suitcases
 //* Delete all suitcases that belong to a user
@@ -223,7 +221,56 @@ suitcaseRoute.delete(
 	'/user/all',
 	VReqToHeaderToken,
 	headersMiddleware,
+	searchMiddleware,
+	VReqToConfirmDelete,
+	confirmDeleteMiddleware,
 	deleteAllSuitcasesBelongsToUser
+);
+
+//* route for delete Items From suitcase that user has => DELETE (itemsIds in Body & params id) user muet by login
+//* DELETE /user/items/:suitcaseId → Delete Items From user’s suitcase
+//* Delete Items From suitcase that belong to a user
+suitcaseRoute.delete(
+	'/user/items/:suitcaseId',
+	VReqToHeaderToken,
+	headersMiddleware,
+	VReqToBodyItemsIdsForDelete,
+	confirmDeleteMiddleware,
+	deleteItemsFromUserSuitcase
+);
+
+//* route for delete All Items From suitcase that user has => DELETE (params id) user muet by login
+//* DELETE /user/items/all/:suitcaseId → Delete All Items From user’s suitcase
+//* Delete All Items From suitcase that belong to a user
+suitcaseRoute.delete(
+	'/user/items/all/:suitcaseId',
+	VReqToHeaderToken,
+	headersMiddleware,
+	searchMiddleware,
+	VReqToConfirmDelete,
+	confirmDeleteMiddleware,
+	deleteAllItemsFromUserSuitcase
+);
+
+//* route for delete Item From suitcase that user has => DELETE (itemId in Body & params id) user muet by login
+//* DELETE /user/item/:suitcaseId → Delete Item From user’s suitcase
+//* Delete Item From suitcase that belong to a user
+suitcaseRoute.delete(
+	'/user/item/:suitcaseId',
+	VReqToHeaderToken,
+	headersMiddleware,
+	VReqToBodyItemId,
+	deleteItemFromUserSuitcase
+);
+
+//* route for delete suitcase user has by id of the suitcase => DELETE (params id) user muet by login
+//* DELETE /user/:suitcaseId → Delete a user’s suitcase
+//* Delete a single suitcase that belongs to a user
+suitcaseRoute.delete(
+	'/user/:suitcaseId',
+	VReqToHeaderToken,
+	headersMiddleware,
+	deleteSuitcaseBelongsToUserById
 );
 
 //*=========================================={suitcases Route For User}===================================

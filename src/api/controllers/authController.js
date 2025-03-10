@@ -34,16 +34,15 @@ export const signUp = async (req, res, next) => {
 					statusCode.notFoundCode
 				)
 			);
-        
 
-        if (safeUser.error) return next(
-            new ErrorResponse(
-                safeUser.error,
-                'Invalid user data '+safeUser.error.message,
-                statusCode.badRequestCode
-            )
-        )
-        
+		if (safeUser.error)
+			return next(
+				new ErrorResponse(
+					safeUser.error,
+					'Invalid user data ' + safeUser.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
 		//* for add the user id to session
 		storeSession(safeUser.id, role, req);
@@ -54,7 +53,7 @@ export const signUp = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.createdCode,
-				'User signed up successfully',
+				'User Signed Up Successfully',
 				safeUser
 			)
 		);
@@ -88,7 +87,7 @@ export const login = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					safeUser.error,
-					'Invalid user data '+safeUser.error.message,
+					'Invalid user data ' + safeUser.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -102,7 +101,7 @@ export const login = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'User logged in successfully',
+				'User logged In Successfully',
 				safeUser
 			)
 		);
@@ -145,21 +144,23 @@ export const forgotPassword = async (req, res, next) => {
 			message,
 		});
 
-		if (!sended) return next(
-            new ErrorResponse(
-                'Failed to send email',
-                'Failed to send reset password email to user',
-                statusCode.internalServerErrorCode
-            )
-        )
+		if (!sended)
+			return next(
+				new ErrorResponse(
+					'Failed to send email',
+					'Failed to send reset password email to user',
+					statusCode.internalServerErrorCode
+				)
+			);
 
-        if (sended.error) return next(
-            new ErrorResponse(
-                sended.error,
-                'Failed to send email '+sended.error.message,
-                statusCode.internalServerErrorCode
-            )
-        )
+		if (sended.error)
+			return next(
+				new ErrorResponse(
+					sended.error,
+					'Failed to send email ' + sended.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
 
 		return next(
 			new SuccessResponse(
@@ -199,7 +200,8 @@ export const resetPassword = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					updatePassword.error,
-					"Error Couldn't reset password "+updatePassword.error.message,
+					"Error Couldn't reset password " +
+						updatePassword.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -213,7 +215,7 @@ export const resetPassword = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully updated password',
+				'User Change Password Successfully',
 				updatePassword
 			)
 		);
@@ -248,7 +250,8 @@ export const updatePassword = async (req, res, next) => {
 			return next(
 				new ErrorResponse(
 					updatePassword.error,
-					"Error Couldn't update password "+updatePassword.error.message,
+					"Error Couldn't update password " +
+						updatePassword.error.message,
 					statusCode.badRequestCode
 				)
 			);
@@ -262,7 +265,7 @@ export const updatePassword = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully updated password',
+				'User Updated Password Successfully',
 				updatePassword
 			)
 		);
@@ -284,21 +287,24 @@ export const updateData = async (req, res, next) => {
 
 		const updatedUserData = await updateUserData(userId, body);
 
-		if (!updatedUserData) return next(
-            new ErrorResponse(
-                'Failed to update user data',
-                'Failed to update',
-                statusCode.badRequestCode
-            )
-        );
+		if (!updatedUserData)
+			return next(
+				new ErrorResponse(
+					'Failed to update user data',
+					'Failed to update',
+					statusCode.badRequestCode
+				)
+			);
 
-        if (updatedUserData.error) return next(
-            new ErrorResponse(
-                updatedUserData.error,
-                "Error Couldn't update user data "+updatedUserData.error.message,
-                statusCode.badRequestCode
-            )
-        );
+		if (updatedUserData.error)
+			return next(
+				new ErrorResponse(
+					updatedUserData.error,
+					"Error Couldn't update user data " +
+						updatedUserData.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
 		//* store user id and role in session
 		storeSession(userId, userRole, req);
@@ -309,7 +315,7 @@ export const updateData = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully updated user data',
+				'Successfully Updated User Profile',
 				updatedUserData
 			)
 		);
@@ -330,26 +336,28 @@ export const deActivate = async (req, res, next) => {
 
 		const deActivateUser = await deactivateUserAccount(userId);
 
-        if (!deActivateUser) return next(
-            new ErrorResponse(
-                'Failed to deactivate user account',
-                'Failed to deactivate',
-                statusCode.notFoundCode
-            )
-        )
+		if (!deActivateUser)
+			return next(
+				new ErrorResponse(
+					'Failed to deactivate user account',
+					'Failed to deactivate',
+					statusCode.notFoundCode
+				)
+			);
 
-        if (deActivateUser.error) return next(
-            new ErrorResponse(
-                deActivateUser.error,
-                'Failed to deactivate '+deActivateUser.error.message,
-                statusCode.badRequestCode
-            )
-        )
+		if (deActivateUser.error)
+			return next(
+				new ErrorResponse(
+					deActivateUser.error,
+					'Failed to deactivate ' + deActivateUser.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully deactivated User Account',
+				'Successfully Deactivated User Account',
 				deActivateUser
 			)
 		);
@@ -370,21 +378,23 @@ export const logout = async (req, res, next) => {
 
 		const deActivateUser = await deactivateUserAccount(userId);
 
-        if (!deActivateUser) return next(
-            new ErrorResponse(
-                'Failed to deactivate user account',
-                'Failed to deactivate',
-                statusCode.notFoundCode
-            )
-        );
+		if (!deActivateUser)
+			return next(
+				new ErrorResponse(
+					'Failed to deactivate user account',
+					'Failed to deactivate',
+					statusCode.notFoundCode
+				)
+			);
 
-        if (deActivateUser.error) return next(
-            new ErrorResponse(
-                deActivateUser.error,
-                'Failed to deactivate '+deActivateUser.error.message,
-                statusCode.badRequestCode
-            )
-        );
+		if (deActivateUser.error)
+			return next(
+				new ErrorResponse(
+					deActivateUser.error,
+					'Failed to deactivate ' + deActivateUser.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
 		clearCookies(res);
 		await deleteSession(req);
@@ -392,7 +402,7 @@ export const logout = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully logged out',
+				'User Logged Out Successfully',
 				deActivateUser
 			)
 		);
@@ -407,68 +417,53 @@ export const logout = async (req, res, next) => {
 	}
 };
 
-export const verifyCsrfToken = (req, res, next) => {
-    const token = req.cookies['XSRF-TOKEN'];
-    if (!token || token!== req.csrfToken()) {
-        return next(
-            new ErrorResponse(
-                'Invalid CSRF token',
-                'Failed to validate CSRF token',
-                statusCode.badRequestCode
-            )
-        );
-    }
-    return next();
-}
-
 export const getAccessToken = (req, res, next) => {
-    const { refreshToken } = req.body;
+	const { refreshToken } = req.body;
 
-    if (!refreshToken) return next(
-        new ErrorResponse(
-            'Missing refresh token',
-            'Failed to get access token',
-            statusCode.badRequestCode
-        )
-    )
+	if (!refreshToken)
+		return next(
+			new ErrorResponse(
+				'Missing refresh token',
+				'Failed to get access token',
+				statusCode.badRequestCode
+			)
+		);
 
-    if (!verifyRefreshToken(refreshToken)) return next(
-        new ErrorResponse(
-            'Invalid refresh token',
-            'User must be logged in again to get access token',
-            statusCode.badRequestCode
-        )
-    )
+	if (!verifyRefreshToken(refreshToken))
+		return next(
+			new ErrorResponse(
+				'Invalid refresh token',
+				'User must be logged in again to get access token',
+				statusCode.badRequestCode
+			)
+		);
 
-    const { userId } = req.session;
+	const { userId } = req.session;
 
-    sendCookies(userId, res)
+	sendCookies(userId, res);
 
-    return next(
-        new SuccessResponse(
-            statusCode.okCode,
-            'Access token generated',
-            "Access token sending via Cookie"
-        )
-    )
-
-}
+	return next(
+		new SuccessResponse(
+			statusCode.okCode,
+			'Access Token Sending Via Cookie',
+			'Access Token Generated'
+		)
+	);
+};
 
 export const csrfResponse = (req, res, next) => {
-    const csrfToken = req.csrfToken();
+	const csrfToken = req.csrfToken();
 
 	res.cookie('XSRF-TOKEN', csrfToken, {
 		expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
 		httpOnly: false, // ✅ Allow frontend access
 		secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
-        sameSite: "strict"
+		sameSite: 'strict',
 	});
 
-    return next(
-        new SuccessResponse(
-            statusCode.okCode, 
-            'CSRF token generated', {
-            csrfToken: csrfToken,
-        })
-    )
+	return next(
+		new SuccessResponse(statusCode.okCode, 'CSRF token generated', {
+			csrfToken: csrfToken,
+		})
+	);
 };

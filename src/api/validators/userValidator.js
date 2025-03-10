@@ -88,11 +88,11 @@ export const modifyUserSchema = Joi.object({
 			"Please Enter your Country\nAnd Don't add any special characters or numbers"
 		),
 
-    city: Joi.string()
-        .pattern(stringRegExp)
-        .message(
-            "Please Enter your City\nAnd Don't add any special characters or numbers"
-        ),
+	city: Joi.string()
+		.pattern(stringRegExp)
+		.message(
+			"Please Enter your City\nAnd Don't add any special characters or numbers"
+		),
 
 	gender: Joi.string()
 		.valid(...Object.values(Gender))
@@ -102,10 +102,10 @@ export const modifyUserSchema = Joi.object({
 });
 
 export const roleSchema = Joi.object({
-    role: Joi.string()
-	.valid(...Object.values(Role))
-	.uppercase()
-})
+	role: Joi.string()
+		.valid(...Object.values(Role))
+		.uppercase(),
+});
 
 //*######################################{UUID Validators}############################################
 

@@ -34,12 +34,11 @@ export const bagSchema = Joi.object({
 		.valid(...Object.values(Material))
 		.uppercase(),
 
-	features: Joi.array()
-    .items(
-        Joi.string()
-        .valid(...Object.values(BagFeature))
-        .uppercase()
-    )
+	features: Joi.array().items(
+		Joi.string()
+			.valid(...Object.values(BagFeature))
+			.uppercase()
+	),
 });
 
 export const bagModifySchema = Joi.object({
@@ -71,49 +70,15 @@ export const bagModifySchema = Joi.object({
 		.valid(...Object.values(Material))
 		.uppercase(),
 
-	features: Joi.array()
-    .items(
-        Joi.string()
-        .valid(...Object.values(BagFeature))
-        .uppercase()
-    ),
+	features: Joi.array().items(
+		Joi.string()
+			.valid(...Object.values(BagFeature))
+			.uppercase()
+	),
 
-	removeFeatures: Joi.array()
-    .items(
-        Joi.string()
-        .valid(...Object.values(BagFeature))
-        .uppercase()
-    )
-});
-
-
-
-export const bagShcemaMiddleware = Joi.object({
-	type: Joi.string()
-		.valid(...Object.values(BagType))
-		.uppercase(),
-
-	size: Joi.string() //* for Bags and Suitcases Only
-		.valid(...Object.values(Size))
-		.uppercase(),
-
-	material: Joi.string() //* for Bags and Suitcases Only
-		.valid(...Object.values(Material))
-		.uppercase(),
-
-	feeatures: Joi.string()
-		.valid(...Object.values(BagFeature))
-		.uppercase(),
-
-	name: Joi.string()
-		.pattern(productStringRegExp)
-		.message(
-			'must be a letter or - but not any special characters or numbers'
-		),
-
-	color: Joi.string()
-		.pattern(productStringRegExp)
-		.message('must be a letter but not any special characters or numbers'),
-
-	createdAt: Joi.date().iso(),
+	removeFeatures: Joi.array().items(
+		Joi.string()
+			.valid(...Object.values(BagFeature))
+			.uppercase()
+	),
 });

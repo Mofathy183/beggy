@@ -14,13 +14,7 @@ import {
 
 export const singUpUser = async (body) => {
 	try {
-		const {
-			firstName,
-			lastName,
-			email,
-			password,
-			confirmPassword,
-		} = body;
+		const { firstName, lastName, email, password, confirmPassword } = body;
 
 		// Hashing the password
 		if (password !== confirmPassword)
@@ -31,43 +25,50 @@ export const singUpUser = async (body) => {
 			);
 		const hashPassword = await hashingPassword(password);
 
-        
 		// Create new user in Prisma
-        const newUser = await prisma.user.create({
-            data: {
-                firstName,
-                lastName,
-                email,
-                password: hashPassword,
-            },
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                displayName: true,
-                email: true,
-                city: true,
-                country: true,
-                birth: true,
-                age: true,
-                gender: true,
-                profilePicture: true,
-                createdAt: true,
-                updatedAt: true,
-            }
-        })
+		const newUser = await prisma.user.create({
+			data: {
+				firstName,
+				lastName,
+				email,
+				password: hashPassword,
+			},
+			include: {
+				account: true,
+				suitcases: {
+					include: {
+						suitcaseItems: {
+							include: {
+								item: true,
+							},
+						},
+					},
+				},
+				bags: {
+					include: {
+						bagItems: {
+							include: {
+								item: true,
+							},
+						},
+					},
+				},
+			},
+		});
 
-        if (!newUser) throw new ErrorHandler(
-            'prisma',
-            'No user created',
-            'Failed to create user'
-        )
+		if (!newUser)
+			throw new ErrorHandler(
+				'prisma',
+				'No user created',
+				'Failed to create user'
+			);
 
-        if (newUser.error) return new ErrorHandler(
-            'prisma',
-            newUser.error,
-            'User already exists '+ newUser.error.message
-        )
+		if (newUser.error)
+			return new ErrorHandler(
+				'prisma',
+				newUser.error,
+				'User already exists ' + newUser.error.message
+			);
 
 		const { role, ...safeUser } = newUser;
 
@@ -91,8 +92,6 @@ export const loginUser = async (body) => {
 				account: true,
 			},
 			omit: {
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -109,7 +108,11 @@ export const loginUser = async (body) => {
 			);
 
 		if (user.error)
-			new ErrorHandler('prisma', user.error, 'User not found '+ user.error.message);
+			new ErrorHandler(
+				'prisma',
+				user.error,
+				'User not found ' + user.error.message
+			);
 
 		// Check if password matches
 		const isPasswordMatch = await verifyPassword(password, userPassword);
@@ -130,7 +133,7 @@ export const loginUser = async (body) => {
 			});
 		}
 
-		return { role, safeUser };
+		return { role: role, safeUser: safeUser };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to login user');
 	}
@@ -148,7 +151,11 @@ export const userForgotPassword = async (email) => {
 			);
 
 		if (user.error)
-			return new ErrorHandler('prisma', user.error, 'User not found '+user.error.message);
+			return new ErrorHandler(
+				'prisma',
+				user.error,
+				'User not found ' + user.error.message
+			);
 
 		//* Generate a random password by crypto
 		const { resetToken, hashResetToken } = generateResetToken();
@@ -175,7 +182,8 @@ export const userForgotPassword = async (email) => {
 			return new ErrorHandler(
 				'prisma',
 				updateUser.error,
-				'Failed to update user password reset token and expired at '+updateUser.error.message
+				'Failed to update user password reset token and expired at ' +
+					updateUser.error.message
 			);
 
 		//* return reset token to send an email
@@ -200,17 +208,19 @@ export const resetUserPassword = async (body, token) => {
 			where: { passwordResetToken: hashedToken },
 		});
 
-		if (!user) return new ErrorHandler(
-            'user is null',
-            'invalid Reset Token',
-            'token is invalid or expired'
-        )
+		if (!user)
+			return new ErrorHandler(
+				'user is null',
+				'invalid Reset Token',
+				'token is invalid or expired'
+			);
 
-        if (user.error) return new ErrorHandler(
-            'prisma',
-            user.error,
-            'User not found '+user.error.message
-        )
+		if (user.error)
+			return new ErrorHandler(
+				'prisma',
+				user.error,
+				'User not found ' + user.error.message
+			);
 
 		//? if the 10 minutes to reset the password is still in effect
 		if (new Date() > user.passwordResetExpiredAt)
@@ -240,8 +250,6 @@ export const resetUserPassword = async (body, token) => {
 			},
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -249,17 +257,18 @@ export const resetUserPassword = async (body, token) => {
 			},
 		});
 
-        if (!updatePassword) return new ErrorHandler(
-            'user is null',
-            'Failed to update user password',
-            'Failed to update user password'
-        )
+		if (!updatePassword)
+			return new ErrorHandler(
+				'user is null',
+				'Failed to update user password',
+				'Failed to update user password'
+			);
 
 		if (updatePassword.error)
 			return new ErrorHandler(
 				'prisma',
 				updatePassword.error,
-				'Failed to update user password '+ updatePassword.error.message
+				'Failed to update user password ' + updatePassword.error.message
 			);
 
 		return updatePassword;
@@ -272,7 +281,6 @@ export const resetUserPassword = async (body, token) => {
 	}
 };
 
-//*  when the user login he can update his password
 export const updateUserPassword = async (userId, body) => {
 	try {
 		const { currentPassword, newPassword, confirmPassword } = body;
@@ -285,17 +293,19 @@ export const updateUserPassword = async (userId, body) => {
 			},
 		});
 
-		if (!userPaaword) return new ErrorHandler(
-            'user is null',
-            'User not found',
-            'User not found'
-        )
+		if (!userPaaword)
+			return new ErrorHandler(
+				'user is null',
+				'User not found',
+				'User not found'
+			);
 
-        if (updatePassword.error) return new ErrorHandler(
-            'prisma',
-            userPaaword.error,
-            'User not found '+userPaaword.error.message
-        )
+		if (userPaaword.error)
+			return new ErrorHandler(
+				'prisma',
+				userPaaword.error,
+				'User not found ' + userPaaword.error.message
+			);
 
 		const isMatch = await verifyPassword(
 			currentPassword,
@@ -326,8 +336,6 @@ export const updateUserPassword = async (userId, body) => {
 			},
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -347,7 +355,7 @@ export const updateUserPassword = async (userId, body) => {
 			return ErrorHandler(
 				'prisma',
 				updatePassword.error,
-				'Failed to update user password '+ updatePassword.error.message
+				'Failed to update user password ' + updatePassword.error.message
 			);
 
 		return updatePassword;
@@ -369,7 +377,7 @@ export const updateUserData = async (userId, body) => {
 			gender,
 			birth,
 			country,
-            city,
+			city,
 			profilePicture,
 		} = body;
 
@@ -387,8 +395,6 @@ export const updateUserData = async (userId, body) => {
 			},
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -408,7 +414,7 @@ export const updateUserData = async (userId, body) => {
 			return ErrorHandler(
 				'prisma',
 				updatedUserData.error,
-				'Failed to update user data '+updatedUserData.error.message
+				'Failed to update user data ' + updatedUserData.error.message
 			);
 
 		return updatedUserData;
@@ -426,8 +432,6 @@ export const deactivateUserAccount = async (userId) => {
 			},
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -435,17 +439,19 @@ export const deactivateUserAccount = async (userId) => {
 			},
 		});
 
-		if (!deactivateUser) return new ErrorHandler(
-            'deactivateUser is null',
-            "Couldn't deactivate user",
-            'Failed to deactivate User Account'
-        )
+		if (!deactivateUser)
+			return new ErrorHandler(
+				'deactivateUser is null',
+				"Couldn't deactivate user",
+				'Failed to deactivate User Account'
+			);
 
-        if (deactivateUser.error) return new ErrorHandler(
-            'prisma',
-            deactivateUser.error,
-            'Failed to deactivate user '+deactivateUser.error.message
-        )
+		if (deactivateUser.error)
+			return new ErrorHandler(
+				'prisma',
+				deactivateUser.error,
+				'Failed to deactivate user ' + deactivateUser.error.message
+			);
 
 		return deactivateUser;
 	} catch (error) {
@@ -456,4 +462,3 @@ export const deactivateUserAccount = async (userId) => {
 		);
 	}
 };
-

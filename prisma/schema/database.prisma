@@ -66,7 +66,6 @@ enum SuitcaseFeature {
     LIGHTWEIGHT        @map("lightweight")
     ANTI_THEFT         @map("anti_theft")
     SCRATCH_RESISTANT  @map("scratch_resistant")
-    SPINNER_WHEELS     @map("spinner_wheels")
     COMPRESSION_STRAPS @map("compression_straps")
     TELESCOPIC_HANDLE  @map("telescopic_handle")
 }

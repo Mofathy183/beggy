@@ -55,30 +55,32 @@ export const itemsArraySchema = Joi.array()
 	.items(itemsSchema)
 	.min(1)
 	.max(5)
-.required();
+	.required();
 
 export const itemSchemaForItemId = Joi.object({
-    itemId:  Joi.string().uuid().required()
-})
+	itemId: Joi.string().uuid().required(),
+});
 
 export const itemSchemaForItemsIds = Joi.object({
-    itemsIds: Joi.array().min(1).max(5).items(
-        Joi.object({
-            itemId: Joi.string().uuid().required()
-        })
-    ).required()
-})
+	itemsIds: Joi.array()
+		.min(1)
+		.max(5)
+		.items(
+			Joi.object({
+				itemId: Joi.string().uuid().required(),
+			})
+		)
+		.required(),
+});
 
 export const itemSchemaForItemsIdsForDelete = Joi.object({
-    itemsIds: Joi.array()
-    .min(1).max(5)
-    .items(
-        Joi.string()
-        .uuid()
-        .required()
-    )
-    .required()
-})
+	itemsIds: Joi.array()
+		.min(1)
+		.max(6)
+		.items(Joi.string().uuid().required())
+		.required(),
 
+	confirmDelete: Joi.boolean().required(),
+});
 
 //*######################################{JOI Check Items Feildes}############################################

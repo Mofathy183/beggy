@@ -3,21 +3,23 @@ import {
 	autoFillItemFields,
 	autoFillBagFields,
 	autoFillSuitcaseFields,
-    location,
-    weather
+	location,
+	weather,
 } from '../controllers/featuresController.js';
 import {
 	VReqToHeaderToken,
 	headersMiddleware,
 } from '../../middlewares/authMiddleware.js';
 import {
-    VReqToItemAutoFilling,
-    VReqToBagAutoFilling,
-    VReqToSuitcaseAutoFilling,
-    VReqTolocationPermission
-} from "../../middlewares/validateRequest.js";
-import { locationPermissionMiddleware, userIpMiddleware } from "../../middlewares/middlewares.js";
-
+	VReqToItemAutoFilling,
+	VReqToBagAutoFilling,
+	VReqToSuitcaseAutoFilling,
+	VReqTolocationPermission,
+} from '../../middlewares/validateRequest.js';
+import {
+	locationPermissionMiddleware,
+	userIpMiddleware,
+} from '../../middlewares/middlewares.js';
 
 const featureRoute = express.Router();
 
@@ -26,7 +28,7 @@ featureRoute.post(
 	'/ai/auto-fill/item',
 	VReqToHeaderToken,
 	headersMiddleware,
-    VReqToItemAutoFilling,
+	VReqToItemAutoFilling,
 	autoFillItemFields
 );
 
@@ -35,7 +37,7 @@ featureRoute.post(
 	'/ai/auto-fill/bag',
 	VReqToHeaderToken,
 	headersMiddleware,
-    VReqToBagAutoFilling,
+	VReqToBagAutoFilling,
 	autoFillBagFields
 );
 
@@ -44,30 +46,22 @@ featureRoute.post(
 	'/ai/auto-fill/suitcase',
 	VReqToHeaderToken,
 	headersMiddleware,
-    VReqToSuitcaseAutoFilling,
+	VReqToSuitcaseAutoFilling,
 	autoFillSuitcaseFields
 );
 
 //* route for get user location by his ip address => GET (send permission in body)
 featureRoute.post(
-    '/location',
-    VReqToHeaderToken,
-    headersMiddleware,
-    VReqTolocationPermission,
-    locationPermissionMiddleware,
-    userIpMiddleware,
-    location
+	'/location',
+	VReqToHeaderToken,
+	headersMiddleware,
+	VReqTolocationPermission,
+	locationPermissionMiddleware,
+	userIpMiddleware,
+	location
 );
 
 //* route for get weather data by use user city and country => GET
-featureRoute.get(
-    "/weather",
-    VReqToHeaderToken,
-    headersMiddleware,
-    weather
-)
-
-
-
+featureRoute.get('/weather', VReqToHeaderToken, headersMiddleware, weather);
 
 export default featureRoute;

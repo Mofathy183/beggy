@@ -12,13 +12,14 @@ const googleProvider = new GoogleStrategy(
 	googleAuthConfig,
 	async (accessToken, refreshToken, profile, done) => {
 		try {
-			const {user: userData, status} = await authenticateUserWithGoogle(profile);
+			const { user: userData, status } =
+				await authenticateUserWithGoogle(profile);
 
 			const user = {
 				profile: profile,
 				accessToken: accessToken,
 				userData: userData,
-                status: status,
+				status: status,
 			};
 
 			return done(null, user);
@@ -33,13 +34,14 @@ const facebookProvider = new FacebookStrategy(
 	facebookAuthConfig,
 	async (accessToken, refreshToken, profile, done) => {
 		try {
-			const {user: userData, status} = await authenticateUserWithFacebook(profile);
+			const { user: userData, status } =
+				await authenticateUserWithFacebook(profile);
 
 			const user = {
 				profile: profile,
 				accessToken: accessToken,
 				userData: userData,
-                status: status,
+				status: status,
 			};
 
 			return done(null, user);

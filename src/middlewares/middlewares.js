@@ -2,7 +2,8 @@ import Joi from 'joi';
 import { statusCode } from '../config/status.js';
 import { ErrorResponse } from '../utils/error.js';
 import { Size } from '@prisma/client';
-import { productStringRegExp } from "../api/validators/itemValidator.js";
+import { productStringRegExp } from '../api/validators/itemValidator.js';
+import { stringRegExp } from '../api/validators/authValidator.js';
 
 export const paginateMiddleware = (req, res, next) => {
 	const { page = 1, limit = 10 } = req.query;
@@ -50,7 +51,7 @@ export const paginateMiddleware = (req, res, next) => {
 };
 
 export const orderByMiddleware = (req, res, next) => {
-    let { order = undefined, sortBy = undefined } = req.query
+	let { order = undefined, sortBy = undefined } = req.query;
 
 	// List of allowed sort fields
 	const allowedSortFields = [
@@ -129,137 +130,146 @@ export const orderByMiddleware = (req, res, next) => {
 };
 
 export const searchMiddleware = (req, res, next) => {
-    let { field = undefined, search = undefined } = req.query
+	let { field = undefined, search = undefined } = req.query;
 
 	// If no search query is provided, continue without filtering
 	if (!search && !field) {
 		return next();
 	}
 
-    if (!search.length && !field.length) return next(); // Ignore empty queries
+	if (!search.length && !field.length) return next(); // Ignore empty queries
 
-    const searchRegExp = /^[A-Za-z_-]+$/
-    const fieldRegExp = /^[A-Za-z]+$/
+	const searchRegExp = /^[A-Za-z_-]+$/;
+	const fieldRegExp = /^[A-Za-z]+$/;
 
-    //* to sprate the search values and make it array
-    search = String(search).split(",").map(s => String(s).trim());
-    //* convert fields to string
-    field = String(field).trim();
+	//* to sprate the search values and make it array
+	search = String(search)
+		.split(',')
+		.map((s) => String(s).trim());
+	//* convert fields to string
+	field = String(field).trim();
 
-    if (!fieldRegExp.test(field)) return next(
-        new ErrorResponse(
-            `Invalid fields query.`,
-            'Fields query must be a string',
-            statusCode.badRequestCode
-        )
-    )
+	if (!fieldRegExp.test(field))
+		return next(
+			new ErrorResponse(
+				`Invalid fields query.`,
+				'Fields query must be a string',
+				statusCode.badRequestCode
+			)
+		);
 
 	// Convert search to uppercase for enums (Prisma requires exact matches for enums)
-	const searchUpper = search.map(s => String(s).toUpperCase().trim());
+	const searchUpper = search.map((s) => String(s).toUpperCase().trim());
 
 	// Default fields for searching (string and enum)
 	const defaultStringFields = ['name', 'color', 'brand'];
-	const defaultEnumFields = ['category', 'size', 'type', 'wheels', "material", "features"];
+	const defaultEnumFields = [
+		'category',
+		'size',
+		'type',
+		'wheels',
+		'material',
+		'features',
+	];
 
-    if(defaultStringFields.includes(field)){
-        if (!search.every(s => productStringRegExp.test(s))) return next(
-            new ErrorResponse(
-                `Invalid search query.`,
-                'Search query must be a string and can contain (-) or digits up until 3 digits',
-                statusCode.badRequestCode
-            )
-        );
-    }
+	if (defaultStringFields.includes(field)) {
+		if (!search.every((s) => productStringRegExp.test(s)))
+			return next(
+				new ErrorResponse(
+					`Invalid search query.`,
+					'Search query must be a string and can contain (-) or digits up until 3 digits',
+					statusCode.badRequestCode
+				)
+			);
+	}
 
-    if(defaultEnumFields.includes(field)){
-        if (!search.every(s => searchRegExp.test(s))) return next(
-            new ErrorResponse(
-                `Invalid search query.`,
-                'Search query must be a string and can contain (_) or (-)',
-                statusCode.badRequestCode
-            )
-        )
-    }
+	if (defaultEnumFields.includes(field)) {
+		if (!search.every((s) => searchRegExp.test(s)))
+			return next(
+				new ErrorResponse(
+					`Invalid search query.`,
+					'Search query must be a string and can contain (_) or (-)',
+					statusCode.badRequestCode
+				)
+			);
+	}
 
-    let filter;
+	let filter;
 
-    if(field === "features"){
-        //* For Fields Are save in database as Array
-        filter = {
-            [field]: {
-                hasSome: searchUpper, // Convert to uppercase for exact match
-            } 
-        } 
-    }
-    else if (defaultStringFields.includes(field)){
-        //* For Fields Are Not save in database as Array and Not Enum
-        filter = {
-            [field]: {
-                in: search, // Convert to uppercase for exact match
-            } 
-        }
-    }
-    else {
-        //* For Fields Are save in database as Array and Enum
-        filter = {
-            [field]: {
-                in: searchUpper, // Convert to uppercase for exact match
-            } 
-        }
-    }
+	if (field === 'features') {
+		//* For Fields Are save in database as Array
+		filter = {
+			[field]: {
+				hasSome: searchUpper, // Convert to uppercase for exact match
+			},
+		};
+	} else if (defaultStringFields.includes(field)) {
+		//* For Fields Are Not save in database as Array and Not Enum
+		filter = {
+			[field]: {
+				in: search, // Convert to uppercase for exact match
+			},
+		};
+	} else {
+		//* For Fields Are save in database as Array and Enum
+		filter = {
+			[field]: {
+				in: searchUpper, // Convert to uppercase for exact match
+			},
+		};
+	}
 
 	req.searchFilter = filter;
 
 	next();
 };
 
-
 export const userIpMiddleware = (req, res, next) => {
-    const userIp = req.headers["x-forwarded-for"]
-    ? req.headers["x-forwarded-for"].split(',')[0].trim() // Get first IP from proxy chain
-    : req.socket.remoteAddress; // Fallback to direct IP
+	const userIp = req.headers['x-forwarded-for']
+		? req.headers['x-forwarded-for'].split(',')[0].trim() // Get first IP from proxy chain
+		: req.socket.remoteAddress; // Fallback to direct IP
 
-    if (!userIp) return next(
-        new ErrorResponse(
-            'Unable to get user Ip', 
-            'Internal Server Error', 
-            statusCode.serverErrorCode
-        )
-    );
+	if (!userIp)
+		return next(
+			new ErrorResponse(
+				'Unable to get user Ip',
+				'Internal Server Error',
+				statusCode.serverErrorCode
+			)
+		);
 
-    req.session.userIp = userIp;
+	req.session.userIp = userIp;
 
-    next();
+	next();
 };
-
 
 export const locationPermissionMiddleware = (req, res, next) => {
-    const locationPermission = req.body.permission;
+	const locationPermission = req.body.permission;
 
-    if (!locationPermission) return next(
-        new ErrorResponse(
-            'Location permission not provided', 
-            'Unauthorized', 
-            statusCode.unauthorizedCode
-        )
-    );
+	if (!locationPermission)
+		return next(
+			new ErrorResponse(
+				'Location permission not provided',
+				'Unauthorized',
+				statusCode.unauthorizedCode
+			)
+		);
 
-    //* locationPermission must be granted that means you can you ip to get location
-    //* Or denied that means can not use ip to get location
-    if (locationPermission !== 'granted') return next(
-        new ErrorResponse(
-            'Location permission denied', 
-            'Unauthorized', 
-            statusCode.unauthorizedCode
-        )
-    );
+	//* locationPermission must be granted that means you can you ip to get location
+	//* Or denied that means can not use ip to get location
+	if (locationPermission !== 'granted')
+		return next(
+			new ErrorResponse(
+				'Location permission denied',
+				'Unauthorized',
+				statusCode.unauthorizedCode
+			)
+		);
 
-    req.session.locationPermission = locationPermission;
+	req.session.locationPermission = locationPermission;
 
-    next();
+	next();
 };
-
-
 
 export const searchForUsersMiddleware = (req, res, next) => {
 	const { firstName, lastName } = req.query;
@@ -309,4 +319,3 @@ export const searchForUsersMiddleware = (req, res, next) => {
 
 	next();
 };
-

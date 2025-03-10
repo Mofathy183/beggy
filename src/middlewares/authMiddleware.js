@@ -11,6 +11,7 @@ import {
 	resetPasswordScheme,
 	updatePasswordScheme,
 	updateUserDataSchema,
+	confirmDeleteSchema,
 } from '../api/validators/authValidator.js';
 import { ErrorResponse } from '../utils/error.js';
 
@@ -28,8 +29,8 @@ export const headersMiddleware = async (req, res, next) => {
 		);
 	}
 
-    //* if user are authenticated will pass the verification jwt token data to req.auth
-    const isAuthenticated = req.auth 
+	//* if user are authenticated will pass the verification jwt token data to req.auth
+	const isAuthenticated = req.auth;
 
 	//? check if the id in the token is the same as the user has
 	const userAuth = await prisma.user.findUnique({
@@ -44,14 +45,15 @@ export const headersMiddleware = async (req, res, next) => {
 				statusCode.unauthorizedCode
 			)
 		);
-    
-    if (userAuth.error) return next(
-        new ErrorResponse(
-            userAuth.error,
-            'Failed to find user by this id '+ userAuth.error.message,
-            statusCode.internalServerErrorCode
-        )
-    )
+
+	if (userAuth.error)
+		return next(
+			new ErrorResponse(
+				userAuth.error,
+				'Failed to find user by this id ' + userAuth.error.message,
+				statusCode.internalServerErrorCode
+			)
+		);
 
 	//? check if the user changed their password after login
 	const passwordHasChanged = passwordChangeAfter(
@@ -121,7 +123,6 @@ export const confirmDeleteMiddleware = (req, res, next) => {
 	next();
 };
 
-
 //*====================={Request Validations}====================
 export const VReqToSignUp = (req, res, next) => {
 	return VReqTo(req, res, next, singUpSchema);
@@ -152,6 +153,10 @@ export const VReqToUpdateUserData = (req, res, next) => {
 	return VReqTo(req, res, next, updateUserDataSchema);
 };
 
+export const VReqToConfirmDelete = (req, res, next) => {
+	return VReqTo(req, res, next, confirmDeleteSchema);
+};
+
 //? if the token in params to reset password is not present or not valid
 //! will prevent the request from being
 export const VReqToResetToken = (req, res, next) => {
@@ -175,10 +180,10 @@ export const VReqToHeaderToken = (req, res, next) => {
 
 	const isAuth = verifyToken(token);
 
-	if (token && isAuth){
-        req.auth = isAuth;
-        return next();
-    }
+	if (token && isAuth) {
+		req.auth = isAuth;
+		return next();
+	}
 
 	return next(
 		new ErrorResponse(
@@ -194,10 +199,10 @@ export const VReqToHeaderRefreshToken = (req, res, next) => {
 
 	const isAuth = verifyRefreshToken(token);
 
-    if (token && isAuth){
-        req.auth = isAuth;
-        return next();
-    }
+	if (token && isAuth) {
+		req.auth = isAuth;
+		return next();
+	}
 
 	return next(
 		new ErrorResponse(

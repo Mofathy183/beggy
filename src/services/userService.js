@@ -1,8 +1,5 @@
 import prisma from '../../prisma/prisma.js';
-import {
-	birthOfDate,
-	haveProfilePicture,
-} from '../utils/userHelper.js';
+import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { hashingPassword } from '../utils/hash.js';
 import { ErrorHandler } from '../utils/error.js';
 
@@ -17,7 +14,7 @@ export const addUser = async (body) => {
 			gender,
 			birth,
 			country,
-            city,
+			city,
 			profilePicture,
 		} = body;
 
@@ -41,7 +38,7 @@ export const addUser = async (body) => {
 				gender: gender,
 				birth: birthOfDate(birth),
 				country,
-                city,
+				city,
 				profilePicture: haveProfilePicture(profilePicture),
 			},
 			include: {
@@ -52,8 +49,6 @@ export const addUser = async (body) => {
 			},
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -73,23 +68,30 @@ export const addUser = async (body) => {
 			return new ErrorHandler(
 				'prisma',
 				newUser.error,
-				'User already exists '+ newUser.error.message
+				'User already exists ' + newUser.error.message
 			);
 
-		return newUser;
+		const totalCount = await prisma.user.count();
+
+		const meta = {
+			totalCount: totalCount,
+			totalCreate: newUser ? 1 : 0,
+		};
+
+		return { newUser: newUser, meta: meta };
 	} catch (error) {
 		return new ErrorHandler('catch error', error, 'Failed to create user');
 	}
 };
 
-export const getUserPublicProfile = async (id) => {
+export const getUserPublicProfile = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: {
-                id: id,
-                AND: {
-                    isActive: true, // Only return active users
-                }
+				id: userId, // Only return active users
+				AND: {
+					isActive: true,
+				},
 			},
 			select: {
 				id: true,
@@ -99,30 +101,25 @@ export const getUserPublicProfile = async (id) => {
 				email: true,
 				gender: true,
 				birth: true,
-                age: true,
+				age: true,
 				country: true,
-                city: true,
+				city: true,
 				profilePicture: true,
-                suitcases: true,
-				bags: true,
-				items: true,
-				account: true,
-				createdAt: true,
-				updatedAt: true,
 			},
 		});
 
-        if (!user) return new ErrorHandler(
-            'user',
-            'User not found',
-            'User not found in the database'
-        )
+		if (!user)
+			return new ErrorHandler(
+				'user',
+				'User not found',
+				'User not found in the database'
+			);
 
-		if (!user.error)
+		if (user.error)
 			return new ErrorHandler(
 				'prisma',
-				'User not found '+user.error,
-				'User not found in the database '+user.error.message
+				user.error,
+				'User not found in the database ' + user.error.message
 			);
 
 		return user;
@@ -135,11 +132,11 @@ export const getUserPublicProfile = async (id) => {
 	}
 };
 
-export const getUserById = async (id) => {
+export const getUserById = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: {
-				id: id,
+				id: userId,
 			},
 			include: {
 				suitcases: true,
@@ -151,6 +148,7 @@ export const getUserById = async (id) => {
 				password: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
+				passwordChangeAt: true,
 			},
 		});
 
@@ -161,11 +159,12 @@ export const getUserById = async (id) => {
 				'There is no user with that id'
 			);
 
-        if (user.error) return new ErrorHandler(
-            'prisma',
-            user.error,
-            'User not found '+user.error.message
-        )
+		if (user.error)
+			return new ErrorHandler(
+				'prisma',
+				user.error,
+				'User not found ' + user.error.message
+			);
 
 		return user;
 	} catch (error) {
@@ -173,58 +172,6 @@ export const getUserById = async (id) => {
 			'catch error',
 			error,
 			'Failed to get user by id'
-		);
-	}
-};
-
-export const getAllPublicUsers = async (pagination, searchFilter) => {
-	try {
-		const { page, limit, offset } = pagination;
-
-		const users = await prisma.user.findMany({
-			where: { OR: searchFilter, isActive: true },
-			omit: {
-				password: true,
-				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
-				role: true,
-				gender: true,
-				birth: true,
-				email: true,
-				createdAt: true,
-				updatedAt: true,
-				suitcases: true,
-				bags: true,
-				items: true,
-				account: true,
-			},
-			skip: offset,
-			take: limit,
-		});
-
-        if (users.error) return new ErrorHandler(
-            'prisma',
-            users.error,
-            'Failed to get all public users '+users.error.message
-        )
-
-		const totalCount = await prisma.user.count({ where: { isActive: true } });
-
-		const meta = {
-			total: totalCount,
-			page: page,
-			limit: limit,
-			searchFilter: searchFilter,
-			orderBy: orderBy,
-		};
-
-		return { users: users, meta: meta };
-	} catch (error) {
-		return new ErrorHandler(
-			'catch',
-			error,
-			'Failed to get all public users'
 		);
 	}
 };
@@ -252,14 +199,23 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 			orderBy: orderBy,
 		});
 
+		if (!users)
+			return new ErrorHandler(
+				'user',
+				'No users found',
+				'No users found in the database'
+			);
+
 		if (users.error)
 			return new ErrorHandler(
 				'prsima',
-				'No users found '+ users.error,
-				'No users found in the database '+ users.error.message
+				'No users found ' + users.error,
+				'No users found in the database ' + users.error.message
 			);
 
-		const totalUsers = await prisma.user.count({ where: { isActive: true } });
+		const totalUsers = await prisma.user.count({
+			where: { isActive: true },
+		});
 
 		if (totalUsers.error)
 			return new ErrorHandler(
@@ -269,7 +225,8 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 			);
 
 		const meta = {
-			total: totalUsers,
+			totalCount: totalUsers,
+			totalFind: users.length,
 			page: page,
 			limit: limit,
 			searchFilter: searchFilter,
@@ -286,7 +243,6 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 	}
 };
 
-//* for PATCH requests
 export const changeUserRole = async (id, body) => {
 	try {
 		const { role } = body;
@@ -298,8 +254,6 @@ export const changeUserRole = async (id, body) => {
 			},
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -318,7 +272,7 @@ export const changeUserRole = async (id, body) => {
 			return new ErrorHandler(
 				'prisma',
 				updatedUser.error,
-				'User cannot be modified '+ updatedUser.error.message
+				'User cannot be modified ' + updatedUser.error.message
 			);
 
 		return updatedUser;
@@ -331,14 +285,12 @@ export const changeUserRole = async (id, body) => {
 	}
 };
 
-export const removeUser = async (id) => {
+export const removeUser = async (userId) => {
 	try {
-		const deleteUser = await prisma.user.delete({
-			where: { id: id },
+		const userDeleted = await prisma.user.delete({
+			where: { id: userId },
 			omit: {
 				password: true,
-				createdAt: true,
-				updatedAt: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
 				passwordResetToken: true,
@@ -347,21 +299,29 @@ export const removeUser = async (id) => {
 			},
 		});
 
-		if (!deleteUser)
+		if (!userDeleted)
 			return new ErrorHandler(
 				'Delete null zero',
 				'User cannot be deleted',
 				'There is no user with that id to delete'
 			);
 
-		if (deleteUser.error)
+		if (userDeleted.error)
 			return new ErrorHandler(
 				'prisma',
-				deleteUser.error,
-				'User cannot be deleted for datebase '+deleteUser.error.message
+				userDeleted.error,
+				'User cannot be deleted for datebase ' +
+					userDeleted.error.message
 			);
 
-		return deleteUser;
+		const totalCount = await prisma.user.count();
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: userDeleted ? 1 : 0,
+		};
+
+		return { userDeleted: userDeleted, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
@@ -373,16 +333,24 @@ export const removeUser = async (id) => {
 
 export const removeAllUsers = async () => {
 	try {
-		const removeAll = await prisma.user.deleteMany();
+		const usersDeleted = await prisma.user.deleteMany();
 
-		if (removeAll.error)
+		if (usersDeleted.error)
 			return new ErrorHandler(
 				'prisma',
-				removeAll.error,
-				'Connot remove all users for database '+removeAll.error.message
+				usersDeleted.error,
+				'Connot remove all users for database ' +
+					usersDeleted.error.message
 			);
 
-		return removeAll;
+		const totalCount = await prisma.user.count();
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: usersDeleted.count,
+		};
+
+		return { usersDeleted: usersDeleted, meta: meta };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',

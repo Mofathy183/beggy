@@ -97,7 +97,7 @@ export const AIConfig = {
 };
 
 export const openweatherApiConfig = {
-    apiKey: process.env.OPENWEATHER_API_KEY,
-    baseURL: process.env.OPENWEATHER_API_URL,
-    units: 'metric'
-}
+	apiKey: process.env.OPENWEATHER_API_KEY,
+	baseURL: process.env.OPENWEATHER_API_URL,
+	units: 'metric',
+};

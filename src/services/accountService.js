@@ -9,7 +9,7 @@ export const authenticateUserWithGoogle = async (profile) => {
 		const { value: email } = emails[0];
 		const { familyName: lastName, givenName: firstName } = name;
 		const { value: photo } = photos[0];
-        let status = 200
+		let status = 200;
 
 		let user = await prisma.account.findUnique({
 			where: { providerId: id },
@@ -21,8 +21,8 @@ export const authenticateUserWithGoogle = async (profile) => {
 						lastName: true,
 						email: true,
 						gender: true,
-                        country: true,
-                        city: true,
+						country: true,
+						city: true,
 						birth: true,
 						profilePicture: true,
 						role: true,
@@ -60,17 +60,17 @@ export const authenticateUserWithGoogle = async (profile) => {
 					lastName: true,
 					email: true,
 					profilePicture: true,
-                    country: true,
-                    city: true,
+					country: true,
+					city: true,
 					role: true,
 					account: true,
 				},
 			});
 
-            status = 201
+			status = 201;
 		}
 
-		return {user: user, status: status};
+		return { user: user, status: status };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -87,7 +87,7 @@ export const authenticateUserWithFacebook = async (profile) => {
 		const { givenName: firstName, familyName: lastName } = name;
 		const { value: photo } = photos[0];
 		const email = emails[0].value || undefined;
-        let status = 200
+		let status = 200;
 
 		let user = await prisma.account.findUnique({
 			where: { providerId: id },
@@ -100,7 +100,7 @@ export const authenticateUserWithFacebook = async (profile) => {
 						email: true,
 						gender: true,
 						country: true,
-                        city: true,
+						city: true,
 						birth: true,
 						profilePicture: true,
 						role: true,
@@ -143,16 +143,16 @@ export const authenticateUserWithFacebook = async (profile) => {
 					role: true,
 					gender: true,
 					birth: true,
-                    country: true,
-                    city: true,
+					country: true,
+					city: true,
 					account: true,
 				},
 			});
 
-            status = 201
+			status = 201;
 		}
 
-		return {user: user, status: status};
+		return { user: user, status: status };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
