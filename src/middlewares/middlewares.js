@@ -1,7 +1,5 @@
-import Joi from 'joi';
 import { statusCode } from '../config/status.js';
 import { ErrorResponse } from '../utils/error.js';
-import { Size } from '@prisma/client';
 import { productStringRegExp } from '../api/validators/itemValidator.js';
 import { stringRegExp } from '../api/validators/authValidator.js';
 
@@ -75,8 +73,7 @@ export const orderByMiddleware = (req, res, next) => {
 			new ErrorResponse(
 				`Both "sortBy" and "order" must be provided.`,
 				`Valid "sortBy" fields: ${allowedSortFields.join(', ')}. ` +
-					`For "size", order must be one of: ${Object.values(Size).join(', ')}. ` +
-					`For others, order must be "asc" or "desc".`,
+				`For others, order must be "asc" or "desc".`,
 				statusCode.badRequestCode
 			)
 		);
@@ -93,27 +90,8 @@ export const orderByMiddleware = (req, res, next) => {
 		);
 	}
 
-	// Special validation for "size" field
-	if (sortBy === 'size') {
-		const sizeSchema = Joi.string()
-			.valid(...Object.values(Size))
-			.uppercase();
-		const { error } = sizeSchema.validate(order);
-
-		if (error) {
-			return next(
-				new ErrorResponse(
-					`Invalid "order" value for size: "${order}".`,
-					`Allowed values: ${Object.values(Size).join(', ')}.`,
-					statusCode.badRequestCode
-				)
-			);
-		}
-
-		order = order.toUpperCase();
-	}
 	// Validate "asc" or "desc" for other fields
-	else if (!['asc', 'desc'].includes(order.toLowerCase())) {
+	if (!['asc', 'desc'].includes(order.toLowerCase())) {
 		return next(
 			new ErrorResponse(
 				`Invalid "order" value: "${order}".`,

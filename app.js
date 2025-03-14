@@ -14,7 +14,7 @@ import {
 	AppResponse,
 	csrfMiddleware,
 } from './src/middlewares/appMiddleware.js';
-import rootRoute from './src/api/routes/rootRouter.js';
+import rootRoute from './src/api/routes/rootRoute.js';
 import passport from './src/config/passport.js';
 
 const app = express();

@@ -8,8 +8,8 @@ model Account {
     updatedAt  DateTime  @updatedAt @map("updated_at")
 
     //* User make relationship between User and Accout
-    userId     String    @map("user_id")
-    user       User      @relation(fields: [userId], references: [id])
+    userId String @map("user_id")
+    user   User   @relation(fields: [userId], references: [id])
 
     //* table name
     @@map("accounts")

@@ -1,5 +1,4 @@
 import express from 'express';
-import { csrfProtection } from '../../middlewares/appMiddleware.js';
 import {
 	signUp,
 	login,

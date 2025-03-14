@@ -3,15 +3,8 @@ import {
 	findItemUserHas,
 	addItemToUser,
 	addItemsToUSer,
-	findItemById,
-	findItemsByQuery,
-	findAllItems,
-	removeAllItems,
-	removeItemById,
 	removeItemUserHas,
 	removeAllItemsUserHas,
-	replaceItemResource,
-	modifyItemResource,
 	replaceItemUserHas,
 	modifyItemUserHas,
 } from '../../services/itemsService.js';
@@ -20,310 +13,13 @@ import { sendCookies, storeSession } from '../../utils/authHelper.js';
 import { ErrorResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
-export const getAllItems = async (req, res, next) => {
-	try {
-		const { pagination } = req;
-
-		const { items, meta } = await findAllItems(pagination);
-
-		if (!items)
-			return next(
-				new ErrorResponse(
-					'No items found',
-					'Failed to find all items',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (items.error)
-			return next(
-				new ErrorResponse(
-					items.error || 'Failed to find all items',
-					'Failed to find all items' + items.error.message,
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		sendCookies(req.session.userId, res);
-		storeSession(req.session.userId, req.session.userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully found all items',
-				items,
-				meta
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to get all items',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const getItemsById = async (req, res, next) => {
-	try {
-		const { itemId } = req.params;
-
-		const item = await findItemById(itemId);
-
-		if (!item)
-			return next(
-				new ErrorResponse(
-					'Item not found',
-					'Failed to find item by id',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (item.error)
-			return next(
-				new ErrorResponse(
-					'Failed to find item by id ' + item.error,
-					'Failed to find item by id ' + item.error.message,
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully found item by id',
-				item
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to get item by id',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const getItemsByQuery = async (req, res, next) => {
-	try {
-		const { pagination, orderBy, searchFilter } = req;
-
-		const { items, meta } = await findItemsByQuery(
-			pagination,
-			searchFilter,
-			orderBy
-		);
-
-		if (items.error)
-			return next(
-				new ErrorResponse(
-					items.error || 'Failed to find all items',
-					'Failed to find all items',
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully found all items by Search',
-				items,
-				meta
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to get all items',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const replaceItemById = async (req, res, next) => {
-	try {
-		const { itemId } = req.params;
-		const { body } = req;
-		const { userId, userRole } = req.session;
-
-		const itemUpdate = await replaceItemResource(itemId, body);
-
-		if (!itemUpdate)
-			return next(
-				new ErrorResponse(
-					'Item not found',
-					'Failed to find item by id',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (itemUpdate.error)
-			return next(
-				new ErrorResponse(
-					itemUpdate.error,
-					'Failed to replace item by itemId ' +
-						itemUpdate.error.message,
-					statusCode.badRequestCode
-				)
-			);
-
-		sendCookies(userId, res);
-		storeSession(userId, userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully Replaced Item by ID',
-				itemUpdate
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to replace item by id',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const modifyItemById = async (req, res, next) => {
-	try {
-		const { itemId } = req.params;
-		const { body } = req;
-		const { userId, userRole } = req.session;
-
-		const itemUpdate = await modifyItemResource(itemId, body);
-
-		if (!itemUpdate)
-			return next(
-				new ErrorResponse(
-					'Item not found',
-					'Failed to find item by id',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (itemUpdate.error)
-			return next(
-				new ErrorResponse(
-					itemUpdate.error,
-					'Failed to modify item by id' + itemUpdate.error.message,
-					statusCode.badRequestCode
-				)
-			);
-
-		sendCookies(userId, res);
-		storeSession(userId, userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully Modified Item by ID',
-				itemUpdate
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to modify item by id',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const deleteItemById = async (req, res, next) => {
-	try {
-		const { itemId } = req.params;
-		const { userId, userRole } = req.session;
-
-		const { deletedItem, meta } = await removeItemById(itemId);
-
-		if (deletedItem.error)
-			return next(
-				new ErrorResponse(
-					'Failed to delete item by id ' + deletedItem.error,
-					'Failed to delete item by id ' + deletedItem.error.message,
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		sendCookies(userId, res);
-		storeSession(userId, userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully Deleted Item by ID',
-				deletedItem,
-				meta
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to delete item by id',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const deleteAllItems = async (req, res, next) => {
-	try {
-		const { userId, userRole } = req.session;
-
-		const { deleteCount, meta } = await removeAllItems();
-
-		if (deleteCount.error)
-			return next(
-				new ErrorResponse(
-					'Failed to delete all items ' + deleteCount.error,
-					'Failed to delete all items ' + deleteCount.error.message,
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		sendCookies(userId, res);
-		storeSession(userId, userRole, req);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'Successfully Delete All Items',
-				deleteCount,
-				meta
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to delete all items',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-//*============================{For Items User Route}==================================
 
 export const getItemsBelongsToUser = async (req, res, next) => {
 	try {
-		const { pagination } = req;
+		const { pagination, searchFilter = undefined, orderBy = undefined } = req;
 		const { userId, userRole } = req.session;
 
-		const { userItems, meta } = await findItemsUserHas(userId, pagination);
+		const { userItems, meta } = await findItemsUserHas(userId, pagination, searchFilter, orderBy);
 
 		if (!userItems)
 			return next(
@@ -349,7 +45,7 @@ export const getItemsBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully Found All Items User Has',
+				`Successfully Found All Items User Has${searchFilter ? " By Search" : ""}`,
 				userItems,
 				meta
 			)
@@ -646,8 +342,9 @@ export const deleteItemBelongsTo = async (req, res, next) => {
 export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
+        const { searchFilter = undefined } = req;
 
-		const { deletedItems, meta } = await removeAllItemsUserHas(userId);
+		const { deletedItems, meta } = await removeAllItemsUserHas(userId, searchFilter);
 
 		if (deletedItems.error)
 			return next(
@@ -666,7 +363,7 @@ export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully Deleted All Items Belongs to User',
+				`Successfully Deleted All Items Belongs to User${searchFilter ? " By Search" : ""}`,
 				deletedItems,
 				meta
 			)

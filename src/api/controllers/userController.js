@@ -1,7 +1,6 @@
 import {
 	addUser,
 	getUserById,
-	getUserPublicProfile,
 	getAllUsers,
 	changeUserRole,
 	removeUser,
@@ -50,48 +49,6 @@ export const createUser = async (req, res, next) => {
 			new ErrorResponse(
 				error,
 				'Failed to create user',
-				statusCode.internalServerErrorCode
-			)
-		);
-	}
-};
-
-export const findUserPublicProfile = async (req, res, next) => {
-	try {
-		const { id } = req.params;
-
-		const user = await getUserPublicProfile(id);
-
-		if (!user)
-			return next(
-				new ErrorResponse(
-					'User not found',
-					"Couldn't find user by this id",
-					statusCode.notFoundCode
-				)
-			);
-
-		if (user.error)
-			return next(
-				new ErrorResponse(
-					user.error,
-					"Couldn't find user by this id " + user.error.message,
-					statusCode.internalServerErrorCode
-				)
-			);
-
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				'User Retrieved By Its ID Successfully',
-				user
-			)
-		);
-	} catch (error) {
-		return next(
-			new ErrorResponse(
-				error,
-				'Failed to retrieve public user profile',
 				statusCode.internalServerErrorCode
 			)
 		);

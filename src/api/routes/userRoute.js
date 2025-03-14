@@ -2,7 +2,6 @@ import express from 'express';
 import {
 	createUser,
 	findUserById,
-	findUserPublicProfile,
 	findAllUsers,
 	changeUserRoleById,
 	deleteUserById,
@@ -22,7 +21,6 @@ import {
 import {
 	paginateMiddleware,
 	orderByMiddleware,
-	searchMiddleware,
 	searchForUsersMiddleware,
 } from '../../middlewares/middlewares.js';
 
@@ -49,25 +47,12 @@ userRoute.get(
 
 //*========================{Private Route}========================
 
-//*========================{Public Route}========================
-
-//* route to get user public profile by id => GET param (id)
-userRoute.get('/public/:id', findUserPublicProfile);
-
-//* route for search for users by query => GET
-userRoute.get(
-	'/search',
-	paginateMiddleware,
-	searchForUsersMiddleware,
-	findAllUsers
-);
-//*========================{Public Route}========================
 
 //*========================{Private Route}========================
 
 //* route for get user private profile by id => GET param (id)
 userRoute.get(
-	'/private/:id',
+	'/:id',
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
@@ -86,13 +71,25 @@ userRoute.post(
 
 //* route for change user role => PATCH (Admin and Member only)
 userRoute.patch(
-	'/role/:id',
+	'/:id/role',
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin'),
 	VReqToUserRole,
 	changeUserRoleById
 );
+
+
+//* route for delete all users => DELETE  //delete
+userRoute.delete(
+    '/',
+    VReqToHeaderToken,
+    headersMiddleware,
+    checkRoleMiddleware('admin'),
+    confirmDeleteMiddleware,
+    deleteAllUsers
+);
+
 
 //* route for delete user by id => DELETE param(id) //delete
 userRoute.delete(
@@ -101,16 +98,6 @@ userRoute.delete(
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
 	deleteUserById
-);
-
-//* route for delete all users => DELETE  //delete
-userRoute.delete(
-	'/',
-	VReqToHeaderToken,
-	headersMiddleware,
-	checkRoleMiddleware('admin'),
-	confirmDeleteMiddleware,
-	deleteAllUsers
 );
 
 //*========================{Private Route}========================

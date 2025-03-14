@@ -84,53 +84,7 @@ export const addUser = async (body) => {
 	}
 };
 
-export const getUserPublicProfile = async (userId) => {
-	try {
-		const user = await prisma.user.findUnique({
-			where: {
-				id: userId, // Only return active users
-				AND: {
-					isActive: true,
-				},
-			},
-			select: {
-				id: true,
-				firstName: true,
-				lastName: true,
-				displayName: true,
-				email: true,
-				gender: true,
-				birth: true,
-				age: true,
-				country: true,
-				city: true,
-				profilePicture: true,
-			},
-		});
 
-		if (!user)
-			return new ErrorHandler(
-				'user',
-				'User not found',
-				'User not found in the database'
-			);
-
-		if (user.error)
-			return new ErrorHandler(
-				'prisma',
-				user.error,
-				'User not found in the database ' + user.error.message
-			);
-
-		return user;
-	} catch (error) {
-		return new ErrorHandler(
-			'catch',
-			error,
-			'Failed to get user public profile'
-		);
-	}
-};
 
 export const getUserById = async (userId) => {
 	try {

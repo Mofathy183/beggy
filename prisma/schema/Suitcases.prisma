@@ -8,7 +8,7 @@ model Suitcases {
     color     String?           @default("black")
     size      Size
     capacity  Float
-    maxWeight  Float
+    maxWeight Float
     weight    Float
     material  Material?
     features  SuitcaseFeature[]
