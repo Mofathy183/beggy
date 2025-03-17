@@ -52,7 +52,6 @@ export const removeItemsFromUserBag = async (userId, bagId, body) => {
 	}
 };
 
-
 export const removeItemFromUserBag = async (userId, bagId, body) => {
 	try {
 		const { itemId } = body;
@@ -106,12 +105,15 @@ export const removeItemFromUserBag = async (userId, bagId, body) => {
 	}
 };
 
-
-export const removeAllItemsFromUserBag = async (userId, bagId, searchFilter) => {
+export const removeAllItemsFromUserBag = async (
+	userId,
+	bagId,
+	searchFilter
+) => {
 	try {
 		const deletedBagItems = await prisma.bagItems.deleteMany({
 			where: {
-                item: searchFilter,
+				item: searchFilter,
 				bagId: bagId,
 			},
 		});
@@ -155,7 +157,6 @@ export const removeAllItemsFromUserBag = async (userId, bagId, searchFilter) => 
 		);
 	}
 };
-
 
 export const addItemToUserBag = async (userId, bagId, body) => {
 	try {
@@ -287,7 +288,6 @@ export const addItemToUserBag = async (userId, bagId, body) => {
 		);
 	}
 };
-
 
 export const addItemsToUserBag = async (userId, bagId, body) => {
 	try {

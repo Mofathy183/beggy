@@ -1,7 +1,6 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
 
-
 //*======================================={Bags Public Route}==============================================
 
 export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
@@ -104,9 +103,7 @@ export const findBagById = async (bagId) => {
 
 //*======================================={Bags Public Route}==============================================
 
-
 //*======================================={Items Public Route}==============================================
-
 
 export const findItemById = async (itemId) => {
 	try {
@@ -196,12 +193,9 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 	}
 };
 
-
 //*======================================={Items Public Route}==============================================
 
-
 //*======================================={Suitcase Public Route}==============================================
-
 
 export const findAllSuitcasesByQuery = async (
 	searchFilter,
@@ -212,7 +206,7 @@ export const findAllSuitcasesByQuery = async (
 		const { page, limit, offset } = pagination;
 
 		const suitcases = await prisma.suitcases.findMany({
-			where: searchFilter ,
+			where: searchFilter,
 			omit: {
 				user: true,
 				userId: true,
@@ -289,13 +283,9 @@ export const findSuitcaseById = async (suitcaseId) => {
 	}
 };
 
-
 //*======================================={Suitcase Public Route}==============================================
 
-
-
 //*======================================={Users Public Route}==============================================
-
 
 export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 	try {
@@ -364,7 +354,6 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 	}
 };
 
-
 export const findUserPublicProfile = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({
@@ -412,6 +401,5 @@ export const findUserPublicProfile = async (userId) => {
 		);
 	}
 };
-
 
 //*======================================={Users Public Route}==============================================

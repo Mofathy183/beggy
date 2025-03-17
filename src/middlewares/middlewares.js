@@ -73,7 +73,7 @@ export const orderByMiddleware = (req, res, next) => {
 			new ErrorResponse(
 				`Both "sortBy" and "order" must be provided.`,
 				`Valid "sortBy" fields: ${allowedSortFields.join(', ')}. ` +
-				`For others, order must be "asc" or "desc".`,
+					`For others, order must be "asc" or "desc".`,
 				statusCode.badRequestCode
 			)
 		);

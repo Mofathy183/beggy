@@ -1,0 +1,1319 @@
+
+tags:
+    - name: Private
+      description: Operations to Private
+
+servers:
+  - url: http://localhost:3000/api/beggy/private
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+
+  schemas:
+    ItemCategory:
+      type: string
+      enum:
+        - ELECTRONICS
+        - ACCESSORIES
+        - FURNITURE
+        - MEDICINE
+        - CLOTHING
+        - BOOKS
+        - FOOD
+      description: Allowed Item Categories
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+        weight:
+          type: number
+        volume:
+          type: number
+        color:
+          type: string
+        isFragile:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId: 
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        SuitcaseItems:
+          type: object
+          items:
+            $ref: '#/components/schemas/Item'
+        bagItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+      required:
+        - id
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+        - isFragile
+
+    CreateItem:
+      type: object
+      required:
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z0-9 ]+$"
+          description: "Name of the item. No special characters allowed."
+          example: "Laptop Bag"
+
+        category:
+          type: string
+          $ref: '#/components/schemas/ItemCategory' # Replace with actual categories
+          description: "Category of the item."
+          example: "ELECTRONICS"
+
+        quantity:
+          type: integer
+          description: "Quantity of the item."
+          example: 5
+
+        weight:
+          type: number
+          format: float
+          description: "Weight of the item in kg, up to 2 decimal places."
+          example: 1.75
+
+        volume:
+          type: number
+          format: float
+          description: "Volume of the item in cubic meters, up to 2 decimal places."
+          example: 0.25
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Color of the item (optional). No special characters or numbers."
+          example: "Red"
+
+        isFragile:
+          type: boolean
+          description: "Indicates if the item is fragile."
+          example: true
+
+    ModifyItem:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z0-9 ]+$"
+          description: "Name of the item. No special characters allowed."
+          example: "Laptop Bag"
+
+        category:
+          type: string
+          $ref: '#/components/schemas/ItemCategory' # Replace with actual categories
+          description: "Category of the item."
+          example: "ELECTRONICS"
+
+        quantity:
+          type: integer
+          description: "Quantity of the item."
+          example: 5
+
+        weight:
+          type: number
+          format: float
+          description: "Weight of the item in kg, up to 2 decimal places."
+          example: 1.75
+
+        volume:
+          type: number
+          format: float
+          description: "Volume of the item in cubic meters, up to 2 decimal places."
+          example: 0.25
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Color of the item (optional). No special characters or numbers."
+          example: "Red"
+
+        isFragile:
+          type: boolean
+          description: "Indicates if the item is fragile."
+          example: true
+
+    SuitcaseItems:
+      type: array
+      items:
+        type: object
+        properties:
+          suitcaseId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          suitcase: 
+            $ref: '#/components/schemas/Suitcase'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - suitcaseId
+          - itemId
+          - suitcase
+          - item
+          - createdAt
+          - updatedAt
+        description: Suitcase item entry in the database
+
+    SuitcaseTypes: 
+      type: string
+      enum: 
+        - CARRY_ON 
+        - CHECKED_LUGGAGE
+        - HARD_SHELL
+        - SOFT_SHELL
+        - BUSINESS
+        - KIDS 
+        - EXPANDABLE
+      description: Allowed Suitcase Types
+
+    SuitcaseFeature:
+      type: string
+      enum:
+        - NONE
+        - TSA_LOCK
+        - WATERPROOF
+        - EXPANDABLE
+        - USB_PORT
+        - LIGHTWEIGHT
+        - ANTI_THEFT
+        - SCRATCH_RESISTANT
+        - COMPRESSION_STRAPS
+        - TELESCOPIC_HANDLE
+      description: Allowed Suitcase Features
+
+    Material: 
+      type: string
+      enum: 
+        - LEATHER
+        - SYNTHETIC
+        - FABRIC
+        - POLYESTER
+        - NYLON
+        - CANVAS
+        - HARD_SHELL
+        - METAL
+      description: Allowed Suitcase Material
+
+    WheelType:
+      type: string
+      enum: 
+        - NONE
+        - TWO_WHEEL
+        - FOUR_WHEEL
+        - SPINNER
+      description: Allowed Wheel Types
+
+    Size:
+      type: string
+      enum:
+        - SMALL       
+        - MEDIUM      
+        - LARGE       
+        - EXTRA_LARGE
+      description: Allowed Suitcase Sizes
+
+    Suitcase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SuitcaseTypes'
+        brand:
+          type: string
+          nullable: true
+        color:
+          type: string
+          default: "black"
+        size:
+          $ref: '#/components/schemas/Size'
+        capacity:
+          type: number
+        maxWeight:
+          type: number
+        weight:
+          type: number
+        material:
+          $ref: '#/components/schemas/Material'
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuitcaseFeature'
+        wheels:
+          $ref: '#/components/schemas/WheelType'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        suitcaseItems:
+          $ref: '#/components/schemas/SuitcaseItems'
+
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+
+    CreateSuitcase:
+      type: object
+      required:
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Suitcase name (letters and '-' only, no special characters or numbers)."
+          example: "TravelPro Max"
+
+        type:
+          type: string
+          $ref: '#/components/schemas/SuitcaseTypes'
+          description: "Type of suitcase."
+          example: "CARRY_ON"
+
+        brand:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Brand name (letters and '-' only)."
+          example: "Samsonite"
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Suitcase color (letters only)."
+          example: "Black"
+
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category for the suitcase."
+          example: "MEDIUM"
+
+        capacity:
+          type: number
+          format: float
+          description: "Capacity in liters."
+          example: 35.5
+
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight allowed (kg)."
+          example: 23.0
+
+        weight:
+          type: number
+          format: float
+          description: "Suitcase's own weight (kg)."
+          example: 4.5
+
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          description: "Material used for the suitcase."
+          example: "POLYCARBONATE"
+
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/SuitcaseFeature'
+          description: "List of features the suitcase has."
+          example: ["USB_CHARGER", "LOCK"]
+
+        wheels:
+          type: string
+          $ref: '#/components/schemas/WheelType'
+          description: "Type of wheels on the suitcase."
+          example: "FOUR_WHEELS"
+
+    ModifySuitcase:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Suitcase name (letters and '-' only, no special characters or numbers)."
+          example: "TravelPro Max"
+
+        type:
+          type: string
+          $ref: '#/components/schemas/SuitcaseTypes'
+          description: "Type of suitcase."
+          example: "CARRY_ON"
+
+        brand:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Brand name (letters and '-' only)."
+          example: "Samsonite"
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Suitcase color (letters only)."
+          example: "Black"
+
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category for the suitcase."
+          example: "MEDIUM"
+
+        capacity:
+          type: number
+          format: float
+          description: "Capacity in liters."
+          example: 35.5
+
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight allowed (kg)."
+          example: 23.0
+
+        weight:
+          type: number
+          format: float
+          description: "Suitcase's own weight (kg)."
+          example: 4.5
+
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          description: "Material used for the suitcase."
+          example: "POLYCARBONATE"
+
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/SuitcaseFeature'
+          description: "List of features the suitcase has."
+          example: ["USB_CHARGER", "LOCK"]
+
+        wheels:
+          type: string
+          $ref: '#/components/schemas/WheelType'
+          description: "Type of wheels on the suitcase."
+          example: "FOUR_WHEELS"
+
+    Bag:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the bag."
+        name:
+          type: string
+          description: "Name of the bag."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          default: "black"
+          nullable: true
+          description: "Color of the bag (default: black)."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Capacity of the bag in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of bag features."
+        createdAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was created."
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was last updated."
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "User ID who owns this bag (nullable if unowned)."
+        bagItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/BagItems"
+          description: "List of items inside the bag."
+
+    CreateBag:
+      type: object
+      required:
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        name:
+          type: string
+          pattern: "^[a-zA-Z-]+$"
+          description: "Must be letters or hyphen (-) but no special characters or numbers."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          pattern: "^[a-zA-Z]+$"
+          description: "Must be letters only, no special characters or numbers."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Bag capacity in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of features the bag has."
+
+    ModifyBag:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: "^[a-zA-Z-]+$"
+          description: "Must be letters or hyphen (-) but no special characters or numbers."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          pattern: "^[a-zA-Z]+$"
+          description: "Must be letters only, no special characters or numbers."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Bag capacity in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of features to add."
+        removeFeatures:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of features to remove."
+
+    BagItems:
+      type: array
+      items:
+        type: object
+        properties:
+          bagId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          bag: 
+            $ref: '#/components/schemas/Bag'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - bagId
+          - itemId
+          - bag
+          - item
+          - createdAt
+          - updatedAt
+        description: Bag item entry in the database
+
+    BagType:
+      type: string
+      enum:
+        - BACKPACK
+        - DUFFEL
+        - TOTE
+        - MESSENGER
+        - LAPTOP_BAG
+        - TRAVEL_BAG
+        - HANDBAG
+        - CROSSBODY
+        - SHOULDER_BAG
+      description: Allowed Bag Types
+
+    BagFeature:
+      type: string
+      enum:
+        - NONE
+        - WATERPROOF
+        - PADDED_LAPTOP_COMPARTMENT
+        - USB_PORT
+        - ANTI_THEFT
+        - MULTIPLE_POCKETS
+        - LIGHTWEIGHT
+        - EXPANDABLE
+        - REINFORCED_STRAPS
+        - TROLLEY_SLEEVE
+        - HIDDEN_POCKET
+      description: Allowed Bag Features
+
+    ItemSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/Item"
+            - type: object
+              $ref: "#/components/schemas/Item"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    BagSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/Bag"
+            - type: object
+              $ref: "#/components/schemas/Bag"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    SuitcaseSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/Suitcase"
+            - type: object
+              $ref: "#/components/schemas/Suitcase"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+
+paths:
+  /api/beggy/private/bags/{bagId}:
+    put:
+      summary: Replace a Bag by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bagId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBag"
+      responses:
+        "200":
+          description: Bag replaced successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BagSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: Modify a Bag by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bagId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifyBag"
+      responses:
+        "200":
+          description: Bag modified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BagSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a Bag by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bagId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bag deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BagSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/private/bags:
+    delete:
+      summary: Delete All Bags (Admin Only)
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: All bags deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BagSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+  /api/beggy/private/suitcases/{suitcaseId}:
+    put:
+      summary: Replace a Suitcase by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: suitcaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSuitcase"
+      responses:
+        "200":
+          description: Suitcase replaced successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuitcaseSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: Modify a Suitcase by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: suitcaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifySuitcase"
+      responses:
+        "200":
+          description: Suitcase modified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuitcaseSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a Suitcase by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: suitcaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Suitcase deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuitcaseSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/private/suitcases:
+    delete:
+      summary: Delete All Suitcases (Admin Only)
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: All suitcases deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuitcaseSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/private/items/{itemId}:
+    put:
+      summary: Replace an Item by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItem"
+      responses:
+        "200":
+          description: Item replaced successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: Modify an Item by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifyItem"
+      responses:
+        "200":
+          description: Item modified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete an Item by ID
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/private/items:
+    delete:
+      summary: Delete All Items (Admin Only)
+      tags:
+        - Private
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: All items deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemSuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+

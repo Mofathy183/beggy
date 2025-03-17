@@ -165,7 +165,6 @@ export const createBagForUser = async (req, res, next) => {
 	}
 };
 
-
 export const replaceBagBelongsToUser = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
@@ -306,7 +305,6 @@ export const deleteBagBelongsToUserById = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const deleteAllBagsBelongsToUser = async (req, res, next) => {
 	try {

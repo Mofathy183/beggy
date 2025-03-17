@@ -2,14 +2,13 @@ import { ErrorResponse } from '../../utils/error.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import { sendCookies, storeSession } from '../../utils/authHelper.js';
-import { 	
-    removeItemsFromUserBag,
+import {
+	removeItemsFromUserBag,
 	removeItemFromUserBag,
 	removeAllItemsFromUserBag,
 	addItemToUserBag,
 	addItemsToUserBag,
 } from '../../services/bagItemsService.js';
-
 
 export const createItemForUserBag = async (req, res, next) => {
 	try {
@@ -58,7 +57,6 @@ export const createItemForUserBag = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const createItemsForUserBag = async (req, res, next) => {
 	try {
@@ -216,12 +214,12 @@ export const deleteAllItemsFromUserBag = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
 		const { bagId } = req.params;
-        const { searchFilter = undefined } = req;
+		const { searchFilter = undefined } = req;
 
 		const { bagItems, meta } = await removeAllItemsFromUserBag(
 			userId,
 			bagId,
-            searchFilter
+			searchFilter
 		);
 
 		if (!bagItems)
@@ -249,7 +247,7 @@ export const deleteAllItemsFromUserBag = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				`Successfully Deleted All Items From User's Bag${searchFilter ? " By Search" : ""}`,
+				`Successfully Deleted All Items From User's Bag${searchFilter ? ' By Search' : ''}`,
 				bagItems,
 				meta
 			)

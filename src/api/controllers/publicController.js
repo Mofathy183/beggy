@@ -4,23 +4,23 @@ import SuccessResponse from '../../utils/successResponse.js';
 import {
 	findAllBagsByQuery,
 	findBagById,
-
-    findItemsByQuery,
-    findItemById,
-
-    findAllSuitcasesByQuery,
-    findSuitcaseById,
-
-    findAllUsers,
-    findUserPublicProfile,
+	findItemsByQuery,
+	findItemById,
+	findAllSuitcasesByQuery,
+	findSuitcaseById,
+	findAllUsers,
+	findUserPublicProfile,
 } from '../../services/publicService.js';
-
 
 //*======================================={Bags Public Route}==============================================
 
 export const getAllBagsByQuery = async (req, res, next) => {
 	try {
-		const { searchFilter = undefined, pagination, orderBy = undefined } = req;
+		const {
+			searchFilter = undefined,
+			pagination,
+			orderBy = undefined,
+		} = req;
 		const { bags, meta } = await findAllBagsByQuery(
 			searchFilter,
 			pagination,
@@ -99,9 +99,7 @@ export const getBagById = async (req, res, next) => {
 
 //*======================================={Bags Public Route}==============================================
 
-
 //*======================================={Items Public Route}==============================================
-
 
 export const getItemsById = async (req, res, next) => {
 	try {
@@ -183,12 +181,9 @@ export const getItemsByQuery = async (req, res, next) => {
 	}
 };
 
-
 //*======================================={Items Public Route}=============================================
 
-
 //*======================================={Suitcase Public Route}==============================================
-
 
 export const getAllSuitcasesByQuery = async (req, res, next) => {
 	try {
@@ -282,9 +277,7 @@ export const getSuitcaseById = async (req, res, next) => {
 	}
 };
 
-
 //*======================================={Suitcase Public Route}==============================================
-
 
 //*======================================={Users Public Route}==============================================
 
@@ -339,7 +332,6 @@ export const getAllUsers = async (req, res, next) => {
 	}
 };
 
-
 export const getUserPublicProfile = async (req, res, next) => {
 	try {
 		const { id } = req.params;
@@ -381,6 +373,5 @@ export const getUserPublicProfile = async (req, res, next) => {
 		);
 	}
 };
-
 
 //*======================================={Users Public Route}==============================================

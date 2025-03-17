@@ -1,7 +1,6 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
 
-
 export const findBagsUserHas = async (
 	userId,
 	searchFilter,
@@ -218,7 +217,6 @@ export const addBagToUser = async (userId, body) => {
 		return new ErrorHandler('catch', error, 'Failed to add bag to user');
 	}
 };
-
 
 export const replaceBagUserHas = async (userId, bagId, body) => {
 	try {

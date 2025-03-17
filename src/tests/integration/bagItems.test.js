@@ -18,7 +18,6 @@ test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
 });
 
-
 describe("Bags Route For User For Add User's Item To User's Bag", () => {
 	test("Should Add User's Item By Id To User's Bag", async () => {
 		const user = await prisma.user.create({
@@ -429,7 +428,7 @@ describe("Bags Route For User For Delete All Items In User's Bag", () => {
 		expect(res.body.meta.totalDelete).toBe(2);
 	});
 
-    test("Should Delete All Items From User's Bag By Search", async () => {
+	test("Should Delete All Items From User's Bag By Search", async () => {
 		const user = await prisma.user.create({
 			data: {
 				firstName: 'John',
@@ -510,7 +509,9 @@ describe("Bags Route For User For Delete All Items In User's Bag", () => {
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/bag-items/${bag.id}/items/bulk?field=category&search=electronics`)
+			.delete(
+				`/api/beggy/bag-items/${bag.id}/items/bulk?field=category&search=electronics`
+			)
 			.set('Cookie', cookies)
 			.set('X-XSRF-TOKEN', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)

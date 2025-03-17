@@ -1,0 +1,639 @@
+
+tags:
+    - name: Items
+      description: Operations related to managing Items
+
+servers:
+  - url: http://localhost:3000/api/beggy/items
+    description: Local development server
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+  schemas:
+    ItemCategory:
+      type: string
+      enum:
+        - ELECTRONICS
+        - ACCESSORIES
+        - FURNITURE
+        - MEDICINE
+        - CLOTHING
+        - BOOKS
+        - FOOD
+      description: Allowed Item Categories
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+        weight:
+          type: number
+        volume:
+          type: number
+        color:
+          type: string
+        isFragile:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId: 
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        SuitcaseItems:
+          type: object
+          items:
+            $ref: '#/components/schemas/Item'
+        bagItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+      required:
+        - id
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+        - isFragile
+
+    CreateItem:
+      type: object
+      required:
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z0-9 ]+$"
+          description: "Name of the item. No special characters allowed."
+          example: "Laptop Bag"
+
+        category:
+          type: string
+          $ref: '#/components/schemas/ItemCategory' # Replace with actual categories
+          description: "Category of the item."
+          example: "ELECTRONICS"
+
+        quantity:
+          type: integer
+          description: "Quantity of the item."
+          example: 5
+
+        weight:
+          type: number
+          format: float
+          description: "Weight of the item in kg, up to 2 decimal places."
+          example: 1.75
+
+        volume:
+          type: number
+          format: float
+          description: "Volume of the item in cubic meters, up to 2 decimal places."
+          example: 0.25
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Color of the item (optional). No special characters or numbers."
+          example: "Red"
+
+        isFragile:
+          type: boolean
+          description: "Indicates if the item is fragile."
+          example: true
+
+    ModifyItem:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z0-9 ]+$"
+          description: "Name of the item. No special characters allowed."
+          example: "Laptop Bag"
+
+        category:
+          type: string
+          $ref: '#/components/schemas/ItemCategory' # Replace with actual categories
+          description: "Category of the item."
+          example: "ELECTRONICS"
+
+        quantity:
+          type: integer
+          description: "Quantity of the item."
+          example: 5
+
+        weight:
+          type: number
+          format: float
+          description: "Weight of the item in kg, up to 2 decimal places."
+          example: 1.75
+
+        volume:
+          type: number
+          format: float
+          description: "Volume of the item in cubic meters, up to 2 decimal places."
+          example: 0.25
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Color of the item (optional). No special characters or numbers."
+          example: "Red"
+
+        isFragile:
+          type: boolean
+          description: "Indicates if the item is fragile."
+          example: true
+
+    CreateMultipleItems:
+      type: array
+      minItems: 1
+      maxItems: 5
+      items:
+        $ref: "#/components/schemas/CreateItem"
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/Item"
+            - type: object
+              $ref: "#/components/schemas/Item"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+
+paths:
+  /api/beggy/items:
+    get:
+      summary: Get all items for the logged-in user
+      security:
+        - bearerAuth: []
+      tags:
+        - Items
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Search term
+          schema:
+            type: string
+        - name: field
+          in: query
+          description: Field name
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Sorting order
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sorting field
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: Create a new item for the logged-in user
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItem"
+      responses:
+        "200":
+          description: Successfully created an item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete all items for the logged-in user (filtered by search if provided)
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Items
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmDelete:
+                  type: boolean
+              required:
+                - confirmDelete
+      responses:
+        "200":
+          description: Successfully deleted items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/items/multiple:
+    post:
+      summary: Create multiple items for the logged-in user
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMultipleItems"
+      responses:
+        "200":
+          description: Successfully created multiple items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/items/{itemId}:
+    get:
+      summary: Get a single item by ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Items
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: The ID of the item to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully retrieved item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: Replace an existing item by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Items
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: The ID of the item to replace
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItem"
+      responses:
+        "200":
+          description: Successfully replaced item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: Modify an existing item by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Items
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: The ID of the item to modify
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifyItem"
+      responses:
+        "200":
+          description: Successfully modified item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a single item by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Items
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: The ID of the item to delete
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmDelete:
+                  type: boolean
+              required:
+                - confirmDelete
+      responses:
+        "200":
+          description: Successfully deleted item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

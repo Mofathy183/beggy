@@ -34,17 +34,16 @@ itemsRoute.param('itemId', (req, res, next, itemId) =>
 	VReqToUUID(req, res, next, itemId, 'itemId')
 );
 
-
 //* route to get items that user has by search IF THERE => GET user muet by login
-//* GET / → Get all items for a user by Query OR ALL items 
+//* GET / → Get all items for a user by Query OR ALL items
 //* Get items that belong to a specific user
 itemsRoute.get(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
 	paginateMiddleware,
-    searchMiddleware,
-    orderByMiddleware,
+	searchMiddleware,
+	orderByMiddleware,
 	getItemsBelongsToUser
 );
 
@@ -109,7 +108,7 @@ itemsRoute.delete(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
-    searchMiddleware,
+	searchMiddleware,
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
 	deleteAllItemsBelongsToUser
@@ -124,6 +123,5 @@ itemsRoute.delete(
 	headersMiddleware,
 	deleteItemBelongsTo
 );
-
 
 export default itemsRoute;

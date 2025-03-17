@@ -8,7 +8,7 @@ import {
 
 const accountRoute = express.Router();
 
-//todo: route for start OAuth Google authenticate => GET
+//*: route for start OAuth Google authenticate => GET
 accountRoute.get(
 	'/google',
 	passport.authenticate('google', {
@@ -17,7 +17,7 @@ accountRoute.get(
 	})
 );
 
-//todo: route for callback OAuth Google authenticate => GET
+//*: route for callback OAuth Google authenticate => GET
 accountRoute.get(
 	'/google/callback',
 	passport.authenticate('google', {
@@ -29,7 +29,7 @@ accountRoute.get(
 	authenticateWithGoogle
 );
 
-//todo: route for start OAuth Facebook authenticate => GET
+//*: route for start OAuth Facebook authenticate => GET
 accountRoute.get(
 	'/facebook',
 	passport.authenticate('facebook', {
@@ -45,7 +45,7 @@ accountRoute.get(
 	})
 );
 
-//todo: route for callback OAuth Facebook authenticate => GET
+//*: route for callback OAuth Facebook authenticate => GET
 accountRoute.get(
 	'/facebook/callback',
 	passport.authenticate('facebook', {

@@ -1,0 +1,986 @@
+
+tags:
+    - name: Users
+      description: Operations related to managing Users
+
+servers:
+  - url: http://localhost:3000/api/beggy/users
+    description: Local development server
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+  schemas:
+    ItemCategory:
+      type: string
+      enum:
+        - ELECTRONICS
+        - ACCESSORIES
+        - FURNITURE
+        - MEDICINE
+        - CLOTHING
+        - BOOKS
+        - FOOD
+      description: Allowed Item Categories
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+        weight:
+          type: number
+        volume:
+          type: number
+        color:
+          type: string
+        isFragile:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId: 
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        SuitcaseItems:
+          type: object
+          items:
+            $ref: '#/components/schemas/Item'
+        bagItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+      required:
+        - id
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+        - isFragile
+
+    SuitcaseItems:
+      type: array
+      items:
+        type: object
+        properties:
+          suitcaseId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          suitcase: 
+            $ref: '#/components/schemas/Suitcase'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - suitcaseId
+          - itemId
+          - suitcase
+          - item
+          - createdAt
+          - updatedAt
+        description: Suitcase item entry in the database
+
+    SuitcaseTypes: 
+      type: string
+      enum: 
+        - CARRY_ON 
+        - CHECKED_LUGGAGE
+        - HARD_SHELL
+        - SOFT_SHELL
+        - BUSINESS
+        - KIDS 
+        - EXPANDABLE
+      description: Allowed Suitcase Types
+
+    SuitcaseFeature:
+      type: string
+      enum:
+        - NONE
+        - TSA_LOCK
+        - WATERPROOF
+        - EXPANDABLE
+        - USB_PORT
+        - LIGHTWEIGHT
+        - ANTI_THEFT
+        - SCRATCH_RESISTANT
+        - COMPRESSION_STRAPS
+        - TELESCOPIC_HANDLE
+      description: Allowed Suitcase Features
+
+    Material: 
+      type: string
+      enum: 
+        - LEATHER
+        - SYNTHETIC
+        - FABRIC
+        - POLYESTER
+        - NYLON
+        - CANVAS
+        - HARD_SHELL
+        - METAL
+      description: Allowed Suitcase Material
+
+    WheelType:
+      type: string
+      enum: 
+        - NONE
+        - TWO_WHEEL
+        - FOUR_WHEEL
+        - SPINNER
+      description: Allowed Wheel Types
+
+    Size:
+      type: string
+      enum:
+        - SMALL       
+        - MEDIUM      
+        - LARGE       
+        - EXTRA_LARGE
+      description: Allowed Suitcase Sizes
+
+    Suitcase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SuitcaseTypes'
+        brand:
+          type: string
+          nullable: true
+        color:
+          type: string
+          default: "black"
+        size:
+          $ref: '#/components/schemas/Size'
+        capacity:
+          type: number
+        maxWeight:
+          type: number
+        weight:
+          type: number
+        material:
+          $ref: '#/components/schemas/Material'
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuitcaseFeature'
+        wheels:
+          $ref: '#/components/schemas/WheelType'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        user:
+          $ref: '#/components/schemas/User'
+        suitcaseItems:
+          $ref: '#/components/schemas/SuitcaseItems'
+
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+
+    Bag:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the bag."
+        name:
+          type: string
+          description: "Name of the bag."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          default: "black"
+          nullable: true
+          description: "Color of the bag (default: black)."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Capacity of the bag in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of bag features."
+        createdAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was created."
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was last updated."
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "User ID who owns this bag (nullable if unowned)."
+        bagItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/BagItems"
+          description: "List of items inside the bag."
+
+    BagItems:
+      type: array
+      items:
+        type: object
+        properties:
+          bagId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          bag: 
+            $ref: '#/components/schemas/Bag'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - bagId
+          - itemId
+          - bag
+          - item
+          - createdAt
+          - updatedAt
+        description: Bag item entry in the database
+
+    BagType:
+      type: string
+      enum:
+        - BACKPACK
+        - DUFFEL
+        - TOTE
+        - MESSENGER
+        - LAPTOP_BAG
+        - TRAVEL_BAG
+        - HANDBAG
+        - CROSSBODY
+        - SHOULDER_BAG
+      description: Allowed Bag Types
+
+    BagFeature:
+      type: string
+      enum:
+        - NONE
+        - WATERPROOF
+        - PADDED_LAPTOP_COMPARTMENT
+        - USB_PORT
+        - ANTI_THEFT
+        - MULTIPLE_POCKETS
+        - LIGHTWEIGHT
+        - EXPANDABLE
+        - REINFORCED_STRAPS
+        - TROLLEY_SLEEVE
+        - HIDDEN_POCKET
+      description: Allowed Bag Features
+
+
+    Gender: 
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+        - OTHER
+      description: Allowed Gender
+
+    Role: 
+      type: string
+      enum:
+        - USER
+        - ADMIN
+        - MEMBER
+        - SUBSCRIBER
+      description: Allowed User Roles
+
+    User:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - password
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        password:
+          type: string
+          format: password
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/Role'
+        profilePicture:
+          type: string
+          format: uri
+        gender:
+          $ref: '#/components/schemas/Gender'
+          nullable: true
+        birth:
+          type: string
+          format: date
+          nullable: true
+        age:
+          type: integer
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        passwordChangeAt:
+          type: string
+          format: date-time
+          nullable: true
+        passwordResetToken:
+          type: string
+          nullable: true
+        passwordResetExpiredAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        account: 
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        bags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bag'
+        suitcases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Suitcase'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+
+    CreateUser:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+        - confirmPassword
+      properties:
+        firstName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your first name. No special characters or numbers."
+          example: "John"
+
+        lastName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your last name. No special characters or numbers."
+          example: "Doe"
+
+        email:
+          type: string
+          format: email
+          description: "Must be a valid email address."
+          example: "johndoe@example.com"
+
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+          description: "Must be 8-20 characters long, including at least one uppercase letter, one lowercase letter, one digit, and one special character from @$!%*?&."
+          example: "SecurePass@123"
+
+        confirmPassword:
+          type: string
+          description: "Must match the password."
+          example: "SecurePass@123"
+
+        birth:
+          type: string
+          format: date
+          description: "ISO format date of birth."
+          example: "2000-01-01"
+
+        country:
+          type: string
+          pattern: "^[A-Za-z ]+$"
+          description: "Please enter your country name. No special characters or numbers."
+          example: "United States"
+
+        city:
+          type: string
+          pattern: "^[A-Za-z ]+$"
+          description: "Please enter your city name. No special characters or numbers."
+          example: "New York"
+
+        gender:
+          type: string
+          $ref: './schema.swagger.yaml#/components/schemas/Gender'
+          description: "Gender must be one of MALE, FEMALE, or OTHER."
+          example: "MALE"
+
+        profilePicture:
+          type: string
+          description: "URL of the profile picture."
+          example: "https://example.com/profile.jpg"
+
+    ModifyUser:
+      type: object
+      properties:
+        firstName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your first name. No special characters or numbers."
+          example: "John"
+
+        lastName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your last name. No special characters or numbers."
+          example: "Doe"
+
+        email:
+          type: string
+          format: email
+          description: "Must be a valid email address."
+          example: "johndoe@example.com"
+
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+          description: "Must be 8-20 characters long, including at least one uppercase letter, one lowercase letter, one digit, and one special character from @$!%*?&."
+          example: "SecurePass@123"
+
+        confirmPassword:
+          type: string
+          description: "Must match the password."
+          example: "SecurePass@123"
+
+        birth:
+          type: string
+          format: date
+          description: "ISO format date of birth."
+          example: "2000-01-01"
+
+        country:
+          type: string
+          pattern: "^[A-Za-z ]+$"
+          description: "Please enter your country name. No special characters or numbers."
+          example: "United States"
+
+        city:
+          type: string
+          pattern: "^[A-Za-z ]+$"
+          description: "Please enter your city name. No special characters or numbers."
+          example: "New York"
+
+        gender:
+          type: string
+          $ref: '#/components/schemas/Gender'
+          description: "Gender must be one of MALE, FEMALE, or OTHER."
+          example: "MALE"
+
+        profilePicture:
+          type: string
+          description: "URL of the profile picture."
+          example: "https://example.com/profile.jpg"
+
+    ChangeRole:
+      type: object
+      properties:
+        role:
+          type: string
+          $ref: '#/components/schemas/Role'
+          description: "Role must be one of ADMIN, USER, or MEMBER, SUBSCRIBER."
+
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/User"
+            - type: object
+              $ref: "#/components/schemas/User"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+
+
+
+paths:
+  /api/beggy/users:
+    get:
+      summary: Get all users (Admin Only)
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Number of users per page
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Search term (e.g., name or email)
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sorting field
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Sorting order (asc/desc)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: Create a new user (Admin Only)
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUser"
+      responses:
+        "201":
+          description: Successfully created a user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request - Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete all users (Admin Only)
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmDelete:
+                  type: boolean
+              required:
+                - confirmDelete
+      responses:
+        "200":
+          description: Successfully deleted all users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/users/{id}:
+    get:
+      summary: Get user details by ID (Admin & Member)
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully retrieved user details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin or Member access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a user by ID (Admin & Member)
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user to delete
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully deleted the user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin or Member access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/users/{id}/role:
+    patch:
+      summary: Change a user's role (Admin Only)
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user whose role is being changed
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [admin, member, user]
+              required:
+                - role
+      responses:
+        "200":
+          description: Successfully changed user role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

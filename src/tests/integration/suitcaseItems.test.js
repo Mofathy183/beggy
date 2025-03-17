@@ -18,7 +18,6 @@ test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
 });
 
-
 describe("Suitcases Route For User For Add User's Item to User's Suitcase", () => {
 	test('Should Add Item By Its Id to Suitcase', async () => {
 		const user = await prisma.user.create({

@@ -1,190 +1,185 @@
 import { ErrorResponse } from '../../utils/error.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
-import { sendCookies, storeSession } from "../../utils/authHelper"
+import { sendCookies, storeSession } from '../../utils/authHelper.js';
 import {
-    replaceBagResource,
+	replaceBagResource,
 	modifyBagResource,
 	removeBagById,
 	removeAllBags,
-
-    replaceSuitcaseResource,
+	replaceSuitcaseResource,
 	modifySuitcaseResource,
 	removeSuitcaseById,
 	removeAllSuitcases,
-
 	replaceItemResource,
 	modifyItemResource,
-    removeAllItems,
+	removeAllItems,
 	removeItemById,
-} from "../../services/privateService.js"
-
+} from '../../services/privateService.js';
 
 //*======================================={Bags Private Route}==============================================
 
-
 export const replaceBagById = async (req, res, next) => {
-    try {
-        const { bagId } = req.params;
-        const { body } = req;
+	try {
+		const { bagId } = req.params;
+		const { body } = req;
 
-        const bagUpdate = await replaceBagResource(bagId, body);
+		const bagUpdate = await replaceBagResource(bagId, body);
 
-        if (!bagUpdate)
-            return next(
-                new ErrorResponse(
-                    'Bag not found',
-                    'Failed to replace bag',
-                    statusCode.notFoundCode
-                )
-            );
+		if (!bagUpdate)
+			return next(
+				new ErrorResponse(
+					'Bag not found',
+					'Failed to replace bag',
+					statusCode.notFoundCode
+				)
+			);
 
-        if (bagUpdate.error)
-            return next(
-                new ErrorResponse(
-                    bagUpdate.error,
-                    'Failed to replace bag ' + bagUpdate.error.message,
-                    statusCode.badRequestCode
-                )
-            );
+		if (bagUpdate.error)
+			return next(
+				new ErrorResponse(
+					bagUpdate.error,
+					'Failed to replace bag ' + bagUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
-        return next(
-            new SuccessResponse(
-                statusCode.okCode,
-                'Successfully Replaced Bag By ID',
-                bagUpdate
-            )
-        );
-    } catch (error) {
-        return next(
-            new ErrorResponse(
-                error,
-                'Failed to replace bag',
-                statusCode.internalServerErrorCode
-            )
-        );
-    }
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Replaced Bag By ID',
+				bagUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to replace bag',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
 };
 
 export const modifyBagById = async (req, res, next) => {
-    try {
-        const { bagId } = req.params;
-        const { body } = req;
+	try {
+		const { bagId } = req.params;
+		const { body } = req;
 
-        const bagUpdate = await modifyBagResource(bagId, body);
+		const bagUpdate = await modifyBagResource(bagId, body);
 
-        if (!bagUpdate)
-            return next(
-                new ErrorResponse(
-                    'Bag not found',
-                    'Failed to Modify bag',
-                    statusCode.notFoundCode
-                )
-            );
+		if (!bagUpdate)
+			return next(
+				new ErrorResponse(
+					'Bag not found',
+					'Failed to Modify bag',
+					statusCode.notFoundCode
+				)
+			);
 
-        if (bagUpdate.error)
-            return next(
-                new ErrorResponse(
-                    bagUpdate.error,
-                    'Failed to Modify bag ' + bagUpdate.error.message,
-                    statusCode.badRequestCode
-                )
-            );
+		if (bagUpdate.error)
+			return next(
+				new ErrorResponse(
+					bagUpdate.error,
+					'Failed to Modify bag ' + bagUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
-        return next(
-            new SuccessResponse(
-                statusCode.okCode,
-                'Successfully Replaced Bag By ID',
-                bagUpdate
-            )
-        );
-    } catch (error) {
-        return next(
-            new ErrorResponse(
-                error,
-                'Failed to modify bag',
-                statusCode.internalServerErrorCode
-            )
-        );
-    }
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Replaced Bag By ID',
+				bagUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to modify bag',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
 };
 
 export const deleteBagById = async (req, res, next) => {
-    try {
-        const { bagId } = req.params;
+	try {
+		const { bagId } = req.params;
 
-        const { bagDelete, meta } = await removeBagById(bagId);
+		const { bagDelete, meta } = await removeBagById(bagId);
 
-        if (!bagDelete)
-            return next(
-                new ErrorResponse(
-                    'Bag not found',
-                    'Failed to delete bag',
-                    statusCode.notFoundCode
-                )
-            );
+		if (!bagDelete)
+			return next(
+				new ErrorResponse(
+					'Bag not found',
+					'Failed to delete bag',
+					statusCode.notFoundCode
+				)
+			);
 
-        if (bagDelete.error)
-            return next(
-                new ErrorResponse(
-                    bagDelete.error,
-                    'Failed to delete bag ' + bagDelete.error.message,
-                    statusCode.badRequestCode
-                )
-            );
+		if (bagDelete.error)
+			return next(
+				new ErrorResponse(
+					bagDelete.error,
+					'Failed to delete bag ' + bagDelete.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
-        return next(
-            new SuccessResponse(
-                statusCode.okCode,
-                'Successfully Deleted Bag By ID',
-                bagDelete,
-                meta
-            )
-        );
-    } catch (error) {
-        return next(
-            new ErrorResponse(
-                error,
-                'Failed to delete bag',
-                statusCode.internalServerErrorCode
-            )
-        );
-    }
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Deleted Bag By ID',
+				bagDelete,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to delete bag',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
 };
 
 export const deleteAllBags = async (req, res, next) => {
-    try {
-        const { searchFilter = undefined } = req;
-        const { deleteCount, meta } = await removeAllBags(searchFilter);
+	try {
+		const { searchFilter = undefined } = req;
+		const { deleteCount, meta } = await removeAllBags(searchFilter);
 
-        if (deleteCount.error)
-            return next(
-                new ErrorResponse(
-                    deleteCount.error,
-                    'Failed to delete all bags ' + deleteCount.error.message,
-                    statusCode.badRequestCode
-                )
-            );
+		if (deleteCount.error)
+			return next(
+				new ErrorResponse(
+					deleteCount.error,
+					'Failed to delete all bags ' + deleteCount.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
-        return next(
-            new SuccessResponse(
-                statusCode.okCode,
-                `Successfully Delete All Bags${searchFilter ? " By Search" : ""}`,
-                deleteCount,
-                meta
-            )
-        );
-    } catch (error) {
-        return next(
-            new ErrorResponse(
-                error,
-                'Failed to delete all bags',
-                statusCode.internalServerErrorCode
-            )
-        );
-    }
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				`Successfully Delete All Bags${searchFilter ? ' By Search' : ''}`,
+				deleteCount,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to delete all bags',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
 };
-
 
 //*======================================={Bags Private Route}==============================================
 
@@ -244,7 +239,7 @@ export const modifySuitcaseById = async (req, res, next) => {
 		const { body } = req;
 		const { userId, userRole } = req.session;
 
-        console.log(suitcaseId, body, userRole, userId);
+		console.log(suitcaseId, body, userRole, userId);
 
 		const updatedSuitcase = await modifySuitcaseResource(suitcaseId, body);
 
@@ -339,7 +334,7 @@ export const deleteSuitcaseById = async (req, res, next) => {
 export const deleteAllSuitcases = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
-        const { searchFilter = undefined } = req;
+		const { searchFilter = undefined } = req;
 
 		const { deleteCount, meta } = await removeAllSuitcases(searchFilter);
 
@@ -359,7 +354,7 @@ export const deleteAllSuitcases = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				`Successfully Delete All Suitcases${searchFilter ? " By Search" : ""}`,
+				`Successfully Delete All Suitcases${searchFilter ? ' By Search' : ''}`,
 				deleteCount,
 				meta
 			)
@@ -377,9 +372,7 @@ export const deleteAllSuitcases = async (req, res, next) => {
 
 //*======================================={Suitcase Private Route}==============================================
 
-
 //*======================================={Items Private Route}==============================================
-
 
 export const replaceItemById = async (req, res, next) => {
 	try {
@@ -517,7 +510,7 @@ export const deleteItemById = async (req, res, next) => {
 export const deleteAllItems = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
-        const { searchFilter = undefined } = req;
+		const { searchFilter = undefined } = req;
 
 		const { deleteCount, meta } = await removeAllItems(searchFilter);
 
@@ -536,7 +529,7 @@ export const deleteAllItems = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				`Successfully Delete All Items${searchFilter ? " By Search" : ""}`,
+				`Successfully Delete All Items${searchFilter ? ' By Search' : ''}`,
 				deleteCount,
 				meta
 			)
@@ -551,6 +544,5 @@ export const deleteAllItems = async (req, res, next) => {
 		);
 	}
 };
-
 
 //*======================================={Items Private Route}==============================================

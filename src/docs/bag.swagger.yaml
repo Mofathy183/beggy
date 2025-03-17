@@ -1,0 +1,697 @@
+
+servers:
+  - url: http://localhost:3000/api/beggy/bags
+    description: Local development server
+
+tags:
+  - name: Bags
+    description: Operations related to bags
+
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+
+  schemas:
+    Bag:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the bag."
+        name:
+          type: string
+          description: "Name of the bag."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          default: "black"
+          nullable: true
+          description: "Color of the bag (default: black)."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Capacity of the bag in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of bag features."
+        createdAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was created."
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was last updated."
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "User ID who owns this bag (nullable if unowned)."
+        bagItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/BagItems"
+          description: "List of items inside the bag."
+
+    BagItems:
+      type: array
+      items:
+        type: object
+        properties:
+          bagId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          bag: 
+            $ref: '#/components/schemas/Bag'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - BagId
+          - itemId
+          - Bag
+          - item
+          - createdAt
+          - updatedAt
+        description: Bag item entry in the database
+
+    BagType:
+      type: string
+      enum:
+        - BACKPACK
+        - DUFFEL
+        - TOTE
+        - MESSENGER
+        - LAPTOP_BAG
+        - TRAVEL_BAG
+        - HANDBAG
+        - CROSSBODY
+        - SHOULDER_BAG
+      description: Allowed Bag Types
+
+    BagFeature:
+      type: string
+      enum:
+        - NONE
+        - WATERPROOF
+        - PADDED_LAPTOP_COMPARTMENT
+        - USB_PORT
+        - ANTI_THEFT
+        - MULTIPLE_POCKETS
+        - LIGHTWEIGHT
+        - EXPANDABLE
+        - REINFORCED_STRAPS
+        - TROLLEY_SLEEVE
+        - HIDDEN_POCKET
+      description: Allowed Bag Features
+
+    Size:
+      type: string
+      enum:
+        - SMALL       
+        - MEDIUM      
+        - LARGE       
+        - EXTRA_LARGE
+      description: Allowed Suitcase Sizes
+
+    Material: 
+      type: string
+      enum: 
+        - LEATHER
+        - SYNTHETIC
+        - FABRIC
+        - POLYESTER
+        - NYLON
+        - CANVAS
+        - HARD_SHELL
+        - METAL
+      description: Allowed Suitcase Material
+
+    CreateBag:
+      type: object
+      required:
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        name:
+          type: string
+          pattern: "^[a-zA-Z-]+$"
+          description: "Must be letters or hyphen (-) but no special characters or numbers."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          pattern: "^[a-zA-Z]+$"
+          description: "Must be letters only, no special characters or numbers."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Bag capacity in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of features the bag has."
+
+    ModifyBag:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: "^[a-zA-Z-]+$"
+          description: "Must be letters or hyphen (-) but no special characters or numbers."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          pattern: "^[a-zA-Z]+$"
+          description: "Must be letters only, no special characters or numbers."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Bag capacity in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of features to add."
+        removeFeatures:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of features to remove."
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/Bag"
+            - type: object
+              $ref: "#/components/schemas/Bag"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+
+
+paths:
+  /api/beggy/bags:
+    get:
+      summary: Get all bags for the logged-in user
+      security:
+        - bearerAuth: []
+      tags:
+        - Bags
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Search term
+          schema:
+            type: string
+        - name: field
+          in: query
+          description: Field name
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Sorting order
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sorting Field
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved bags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: Create a new bag for the logged-in user
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Bags
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBag"
+      responses:
+        "200":
+          description: Successfully created a bag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete all bags for the logged-in user (filtered by search if provided)
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Bags
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmDelete:
+                  type: boolean
+              required:
+                - confirmDelete
+      responses:
+        "200":
+          description: Successfully deleted bags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/bags/{bagId}:
+    get:
+      summary: Get a single bag by ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Bags
+      parameters:
+        - name: bagId
+          in: path
+          required: true
+          description: The ID of the bag to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully retrieved bag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: Replace an existing bag by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Bags
+      parameters:
+        - name: bagId
+          in: path
+          required: true
+          description: The ID of the bag to replace
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBag"
+      responses:
+        "200":
+          description: Successfully replaced bag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: Modify an existing bag by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Bags
+      parameters:
+        - name: bagId
+          in: path
+          required: true
+          description: The ID of the bag to modify
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifyBag"
+      responses:
+        "200":
+          description: Successfully modified bag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a single bag by ID
+      tags:
+        - Bags
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      parameters:
+        - name: bagId
+          in: path
+          required: true
+          description: The ID of the bag to delete
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmDelete:
+                  type: boolean
+              required:
+                - confirmDelete
+      responses:
+        "200":
+          description: Successfully deleted bag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

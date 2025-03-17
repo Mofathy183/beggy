@@ -33,80 +33,6 @@ bagsRoute.param('bagId', (req, res, next, bagId) =>
 	VReqToUUID(req, res, next, bagId, 'bagId')
 );
 
-//*=========================================={Base Bags Route}===================================
-
-// //* route for get All bags => GET
-// //* GET "/" → Get all bags
-// bagsRoute.get('/', paginateMiddleware, orderByMiddleware, getAllBagsByQuery);
-
-// //* route for get all bags by Querys => GET (query limit and pages)
-// //* GET "/search" → Get bags by query
-// //* Get all bags with optional search query
-// bagsRoute.get(
-// 	'/search',
-// 	searchMiddleware,
-// 	paginateMiddleware,
-// 	orderByMiddleware,
-// 	getAllBagsByQuery
-// );
-
-// //* route for get bag by id => GET (params id)
-// //* GET "/:bagId" → Get a single bag by ID
-// //* Get bag by ID
-// bagsRoute.get('/:bagId', getBagById);
-
-// //* route for replace (update) bag by id => PUT param(id)
-// //* PUT /:bagId → Replace an bag (admin/member)
-// //* Replace (update) an bag by ID
-// bagsRoute.put(
-// 	'/:bagId',
-// 	VReqToHeaderToken,
-// 	headersMiddleware,
-// 	checkRoleMiddleware('admin', 'member'),
-// 	VReqToCreateBag,
-// 	replaceBagById
-// );
-
-// //* route for modify (update) bag by id => PATCH param(id)
-// //* PATCH /:bagId → Modify an bag (admin/member)
-// //* Modify (update) an bag by ID
-// bagsRoute.patch(
-// 	'/:bagId',
-// 	VReqToHeaderToken,
-// 	headersMiddleware,
-// 	checkRoleMiddleware('admin', 'member'),
-// 	VReqToModifyBag,
-// 	modifyBagById
-// );
-
-// //* route for delete All bags => DELETE
-// //* DELETE /delete-all → Delete all bags (admin only)
-// //* Delete all bags (Admin only)
-// bagsRoute.delete(
-// 	'/delete-all',
-// 	VReqToHeaderToken,
-// 	headersMiddleware,
-// 	checkRoleMiddleware('admin'),
-// 	VReqToConfirmDelete,
-// 	confirmDeleteMiddleware,
-// 	deleteAllBags
-// );
-
-// //* route for delete bag by id => DELETE (params id)
-// //* DELETE /:bagId → Delete an bag (admin/member)
-// //* Delete an bag by ID
-// bagsRoute.delete(
-// 	'/:bagId',
-// 	VReqToHeaderToken,
-// 	headersMiddleware,
-// 	checkRoleMiddleware('admin', 'member'),
-// 	deleteBagById
-// );
-
-//*=========================================={Base Bags Route}===================================
-
-//*=========================================={Bags Route For User}===================================
-
 //* route to get bags that user has by user => GET user muet by login
 //* GET /user → Get all bags for a user
 //* Get bags that belong to a specific user option query
@@ -185,7 +111,5 @@ bagsRoute.delete(
 	headersMiddleware,
 	deleteBagBelongsToUserById
 );
-
-//*=========================================={Bags Route For User}===================================
 
 export default bagsRoute;

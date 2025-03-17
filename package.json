@@ -15,10 +15,24 @@
 		"prisma:migrate": "npx prisma migrate dev"
 	},
 	"author": "Mohamed Fathy",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Mofathy183/Beggy-backend"
+	},
+	"bugs": {
+		"url": "https://github.com/Mofathy183/Beggy-backend/issues"
+	},
+	"keywords": [
+		"backend",
+		"web-app",
+		"Beggy",
+		"travel",
+		"Prisma",
+		"PostgreSQL",
+		"Express"
+	],
 	"license": "ISC",
 	"devDependencies": {
-		"@babel/preset-env": "^7.26.9",
-		"@jest/globals": "^29.7.0",
 		"babel-jest": "^29.7.0",
 		"cross-env": "^7.0.3",
 		"jest": "^29.7.0",
@@ -47,6 +61,8 @@
 		"nodemailer": "^6.10.0",
 		"passport": "^0.7.0",
 		"passport-facebook": "^3.0.0",
-		"passport-google-oauth20": "^2.0.0"
+		"passport-google-oauth20": "^2.0.0",
+		"swagger-jsdoc": "^6.2.8",
+		"swagger-ui-express": "^5.0.1"
 	}
 }

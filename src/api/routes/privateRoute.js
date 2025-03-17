@@ -1,34 +1,32 @@
 import express from 'express';
 import {
-    VReqToUUID,
-    VReqToCreateBag,
-    VReqToModifyBag,
+	VReqToUUID,
+	VReqToCreateBag,
+	VReqToModifyBag,
 } from '../../middlewares/validateRequest.js';
 import {
-    VReqToCreateSuitcase,
-    VReqToModifySuitcase,
-    VReqToModifyItem,
-    VReqToCreateItem
-}from "../../middlewares/validateRequest.js"
+	VReqToCreateSuitcase,
+	VReqToModifySuitcase,
+	VReqToModifyItem,
+	VReqToCreateItem,
+} from '../../middlewares/validateRequest.js';
 import {
-    headersMiddleware,
-    checkRoleMiddleware,
-    VReqToHeaderToken,
-    confirmDeleteMiddleware,
-    VReqToConfirmDelete,
+	headersMiddleware,
+	checkRoleMiddleware,
+	VReqToHeaderToken,
+	confirmDeleteMiddleware,
+	VReqToConfirmDelete,
 } from '../../middlewares/authMiddleware.js';
 import {
-    replaceBagById,
-    modifyBagById,
-    deleteBagById,
-    deleteAllBags,
-
-    replaceSuitcaseById,
+	replaceBagById,
+	modifyBagById,
+	deleteBagById,
+	deleteAllBags,
+	replaceSuitcaseById,
 	modifySuitcaseById,
 	deleteSuitcaseById,
 	deleteAllSuitcases,
-
-    replaceItemById,
+	replaceItemById,
 	modifyItemById,
 	deleteItemById,
 	deleteAllItems,
@@ -39,7 +37,7 @@ const privateRoute = express.Router();
 
 //* Validate request parameters
 privateRoute.param('bagId', (req, res, next, bagId) =>
-    VReqToUUID(req, res, next, bagId, 'bagId')
+	VReqToUUID(req, res, next, bagId, 'bagId')
 );
 
 privateRoute.param('suitcaseId', (req, res, next, suitcaseId) =>
@@ -47,9 +45,8 @@ privateRoute.param('suitcaseId', (req, res, next, suitcaseId) =>
 );
 
 privateRoute.param('itemId', (req, res, next, itemId) =>
-    VReqToUUID(req, res, next, itemId, 'itemId')
+	VReqToUUID(req, res, next, itemId, 'itemId')
 );
-
 
 //*======================================={Bags Private Route}==============================================
 
@@ -84,7 +81,7 @@ privateRoute.delete(
 	'/bags',
 	VReqToHeaderToken,
 	headersMiddleware,
-    searchMiddleware,
+	searchMiddleware,
 	checkRoleMiddleware('admin'),
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
@@ -103,7 +100,6 @@ privateRoute.delete(
 );
 
 //*======================================={Bags Private Route}==============================================
-
 
 //*======================================={Suitcase Private Route}==============================================
 
@@ -138,7 +134,7 @@ privateRoute.delete(
 	'/suitcases',
 	VReqToHeaderToken,
 	headersMiddleware,
-    searchMiddleware,
+	searchMiddleware,
 	checkRoleMiddleware('admin'),
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
@@ -157,7 +153,6 @@ privateRoute.delete(
 );
 
 //*======================================={Suitcase Private Route}==============================================
-
 
 //*======================================={Items Private Route}==============================================
 
@@ -192,7 +187,7 @@ privateRoute.delete(
 	'/items',
 	VReqToHeaderToken,
 	headersMiddleware,
-    searchMiddleware,
+	searchMiddleware,
 	checkRoleMiddleware('admin'),
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
@@ -213,5 +208,3 @@ privateRoute.delete(
 //*======================================={Items Private Route}==============================================
 
 export default privateRoute;
-
-

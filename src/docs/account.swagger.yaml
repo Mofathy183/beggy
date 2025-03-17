@@ -1,0 +1,543 @@
+
+tags:
+    - name: Authentication
+      description: Operations related to managing Authentication
+
+servers:
+  - url: http://localhost:3000/api/beggy/auth
+    description: Local development server
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+  schemas:
+    Providers: 
+      type: string
+      enum: 
+        - GOOGLE
+        - FACEBOOK
+      description: Allowed Providers
+
+    Account:
+      type: object
+      required:
+        - id
+        - provider
+        - providerId
+        - createdAt
+        - updatedAt
+        - userId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the account."
+        provider:
+          type: string
+          $ref: "#/components/schemas/Providers"
+          description: "The authentication provider (Google, Facebook)."
+        providerId:
+          type: string
+          description: "Unique provider ID assigned by the authentication service."
+        createdAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the account was created."
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the account was last updated."
+        userId:
+          type: string
+          format: uuid
+          description: "User ID associated with this account."
+
+    ItemCategory:
+      type: string
+      enum:
+        - ELECTRONICS
+        - ACCESSORIES
+        - FURNITURE
+        - MEDICINE
+        - CLOTHING
+        - BOOKS
+        - FOOD
+      description: Allowed Item Categories
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+        weight:
+          type: number
+        volume:
+          type: number
+        color:
+          type: string
+        isFragile:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId: 
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        SuitcaseItems:
+          type: object
+          items:
+            $ref: '#/components/schemas/Item'
+        bagItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+      required:
+        - id
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+        - isFragile
+
+    SuitcaseItems:
+      type: array
+      items:
+        type: object
+        properties:
+          suitcaseId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          suitcase: 
+            $ref: '#/components/schemas/Suitcase'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - suitcaseId
+          - itemId
+          - suitcase
+          - item
+          - createdAt
+          - updatedAt
+        description: Suitcase item entry in the database
+
+    SuitcaseTypes: 
+      type: string
+      enum: 
+        - CARRY_ON 
+        - CHECKED_LUGGAGE
+        - HARD_SHELL
+        - SOFT_SHELL
+        - BUSINESS
+        - KIDS 
+        - EXPANDABLE
+      description: Allowed Suitcase Types
+
+    SuitcaseFeature:
+      type: string
+      enum:
+        - NONE
+        - TSA_LOCK
+        - WATERPROOF
+        - EXPANDABLE
+        - USB_PORT
+        - LIGHTWEIGHT
+        - ANTI_THEFT
+        - SCRATCH_RESISTANT
+        - COMPRESSION_STRAPS
+        - TELESCOPIC_HANDLE
+      description: Allowed Suitcase Features
+
+    Material: 
+      type: string
+      enum: 
+        - LEATHER
+        - SYNTHETIC
+        - FABRIC
+        - POLYESTER
+        - NYLON
+        - CANVAS
+        - HARD_SHELL
+        - METAL
+      description: Allowed Suitcase Material
+
+    WheelType:
+      type: string
+      enum: 
+        - NONE
+        - TWO_WHEEL
+        - FOUR_WHEEL
+        - SPINNER
+      description: Allowed Wheel Types
+
+    Size:
+      type: string
+      enum:
+        - SMALL       
+        - MEDIUM      
+        - LARGE       
+        - EXTRA_LARGE
+      description: Allowed Suitcase Sizes
+
+    Suitcase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SuitcaseTypes'
+        brand:
+          type: string
+          nullable: true
+        color:
+          type: string
+          default: "black"
+        size:
+          $ref: '#/components/schemas/Size'
+        capacity:
+          type: number
+        maxWeight:
+          type: number
+        weight:
+          type: number
+        material:
+          $ref: '#/components/schemas/Material'
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuitcaseFeature'
+        wheels:
+          $ref: '#/components/schemas/WheelType'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        user:
+          $ref: '#/components/schemas/User'
+        suitcaseItems:
+          $ref: '#/components/schemas/SuitcaseItems'
+
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+
+
+
+    Gender: 
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+        - OTHER
+      description: Allowed Gender
+
+    Role: 
+      type: string
+      enum:
+        - USER
+        - ADMIN
+        - MEMBER
+        - SUBSCRIBER
+      description: Allowed User Roles
+
+    User:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - password
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        password:
+          type: string
+          format: password
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/Role'
+        profilePicture:
+          type: string
+          format: uri
+        gender:
+          $ref: '#/components/schemas/Gender'
+          nullable: true
+        birth:
+          type: string
+          format: date
+          nullable: true
+        age:
+          type: integer
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        passwordChangeAt:
+          type: string
+          format: date-time
+          nullable: true
+        passwordResetToken:
+          type: string
+          nullable: true
+        passwordResetExpiredAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        account: 
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        bags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bag'
+        suitcases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Suitcase'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/User"
+            - type: object
+              $ref: "#/components/schemas/User"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+
+paths:
+  /api/beggy/auth/google:
+    get:
+      summary: Start Google OAuth authentication
+      tags:
+        - Authentication
+      security: []
+      responses:
+        "302":
+          description: Redirects to Google authentication page
+
+  /api/beggy/auth/google/callback:
+    get:
+      summary: Google OAuth callback
+      tags:
+        - Authentication
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: OAuth authorization code
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully authenticated with Google
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "302":
+          description: Redirects to failure page if authentication fails
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "/api/beggy/auth/login"
+        "401":
+          description: Unauthorized - Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/facebook:
+    get:
+      summary: Start Facebook OAuth authentication
+      tags:
+        - Authentication
+      security: []
+      responses:
+        "302":
+          description: Redirects to Facebook authentication page
+
+  /api/beggy/auth/facebook/callback:
+    get:
+      summary: Facebook OAuth callback
+      tags:
+        - Authentication
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: OAuth authorization code
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully authenticated with Facebook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "302":
+          description: Redirects to failure page if authentication fails
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "/api/beggy/auth/login"
+        "401":
+          description: Unauthorized - Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

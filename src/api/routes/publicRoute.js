@@ -1,40 +1,35 @@
 import express from 'express';
+import { VReqToUUID } from '../../middlewares/validateRequest.js';
 import {
-    VReqToUUID,
-} from '../../middlewares/validateRequest.js';
-import {
-    paginateMiddleware,
-    searchMiddleware,
-    searchForUsersMiddleware,
-    orderByMiddleware,
+	paginateMiddleware,
+	searchMiddleware,
+	searchForUsersMiddleware,
+	orderByMiddleware,
 } from '../../middlewares/middlewares.js';
 import {
-    getAllBagsByQuery,
-    getBagById,
-
-    getItemsByQuery,
-    getItemsById,
-
-    getAllSuitcasesByQuery,
-    getSuitcaseById,
-
-    getAllUsers,
-    getUserPublicProfile,
+	getAllBagsByQuery,
+	getBagById,
+	getItemsByQuery,
+	getItemsById,
+	getAllSuitcasesByQuery,
+	getSuitcaseById,
+	getAllUsers,
+	getUserPublicProfile,
 } from '../controllers/publicController.js';
 
 const publicRoute = express.Router();
 
 //* Validate request parameters
 publicRoute.param('id', (req, res, next, id) =>
-    VReqToUUID(req, res, next, id, 'id')
+	VReqToUUID(req, res, next, id, 'id')
 );
 
 publicRoute.param('bagId', (req, res, next, bagId) =>
-    VReqToUUID(req, res, next, bagId, 'bagId')
+	VReqToUUID(req, res, next, bagId, 'bagId')
 );
 
 publicRoute.param('itemId', (req, res, next, itemId) =>
-    VReqToUUID(req, res, next, itemId, 'itemId')
+	VReqToUUID(req, res, next, itemId, 'itemId')
 );
 
 publicRoute.param('suitcaseId', (req, res, next, suitcaseId) =>
@@ -45,19 +40,17 @@ publicRoute.param('suitcaseId', (req, res, next, suitcaseId) =>
 
 //* route for search for users by query => GET
 publicRoute.get(
-    '/users',
-    paginateMiddleware,
-    orderByMiddleware,
-    searchForUsersMiddleware,
-    getAllUsers
+	'/users',
+	paginateMiddleware,
+	orderByMiddleware,
+	searchForUsersMiddleware,
+	getAllUsers
 );
 
 //* route to get user public profile by id => GET param (id)
 publicRoute.get('/users/:id', getUserPublicProfile);
 
-
 //*======================================={Users Public Route}==============================================
-
 
 //*======================================={Bags Public Route}==============================================
 
@@ -65,11 +58,11 @@ publicRoute.get('/users/:id', getUserPublicProfile);
 //* GET "/search" → Get bags by query If There OR ALL Bags
 //* Get all bags with optional search query
 publicRoute.get(
-    '/bags',
-    searchMiddleware,
-    paginateMiddleware,
-    orderByMiddleware,
-    getAllBagsByQuery
+	'/bags',
+	searchMiddleware,
+	paginateMiddleware,
+	orderByMiddleware,
+	getAllBagsByQuery
 );
 
 //* route for get bag by id => GET (params id)
@@ -79,10 +72,9 @@ publicRoute.get('/bags/:bagId', getBagById);
 
 //*======================================={Bags Public Route}==============================================
 
-
 //*======================================={Items Public Route}==============================================
 
-//* route for get all items by Querys or All Items => GET 
+//* route for get all items by Querys or All Items => GET
 //* GET "/items/search" → Get items by query
 //* Get all items with optional search query
 publicRoute.get(
@@ -100,9 +92,7 @@ publicRoute.get('/items/:itemId', getItemsById);
 
 //*======================================={Items Public Route}==============================================
 
-
 //*======================================={Suitcase Public Route}==============================================
-
 
 //* route for get all suitcases by Querys => GET (query limit and pages)
 //* GET "/search" → Get suitcases by query
@@ -115,14 +105,11 @@ publicRoute.get(
 	getAllSuitcasesByQuery
 );
 
-
 //* route for get suitcase by id => GET (params id)
 //* GET "/:suitcaseId" → Get a single suitcase by ID
 //* Get suitcase by ID
 publicRoute.get('/suitcases/:suitcaseId', getSuitcaseById);
 
-
 //*======================================={Suitcase Public Route}==============================================
-
 
 export default publicRoute;

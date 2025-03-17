@@ -392,8 +392,6 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 	}
 };
 
-
-
 export const removeAllSuitcasesUserHas = async (userId, searchFilter) => {
 	try {
 		const deletedSuitcases = await prisma.suitcases.deleteMany({

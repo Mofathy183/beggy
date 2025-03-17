@@ -1,0 +1,1085 @@
+tags:
+    - name: Authentication
+      description: Operations related to managing Authentication
+
+servers:
+  - url: http://localhost:3000/api/beggy/auth
+    description: Local development server
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+
+  schemas:
+    ItemCategory:
+      type: string
+      enum:
+        - ELECTRONICS
+        - ACCESSORIES
+        - FURNITURE
+        - MEDICINE
+        - CLOTHING
+        - BOOKS
+        - FOOD
+      description: Allowed Item Categories
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+        weight:
+          type: number
+        volume:
+          type: number
+        color:
+          type: string
+        isFragile:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId: 
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        SuitcaseItems:
+          type: object
+          items:
+            $ref: '#/components/schemas/Item'
+        bagItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+      required:
+        - id
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+        - isFragile
+
+    SuitcaseItems:
+      type: array
+      items:
+        type: object
+        properties:
+          suitcaseId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          suitcase: 
+            $ref: '#/components/schemas/Suitcase'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - suitcaseId
+          - itemId
+          - suitcase
+          - item
+          - createdAt
+          - updatedAt
+        description: Suitcase item entry in the database
+
+    SuitcaseTypes: 
+      type: string
+      enum: 
+        - CARRY_ON 
+        - CHECKED_LUGGAGE
+        - HARD_SHELL
+        - SOFT_SHELL
+        - BUSINESS
+        - KIDS 
+        - EXPANDABLE
+      description: Allowed Suitcase Types
+
+    SuitcaseFeature:
+      type: string
+      enum:
+        - NONE
+        - TSA_LOCK
+        - WATERPROOF
+        - EXPANDABLE
+        - USB_PORT
+        - LIGHTWEIGHT
+        - ANTI_THEFT
+        - SCRATCH_RESISTANT
+        - COMPRESSION_STRAPS
+        - TELESCOPIC_HANDLE
+      description: Allowed Suitcase Features
+
+    Bag:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the bag."
+        name:
+          type: string
+          description: "Name of the bag."
+        type:
+          type: string
+          $ref: '#/components/schemas/BagType'
+          description: "Type of the bag."
+        color:
+          type: string
+          default: "black"
+          nullable: true
+          description: "Color of the bag (default: black)."
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category of the bag."
+        capacity:
+          type: number
+          format: float
+          description: "Capacity of the bag in liters."
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight the bag can carry in kg."
+        weight:
+          type: number
+          format: float
+          description: "Weight of the bag in kg."
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          nullable: true
+          description: "Material of the bag."
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/BagFeature'
+          description: "List of bag features."
+        createdAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was created."
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the bag was last updated."
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "User ID who owns this bag (nullable if unowned)."
+        bagItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/BagItems"
+          description: "List of items inside the bag."
+
+    BagItems:
+      type: array
+      items:
+        type: object
+        properties:
+          bagId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          bag: 
+            $ref: '#/components/schemas/Bag'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - bagId
+          - itemId
+          - bag
+          - item
+          - createdAt
+          - updatedAt
+        description: Bag item entry in the database
+
+    BagType:
+      type: string
+      enum:
+        - BACKPACK
+        - DUFFEL
+        - TOTE
+        - MESSENGER
+        - LAPTOP_BAG
+        - TRAVEL_BAG
+        - HANDBAG
+        - CROSSBODY
+        - SHOULDER_BAG
+      description: Allowed Bag Types
+
+    BagFeature:
+      type: string
+      enum:
+        - NONE
+        - WATERPROOF
+        - PADDED_LAPTOP_COMPARTMENT
+        - USB_PORT
+        - ANTI_THEFT
+        - MULTIPLE_POCKETS
+        - LIGHTWEIGHT
+        - EXPANDABLE
+        - REINFORCED_STRAPS
+        - TROLLEY_SLEEVE
+        - HIDDEN_POCKET
+      description: Allowed Bag Features
+
+    Material: 
+      type: string
+      enum: 
+        - LEATHER
+        - SYNTHETIC
+        - FABRIC
+        - POLYESTER
+        - NYLON
+        - CANVAS
+        - HARD_SHELL
+        - METAL
+      description: Allowed Suitcase Material
+
+    WheelType:
+      type: string
+      enum: 
+        - NONE
+        - TWO_WHEEL
+        - FOUR_WHEEL
+        - SPINNER
+      description: Allowed Wheel Types
+
+    Size:
+      type: string
+      enum:
+        - SMALL       
+        - MEDIUM      
+        - LARGE       
+        - EXTRA_LARGE
+      description: Allowed Suitcase Sizes
+
+    Suitcase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SuitcaseTypes'
+        brand:
+          type: string
+          nullable: true
+        color:
+          type: string
+          default: "black"
+        size:
+          $ref: '#/components/schemas/Size'
+        capacity:
+          type: number
+        maxWeight:
+          type: number
+        weight:
+          type: number
+        material:
+          $ref: '#/components/schemas/Material'
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuitcaseFeature'
+        wheels:
+          $ref: '#/components/schemas/WheelType'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        user:
+          $ref: '#/components/schemas/User'
+        suitcaseItems:
+          $ref: '#/components/schemas/SuitcaseItems'
+
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+
+    Providers: 
+      type: string
+      enum: 
+        - GOOGLE
+        - FACEBOOK
+      description: Allowed Providers
+
+    Account:
+      type: object
+      required:
+        - id
+        - provider
+        - providerId
+        - createdAt
+        - updatedAt
+        - userId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the account."
+        provider:
+          type: string
+          $ref: "#/components/schemas/Providers"
+          description: "The authentication provider (Google, Facebook, Instagram, etc.)."
+        providerId:
+          type: string
+          description: "Unique provider ID assigned by the authentication service."
+        createdAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the account was created."
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Timestamp when the account was last updated."
+        userId:
+          type: string
+          format: uuid
+          description: "User ID associated with this account."
+
+    Gender: 
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+        - OTHER
+      description: Allowed Gender
+
+    Role: 
+      type: string
+      enum:
+        - USER
+        - ADMIN
+        - MEMBER
+        - SUBSCRIBER
+      description: Allowed User Roles
+
+    User:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - password
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        password:
+          type: string
+          format: password
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/Role'
+        profilePicture:
+          type: string
+          format: uri
+        gender:
+          $ref: '#/components/schemas/Gender'
+          nullable: true
+        birth:
+          type: string
+          format: date
+          nullable: true
+        age:
+          type: integer
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        passwordChangeAt:
+          type: string
+          format: date-time
+          nullable: true
+        passwordResetToken:
+          type: string
+          nullable: true
+        passwordResetExpiredAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        account: 
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        bags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bag'
+        suitcases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Suitcase'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+
+    SignUp:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+        - confirmPassword
+      properties:
+        firstName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your first name. Don't add any special characters or numbers."
+        lastName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your last name. Don't add any special characters or numbers."
+        email:
+          type: string
+          format: email
+          description: "Invalid email format."
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+          description: "Password must be between 8 and 20 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character."
+        confirmPassword:
+          type: string
+          description: "Must match the password field."
+
+    Login:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: "Invalid email format."
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+          description: "Password must be between 8 and 20 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character."
+
+    ForgotPassword:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: "Invalid email format."
+
+    ResetPassword:
+      type: object
+      required:
+        - password
+        - confirmPassword
+      properties:
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+          description: "Password must be between 8 and 20 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character."
+        confirmPassword:
+          type: string
+          description: "Must match the password field."
+
+    UpdatePassword:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+        - confirmPassword
+      properties:
+        currentPassword:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+          description: "Current password."
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$"
+          description: "New password must be between 8 and 20 characters long."
+        confirmPassword:
+          type: string
+          description: "Must match the new password field."
+
+    UpdateUserData:
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        firstName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your first name. Don't add any special characters or numbers."
+        lastName:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your last name. Don't add any special characters or numbers."
+        email:
+          type: string
+          format: email
+          description: "Invalid email format."
+        birth:
+          type: string
+          format: date
+          description: "ISO format date of birth."
+        country:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Please enter your country. Don't add any special characters or numbers."
+        gender:
+          type: string
+          $ref: "#/components/schemas/Gender"
+          description: "Gender must be MALE, FEMALE, or OTHER."
+        profilePicture:
+          type: string
+          description: "Profile picture URL."
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/User"
+            - type: object
+              $ref: "#/components/schemas/User"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+
+
+paths:
+  /api/beggy/auth/signup:
+    post:
+      summary: User sign-up
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUp"
+      responses:
+        "201":
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/login:
+    post:
+      summary: User login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: User successfully logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/forgot-password:
+    patch:
+      summary: Request password reset via email
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        "200":
+          description: Password reset link sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/reset-password/{token}:
+    patch:
+      summary: Reset password using token
+      tags:
+        - Authentication
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                confirmPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password successfully reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/update-password:
+    patch:
+      summary: Update password for logged-in users
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+                confirmPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/update-user-data:
+    patch:
+      summary: Update user profile data (excluding password)
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                profileImage:
+                  type: string
+                  format: uri
+      responses:
+        "200":
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/deactivate:
+    delete:
+      summary: Deactivate user account
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Account successfully deactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/auth/logout:
+    post:
+      summary: User logout
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successfully logged out
+
+  /api/beggy/auth/csrf-token:
+    get:
+      summary: Get CSRF token
+      tags:
+        - Authentication
+      responses:
+        "200":
+          description: Returns CSRF token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csrfToken:
+                    type: string
+
+  /api/beggy/auth/refresh-token:
+    post:
+      summary: Refresh access token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        "200":
+          description: Returns a new access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        "401":
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

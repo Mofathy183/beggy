@@ -1,0 +1,791 @@
+
+tags:
+    - name: Suitcases
+      description: Operations related to managing suitcases
+
+servers:
+  - url: http://localhost:3000/api/beggy/suitcases
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+  schemas:
+    ItemCategory:
+      type: string
+      enum:
+        - ELECTRONICS
+        - ACCESSORIES
+        - FURNITURE
+        - MEDICINE
+        - CLOTHING
+        - BOOKS
+        - FOOD
+      description: Allowed Item Categories
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        quantity:
+          type: integer
+        weight:
+          type: number
+        volume:
+          type: number
+        color:
+          type: string
+        isFragile:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId: 
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        SuitcaseItems:
+          type: object
+          items:
+            $ref: '#/components/schemas/Item'
+        bagItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+      required:
+        - id
+        - name
+        - category
+        - quantity
+        - weight
+        - volume
+        - isFragile
+
+    SuitcaseItems:
+      type: array
+      items:
+        type: object
+        properties:
+          suitcaseId: 
+            type: string
+            format: uuid
+          itemId:
+            type: string
+            format: uuid
+          suitcase: 
+            $ref: '#/components/schemas/Suitcase'
+          item:
+            $ref: '#/components/schemas/Item'
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+        required:
+          - suitcaseId
+          - itemId
+          - suitcase
+          - item
+          - createdAt
+          - updatedAt
+        description: Suitcase item entry in the database
+
+    SuitcaseTypes: 
+      type: string
+      enum: 
+        - CARRY_ON 
+        - CHECKED_LUGGAGE
+        - HARD_SHELL
+        - SOFT_SHELL
+        - BUSINESS
+        - KIDS 
+        - EXPANDABLE
+      description: Allowed Suitcase Types
+
+    SuitcaseFeature:
+      type: string
+      enum:
+        - NONE
+        - TSA_LOCK
+        - WATERPROOF
+        - EXPANDABLE
+        - USB_PORT
+        - LIGHTWEIGHT
+        - ANTI_THEFT
+        - SCRATCH_RESISTANT
+        - COMPRESSION_STRAPS
+        - TELESCOPIC_HANDLE
+      description: Allowed Suitcase Features
+
+    Material: 
+      type: string
+      enum: 
+        - LEATHER
+        - SYNTHETIC
+        - FABRIC
+        - POLYESTER
+        - NYLON
+        - CANVAS
+        - HARD_SHELL
+        - METAL
+      description: Allowed Suitcase Material
+
+    WheelType:
+      type: string
+      enum: 
+        - NONE
+        - TWO_WHEEL
+        - FOUR_WHEEL
+        - SPINNER
+      description: Allowed Wheel Types
+
+    Size:
+      type: string
+      enum:
+        - SMALL       
+        - MEDIUM      
+        - LARGE       
+        - EXTRA_LARGE
+      description: Allowed Suitcase Sizes
+
+    Suitcase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/SuitcaseTypes'
+        brand:
+          type: string
+          nullable: true
+        color:
+          type: string
+          default: "black"
+        size:
+          $ref: '#/components/schemas/Size'
+        capacity:
+          type: number
+        maxWeight:
+          type: number
+        weight:
+          type: number
+        material:
+          $ref: '#/components/schemas/Material'
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuitcaseFeature'
+        wheels:
+          $ref: '#/components/schemas/WheelType'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        suitcaseItems:
+          $ref: '#/components/schemas/SuitcaseItems'
+
+      required:
+        - id
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+
+    CreateSuitcase:
+      type: object
+      required:
+        - name
+        - type
+        - size
+        - capacity
+        - maxWeight
+        - weight
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Suitcase name (letters and '-' only, no special characters or numbers)."
+          example: "TravelPro Max"
+
+        type:
+          type: string
+          $ref: '#/components/schemas/SuitcaseTypes'
+          description: "Type of suitcase."
+          example: "CARRY_ON"
+
+        brand:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Brand name (letters and '-' only)."
+          example: "Samsonite"
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Suitcase color (letters only)."
+          example: "Black"
+
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category for the suitcase."
+          example: "MEDIUM"
+
+        capacity:
+          type: number
+          format: float
+          description: "Capacity in liters."
+          example: 35.5
+
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight allowed (kg)."
+          example: 23.0
+
+        weight:
+          type: number
+          format: float
+          description: "Suitcase's own weight (kg)."
+          example: 4.5
+
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          description: "Material used for the suitcase."
+          example: "POLYCARBONATE"
+
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/SuitcaseFeature'
+          description: "List of features the suitcase has."
+          example: ["USB_CHARGER", "LOCK"]
+
+        wheels:
+          type: string
+          $ref: '#/components/schemas/WheelType'
+          description: "Type of wheels on the suitcase."
+          example: "FOUR_WHEELS"
+
+    ModifySuitcase:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Suitcase name (letters and '-' only, no special characters or numbers)."
+          example: "TravelPro Max"
+
+        type:
+          type: string
+          $ref: '#/components/schemas/SuitcaseTypes'
+          description: "Type of suitcase."
+          example: "CARRY_ON"
+
+        brand:
+          type: string
+          pattern: "^[A-Za-z-]+$"
+          description: "Brand name (letters and '-' only)."
+          example: "Samsonite"
+
+        color:
+          type: string
+          pattern: "^[A-Za-z]+$"
+          description: "Suitcase color (letters only)."
+          example: "Black"
+
+        size:
+          type: string
+          $ref: '#/components/schemas/Size'
+          description: "Size category for the suitcase."
+          example: "MEDIUM"
+
+        capacity:
+          type: number
+          format: float
+          description: "Capacity in liters."
+          example: 35.5
+
+        maxWeight:
+          type: number
+          format: float
+          description: "Maximum weight allowed (kg)."
+          example: 23.0
+
+        weight:
+          type: number
+          format: float
+          description: "Suitcase's own weight (kg)."
+          example: 4.5
+
+        material:
+          type: string
+          $ref: '#/components/schemas/Material'
+          description: "Material used for the suitcase."
+          example: "POLYCARBONATE"
+
+        features:
+          type: array
+          items:
+            type: string
+            $ref: '#/components/schemas/SuitcaseFeature'
+          description: "List of features the suitcase has."
+          example: ["USB_CHARGER", "LOCK"]
+
+        wheels:
+          type: string
+          $ref: '#/components/schemas/WheelType'
+          description: "Type of wheels on the suitcase."
+          example: "FOUR_WHEELS"
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                $ref: "#/components/schemas/Suitcase"
+            - type: object
+              $ref: "#/components/schemas/Suitcase"
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+paths:
+  /api/beggy/suitcases:
+    get:
+      summary: Get all suitcases for the logged-in user
+      security:
+        - bearerAuth: []
+      tags:
+        - Suitcases
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Search term
+          schema:
+            type: string
+        - name: field
+          in: query
+          description: Field name
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Sorting order
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sorting Field
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved suitcases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    
+    post:
+      summary: Create a new suitcase for the logged-in user
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Suitcases
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSuitcase"
+      responses:
+        "200":
+          description: Successfully retrieved suitcases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete all suitcases for the logged-in user
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Suitcases
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmDelete:
+                  type: boolean
+              required:
+                - confirmDelete
+      responses:
+        "200":
+          description: Successfully retrieved suitcases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/suitcases/{suitcaseId}:
+    get:
+      summary: Get a single suitcase by ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Suitcases
+      parameters:
+        - name: suitcaseId
+          in: path
+          required: true
+          description: The ID of the suitcase to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully retrieved suitcases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: Replace an existing suitcase by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Suitcases
+      parameters:
+        - name: suitcaseId
+          in: path
+          required: true
+          description: The ID of the suitcase to replace
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSuitcase"
+      responses:
+        "200":
+          description: Successfully retrieved suitcases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: Modify an existing suitcase by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Suitcases
+      parameters:
+        - name: suitcaseId
+          in: path
+          required: true
+          description: The ID of the suitcase to modify
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifySuitcase"
+      responses:
+        "200":
+          description: Successfully retrieved suitcases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a single suitcase by ID
+      security:
+        - bearerAuth: []
+        - csefToken: []
+      tags:
+        - Suitcases
+      parameters:
+        - name: suitcaseId
+          in: path
+          required: true
+          description: The ID of the suitcase to delete
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmDelete:
+                  type: boolean
+              required:
+                - confirmDelete
+      responses:
+        "200":
+          description: Successfully retrieved suitcases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

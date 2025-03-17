@@ -84,8 +84,6 @@ export const addUser = async (body) => {
 	}
 };
 
-
-
 export const getUserById = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({

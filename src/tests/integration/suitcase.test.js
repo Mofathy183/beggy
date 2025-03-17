@@ -103,7 +103,6 @@ test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
 });
 
-
 describe("Suitcases Route For User For Get User's Suitcases", () => {
 	test("Should Get User's Suitcases", async () => {
 		const user = await prisma.user.create({
@@ -286,7 +285,6 @@ describe('Suitcases Route For User For Creating Suitcase For User', () => {
 		});
 	});
 });
-
 
 describe("Suitcases Route For User For Replace User's Suitcase", () => {
 	test("Should Replace User's Suitcase", async () => {
@@ -504,4 +502,3 @@ describe("Suitcases Route For User For Delete All User's Suitcases", () => {
 		expect(res.body.meta.totalDelete).toBe(5);
 	});
 });
-

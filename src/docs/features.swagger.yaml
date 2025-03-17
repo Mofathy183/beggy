@@ -1,0 +1,397 @@
+
+
+servers:
+  - url: http://localhost:3000/api/beggy/features
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    csefToken:
+      type: apiKey
+      name: X-CSEF-Token
+      in: header
+      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+
+
+  schemas:
+    ItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+            type: object
+            properties:
+              volume:
+                type: number
+              weight:
+                type: number
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    BagResponse:
+      $ref: "#/components/schemas/SuitcaseResponse"
+
+    SuitcaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+            type: object
+            properties:
+              capacity:
+                type: number
+              maxWeight:
+                type: number
+              weight:
+                type: number
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    LocationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+        message:
+          type: string
+        data:
+            type: object
+            properties:
+              country:
+                type: string
+              city:
+                type: string
+        meta:
+          oneOf:
+            - $ref: "#/components/schemas/PaginationMeta"
+            - $ref: "#/components/schemas/DeletionsMeta"
+            - type: object
+              additionalProperties: true
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+        stack:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalFind: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        offset:
+          type: integer
+        searchFilter:
+          type: object
+          properties:
+            field:
+              type: string
+            search:
+              type: string
+        orderBy:
+          type: object
+          properties:
+            field:
+              type: string
+            sortBy:
+              type: string
+            order:
+              type: string
+              enum:
+                - asc
+                - desc
+
+    DeletionsMeta:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        totalDelete:
+          type: integer
+
+
+paths:
+  /api/beggy/feature/ai/auto-fill/item:
+    post:
+      summary: AI Auto-Fill Item
+      tags:
+        - AI Features
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Laptop"
+                quantity:
+                  type: integer
+                  example: 2
+                category:
+                  type: string
+                  example: "Electronics"
+      responses:
+        "200":
+          description: Auto-filled item details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemResponse"
+        "400":
+          description: Bad request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+  /api/beggy/feature/ai/auto-fill/bag:
+    post:
+      summary: AI Auto-Fill Bag
+      tags:
+        - AI Features
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Backpack"
+                type:
+                  type: string
+                  example: "Travel"
+                size:
+                  type: string
+                  example: "Medium"
+                material:
+                  type: string
+                  example: "Leather"
+                feature:
+                  type: string
+                  example: "Water-resistant"
+      responses:
+        "200":
+          description: Auto-filled bag details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BagResponse"
+        "400":
+          description: Bad request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/feature/ai/auto-fill/suitcase:
+    post:
+      summary: AI Auto-Fill Suitcase
+      tags:
+        - AI Features
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Hard Shell Suitcase"
+                type:
+                  type: string
+                  example: "Carry-On"
+                size:
+                  type: string
+                  example: "Small"
+                material:
+                  type: string
+                  example: "Polycarbonate"
+                feature:
+                  type: string
+                  example: "TSA Lock"
+                brand:
+                  type: string
+                  example: "Samsonite"
+                wheels:
+                  type: string
+                  example: "4-wheel spinner"
+      responses:
+        "200":
+          description: Auto-filled suitcase details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuitcaseResponse"
+        "400":
+          description: Bad request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/beggy/feature/location:
+    post:
+      summary: Get User Location by IP Address
+      tags:
+        - Location & Weather
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permission:
+                  type: boolean
+                  example: true
+      responses:
+        "200":
+          description: Returns user's location details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationResponse"
+        "403":
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+  /api/beggy/feature/weather:
+    get:
+      summary: Get Weather Data by User Location
+      tags:
+        - Location & Weather
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Returns current weather data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  temperature:
+                    type: number
+                    example: 22.5
+                  humidity:
+                    type: number
+                    example: 65
+                  description:
+                    type: string
+                    example: "Partly cloudy"
+                  windSpeed:
+                    type: number
+                    example: 5.5
+        "404":
+          description: Location not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+

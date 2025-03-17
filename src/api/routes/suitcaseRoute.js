@@ -31,8 +31,7 @@ suitcaseRoute.param('suitcaseId', (req, res, next, suitcaseId) =>
 	VReqToUUID(req, res, next, suitcaseId, 'suitcaseId')
 );
 
-
-//* route to get suitcases that user has by user => GET user muet by login
+//* route to get suitcases that user has by Search Optional => GET user muet by login
 //* GET / → Get all Suitcases for a user
 //* Get suitcases that belong to a specific user option query
 suitcaseRoute.get(
@@ -65,7 +64,6 @@ suitcaseRoute.post(
 	VReqToCreateSuitcase,
 	createSuitcaseForUser
 );
-
 
 //* route for replace (update) suitcase user has by id of the suitcase => PUT param(id)
 //* PUT /:suitcaseId → Replace a user’s suitcase
@@ -101,7 +99,6 @@ suitcaseRoute.delete(
 	confirmDeleteMiddleware,
 	deleteAllSuitcasesBelongsToUser
 );
-
 
 //* route for delete suitcase user has by id of the suitcase => DELETE (params id) user muet by login
 //* DELETE /:suitcaseId → Delete a user’s suitcase

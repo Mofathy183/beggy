@@ -376,25 +376,7 @@ export const logout = async (req, res, next) => {
 	try {
 		const { userId } = req.session;
 
-		const deActivateUser = await deactivateUserAccount(userId);
-
-		if (!deActivateUser)
-			return next(
-				new ErrorResponse(
-					'Failed to deactivate user account',
-					'Failed to deactivate',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (deActivateUser.error)
-			return next(
-				new ErrorResponse(
-					deActivateUser.error,
-					'Failed to deactivate ' + deActivateUser.error.message,
-					statusCode.badRequestCode
-				)
-			);
+		await deactivateUserAccount(userId);
 
 		clearCookies(res);
 		await deleteSession(req);
@@ -403,7 +385,7 @@ export const logout = async (req, res, next) => {
 			new SuccessResponse(
 				statusCode.okCode,
 				'User Logged Out Successfully',
-				deActivateUser
+				'Uesr Logout'
 			)
 		);
 	} catch (error) {

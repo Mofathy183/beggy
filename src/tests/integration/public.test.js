@@ -261,7 +261,6 @@ const users = [
 	},
 ];
 
-
 beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
@@ -272,115 +271,114 @@ test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
 });
 
-
 //*======================================={Users Public Route}==============================================
 
+describe('User API Tests For Get User Public Data', () => {
+	test('Get User Public Data', async () => {
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser123@example.com',
+				password: await hashingPassword('password123'),
+			},
+		});
 
-describe("User API Tests For Get User Public Data", () => {
-    test("Get User Public Data", async () => {
-        const user = await prisma.user.create({
-            data: {
-                firstName: "John",
-                lastName: "Doe",
-                email: "testuser123@example.com",
-                password: await hashingPassword("password123"),
-            },
-        });
+		console.log('USER', user);
 
-        console.log("USER", user);
+		const res = await request(app).get(
+			`/api/beggy/public/users/${user.id}`
+		);
 
-        const res = await request(app)
-        .get(`/api/beggy/public/users/${user.id}`);
+		console.log('Response', res.body);
 
-        console.log("Response", res.body);
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('User Retrieved By Its ID Successfully');
+		expect(res.body.data).toMatchObject({
+			id: user.id,
+			firstName: 'John',
+			lastName: 'Doe',
+			email: 'testuser123@example.com',
+		});
 
-        expect(res.status).toBe(200);
-        expect(res.body.success).toBe(true)
-        expect(res.body.message).toBe("User Retrieved By Its ID Successfully")
-        expect(res.body.data).toMatchObject({
-            id: user.id,
-            firstName: "John",
-            lastName: "Doe",
-            email: "testuser123@example.com",
-        });
+		const isUser = await prisma.user.findUnique({ where: { id: user.id } });
 
-        const isUser = await prisma.user.findUnique({ where: { id: user.id } });
+		expect(isUser).not.toBeNull();
+		expect(isUser).toMatchObject({
+			id: isUser.id,
+			firstName: 'John',
+			lastName: 'Doe',
+			email: 'testuser123@example.com',
+		});
+	});
+});
 
-        expect(isUser).not.toBeNull();
-        expect(isUser).toMatchObject({
-            id: isUser.id,
-            firstName: "John",
-            lastName: "Doe",
-            email: "testuser123@example.com",
-        });
-    })
-})
+describe('User API Tests For Search For Users Public Profiles', () => {
+	test('Search for User by his first and last name', async () => {
+		await prisma.user.createMany({
+			data: users,
+		});
 
-describe("User API Tests For Search For Users Public Profiles", () => {
-    test("Search for User by his first and last name", async () => {
-        await prisma.user.createMany({
-            data: users,
-        });
+		const res = await request(app).get(
+			`/api/beggy/public/users?firstName=John&lastName=Doe`
+		);
 
-        const res = await request(app)
-        .get(`/api/beggy/public/users?firstName=John&lastName=Doe`);
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Users Found Successfully By Search');
+		expect(res.body.data[0]).toMatchObject({
+			id: res.body.data[0].id,
+			firstName: 'John',
+			lastName: 'Doe',
+			email: 'testuser123@example.com',
+		});
 
-        expect(res.status).toBe(200);
-        expect(res.body.success).toBe(true)
-        expect(res.body.message).toBe("Users Found Successfully By Search")
-        expect(res.body.data[0]).toMatchObject({
-            id: res.body.data[0].id,
-            firstName: "John",
-            lastName: "Doe",
-            email: "testuser123@example.com",
-        });
+		console.log('Response', res.body);
+		console.log('Response data', res.body.data);
 
-        console.log("Response", res.body);
-        console.log("Response data", res.body.data);
+		const isUsers = await prisma.user.findMany({
+			where: { firstName: 'John', lastName: 'Doe' },
+		});
 
-        const isUsers = await prisma.user.findMany({ where: { firstName: "John", lastName: "Doe" } });
+		expect(isUsers[0]).toMatchObject({
+			id: isUsers[0].id,
+			firstName: 'John',
+			lastName: 'Doe',
+			email: 'testuser123@example.com',
+		});
+	});
 
-        expect(isUsers[0]).toMatchObject({
-            id: isUsers[0].id,
-            firstName: "John",
-            lastName: "Doe",
-            email: "testuser123@example.com",
-        });
-    });
+	test('Search for User', async () => {
+		await prisma.user.createMany({
+			data: users,
+		});
 
-    test("Search for User", async () => {
-        await prisma.user.createMany({
-            data: users,
-        });
+		const res = await request(app).get(`/api/beggy/public/users`);
 
-        const res = await request(app)
-        .get(`/api/beggy/public/users`);
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Users Found Successfully');
+		expect(Array.isArray(res.body.data)).toBe(true);
+		expect(res.body.data.length).toBeGreaterThan(0);
 
-        expect(res.status).toBe(200);
-        expect(res.body.success).toBe(true)
-        expect(res.body.message).toBe("Users Found Successfully")
-        expect(Array.isArray(res.body.data)).toBe(true);
-        expect(res.body.data.length).toBeGreaterThan(0);
+		console.log('Response', res.body);
+		console.log('Response data', res.body.data);
 
-        console.log("Response", res.body);
-        console.log("Response data", res.body.data);
+		const isUsers = await prisma.user.findMany({
+			where: {},
+			take: res.body.meta.limit,
+			skip: res.body.meta.offset,
+		});
 
-        const isUsers = await prisma.user.findMany({
-            where: { },
-            take: res.body.meta.limit,
-            skip: res.body.meta.offset
-        });
+		expect(Array.isArray(isUsers)).toBe(true);
+		expect(isUsers.length).toBeGreaterThan(0);
 
-        expect(Array.isArray(isUsers)).toBe(true);
-        expect(isUsers.length).toBeGreaterThan(0);
-
-        console.log("User", isUsers[0]);
-    });
-})
-
+		console.log('User', isUsers[0]);
+	});
+});
 
 //*======================================={Users Public Route}==============================================
-
 
 //*======================================={Bags Public Route}==============================================
 
@@ -486,7 +484,6 @@ describe('Base Bags Route Tests To Get Bag By ID', () => {
 
 //*======================================={Bags Public Route}==============================================
 
-
 //*======================================={Items Public Route}==============================================
 
 describe('Base Items Route Tests for get All Items', () => {
@@ -520,7 +517,9 @@ describe('Base Items Route Tests For Get Item By ID', () => {
 			},
 		});
 
-		const res = await request(app).get(`/api/beggy/public/items/${item.id}`);
+		const res = await request(app).get(
+			`/api/beggy/public/items/${item.id}`
+		);
 
 		console.log('Response', res.body);
 		console.log('Response data', res.body.data);
@@ -591,12 +590,9 @@ describe('Base Items Route Tests For Search for Items', () => {
 	});
 });
 
-
 //*======================================={Items Public Route}==============================================
 
-
 //*======================================={Suitcase Public Route}==============================================
-
 
 describe('Base suitcases Route Tests To Get All Suitcases', () => {
 	test('Should Get All Suitcases', async () => {
@@ -697,6 +693,5 @@ describe('Base suitcases Route Tests To Suitcase By Its ID', () => {
 		});
 	});
 });
-
 
 //*======================================={Suitcase Public Route}==============================================

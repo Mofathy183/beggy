@@ -31,8 +31,6 @@ userRoute.param('id', (req, res, next, id) =>
 	VReqToUUID(req, res, next, id, 'id')
 );
 
-//*========================{Private Route}========================
-
 //* route for get all users => GET (Only Admin)
 userRoute.get(
 	'/',
@@ -44,11 +42,6 @@ userRoute.get(
 	searchForUsersMiddleware,
 	findAllUsers
 );
-
-//*========================{Private Route}========================
-
-
-//*========================{Private Route}========================
 
 //* route for get user private profile by id => GET param (id)
 userRoute.get(
@@ -79,17 +72,15 @@ userRoute.patch(
 	changeUserRoleById
 );
 
-
 //* route for delete all users => DELETE  //delete
 userRoute.delete(
-    '/',
-    VReqToHeaderToken,
-    headersMiddleware,
-    checkRoleMiddleware('admin'),
-    confirmDeleteMiddleware,
-    deleteAllUsers
+	'/',
+	VReqToHeaderToken,
+	headersMiddleware,
+	checkRoleMiddleware('admin'),
+	confirmDeleteMiddleware,
+	deleteAllUsers
 );
-
 
 //* route for delete user by id => DELETE param(id) //delete
 userRoute.delete(
@@ -100,5 +91,4 @@ userRoute.delete(
 	deleteUserById
 );
 
-//*========================{Private Route}========================
 export default userRoute;

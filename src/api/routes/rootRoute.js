@@ -7,9 +7,9 @@ import featuresRoute from './featuresRoute.js';
 import bagsRoute from './bagsRoute.js';
 import suitcaseRoute from './suitcaseRoute.js';
 import bagItemsRoute from './bagItemsRoute.js';
-import suitcaseItemsRoute from "./suitcaseItemsRoute.js";
-import publicRoute from "./publicRoute.js";
-import privateRoute from "./privateRoute.js"
+import suitcaseItemsRoute from './suitcaseItemsRoute.js';
+import publicRoute from './publicRoute.js';
+import privateRoute from './privateRoute.js';
 
 const rootRoute = express.Router();
 

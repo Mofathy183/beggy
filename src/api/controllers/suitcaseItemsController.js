@@ -3,14 +3,12 @@ import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import { sendCookies, storeSession } from '../../utils/authHelper.js';
 import {
-    removeItemFromUserSuitcase,
+	removeItemFromUserSuitcase,
 	removeItemsFromUserSuitcase,
 	removeAllItemsFromUserSuitcase,
 	addItemToUserSuitcase,
 	addItemsToUserSuitcase,
 } from '../../services/suitcaseItemsService.js';
-
-
 
 export const createItemForUserSuitcase = async (req, res, next) => {
 	try {
@@ -65,7 +63,6 @@ export const createItemForUserSuitcase = async (req, res, next) => {
 	}
 };
 
-
 export const createItemsForUserSuitcase = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
@@ -118,7 +115,6 @@ export const createItemsForUserSuitcase = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const deleteItemsFromUserSuitcase = async (req, res, next) => {
 	try {
@@ -216,7 +212,6 @@ export const deleteAllItemsFromUserSuitcase = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const deleteItemFromUserSuitcase = async (req, res, next) => {
 	try {

@@ -182,8 +182,6 @@ test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
 });
 
-
-
 describe('Items Route For User to Get Item User Has By ID', () => {
 	test('Should get item Belongs To User by ID', async () => {
 		const user = await prisma.user.create({
@@ -561,16 +559,17 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 		const res = await request(app)
 			//* There is no match for color yellow
 			.get(`/api/beggy/items/?field=color&search=yellow`)
-            .set('Cookie', cookies)
+			.set('Cookie', cookies)
 			.set('X-XSRF-TOKEN', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
-            
 
 		console.log('Response Not Match', res.body);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Found All Items User Has By Search');
+		expect(res.body.message).toBe(
+			'Successfully Found All Items User Has By Search'
+		);
 		expect(Array.isArray(res.body.data)).toBe(true);
 		expect(res.body.data.length).toBe(0);
 	});
@@ -579,7 +578,7 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 		const res = await request(app)
 			//* There is a match for color blue
 			.get(`/api/beggy/items/?field=category&search=electronics`)
-            .set('Cookie', cookies)
+			.set('Cookie', cookies)
 			.set('X-XSRF-TOKEN', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
@@ -587,24 +586,29 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Found All Items User Has By Search');
+		expect(res.body.message).toBe(
+			'Successfully Found All Items User Has By Search'
+		);
 		expect(Array.isArray(res.body.data)).toBe(true);
 		expect(res.body.data.length).toBeGreaterThan(0);
 	});
 
 	test('Should return items by Search and Order and Pagination if there are Match', async () => {
-		const res = await request(app).get(
-			'/api/beggy/items/?field=category&search=electronics&page=2&limit=2&order=desc&sortBy=volume'
-		)
-        .set('Cookie', cookies)
-        .set('X-XSRF-TOKEN', csrfToken)
-        .set('Authorization', `Bearer ${signToken(user.id)}`);
+		const res = await request(app)
+			.get(
+				'/api/beggy/items/?field=category&search=electronics&page=2&limit=2&order=desc&sortBy=volume'
+			)
+			.set('Cookie', cookies)
+			.set('X-XSRF-TOKEN', csrfToken)
+			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response For Search and Order and Pagination', res.body);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Found All Items User Has By Search');
+		expect(res.body.message).toBe(
+			'Successfully Found All Items User Has By Search'
+		);
 		expect(Array.isArray(res.body.data)).toBe(true);
 		expect(res.body.data.length).toBeGreaterThan(0);
 	});
@@ -1128,7 +1132,7 @@ describe('Items Route For User To Delete All Items User Has', () => {
 		expect(deletedItems).toHaveLength(0);
 	});
 
-    test('Should delete all items Belongs To User', async () => {
+	test('Should delete all items Belongs To User', async () => {
 		const res = await request(app)
 			.delete(`/api/beggy/items/?field=color&search=blue`)
 			.set('Cookie', cookies)

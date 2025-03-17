@@ -1,7 +1,12 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
 
-export const findItemsUserHas = async (userId, pagination, searchFilter, orderBy) => {
+export const findItemsUserHas = async (
+	userId,
+	pagination,
+	searchFilter,
+	orderBy
+) => {
 	try {
 		const { page, limit, offset } = pagination;
 
@@ -18,7 +23,7 @@ export const findItemsUserHas = async (userId, pagination, searchFilter, orderBy
 			},
 			take: limit,
 			skip: offset,
-            orderBy: orderBy,
+			orderBy: orderBy,
 		});
 
 		if (userItems.error)
@@ -42,11 +47,11 @@ export const findItemsUserHas = async (userId, pagination, searchFilter, orderBy
 		const meta = {
 			total: itemsCount,
 			totalSearch: userItems.length,
-            searchFilter,
+			searchFilter,
 			page: page,
 			limit: limit,
 			offset: offset,
-            orderBy,
+			orderBy,
 		};
 
 		return { userItems: userItems, meta: meta };

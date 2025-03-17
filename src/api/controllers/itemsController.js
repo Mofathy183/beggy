@@ -13,13 +13,21 @@ import { sendCookies, storeSession } from '../../utils/authHelper.js';
 import { ErrorResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
-
 export const getItemsBelongsToUser = async (req, res, next) => {
 	try {
-		const { pagination, searchFilter = undefined, orderBy = undefined } = req;
+		const {
+			pagination,
+			searchFilter = undefined,
+			orderBy = undefined,
+		} = req;
 		const { userId, userRole } = req.session;
 
-		const { userItems, meta } = await findItemsUserHas(userId, pagination, searchFilter, orderBy);
+		const { userItems, meta } = await findItemsUserHas(
+			userId,
+			pagination,
+			searchFilter,
+			orderBy
+		);
 
 		if (!userItems)
 			return next(
@@ -45,7 +53,7 @@ export const getItemsBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				`Successfully Found All Items User Has${searchFilter ? " By Search" : ""}`,
+				`Successfully Found All Items User Has${searchFilter ? ' By Search' : ''}`,
 				userItems,
 				meta
 			)
@@ -342,9 +350,12 @@ export const deleteItemBelongsTo = async (req, res, next) => {
 export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
-        const { searchFilter = undefined } = req;
+		const { searchFilter = undefined } = req;
 
-		const { deletedItems, meta } = await removeAllItemsUserHas(userId, searchFilter);
+		const { deletedItems, meta } = await removeAllItemsUserHas(
+			userId,
+			searchFilter
+		);
 
 		if (deletedItems.error)
 			return next(
@@ -363,7 +374,7 @@ export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				`Successfully Deleted All Items Belongs to User${searchFilter ? " By Search" : ""}`,
+				`Successfully Deleted All Items Belongs to User${searchFilter ? ' By Search' : ''}`,
 				deletedItems,
 				meta
 			)

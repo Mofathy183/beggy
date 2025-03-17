@@ -12,7 +12,6 @@ import {
 	removeAllSuitcasesUserHas,
 } from '../../services/suitcaseService.js';
 
-
 //*==================================={suitcases Route For User}===================================
 
 export const getSuitcasesBelongsToUser = async (req, res, next) => {
@@ -166,9 +165,6 @@ export const createSuitcaseForUser = async (req, res, next) => {
 		);
 	}
 };
-
-
-
 
 export const replaceSuitcaseBelongsToUser = async (req, res, next) => {
 	try {
@@ -324,7 +320,6 @@ export const deleteSuitcaseBelongsToUserById = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const deleteAllSuitcasesBelongsToUser = async (req, res, next) => {
 	try {

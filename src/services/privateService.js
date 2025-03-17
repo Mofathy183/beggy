@@ -151,7 +151,9 @@ export const removeBagById = async (bagId) => {
 
 export const removeAllBags = async (searchFilter) => {
 	try {
-		const deleteCount = await prisma.bags.deleteMany({ where: searchFilter });
+		const deleteCount = await prisma.bags.deleteMany({
+			where: searchFilter,
+		});
 
 		if (deleteCount.error)
 			return new ErrorHandler(
@@ -163,7 +165,7 @@ export const removeAllBags = async (searchFilter) => {
 		const meta = {
 			totalCount: deleteCount.count,
 			totalDelete: deleteCount.count,
-            searchFilter,
+			searchFilter,
 		};
 
 		return { deleteCount: deleteCount, meta: meta };
@@ -173,8 +175,6 @@ export const removeAllBags = async (searchFilter) => {
 };
 
 //*======================================={Bags Private Route}==============================================
-
-
 
 //*======================================={Suitcase Private Route}==============================================
 
@@ -384,7 +384,9 @@ export const removeSuitcaseById = async (suitcaseId) => {
 
 export const removeAllSuitcases = async (searchFilter) => {
 	try {
-		const deleteCount = await prisma.suitcases.deleteMany({ where: searchFilter });
+		const deleteCount = await prisma.suitcases.deleteMany({
+			where: searchFilter,
+		});
 
 		if (deleteCount.error)
 			return new ErrorHandler(
@@ -399,7 +401,7 @@ export const removeAllSuitcases = async (searchFilter) => {
 		const meta = {
 			totalCount: totalCount,
 			totalDelete: deleteCount.count,
-            searchFilter,
+			searchFilter,
 		};
 
 		return { deleteCount: deleteCount, meta: meta };
@@ -412,9 +414,7 @@ export const removeAllSuitcases = async (searchFilter) => {
 	}
 };
 
-
 //*======================================={Suitcase Private Route}==============================================
-
 
 //*======================================={Items Private Route}==============================================
 
@@ -582,7 +582,9 @@ export const removeItemById = async (itemId) => {
 
 export const removeAllItems = async (searchFilter) => {
 	try {
-		const deleteCount = await prisma.items.deleteMany({where: searchFilter });
+		const deleteCount = await prisma.items.deleteMany({
+			where: searchFilter,
+		});
 
 		if (deleteCount.error)
 			return new ErrorHandler(
@@ -596,7 +598,7 @@ export const removeAllItems = async (searchFilter) => {
 		const meta = {
 			totalCount: totalCount,
 			totalDelete: deleteCount.count,
-            searchFilter,
+			searchFilter,
 		};
 
 		return { deleteCount: deleteCount, meta: meta };
@@ -604,6 +606,5 @@ export const removeAllItems = async (searchFilter) => {
 		return new ErrorHandler('catch', error, 'Failed to remove all items');
 	}
 };
-
 
 //*======================================={Items Private Route}==============================================

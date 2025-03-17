@@ -5,6 +5,8 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import expressSanitizer from 'express-sanitizer';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './src/middlewares/appMiddleware.js';
 import { sessionConfig } from './src/config/env.js';
 import {
 	limter,
@@ -62,20 +64,17 @@ app.use(passport.session());
 
 // Routes
 app.use('/api/beggy', rootRoute);
-app.post('/submit', (req, res) => {
-	res.status(200).json({
-		data: req.body.data,
-		message: 'Form submitted successfully!',
-	});
-});
+
+// Serve static files from the public directory
+app.use('/upload', express.static('public'));
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Handler undfined Routes
 app.all('*', routeErrorHandler);
 
 //* Handle Response from classes ErrorResponse and SuccessResponse
 app.use(AppResponse);
-
-// Serve static files from the public directory
-app.use('/upload', express.static('public'));
 
 export default app;
