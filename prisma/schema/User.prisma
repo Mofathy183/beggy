@@ -7,7 +7,7 @@ model User {
     password               String
     email                  String    @unique
     role                   Role      @default(USER)
-    profilePicture         String?   @default("public/profilePicture.webp")
+    profilePicture         String?
     gender                 Gender?
     birth                  DateTime?
     country                String?
@@ -15,7 +15,7 @@ model User {
     isActive               Boolean   @default(true) @map("is_active")
     passwordChangeAt       DateTime? @map("password_change_at")
     passwordResetToken     String?   @unique @map("password_reset_token")
-    passwordResetExpiredAt DateTime? @map("passwoed_reset_at")
+    passwordResetExpiredAt DateTime? @map("password_reset_at")
     createdAt              DateTime  @default(now()) @map("created_at")
     updatedAt              DateTime  @updatedAt @map("updated_at")
 
@@ -27,4 +27,24 @@ model User {
 
     //* the nama of the table
     @@map("users")
+}
+
+model Permission {
+    id      String   @id @default(uuid())
+    action  String
+    subject String[]
+
+    rolePermissions RoleOnPermission[]
+
+    @@unique([action, subject])
+    @@map("permissions")
+}
+
+model RoleOnPermission {
+    id           String     @id @default(uuid())
+    role         Role
+    permission   Permission @relation(fields: [permissionId], references: [id])
+    permissionId String
+
+    @@map("role_on_permission")
 }

@@ -93,8 +93,8 @@ CREATE TABLE "items" (
 CREATE TABLE "suitcases" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "type" "SuitcaseType" NOT NULL,
     "brand" TEXT,
+    "type" "SuitcaseType" NOT NULL,
     "color" TEXT DEFAULT 'black',
     "size" "Size" NOT NULL,
     "capacity" DOUBLE PRECISION NOT NULL,
@@ -128,7 +128,7 @@ CREATE TABLE "users" (
     "password" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'user',
-    "profilePicture" TEXT DEFAULT 'public/profilePicture.webp',
+    "profilePicture" TEXT,
     "gender" "Gender",
     "birth" TIMESTAMP(3),
     "country" TEXT,
@@ -136,11 +136,29 @@ CREATE TABLE "users" (
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "password_change_at" TIMESTAMP(3),
     "password_reset_token" TEXT,
-    "passwoed_reset_at" TIMESTAMP(3),
+    "password_reset_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "permissions" (
+    "id" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "subject" TEXT[],
+
+    CONSTRAINT "permissions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "role_on_permission" (
+    "id" TEXT NOT NULL,
+    "role" "Role" NOT NULL,
+    "permissionId" TEXT NOT NULL,
+
+    CONSTRAINT "role_on_permission_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -151,6 +169,9 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_password_reset_token_key" ON "users"("password_reset_token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "permissions_action_subject_key" ON "permissions"("action", "subject");
 
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -175,3 +196,6 @@ ALTER TABLE "suitcase_items" ADD CONSTRAINT "suitcase_items_suitcase_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "suitcase_items" ADD CONSTRAINT "suitcase_items_item_id_fkey" FOREIGN KEY ("item_id") REFERENCES "items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "role_on_permission" ADD CONSTRAINT "role_on_permission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

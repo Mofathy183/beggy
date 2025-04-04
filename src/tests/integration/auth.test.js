@@ -176,7 +176,7 @@ describe('Auth API Tests For Update User Password', () => {
 			});
 
 		console.log(
-			'Aftere Update Password',
+			'After Update Password',
 			await prisma.user.findUnique({
 				where: { id: user.id },
 				select: { password: true },
@@ -365,31 +365,33 @@ describe('Auth API Tests For Get Access Token', () => {
 });
 
 ////* Forgot Password tests Will send and email so it takes a while to complete
-// describe("Auth API Tests For Forgot Password", () => {
-//     test("Should send a password reset link", async () => {
-//         // ✅ First, register a new user before sending a password reset link
-//         await prisma.user.create({
-//             data: {
-//                 firstName: "John",
-//                 lastName: "Doe",
-//                 email: "testuser33@test.com",
-//                 password: await hashingPassword("testing123"),
-//             },
-//         });
+describe('Auth API Tests For Forgot Password', () => {
+	test.skip('Should send a password reset link', async () => {
+		// ✅ First, register a new user before sending a password reset link
+		await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser33@test.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
 
-//         const res = await request(app)
-//         .patch("/api/beggy/auth/forgot-password")
-//         .set("Cookie", cookies)
-//         .set("X-XSRF-TOKEN", csrfToken)
-//         .send({
-//             email: "testuser33@test.com",
-//         });
+		const res = await request(app)
+			.patch('/api/beggy/auth/forgot-password')
+			.set('Cookie', cookies)
+			.set('X-XSRF-TOKEN', csrfToken)
+			.send({
+				email: 'testuser33@test.com',
+			});
 
-//         console.log("RESPONSE", res.body);
+		console.log('RESPONSE', res.body);
 
-//         expect(res.status).toBe(200);
-//         expect(res.body.success).toBe(true);
-//         expect(res.body.message).toBe("Reset password email sent successfully");
-//         expect(res.body.data).toBe("Check your email for password reset instructions.");
-//     });
-// })
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Reset password email sent successfully');
+		expect(res.body.data).toBe(
+			'Check your email for password reset instructions.'
+		);
+	});
+});

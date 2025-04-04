@@ -17,6 +17,8 @@ import {
 	checkRoleMiddleware,
 	confirmDeleteMiddleware,
 	VReqToHeaderToken,
+	checkPermissionMiddleware,
+	VReqToConfirmDelete,
 } from '../../middlewares/authMiddleware.js';
 import {
 	paginateMiddleware,
@@ -37,6 +39,7 @@ userRoute.get(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('read:any', 'user'),
 	paginateMiddleware,
 	orderByMiddleware,
 	searchForUsersMiddleware,
@@ -49,6 +52,7 @@ userRoute.get(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('read:any', 'user'),
 	findUserById
 );
 
@@ -58,6 +62,7 @@ userRoute.post(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin'),
+	checkPermissionMiddleware('create:any', 'user'),
 	VReqToCreateUser,
 	createUser
 );
@@ -68,6 +73,7 @@ userRoute.patch(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin'),
+	checkPermissionMiddleware('update:any', 'user'),
 	VReqToUserRole,
 	changeUserRoleById
 );
@@ -78,6 +84,9 @@ userRoute.delete(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin'),
+	checkPermissionMiddleware('delete:any', 'user'),
+	searchForUsersMiddleware,
+	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
 	deleteAllUsers
 );
@@ -87,7 +96,8 @@ userRoute.delete(
 	'/:id',
 	VReqToHeaderToken,
 	headersMiddleware,
-	checkRoleMiddleware('admin', 'member'),
+	checkRoleMiddleware('admin'),
+	checkPermissionMiddleware('delete:any', 'user'),
 	deleteUserById
 );
 

@@ -22,6 +22,7 @@ import {
 	VReqToHeaderToken,
 	VReqToHeaderRefreshToken,
 	headersMiddleware,
+	checkPermissionMiddleware,
 } from '../../middlewares/authMiddleware.js';
 
 const authRoute = express.Router();
@@ -45,35 +46,39 @@ authRoute.patch('/reset-password/:token', VReqToResetPassword, resetPassword);
 //* route for update password for only login users => PATCH (Old Password and new password and confirm password)
 authRoute.patch(
 	'/update-password',
-	VReqToHeaderToken, // to validate the token in the header
+	VReqToHeaderToken,
 	headersMiddleware,
-	VReqToUpdatePassword, // to validate the body of the update password request
+	checkPermissionMiddleware('update:own', 'user'),
+	VReqToUpdatePassword,
 	updatePassword
 );
 
 //* route for update user data for only logged in users => PATCH (Not for Update user Password)
 authRoute.patch(
 	'/update-user-data',
-	VReqToHeaderToken, // to validate the token in the header
+	VReqToHeaderToken,
 	headersMiddleware,
-	VReqToUpdateUserData, // to validate the body of the update user request
+	VReqToUpdateUserData,
+	checkPermissionMiddleware('update:own', 'user'),
 	updateData
 );
 
-//* route for deactivate user acount => DELETE  (User must be login already to be deactivated)
+//* route for deactivate user account => DELETE  (User must be login already to be deactivated)
 authRoute.delete(
 	'/deactivate',
-	VReqToHeaderToken, // to validate the token in the header
+	VReqToHeaderToken,
 	headersMiddleware,
-	deActivate // to deactivate the user account
+	checkPermissionMiddleware('delete:own', 'user'),
+	deActivate
 );
 
 //* route for logout => POST
 authRoute.post(
 	'/logout',
-	VReqToHeaderToken, // to validate the token in the header
+	VReqToHeaderToken,
 	headersMiddleware,
-	logout // to log out the user
+	checkPermissionMiddleware('delete:own', 'user'),
+	logout
 );
 
 //* to get csrf token to send with the request body
@@ -86,4 +91,5 @@ authRoute.post(
 	headersMiddleware,
 	getAccessToken
 );
+
 export default authRoute;

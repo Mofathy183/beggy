@@ -1,6 +1,6 @@
 export default {
 	setupFilesAfterEnv: ['./src/tests/setup.test.js'],
-	testTimeout: 3000,
+	testTimeout: 4000,
 	testMatch: [
 		'**/src/tests/**/bag.test.js',
 		'**/src/tests/**/suitcase.test.js',

@@ -1,5 +1,7 @@
 import { verifyRefreshToken, verifyToken } from '../utils/jwt.js';
 import prisma from '../../prisma/prisma.js';
+import { AbilityBuilder, subject } from '@casl/ability';
+import { createPrismaAbility } from '@casl/prisma';
 import { passwordChangeAfter } from '../utils/userHelper.js';
 import { storeSession } from '../utils/authHelper.js';
 import { statusCode } from '../config/status.js';
@@ -74,6 +76,58 @@ export const headersMiddleware = async (req, res, next) => {
 	storeSession(userAuth.id, userAuth.role, req);
 	next();
 };
+
+//* to get the permissions depends on user role
+const defineAbilitiesFor = async (role) => {
+	const { can, build } = new AbilityBuilder(createPrismaAbility);
+
+	const permissions = await prisma.roleOnPermission.findMany({
+		where: { role: role },
+		include: { permission: true },
+	});
+
+	permissions.forEach((perm) => {
+		let { action, subject, isOwner } = perm.permission;
+		// If isOwner is true, allow the action only if the user is the owner
+		if (isOwner) can(action, subject, { isOwner: isOwner });
+		// If isOwner is false, allow the action without ownership condition
+		else can(action, subject);
+	});
+
+	return build();
+};
+
+//* Check permissions For the actions and subject User will be allowed to make
+export const checkPermissionMiddleware =
+	(action, subject) => async (req, res, next) => {
+		try {
+			const { userRole } = req.session;
+
+			const ability = await defineAbilitiesFor(userRole);
+
+			const hasPermission = ability.can(action, subject);
+
+			if (!hasPermission) {
+				return next(
+					new ErrorResponse(
+						`You do not have permission to ${action.split(':').join(' ')} on ${subject}`,
+						'Forbidden permission',
+						statusCode.forbiddenCode
+					)
+				);
+			}
+
+			next();
+		} catch (error) {
+			return next(
+				new ErrorResponse(
+					error,
+					'Failed to check user permissions',
+					statusCode.internalServerErrorCode
+				)
+			);
+		}
+	};
 
 //* check if the user has the required role to do that action
 export const checkRoleMiddleware = (...roles) => {

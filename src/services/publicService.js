@@ -176,11 +176,12 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 
 		const meta = {
 			totalCount: totalCount,
-			totalSearch: items.length,
+			totalFind: items.length,
 			page: page,
 			limit: limit,
-			searchFilter,
-			orderBy,
+			offset: offset,
+			searchFilter: searchFilter,
+			orderBy: orderBy,
 		};
 
 		return { meta: meta, items: items };
@@ -232,8 +233,11 @@ export const findAllSuitcasesByQuery = async (
 					suitcases.error.message
 			);
 
+		const totalCount = await prisma.suitcases.count();
+
 		const meta = {
-			totalCount: suitcases.length,
+			totalCount: totalCount,
+			totalFind: suitcases.length,
 			page: page,
 			limit: limit,
 			offset: offset,

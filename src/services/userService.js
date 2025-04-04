@@ -160,7 +160,7 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 
 		if (users.error)
 			return new ErrorHandler(
-				'prsima',
+				'prisma',
 				'No users found ' + users.error,
 				'No users found in the database ' + users.error.message
 			);
@@ -232,7 +232,7 @@ export const changeUserRole = async (id, body) => {
 		return new ErrorHandler(
 			'catch error',
 			error,
-			'Failed to modeify user by id'
+			'Failed to modify user by id'
 		);
 	}
 };
@@ -262,7 +262,7 @@ export const removeUser = async (userId) => {
 			return new ErrorHandler(
 				'prisma',
 				userDeleted.error,
-				'User cannot be deleted for datebase ' +
+				'User cannot be deleted for database ' +
 					userDeleted.error.message
 			);
 
@@ -283,15 +283,19 @@ export const removeUser = async (userId) => {
 	}
 };
 
-export const removeAllUsers = async () => {
+export const removeAllUsers = async (searchFilter) => {
 	try {
-		const usersDeleted = await prisma.user.deleteMany();
+		const usersDeleted = await prisma.user.deleteMany({
+			where: {
+				OR: searchFilter,
+			},
+		});
 
 		if (usersDeleted.error)
 			return new ErrorHandler(
 				'prisma',
 				usersDeleted.error,
-				'Connot remove all users for database ' +
+				'Cannot remove all users for database ' +
 					usersDeleted.error.message
 			);
 
@@ -300,6 +304,7 @@ export const removeAllUsers = async () => {
 		const meta = {
 			totalCount: totalCount,
 			totalDelete: usersDeleted.count,
+			totalSearch: searchFilter ? usersDeleted.count : 0,
 		};
 
 		return { usersDeleted: usersDeleted, meta: meta };

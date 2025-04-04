@@ -11,7 +11,7 @@ import {
 } from '@prisma/client';
 import { productStringRegExp } from './itemValidator.js';
 
-export const itemAutoFillingSchame = Joi.object({
+export const itemAutoFillingSchema = Joi.object({
 	name: Joi.string().pattern(productStringRegExp).required(),
 
 	category: Joi.string()
@@ -22,7 +22,7 @@ export const itemAutoFillingSchame = Joi.object({
 	quantity: Joi.number().integer().required(),
 });
 
-export const bagAutoFillingSchame = Joi.object({
+export const bagAutoFillingSchema = Joi.object({
 	name: Joi.string().pattern(productStringRegExp).required(),
 
 	type: Joi.string()
@@ -44,7 +44,7 @@ export const bagAutoFillingSchame = Joi.object({
 		.uppercase(),
 });
 
-export const suitcaseAutoFillingSchame = Joi.object({
+export const suitcaseAutoFillingSchema = Joi.object({
 	name: Joi.string().pattern(productStringRegExp).required(),
 
 	brand: Joi.string().pattern(productStringRegExp),

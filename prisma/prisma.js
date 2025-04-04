@@ -3,6 +3,7 @@ import {
 	//*======={User}========
 	getDisplayName,
 	getAge,
+	setProfilePicture,
 	//*======={User}========
 	//*======={Suitcase and Bags}========
 	getCurrentWeight,
@@ -193,6 +194,11 @@ const prisma = new PrismaClient().$extends({
 			displayName: {
 				compute(user) {
 					return getDisplayName(user.firstName, user.lastName);
+				},
+			},
+			defaultProfilePicture: {
+				compute(user) {
+					return setProfilePicture(user.firstName, user.email);
 				},
 			},
 			age: {

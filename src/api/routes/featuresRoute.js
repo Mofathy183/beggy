@@ -9,12 +9,13 @@ import {
 import {
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware,
 } from '../../middlewares/authMiddleware.js';
 import {
 	VReqToItemAutoFilling,
 	VReqToBagAutoFilling,
 	VReqToSuitcaseAutoFilling,
-	VReqTolocationPermission,
+	VReqToLocationPermission,
 } from '../../middlewares/validateRequest.js';
 import {
 	locationPermissionMiddleware,
@@ -28,6 +29,7 @@ featureRoute.post(
 	'/ai/auto-fill/item',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('create:own', 'item'),
 	VReqToItemAutoFilling,
 	autoFillItemFields
 );
@@ -37,6 +39,7 @@ featureRoute.post(
 	'/ai/auto-fill/bag',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('create:own', 'bag'),
 	VReqToBagAutoFilling,
 	autoFillBagFields
 );
@@ -46,6 +49,7 @@ featureRoute.post(
 	'/ai/auto-fill/suitcase',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('create:own', 'suitcase'),
 	VReqToSuitcaseAutoFilling,
 	autoFillSuitcaseFields
 );
@@ -55,7 +59,7 @@ featureRoute.post(
 	'/location',
 	VReqToHeaderToken,
 	headersMiddleware,
-	VReqTolocationPermission,
+	VReqToLocationPermission,
 	locationPermissionMiddleware,
 	userIpMiddleware,
 	location

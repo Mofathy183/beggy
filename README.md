@@ -5,19 +5,19 @@ Welcome to the **Beggy Backend**, the API powering Beggy, a web application that
 ## Table of Contents
 
 - [Beggy Backend](#beggy-backend)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Technologies Used](#technologies-used)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Configuration](#configuration)
-    - [Prisma Setup](#prisma-setup)
-    - [Running the Application](#running-the-application)
-  - [API Documentation](#api-documentation)
-  - [Testing](#testing)
-  - [Contributing](#contributing)
-  - [License](#license)
+    - [Table of Contents](#table-of-contents)
+    - [Features](#features)
+    - [Technologies Used](#technologies-used)
+    - [Getting Started](#getting-started)
+        - [Prerequisites](#prerequisites)
+        - [Installation](#installation)
+        - [Configuration](#configuration)
+        - [Prisma Setup](#prisma-setup)
+        - [Running the Application](#running-the-application)
+    - [API Documentation](#api-documentation)
+    - [Testing](#testing)
+    - [Contributing](#contributing)
+    - [License](#license)
 
 ## Features
 
@@ -52,16 +52,16 @@ Ensure you have the following installed:
 
 1. **Clone the repository:**
 
-   ```sh
-   git clone https://github.com/Mofathy183/Beggy-backend.git
-   cd Beggy-backend
-   ```
+    ```sh
+    git clone https://github.com/Mofathy183/Beggy-backend.git
+    cd Beggy-backend
+    ```
 
 2. **Install dependencies:**
 
-   ```sh
-   npm install
-   ```
+    ```sh
+    npm install
+    ```
 
 ### Configuration
 
@@ -118,21 +118,21 @@ We welcome contributions! Please follow these steps:
 
 2. Create a new branch:
 
-   ```sh
-   git checkout -b feature-branch
-   ```
+    ```sh
+    git checkout -b feature-branch
+    ```
 
 3. Commit your changes:
 
-   ```sh
-   git commit -m "Add new feature"
-   ```
+    ```sh
+    git commit -m "Add new feature"
+    ```
 
 4. Push to your branch:
 
-   ```sh
-   git push origin feature-branch
-   ```
+    ```sh
+    git push origin feature-branch
+    ```
 
 5. Open a Pull Request.
 

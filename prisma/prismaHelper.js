@@ -50,7 +50,7 @@ export const getIsWeightExceeded = (items, maxWeight) => {
 	//* if the current weight is greater than the max weight
 	//* that means the current weight is exceeded the max weight
 	//* so return true, else return false
-	//* if Exeeded "True", If Not "False"
+	//* if Exceeded "True", If Not "False"
 	return currentWeight > maxWeight;
 };
 
@@ -74,8 +74,41 @@ export const getIsCapacityExceeded = (items, capacity) => {
 	//* if the current weight is greater than the max weight
 	//* that means the current weight is exceeded the max weight
 	//* so return true, else return false
-	//* if Exeeded "True", If Not "False"
+	//* if Exceeded "True", If Not "False"
 	return currentCapacity > capacity;
 };
 
 //*==========================={Suitcases and Bags Helpers}========================
+
+import crypto from 'crypto';
+
+const COLORS = [
+	'#AB47BC',
+	'#EC407A',
+	'#5C6BC0',
+	'#26A69A',
+	'#FF7043',
+	'#42A5F5',
+	'#66BB6A',
+	'#FFA726',
+	'#8D6E63',
+	'#29B6F6',
+	'#7E57C2',
+	'#D4E157',
+];
+
+const getConsistentColor = (email) => {
+	const hash = crypto
+		.createHash('md5')
+		.update(email.trim().toLowerCase())
+		.digest('hex');
+	const index = parseInt(hash.substring(0, 2), 16) % COLORS.length;
+	return COLORS[index];
+};
+
+export const setProfilePicture = (firstName, email) => {
+	if (!firstName || !email) return undefined;
+	const firstLetter = firstName.charAt(0).toUpperCase();
+	const bgColor = getConsistentColor(email).substring(1);
+	return `https://ui-avatars.com/api/?name=${firstLetter}&background=${bgColor}&color=fff&size=128&bold=true`;
+};

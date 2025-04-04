@@ -1,4 +1,4 @@
-import { statusCode, statusStatment } from '../config/status.js';
+import { statusCode, statusStatement } from '../config/status.js';
 
 const errorHandler = (error, path, message = 'error') => {
 	return {
@@ -108,16 +108,13 @@ class ErrorHandler extends Error {
 		Error.captureStackTrace(this, this.constructor);
 
 		this.whichError();
-
-		// console.log(this.whichError());
 	}
 
 	whichError() {
 		if (this.name === 'prisma') {
-			// console.log('Prisma');
 			return prismaErrorHandler(
 				this.error,
-				this.stack, //* you can use this.stack becouce it's already set by captureStackTrace
+				this.stack, //* you can use this.stack because it's already set by captureStackTrace
 				this.message
 			);
 		} else {
@@ -132,7 +129,7 @@ class ErrorResponse extends Error {
 		this.error = error;
 		this.statusCode = status || 500;
 		this.message = message;
-		this.statment = statusStatment[this.statusCode];
+		this.statement = statusStatement[this.statusCode];
 
 		Error.captureStackTrace(this, this.constructor);
 	}

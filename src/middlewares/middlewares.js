@@ -33,7 +33,7 @@ export const paginateMiddleware = (req, res, next) => {
 	}
 
 	// Calculate offset
-	//* it is like when you prass next page in website
+	//* it is like when you press next page in website
 	//* will skip the 10 thing you already seen in the previous page
 	//* and show the next page with 10 now things
 	const offset = (parsedPage - 1) * parsedLimit;
@@ -120,7 +120,7 @@ export const searchMiddleware = (req, res, next) => {
 	const searchRegExp = /^[A-Za-z_-]+$/;
 	const fieldRegExp = /^[A-Za-z]+$/;
 
-	//* to sprate the search values and make it array
+	//* to separate the search values and make it array
 	search = String(search)
 		.split(',')
 		.map((s) => String(s).trim());
@@ -229,7 +229,7 @@ export const locationPermissionMiddleware = (req, res, next) => {
 			new ErrorResponse(
 				'Location permission not provided',
 				'Unauthorized',
-				statusCode.unauthorizedCode
+				statusCode.badRequestCode
 			)
 		);
 

@@ -11,7 +11,7 @@ export const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 export const corsMiddleware = cors({
 	origin: coreConfig.origin,
-	method: 'POST, GET, PUT, DELETE, OPTIONS, PATCH',
+	methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
 });
 
 export const csrfMiddleware = (error, req, res, next) => {
@@ -20,7 +20,7 @@ export const csrfMiddleware = (error, req, res, next) => {
 			new ErrorResponse(
 				error,
 				'Invalid CSRF token',
-				statusCode.forbiddenCode // HTTP status code for forbidde
+				statusCode.forbiddenCode // HTTP status code for forbidden
 			)
 		);
 	}
@@ -32,13 +32,13 @@ export const csrfMiddleware = (error, req, res, next) => {
 export const csrfProtection = csurf({ cookie: true });
 
 //* Apply middleware rate limit for all requests
-export const limter = rateLimit({
+export const limiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
 	max: 100, // limit each IP to 100 requests per windowMs
 	message: 'Too many requests from this IP, please try again later.',
 });
 
-//* for not idintfication routes
+//* for not identification routes
 export const routeErrorHandler = (req, res, next) => {
 	return next(
 		new ErrorResponse(
@@ -55,7 +55,8 @@ export const AppResponse = (sucORerr, req, res, next) => {
 	if (sucORerr instanceof SuccessResponse) {
 		return res.status(sucORerr.status).json({
 			success: true,
-			status: sucORerr.statment,
+			status: sucORerr.statement,
+			statusCode: sucORerr.statusCode,
 			message: sucORerr.message,
 			data: sucORerr.data,
 			meta: sucORerr.meta,
@@ -68,7 +69,8 @@ export const AppResponse = (sucORerr, req, res, next) => {
 		console.log(sucORerr.stack);
 		return res.status(sucORerr.statusCode).json({
 			success: false,
-			status: sucORerr.statment,
+			status: sucORerr.statement,
+			statusCode: sucORerr.statusCode,
 			message: sucORerr.message,
 			error: sucORerr.error,
 			stack: sucORerr.stack,

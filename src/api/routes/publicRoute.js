@@ -54,7 +54,7 @@ publicRoute.get('/users/:id', getUserPublicProfile);
 
 //*======================================={Bags Public Route}==============================================
 
-//* route for get all bags by Querys Or ALL BAGS => GET (query limit and pages)
+//* route for get all bags by Query Or ALL BAGS => GET (query limit and pages)
 //* GET "/search" → Get bags by query If There OR ALL Bags
 //* Get all bags with optional search query
 publicRoute.get(
@@ -74,7 +74,7 @@ publicRoute.get('/bags/:bagId', getBagById);
 
 //*======================================={Items Public Route}==============================================
 
-//* route for get all items by Querys or All Items => GET
+//* route for get all items by Query or All Items => GET
 //* GET "/items/search" → Get items by query
 //* Get all items with optional search query
 publicRoute.get(
@@ -94,7 +94,7 @@ publicRoute.get('/items/:itemId', getItemsById);
 
 //*======================================={Suitcase Public Route}==============================================
 
-//* route for get all suitcases by Querys => GET (query limit and pages)
+//* route for get all suitcases by Query => GET (query limit and pages)
 //* GET "/search" → Get suitcases by query
 //* Get all suitcases with optional search query
 publicRoute.get(

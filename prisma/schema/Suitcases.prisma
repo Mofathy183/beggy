@@ -3,8 +3,8 @@
 model Suitcases {
     id        String            @id @default(uuid())
     name      String
-    type      SuitcaseType
     brand     String?
+    type      SuitcaseType
     color     String?           @default("black")
     size      Size
     capacity  Float

@@ -9,6 +9,7 @@ import {
 	VReqToHeaderToken,
 	confirmDeleteMiddleware,
 	VReqToConfirmDelete,
+	checkPermissionMiddleware,
 } from '../../middlewares/authMiddleware.js';
 import {
 	paginateMiddleware,
@@ -31,36 +32,39 @@ suitcaseRoute.param('suitcaseId', (req, res, next, suitcaseId) =>
 	VReqToUUID(req, res, next, suitcaseId, 'suitcaseId')
 );
 
-//* route to get suitcases that user has by Search Optional => GET user muet by login
+//* route to get suitcases that user has by Search Optional => GET user must by login
 //* GET / → Get all Suitcases for a user
 //* Get suitcases that belong to a specific user option query
 suitcaseRoute.get(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('read:own', 'suitcase'),
 	paginateMiddleware,
 	searchMiddleware,
 	orderByMiddleware,
 	getSuitcasesBelongsToUser
 );
 
-//* route to get suitcase that user has by user id => GET (params id) user muet by login
+//* route to get suitcase that user has by user id => GET (params id) user must by login
 //* PUT /:suitcaseId → Replace a user’s suitcase
 //* Get suitcases that belong to a specific user
 suitcaseRoute.get(
 	'/:suitcaseId',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('read:own', 'suitcase'),
 	getSuitcaseBelongsToUser
 );
 
-//* route for create suitcase for User => POST (params id) user muet by login
+//* route for create suitcase for User => POST (params id) user must by login
 //* POST "/" → Create an suitcase for a user
 //* Create a single suitcase for a user
 suitcaseRoute.post(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('create:own', 'suitcase'),
 	VReqToCreateSuitcase,
 	createSuitcaseForUser
 );
@@ -72,6 +76,7 @@ suitcaseRoute.put(
 	'/:suitcaseId',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('update:own', 'suitcase'),
 	VReqToCreateSuitcase,
 	replaceSuitcaseBelongsToUser
 );
@@ -83,30 +88,33 @@ suitcaseRoute.patch(
 	'/:suitcaseId',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('update:own', 'suitcase'),
 	VReqToModifySuitcase,
 	modifySuitcaseBelongsToUser
 );
 
-//* route for delete all suitcases that user has by user id => DELETE (params id) user muet by login
+//* route for delete all suitcases that user has by user id => DELETE (params id) user must by login
 //* DELETE / → Delete all user’s suitcases
 //* Delete all suitcases that belong to a user
 suitcaseRoute.delete(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('delete:own', 'suitcase'),
 	searchMiddleware,
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
 	deleteAllSuitcasesBelongsToUser
 );
 
-//* route for delete suitcase user has by id of the suitcase => DELETE (params id) user muet by login
+//* route for delete suitcase user has by id of the suitcase => DELETE (params id) user must by login
 //* DELETE /:suitcaseId → Delete a user’s suitcase
 //* Delete a single suitcase that belongs to a user
 suitcaseRoute.delete(
 	'/:suitcaseId',
 	VReqToHeaderToken,
 	headersMiddleware,
+	checkPermissionMiddleware('delete:own', 'suitcase'),
 	deleteSuitcaseBelongsToUserById
 );
 

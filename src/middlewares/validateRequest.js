@@ -15,11 +15,11 @@ import {
 	roleSchema,
 } from '../api/validators/userValidator.js';
 import {
-	itemAutoFillingSchame,
-	bagAutoFillingSchame,
-	suitcaseAutoFillingSchame,
+	itemAutoFillingSchema,
+	bagAutoFillingSchema,
+	suitcaseAutoFillingSchema,
 	locationPermissionScheme,
-} from '../api/validators/featuresVaildator.js';
+} from '../api/validators/featuresValidator.js';
 import { bagSchema, bagModifySchema } from '../api/validators/bagValidator.js';
 import {
 	suitcaseSchema,
@@ -74,7 +74,7 @@ export const VReqToUUID = (req, res, next, value, paramName) => {
 
 //* ======================={USER VRequests Validation}========================
 
-//? if req.user if undfind or null means that Facebook authentication failed
+//? if req.user if undefined or null means that Facebook authentication failed
 export const VReqUser = (req, res, next) => {
 	if (!req.user)
 		return next(
@@ -153,18 +153,18 @@ export const VReqToModifySuitcase = (req, res, next) => {
 
 //* ======================={FEATURES VRequests Validation}========================
 export const VReqToItemAutoFilling = (req, res, next) => {
-	return VReqTo(req, res, next, itemAutoFillingSchame);
+	return VReqTo(req, res, next, itemAutoFillingSchema);
 };
 
 export const VReqToBagAutoFilling = (req, res, next) => {
-	return VReqTo(req, res, next, bagAutoFillingSchame);
+	return VReqTo(req, res, next, bagAutoFillingSchema);
 };
 
 export const VReqToSuitcaseAutoFilling = (req, res, next) => {
-	return VReqTo(req, res, next, suitcaseAutoFillingSchame);
+	return VReqTo(req, res, next, suitcaseAutoFillingSchema);
 };
 
-export const VReqTolocationPermission = (req, res, next) => {
+export const VReqToLocationPermission = (req, res, next) => {
 	return VReqTo(req, res, next, locationPermissionScheme);
 };
 //* ======================={FEATURES VRequests Validation}========================

@@ -9,7 +9,6 @@ import {
 import { productStringRegExp } from './itemValidator.js';
 import { stringRegExp } from './authValidator.js';
 
-// if happen error .prefs({ convert: false }) for float
 export const suitcaseSchema = Joi.object({
 	name: Joi.string()
 		.pattern(productStringRegExp)

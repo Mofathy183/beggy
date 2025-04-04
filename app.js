@@ -9,7 +9,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './src/middlewares/appMiddleware.js';
 import { sessionConfig } from './src/config/env.js';
 import {
-	limter,
+	limiter,
 	corsMiddleware,
 	routeErrorHandler,
 	csrfProtection,
@@ -47,9 +47,9 @@ app.use(morgan('dev'));
 app.use(corsMiddleware);
 
 // Rate limiting middleware (express-rate-limit) to limit the number of requests from the same IP address.
-app.use(limter);
+app.use(limiter);
 
-// Data Santitization against XSS
+// Data Sanitization against XSS
 app.use(expressSanitizer());
 
 // Session middleware
@@ -58,20 +58,17 @@ app.use(session(sessionConfig));
 // Flash middleware
 app.use(flash());
 
-// Paaport middleware
+// Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
 app.use('/api/beggy', rootRoute);
 
-// Serve static files from the public directory
-app.use('/upload', express.static('public'));
-
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Handler undfined Routes
+// Handler undefined Routes
 app.all('*', routeErrorHandler);
 
 //* Handle Response from classes ErrorResponse and SuccessResponse

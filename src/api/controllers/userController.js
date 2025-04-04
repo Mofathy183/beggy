@@ -239,7 +239,8 @@ export const deleteUserById = async (req, res, next) => {
 
 export const deleteAllUsers = async (req, res, next) => {
 	try {
-		const { usersDeleted, meta } = await removeAllUsers();
+		const { searchFilter = undefined } = req;
+		const { usersDeleted, meta } = await removeAllUsers(searchFilter);
 
 		if (usersDeleted.error)
 			return next(
@@ -253,7 +254,7 @@ export const deleteAllUsers = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'All Users Are Deleted Successfully',
+				`All Users Are Deleted Successfully${searchFilter ? ' By Search Filter' : ''}`,
 				usersDeleted,
 				meta
 			)

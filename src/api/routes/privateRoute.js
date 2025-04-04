@@ -16,6 +16,7 @@ import {
 	VReqToHeaderToken,
 	confirmDeleteMiddleware,
 	VReqToConfirmDelete,
+	checkPermissionMiddleware,
 } from '../../middlewares/authMiddleware.js';
 import {
 	replaceBagById,
@@ -58,6 +59,7 @@ privateRoute.put(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('update:any', 'bag'),
 	VReqToCreateBag,
 	replaceBagById
 );
@@ -70,6 +72,7 @@ privateRoute.patch(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('update:any', 'bag'),
 	VReqToModifyBag,
 	modifyBagById
 );
@@ -83,6 +86,7 @@ privateRoute.delete(
 	headersMiddleware,
 	searchMiddleware,
 	checkRoleMiddleware('admin'),
+	checkPermissionMiddleware('delete:any', 'bag'),
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
 	deleteAllBags
@@ -96,6 +100,7 @@ privateRoute.delete(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('delete:any', 'bag'),
 	deleteBagById
 );
 
@@ -111,6 +116,7 @@ privateRoute.put(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('update:any', 'suitcase'),
 	VReqToCreateSuitcase,
 	replaceSuitcaseById
 );
@@ -123,6 +129,7 @@ privateRoute.patch(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('update:any', 'suitcase'),
 	VReqToModifySuitcase,
 	modifySuitcaseById
 );
@@ -136,6 +143,7 @@ privateRoute.delete(
 	headersMiddleware,
 	searchMiddleware,
 	checkRoleMiddleware('admin'),
+	checkPermissionMiddleware('delete:any', 'suitcase'),
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
 	deleteAllSuitcases
@@ -149,6 +157,7 @@ privateRoute.delete(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('delete:any', 'suitcase'),
 	deleteSuitcaseById
 );
 
@@ -164,6 +173,7 @@ privateRoute.put(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('update:any', 'item'),
 	VReqToCreateItem,
 	replaceItemById
 );
@@ -176,6 +186,7 @@ privateRoute.patch(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('update:any', 'item'),
 	VReqToModifyItem,
 	modifyItemById
 );
@@ -189,6 +200,7 @@ privateRoute.delete(
 	headersMiddleware,
 	searchMiddleware,
 	checkRoleMiddleware('admin'),
+	checkPermissionMiddleware('delete:any', 'item'),
 	VReqToConfirmDelete,
 	confirmDeleteMiddleware,
 	deleteAllItems
@@ -202,6 +214,7 @@ privateRoute.delete(
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkRoleMiddleware('admin', 'member'),
+	checkPermissionMiddleware('delete:any', 'item'),
 	deleteItemById
 );
 

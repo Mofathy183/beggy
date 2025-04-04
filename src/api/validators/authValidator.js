@@ -5,7 +5,7 @@ export const stringRegExp = /^[a-zA-Z\s]*$/;
 export const passwordRegExp =
 	/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!?#%*&]{8,20}$/;
 
-//* Check the Feildes Of Sing-up form
+//* Check the Felids Of Sing-up form
 export const singUpSchema = Joi.object({
 	firstName: Joi.string()
 		.pattern(stringRegExp)
@@ -37,7 +37,7 @@ export const singUpSchema = Joi.object({
 	confirmPassword: Joi.ref('password'),
 });
 
-//* Check the Feildes Of login form
+//* Check the Felids Of login form
 export const loginSchema = Joi.object({
 	email: Joi.string()
 		.email({ tlds: { allow: false } })

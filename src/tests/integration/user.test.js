@@ -30,7 +30,7 @@ const users = [
 		password: await hashingPassword('password101'),
 	},
 	{
-		firstName: 'Frank',
+		firstName: 'John',
 		lastName: 'Williams',
 		email: 'testuser708@example.com',
 		password: await hashingPassword('password101'),
@@ -357,7 +357,7 @@ describe('User API Tests For Delete All User From Database Only for Admin', () =
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/users`)
+			.delete(`/api/beggy/users/`)
 			.set('Cookie', cookies)
 			.set('X-XSRF-TOKEN', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
@@ -375,6 +375,52 @@ describe('User API Tests For Delete All User From Database Only for Admin', () =
 		});
 
 		const usersAfterDeletion = await prisma.user.findMany({ where: {} });
+
+		expect(usersAfterDeletion).toHaveLength(0);
+		expect(usersAfterDeletion).toEqual([]);
+	});
+
+	test('Should Delete All Users By Query', async () => {
+		const admin = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testadmin123@example.com',
+				password: await hashingPassword('password123'),
+				role: 'ADMIN',
+			},
+		});
+
+		await prisma.user.createMany({
+			data: users,
+		});
+
+		const res = await request(app)
+			.delete(`/api/beggy/users/?firstName=John`)
+			.set('Cookie', cookies)
+			.set('X-XSRF-TOKEN', csrfToken)
+			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.send({
+				confirmDelete: true,
+			});
+
+		console.log('Response', res.body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe(
+			'All Users Are Deleted Successfully By Search Filter'
+		);
+		expect(res.body.data).toMatchObject({
+			count: res.body.data.count,
+		});
+		expect(res.body.meta).toMatchObject({
+			totalSearch: res.body.data.count,
+		});
+
+		const usersAfterDeletion = await prisma.user.findMany({
+			where: { firstName: 'John' },
+		});
 
 		expect(usersAfterDeletion).toHaveLength(0);
 		expect(usersAfterDeletion).toEqual([]);

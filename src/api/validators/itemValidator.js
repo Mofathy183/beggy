@@ -4,27 +4,7 @@ import { stringRegExp } from './authValidator.js';
 
 export const productStringRegExp = /^(?=.*[a-zA-Z])(?!^\d+$)[a-zA-Z0-9\s-]+$/;
 
-export const itemShcemaMiddleware = Joi.object({
-	category: Joi.string()
-		.valid(...Object.values(ItemCategory))
-		.uppercase(),
-
-	isFragile: Joi.boolean(),
-
-	name: Joi.string()
-		.pattern(productStringRegExp)
-		.message(
-			'must be a letter or - but not any special characters or numbers'
-		),
-
-	color: Joi.string()
-		.pattern(productStringRegExp)
-		.message('must be a letter but not any special characters or numbers'),
-
-	createdAt: Joi.date().iso(),
-});
-
-//*######################################{JOI Check Items Feildes}############################################
+//*######################################{JOI Check Items Felids}############################################
 
 export const itemsSchema = Joi.object({
 	name: Joi.string().pattern(productStringRegExp).required(),
@@ -83,4 +63,4 @@ export const itemSchemaForItemsIdsForDelete = Joi.object({
 	confirmDelete: Joi.boolean().required(),
 });
 
-//*######################################{JOI Check Items Feildes}############################################
+//*######################################{JOI Check Items Felids}############################################
