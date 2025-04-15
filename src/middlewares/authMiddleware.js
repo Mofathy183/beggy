@@ -1,6 +1,6 @@
 import { verifyRefreshToken, verifyToken } from '../utils/jwt.js';
 import prisma from '../../prisma/prisma.js';
-import { AbilityBuilder, subject } from '@casl/ability';
+import { AbilityBuilder } from '@casl/ability';
 import { createPrismaAbility } from '@casl/prisma';
 import { passwordChangeAfter } from '../utils/userHelper.js';
 import { storeSession } from '../utils/authHelper.js';
@@ -59,7 +59,7 @@ export const headersMiddleware = async (req, res, next) => {
 
 	//? check if the user changed their password after login
 	const passwordHasChanged = passwordChangeAfter(
-		userAuth,
+		userAuth.passwordChangeAt,
 		isAuthenticated.iat
 	);
 
@@ -87,11 +87,8 @@ const defineAbilitiesFor = async (role) => {
 	});
 
 	permissions.forEach((perm) => {
-		let { action, subject, isOwner } = perm.permission;
-		// If isOwner is true, allow the action only if the user is the owner
-		if (isOwner) can(action, subject, { isOwner: isOwner });
-		// If isOwner is false, allow the action without ownership condition
-		else can(action, subject);
+		let { action, subject } = perm.permission;
+		can(action, subject);
 	});
 
 	return build();

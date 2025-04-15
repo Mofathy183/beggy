@@ -134,6 +134,8 @@ CREATE TABLE "users" (
     "country" TEXT,
     "city" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "verify_token" TEXT,
     "password_change_at" TIMESTAMP(3),
     "password_reset_token" TEXT,
     "password_reset_at" TIMESTAMP(3),

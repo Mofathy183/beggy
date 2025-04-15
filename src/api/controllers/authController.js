@@ -7,9 +7,10 @@ import {
 	updateUserPassword,
 	deactivateUserAccount,
 } from '../../services/authService.js';
-import { ApiUrls } from '../../config/env.js';
+import { resetPasswordUrl } from '../../config/env.js';
+import { sendEmail } from '../../utils/sendMail.js';
+import { generateCSRFToken } from '../../utils/authHelper.js';
 import {
-	sendEmail,
 	sendCookies,
 	storeSession,
 	clearCookies,
@@ -120,38 +121,22 @@ export const forgotPassword = async (req, res, next) => {
 	try {
 		const { email } = req.body;
 
-		const resetToken = await userForgotPassword(email);
+		const { resetToken, userName, userEmail } =
+			await userForgotPassword(email);
 
 		//* send email to reset the password to the user
 		//* send a link to reset the password as a patch request
 		//* with the resetToken in the params
-		const resetURL = `${req.protocol}://${req.get('host')}${ApiUrls.resetPasswordUrl}/${resetToken}`;
-
-		const message =
-			'If You Forgot your password?' +
-			'\n' +
-			'Click here to reset your password:' +
-			'\n' +
-			resetURL +
-			'\n' +
-			"if you did't forgot your password, please ignore this email.";
+		const resetURL = `${req.protocol}://${req.get('host')}${resetPasswordUrl}/${resetToken}`;
 
 		//* send email using nodemailer or any other email service`
-		const sended = await sendEmail({
-			to: email,
-			subject:
-				'Password Reset (you have 10 minutes to reset your password)',
-			message,
-		});
-
-		if (!sended)
-			return next(
-				new ErrorResponse(
-					'Failed to send email',
-					'Failed to send reset password email to user',
-					statusCode.internalServerErrorCode
-				)
-			);
+		const sended = await sendEmail(
+			resetURL,
+			userName,
+			userEmail,
+			'reset-password',
+			'reset'
+		);
 
 		if (sended.error)
 			return next(
@@ -259,7 +244,7 @@ export const updatePassword = async (req, res, next) => {
 		//* store user id and role in session
 		storeSession(userId, userRole, req);
 
-		//* Log the useer in and send JWT token via cookie
+		//* Log the user in and send JWT token via cookie
 		sendCookies(userId, res);
 
 		return next(
@@ -309,7 +294,7 @@ export const updateData = async (req, res, next) => {
 		//* store user id and role in session
 		storeSession(userId, userRole, req);
 
-		//* Log the useer in and send JWT token via cookie
+		//* Log the user in and send JWT token via cookie
 		sendCookies(userId, res);
 
 		return next(
@@ -385,7 +370,7 @@ export const logout = async (req, res, next) => {
 			new SuccessResponse(
 				statusCode.okCode,
 				'User Logged Out Successfully',
-				'Uesr Logout'
+				'User Logout'
 			)
 		);
 	} catch (error) {
@@ -433,19 +418,16 @@ export const getAccessToken = (req, res, next) => {
 	);
 };
 
-export const csrfResponse = (req, res, next) => {
-	const csrfToken = req.csrfToken();
-
-	res.cookie('XSRF-TOKEN', csrfToken, {
-		expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-		httpOnly: false, // ✅ Allow frontend access
-		secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
-		sameSite: 'strict',
-	});
+export const csrfProtection = (req, res, next) => {
+	//* generateCSRFToken will handle send the secret via cookie
+	//* and return the generated token
+	const csrfToken = generateCSRFToken(res);
 
 	return next(
-		new SuccessResponse(statusCode.okCode, 'CSRF token generated', {
-			csrfToken: csrfToken,
-		})
+		new SuccessResponse(
+			statusCode.okCode,
+			'CSRF token generated, send the token via cookie ( x-csrf-token )',
+			{ csrfToken }
+		)
 	);
 };

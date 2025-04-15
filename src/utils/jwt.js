@@ -46,9 +46,20 @@ export const verifyRefreshToken = (refreshToken) => {
 	}
 };
 
-// function create() {
-//     const token = verifyToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ0ZDc2OGZkLTQ0NTctNDcwOC1hYzIzLWIzMTA5OTg3YTRmMiIsImlhdCI6MTczODg1MDU0OSwiZXhwIjoxNzQ2NjI2NTQ5fQ.Uwgdx8cBlecNi9WHpYmc5nviJywocrFDr8FR_gV5hTQ");
-//     console.log(token);
-// }
+//* to generate Crypto Token for.
+//* reset password to store hash token in DB and send the token via email
+//* and for verify email to do the same
+export const generateCryptoToken = (token) => {
+	return crypto.createHash('sha256').update(token).digest('hex');
+};
 
-// create();
+//* generate random reset token for forgot password
+export const generateCryptoHashToken = () => {
+	//* the reset token will send to the user via email
+	const token = crypto.randomBytes(32).toString('hex');
+
+	//* this hash token will add to the database
+	const hashToken = crypto.createHash('sha256').update(token).digest('hex');
+
+	return { hashToken: hashToken, token: token };
+};

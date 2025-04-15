@@ -28,50 +28,35 @@ export const sessionConfig = {
 };
 
 export const cookieOptions = {
-	expires: new Date(Date.now() + +process.env.COOKIE_EXPIRES_AT * 60 * 1000), // Access token expires in 15 minutes
+	maxAge: 15 * 60 * 1000, // Access token expires in 15 minutes
 	httpOnly: true,
 	sameSite: 'Strict',
 	secure: process.env.NODE_ENV === 'production',
 };
 
 export const cookieRefreshOptions = {
-	expires: new Date(
-		Date.now() +
-			+process.env.COOKIE_REFRESH_EXPIRES_AT * 24 * 60 * 60 * 1000
-	), // Refresh token expires in 7 days
-	httpOnly: true,
-	sameSite: 'Strict',
-	secure: process.env.NODE_ENV === 'production',
+	...cookieOptions,
+	maxAge: 7 * 24 * 60 * 60 * 1000, // Refresh token expires in 7 days
 };
 
 export const bcryptConfig = {
 	saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS, 10),
 };
 
-export const nodemailerTransport = {
-	host: process.env.NODEMAILER_HOST,
-	port: process.env.NODEMAILER_PORT,
-	auth: {
-		user: process.env.NODEMAILER_USERNAME,
-		pass: process.env.NODEMAILER_PASSWORD,
-	},
+export const resendConfig = {
+	apiKey: process.env.RESEND_API_KEY,
+	testDomain: 'onboarding@resend.dev',
+	//* subjects
+	verify: 'verify Email',
+	reset: 'you have 10 minutes to reset your password',
 };
 
-export const ApiUrls = {
-	users: process.env.API_URL_USERS,
-	auth: process.env.API_URL_AUTH,
-	resetPasswordUrl: process.env.API_URL_AUTH_RESET_PASSWORD,
-	// suitcases: process.env.API_URL_SUITCASES,
-	// bags: process.env.API_URL_BAGS,
-	// items: process.env.API_URL_ITEMS,
-	// transactions: process.env.API_URL_TRANSACTIONS,
-};
+export const resetPasswordUrl = '/api/beggy/auth/reset-password';
 
 export const googleAuthConfig = {
 	clientID: process.env.GOOGLE_CLIENT_ID,
 	clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-	callbackURL: process.env.GOOGLE_CALLBACK_URL,
-	passReqToCallback: true,
+	callbackURL: 'http://localhost:3000/api/beggy/auth/google/callback',
 	scope: ['https://www.googleapis.com/auth/userinfo.profile', 'email'],
 };
 

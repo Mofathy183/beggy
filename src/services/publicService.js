@@ -9,28 +9,9 @@ export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 
 		const bags = await prisma.bags.findMany({
 			where: searchFilter,
-			select: {
-				id: true,
-				name: true,
-				type: true,
-				color: true,
-				size: true,
-				capacity: true,
-				maxWeight: true,
-				weight: true,
-				material: true,
-				features: true,
-				createdAt: true,
-				updatedAt: true,
+			omit: {
+				user: true,
 				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-					},
-				},
 				bagItems: true,
 			},
 			take: limit,
@@ -52,12 +33,11 @@ export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 			totalFind: bags.length,
 			page: page,
 			limit: limit,
-			offset: offset,
 			searchFilter: searchFilter,
 			orderBy: orderBy,
 		};
 
-		return { bags: bags, meta: meta };
+		return { bags, meta };
 	} catch (error) {
 		new ErrorHandler('catch', error, 'Failed to get all bags');
 	}
@@ -88,14 +68,7 @@ export const findBagById = async (bagId) => {
 				'Failed to find bag in the database ' + bag.error.message
 			);
 
-		const totalCount = await prisma.bags.count();
-
-		const meta = {
-			totalCount: totalCount,
-			totalFind: bag ? 1 : 0,
-		};
-
-		return { bag: bag, meta: meta };
+		return bag;
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to get bag by id');
 	}
@@ -109,26 +82,9 @@ export const findItemById = async (itemId) => {
 	try {
 		const item = await prisma.items.findUnique({
 			where: { id: itemId },
-			select: {
-				id: true,
-				name: true,
-				category: true,
-				quantity: true,
-				weight: true,
-				volume: true,
-				color: true,
-				isFragile: true,
+			omit: {
 				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						birth: true,
-						age: true,
-					},
-				},
+				user: true,
 			},
 		});
 
@@ -157,8 +113,10 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 		const { page, limit, offset } = pagination;
 
 		const items = await prisma.items.findMany({
-			where: {
-				...searchFilter,
+			where: searchFilter,
+			omit: {
+				userId: true,
+				user: true,
 			},
 			take: limit,
 			skip: offset,
@@ -179,7 +137,6 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 			totalFind: items.length,
 			page: page,
 			limit: limit,
-			offset: offset,
 			searchFilter: searchFilter,
 			orderBy: orderBy,
 		};
@@ -218,13 +175,6 @@ export const findAllSuitcasesByQuery = async (
 			orderBy: orderBy,
 		});
 
-		if (!suitcases)
-			return new ErrorHandler(
-				'suitcases not found',
-				'Failed to find suitcases in the database',
-				'prisma Error'
-			);
-
 		if (suitcases.error)
 			return new ErrorHandler(
 				'prisma',
@@ -240,7 +190,6 @@ export const findAllSuitcasesByQuery = async (
 			totalFind: suitcases.length,
 			page: page,
 			limit: limit,
-			offset: offset,
 			searchFilter: searchFilter,
 			orderBy: orderBy,
 		};
@@ -297,13 +246,11 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 
 		const users = await prisma.user.findMany({
 			where: { OR: searchFilter },
-			include: {
+			omit: {
 				suitcases: true,
 				bags: true,
 				items: true,
 				account: true,
-			},
-			omit: {
 				password: true,
 				passwordChangeAt: true,
 				passwordResetExpiredAt: true,
@@ -323,7 +270,7 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 
 		if (users.error)
 			return new ErrorHandler(
-				'prsima',
+				'prisma',
 				'No users found ' + users.error,
 				'No users found in the database ' + users.error.message
 			);
@@ -379,6 +326,7 @@ export const findUserPublicProfile = async (userId) => {
 				country: true,
 				city: true,
 				profilePicture: true,
+				defaultProfilePicture: true,
 			},
 		});
 

@@ -1,12 +1,9 @@
 import { ErrorHandler } from '../utils/error.js';
 import { hashingPassword, verifyPassword } from '../utils/hash.js';
 import prisma from '../../prisma/prisma.js';
+import { generateCryptoToken, generateCryptoHashToken } from '../utils/jwt.js';
 import {
-	generateCryptoToken,
-	generateResetToken,
-} from '../utils/authHelper.js';
-import {
-	resetPasswordExpiredAt,
+	setExpiredAt,
 	passwordChangeAt,
 	birthOfDate,
 	haveProfilePicture,
@@ -124,7 +121,7 @@ export const loginUser = async (body) => {
 				'Incorrect password'
 			);
 
-		//? Check if user is deactive (isActive is false)
+		//? Check if user is deActive (isActive is false)
 		//* to make it isActive to true
 		if (!isActive) {
 			prisma.user.update({
@@ -158,15 +155,15 @@ export const userForgotPassword = async (email) => {
 			);
 
 		//* Generate a random password by crypto
-		const { resetToken, hashResetToken } = generateResetToken();
+		const { token, hashToken } = generateCryptoHashToken();
 
 		//* get the reset expired token date, than add it to database.
-		const resetExpiredAt = resetPasswordExpiredAt();
+		const resetExpiredAt = setExpiredAt();
 
 		const updateUser = await prisma.user.update({
 			where: { id: user.id },
 			data: {
-				passwordResetToken: hashResetToken,
+				passwordResetToken: hashToken,
 				passwordResetExpiredAt: resetExpiredAt,
 			},
 		});
@@ -187,7 +184,11 @@ export const userForgotPassword = async (email) => {
 			);
 
 		//* return reset token to send an email
-		return resetToken;
+		return {
+			token,
+			userName: updateUser.displayName,
+			userEmail: updateUser.email,
+		};
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
@@ -285,7 +286,7 @@ export const updateUserPassword = async (userId, body) => {
 	try {
 		const { currentPassword, newPassword, confirmPassword } = body;
 
-		const userPaaword = await prisma.user.findUnique({
+		const userPassword = await prisma.user.findUnique({
 			where: { id: userId },
 			select: {
 				password: true,
@@ -293,23 +294,23 @@ export const updateUserPassword = async (userId, body) => {
 			},
 		});
 
-		if (!userPaaword)
+		if (!userPassword)
 			return new ErrorHandler(
 				'user is null',
 				'User not found',
 				'User not found'
 			);
 
-		if (userPaaword.error)
+		if (userPassword.error)
 			return new ErrorHandler(
 				'prisma',
-				userPaaword.error,
-				'User not found ' + userPaaword.error.message
+				userPassword.error,
+				'User not found ' + userPassword.error.message
 			);
 
 		const isMatch = await verifyPassword(
 			currentPassword,
-			userPaaword.password
+			userPassword.password
 		);
 
 		if (!isMatch)

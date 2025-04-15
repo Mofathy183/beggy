@@ -74,14 +74,15 @@ export const VReqToUUID = (req, res, next, value, paramName) => {
 
 //* ======================={USER VRequests Validation}========================
 
-//? if req.user if undefined or null means that Facebook authentication failed
-export const VReqUser = (req, res, next) => {
+//? if req.user is undefined or null means that Facebook authentication failed
+//? or if req.error is undefined or null means that user dose not have email to sign-up with
+export const VReqUserSocialProfile = (req, res, next) => {
 	if (!req.user)
 		return next(
 			new ErrorResponse(
 				'Not authorized to access this resource',
 				'User not found',
-				statusCode.unauthorizedCode
+				statusCode.badRequestCode
 			)
 		);
 

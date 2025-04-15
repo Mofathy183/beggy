@@ -1,163 +1,132 @@
 import prisma from '../../prisma/prisma.js';
-import { generateFakePassword } from '../utils/authHelper.js';
+import { generateHashPassword } from '../utils/hash.js';
 import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { ErrorHandler } from '../utils/error.js';
 
-export const authenticateUserWithGoogle = async (profile) => {
+export const loginUserWithGoogle = async (profile) => {
 	try {
 		const { id, name, emails, photos, provider } = profile;
-		const { value: email } = emails[0];
+		const { value: email, verified } = emails[0];
 		const { familyName: lastName, givenName: firstName } = name;
 		const { value: photo } = photos[0];
-		let status = 200;
 
-		let user = await prisma.account.findUnique({
-			where: { providerId: id },
-			select: {
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						email: true,
-						gender: true,
-						country: true,
-						city: true,
-						birth: true,
-						profilePicture: true,
-						role: true,
-						suitcases: true,
-						bags: true,
-						items: true,
+		const user = await prisma.user.upsert({
+			where: { email },
+			update: {},
+			create: {
+				firstName,
+				lastName,
+				email,
+				isEmailVerified: verified,
+				password: generateHashPassword(),
+				profilePicture: haveProfilePicture(photo),
+				account: {
+					create: {
+						provider,
+						providerId: id,
 					},
 				},
-				id: true,
-				provider: true,
-				providerId: true,
-				userId: true,
+			},
+			omit: {
+				password: true,
+				passwordChangeAt: true,
+				passwordResetExpiredAt: true,
+				passwordResetToken: true,
+				verifyToken: true,
 			},
 		});
 
-		if (!user) {
-			user = await prisma.user.create({
-				data: {
-					firstName,
-					lastName,
-					email,
-					password: generateFakePassword(),
-					profilePicture: photo,
-					account: {
-						// Creating account inside User creation
-						create: {
-							provider: provider,
-							providerId: id,
-						},
-					},
-				},
-				select: {
-					id: true,
-					firstName: true,
-					lastName: true,
-					email: true,
-					profilePicture: true,
-					country: true,
-					city: true,
-					role: true,
-					account: true,
-				},
-			});
+		if (!user)
+			new ErrorHandler(
+				'user',
+				'There is no user with that email',
+				'User not found'
+			);
 
-			status = 201;
-		}
+		if (user.error)
+			new ErrorHandler(
+				'prisma',
+				user.error,
+				'Could not create user ' + user.error.message
+			);
 
-		return { user: user, status: status };
+		const { role, ...safeUser } = user;
+
+		return { role, safeUser };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
 			error,
-			'An error occurred while trying to authenticate with Google'
+			'An error occurred while trying to Login with Google'
 		);
 	}
 };
 
-export const authenticateUserWithFacebook = async (profile) => {
+export const loginUserWithFacebook = async (profile) => {
 	try {
 		const { id, provider, emails, name, photos, _json } = profile;
 		const { birthday, gender } = _json;
 		const { givenName: firstName, familyName: lastName } = name;
 		const { value: photo } = photos[0];
-		const email = emails[0].value || undefined;
-		let status = 200;
+		const { value: email = undefined } = emails[0];
 
-		let user = await prisma.account.findUnique({
-			where: { providerId: id },
-			select: {
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						email: true,
-						gender: true,
-						country: true,
-						city: true,
-						birth: true,
-						profilePicture: true,
-						role: true,
-						suitcases: true,
-						bags: true,
-						items: true,
+		if (!email)
+			return {
+				emailError:
+					'Email is required to sign up with Facebook.' +
+					'Please ensure your Facebook account has a valid email.',
+			};
+
+		const user = await prisma.user.upsert({
+			where: { email },
+			update: {},
+			create: {
+				firstName,
+				lastName,
+				email,
+				isEmailVerified: true,
+				password: generateHashPassword(),
+				birth: birthOfDate(birthday),
+				gender,
+				profilePicture: haveProfilePicture(photo),
+				account: {
+					create: {
+						provider,
+						providerId: id,
 					},
 				},
-				id: true,
-				provider: true,
-				providerId: true,
-				userId: true,
+			},
+			omit: {
+				password: true,
+				passwordChangeAt: true,
+				passwordResetExpiredAt: true,
+				passwordResetToken: true,
+				verifyToken: true,
 			},
 		});
 
-		if (!user) {
-			user = await prisma.user.create({
-				data: {
-					firstName,
-					lastName,
-					email,
-					password: generateFakePassword(),
-					profilePicture: haveProfilePicture(photo),
-					gender: gender,
-					birth: birthOfDate(birthday),
-					account: {
-						// Creating account inside User creation
-						create: {
-							provider: provider,
-							providerId: id,
-						},
-					},
-				},
-				select: {
-					id: true,
-					firstName: true,
-					lastName: true,
-					email: true,
-					profilePicture: true,
-					role: true,
-					gender: true,
-					birth: true,
-					country: true,
-					city: true,
-					account: true,
-				},
-			});
+		if (!user)
+			new ErrorHandler(
+				'user',
+				'There is no user with that email',
+				'User not found'
+			);
 
-			status = 201;
-		}
+		if (user.error)
+			new ErrorHandler(
+				'prisma',
+				user.error,
+				'Could not create user ' + user.error.message
+			);
 
-		return { user: user, status: status };
+		const { role, ...safeUser } = user;
+
+		return { role, safeUser };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
 			error,
-			'An error occurred while trying to authenticate with Facebook'
+			'An error occurred while trying to Login with Facebook'
 		);
 	}
 };

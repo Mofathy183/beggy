@@ -1,6 +1,7 @@
 import { hash, compare, genSalt } from 'bcrypt';
 import { bcryptConfig } from '../config/env.js';
 import { ErrorHandler } from './error.js';
+import crypto from 'crypto';
 
 export const hashingPassword = async (password) => {
 	try {
@@ -22,4 +23,18 @@ export const verifyPassword = async (password, hashedPassword) => {
 		new ErrorHandler('catch', error, 'Failed to verify password');
 		return false;
 	}
+};
+
+//* generate random reset token for forgot password
+export const generateHashPassword = () => {
+	//* the reset token will send to the user via email
+	const password = crypto.randomBytes(32).toString('hex');
+
+	//* this hash token will add to the database
+	const hashedPassword = crypto
+		.createHash('sha256')
+		.update(password)
+		.digest('hex');
+
+	return hashedPassword;
 };

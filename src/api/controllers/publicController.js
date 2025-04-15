@@ -21,6 +21,7 @@ export const getAllBagsByQuery = async (req, res, next) => {
 			pagination,
 			orderBy = undefined,
 		} = req;
+
 		const { bags, meta } = await findAllBagsByQuery(
 			searchFilter,
 			pagination,
@@ -58,7 +59,7 @@ export const getAllBagsByQuery = async (req, res, next) => {
 export const getBagById = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
-		const { bag, meta } = await findBagById(bagId);
+		const bag = await findBagById(bagId);
 
 		if (!bag)
 			return next(
@@ -82,8 +83,7 @@ export const getBagById = async (req, res, next) => {
 			new SuccessResponse(
 				statusCode.okCode,
 				'Successfully Retrieved Bag By ID',
-				bag,
-				meta
+				bag
 			)
 		);
 	} catch (error) {
@@ -145,7 +145,11 @@ export const getItemsById = async (req, res, next) => {
 
 export const getItemsByQuery = async (req, res, next) => {
 	try {
-		const { pagination, orderBy, searchFilter } = req;
+		const {
+			pagination,
+			orderBy = undefined,
+			searchFilter = undefined,
+		} = req;
 
 		const { items, meta } = await findItemsByQuery(
 			pagination,
@@ -197,15 +201,6 @@ export const getAllSuitcasesByQuery = async (req, res, next) => {
 			pagination,
 			orderBy
 		);
-
-		if (!suitcases)
-			return next(
-				new ErrorResponse(
-					'No suitcases found',
-					'Failed to retrieve any suitcases',
-					statusCode.notFoundCode
-				)
-			);
 
 		if (suitcases.error)
 			return next(
@@ -294,15 +289,6 @@ export const getAllUsers = async (req, res, next) => {
 			searchFilter,
 			orderBy
 		);
-
-		if (!users)
-			return next(
-				new ErrorResponse(
-					'No users found',
-					"Couldn't find any users",
-					statusCode.notFoundCode
-				)
-			);
 
 		if (users.error)
 			return next(

@@ -1,8 +1,8 @@
 import express from 'express';
 import passport from '../../config/passport.js';
-import { VReqUser } from '../../middlewares/validateRequest.js';
+import { VReqUserSocialProfile } from '../../middlewares/validateRequest.js';
 import {
-	authenticateWithGoogle,
+	loginWithGoogle,
 	authenticateWithFacebook,
 } from '../controllers/accountController.js';
 
@@ -13,7 +13,6 @@ accountRoute.get(
 	'/google',
 	passport.authenticate('google', {
 		scope: ['profile', 'email'],
-		session: true, // save user's session in the cookie
 	})
 );
 
@@ -21,12 +20,11 @@ accountRoute.get(
 accountRoute.get(
 	'/google/callback',
 	passport.authenticate('google', {
-		scope: ['public_profile', 'emails'], // ask for user's profile and email
-		session: true, // if fail to authenticate, redirect to login page  // save user's session in the cookie
 		failureRedirect: '/api/beggy/auth/login',
+		session: true, // If you use sessions
 	}),
-	VReqUser, // to check if the user data is stored in session
-	authenticateWithGoogle
+	VReqUserSocialProfile,
+	loginWithGoogle
 );
 
 //*: route for start OAuth Facebook authenticate => GET
@@ -41,7 +39,6 @@ accountRoute.get(
 			'user_birthday',
 			'user_photos',
 		],
-		session: true, // save user's session in the cookie
 	})
 );
 
@@ -49,10 +46,10 @@ accountRoute.get(
 accountRoute.get(
 	'/facebook/callback',
 	passport.authenticate('facebook', {
-		session: true, // if fail to authenticate, redirect to login page  // save user's session in the cookie
-		failureRedirect: '/api/beggy/auth/login',
+		session: true, // save user's session in the cookie
+		failureRedirect: '/api/beggy/auth/login', // if fail to authenticate, redirect to login page
 	}),
-	VReqUser, // to check if the user data is stored in session
+	VReqUserSocialProfile, // to check if the user data is stored in session
 	authenticateWithFacebook
 );
 

@@ -8,7 +8,7 @@ import {
 	updateData,
 	deActivate,
 	logout,
-	csrfResponse,
+	csrfProtection,
 	getAccessToken,
 } from '../controllers/authController.js';
 import {
@@ -82,7 +82,7 @@ authRoute.post(
 );
 
 //* to get csrf token to send with the request body
-authRoute.get('/csrf-token', csrfResponse);
+authRoute.get('/csrf-token', csrfProtection);
 
 //* to get new access token => POST refresh token in the request body
 authRoute.post(

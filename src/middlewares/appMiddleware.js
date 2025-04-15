@@ -1,35 +1,19 @@
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import csurf from 'csurf';
+import CSRF from 'csrf';
 import { coreConfig } from '../config/env.js';
 import { statusCode } from '../config/status.js';
 import { ErrorResponse } from '../utils/error.js';
 import SuccessResponse from '../utils/successResponse.js';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerOptions from '../docs/swaggerDef.js';
+
 export const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 export const corsMiddleware = cors({
 	origin: coreConfig.origin,
 	methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
 });
-
-export const csrfMiddleware = (error, req, res, next) => {
-	if (error.code === 'EBADCSRFTOKEN') {
-		return next(
-			new ErrorResponse(
-				error,
-				'Invalid CSRF token',
-				statusCode.forbiddenCode // HTTP status code for forbidden
-			)
-		);
-	}
-
-	return next(error);
-};
-
-//* CSRF protection
-export const csrfProtection = csurf({ cookie: true });
 
 //* Apply middleware rate limit for all requests
 export const limiter = rateLimit({
@@ -38,12 +22,56 @@ export const limiter = rateLimit({
 	message: 'Too many requests from this IP, please try again later.',
 });
 
+//*==========================={CSRF Middleware}=====================================
+
+//* CSRF protection to Verify the CSRF token
+export const verifyCSRF = (req, res, next) => {
+	const verifyCSRFToken = new CSRF();
+
+	const csrfToken = req.headers['x-csrf-token'];
+	const secret = req.headers['x-csrf-secret'];
+
+	if (!csrfToken || !secret)
+		return next(
+			new ErrorResponse(
+				'Missing CSRF token or secret',
+				'CSRF token or secret missing',
+				statusCode.badRequestCode
+			)
+		);
+
+	if (!verifyCSRFToken.verify(secret, csrfToken))
+		return next(
+			new ErrorResponse(
+				'Invalid CSRF token',
+				'Invalid CSRF token',
+				statusCode.badRequestCode
+			)
+		);
+
+	next();
+};
+
+//* this will check if the request method in the safe method
+//* if not will return csrfProtection to check if the request contains csrf token and secret
+export const csrfMiddleware = (req, res, next) => {
+	const safeMethods = ['GET', 'OPTIONS', 'HEAD'];
+
+	//? if the method not safe
+	//* must use csrf to verify the CSRF token
+	if (!safeMethods.includes(req.method)) {
+		return verifyCSRF(req, res, next);
+	}
+
+	next();
+};
+
 //* for not identification routes
 export const routeErrorHandler = (req, res, next) => {
 	return next(
 		new ErrorResponse(
 			'Request to undefined route was not found',
-			'Route Not Found \n' + req.originalUrl,
+			`Route Not Found (${req.originalUrl})`,
 			statusCode.notFoundCode
 		)
 	);

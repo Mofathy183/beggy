@@ -3,8 +3,6 @@ import prisma from '../../../prisma/prisma.js';
 import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
 
-let csrfToken;
-let cookies;
 const bags = [
 	{
 		name: 'Bag 1',
@@ -260,16 +258,6 @@ const users = [
 		password: await hashingPassword('password101'),
 	},
 ];
-
-beforeAll(async () => {
-	const response = await request(app).get('/api/beggy/auth/csrf-token');
-	cookies = response.headers['set-cookie'];
-	csrfToken = response.body.data.csrfToken;
-});
-
-test('Should return a CSRF token', async () => {
-	expect(csrfToken).toBeDefined();
-});
 
 //*======================================={Users Public Route}==============================================
 

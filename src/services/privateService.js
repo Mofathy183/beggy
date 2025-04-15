@@ -115,10 +115,6 @@ export const removeBagById = async (bagId) => {
 	try {
 		const bagDelete = await prisma.bags.delete({
 			where: { id: bagId },
-			omit: {
-				user: true,
-				bagItems: true,
-			},
 		});
 
 		if (!bagDelete)
@@ -187,7 +183,7 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 			color,
 			size,
 			capacity,
-			maxweight,
+			maxWeight,
 			weight,
 			material,
 			features = [],
@@ -203,7 +199,7 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 				color: color,
 				size: size,
 				capacity: capacity,
-				maxweight: maxweight,
+				maxWeight: maxWeight,
 				weight: weight,
 				material: material,
 				features: features,
@@ -245,7 +241,7 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 			color,
 			size,
 			capacity,
-			maxweight,
+			maxWeight,
 			weight,
 			material,
 			features = [],
@@ -303,7 +299,7 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 				color: color || undefined,
 				size: size || undefined,
 				capacity: capacity || undefined,
-				maxweight: maxweight || undefined,
+				maxWeight: maxWeight || undefined,
 				weight: weight || undefined,
 				material: material || undefined,
 				features:
@@ -343,11 +339,6 @@ export const removeSuitcaseById = async (suitcaseId) => {
 	try {
 		const deletedSuitcase = await prisma.suitcases.delete({
 			where: { id: suitcaseId },
-			omit: {
-				user: true,
-				userId: true,
-				suitcaseItems: true,
-			},
 		});
 
 		if (!deletedSuitcase)
@@ -434,27 +425,6 @@ export const replaceItemResource = async (itemId, body) => {
 				isFragile: isFragile,
 				quantity: quantity,
 			},
-			select: {
-				id: true,
-				name: true,
-				category: true,
-				quantity: true,
-				weight: true,
-				volume: true,
-				color: true,
-				isFragile: true,
-				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						birth: true,
-						age: true,
-					},
-				},
-			},
 		});
 
 		if (!itemUpdate)
@@ -497,27 +467,6 @@ export const modifyItemResource = async (itemId, body) => {
 				color: color || undefined,
 				weight: weight || undefined,
 				volume: volume || undefined,
-			},
-			select: {
-				id: true,
-				name: true,
-				category: true,
-				quantity: true,
-				weight: true,
-				volume: true,
-				color: true,
-				isFragile: true,
-				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						birth: true,
-						age: true,
-					},
-				},
 			},
 		});
 

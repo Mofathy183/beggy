@@ -35,6 +35,17 @@ const prisma = new PrismaClient().$extends({
 					args.data.gender = args.data.gender.toUpperCase();
 				return query(args);
 			},
+			async upsert({ args, query }) {
+				// Convert provider to uppercase
+				if (args.create.account.create.provider)
+					args.create.account.create.provider =
+						args.create.account.create.provider.toUpperCase();
+				// Convert gender to uppercase
+				if (args.create.gender)
+					args.create.gender = args.create.gender.toUpperCase();
+				// Call the query with modified args
+				return query(args);
+			},
 		},
 		items: {
 			async create({ args, query }) {
@@ -198,6 +209,7 @@ const prisma = new PrismaClient().$extends({
 			},
 			defaultProfilePicture: {
 				compute(user) {
+					if (user.profilePicture) return null;
 					return setProfilePicture(user.firstName, user.email);
 				},
 			},

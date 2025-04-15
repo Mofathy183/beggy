@@ -12,7 +12,6 @@ import {
 	limiter,
 	corsMiddleware,
 	routeErrorHandler,
-	csrfProtection,
 	AppResponse,
 	csrfMiddleware,
 } from './src/middlewares/appMiddleware.js';
@@ -30,12 +29,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Middleware
-
-// Enable CSRF protection with cookies
-app.use(csrfProtection);
-
-// CSRF Error middleware
-app.use(csrfMiddleware);
 
 // security middle
 app.use(helmet());
@@ -62,6 +55,9 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
+// CSRF Error middleware
+app.use(csrfMiddleware);
+
 // Routes
 app.use('/api/beggy', rootRoute);
 
@@ -69,7 +65,7 @@ app.use('/api/beggy', rootRoute);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Handler undefined Routes
-app.all('*', routeErrorHandler);
+app.all('/{*splat}', routeErrorHandler);
 
 //* Handle Response from classes ErrorResponse and SuccessResponse
 app.use(AppResponse);

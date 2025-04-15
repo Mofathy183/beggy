@@ -1,54 +1,29 @@
-import GoogleStrategy from 'passport-google-oauth20';
-import FacebookStrategy from 'passport-facebook';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as FacebookStrategy } from 'passport-facebook';
 import passport from 'passport';
 import { googleAuthConfig, facebookAuthConfig } from './env.js';
-import { getUserById } from '../services/userService.js';
-import {
-	authenticateUserWithGoogle,
-	authenticateUserWithFacebook,
-} from '../services/accountService.js';
 
 const googleProvider = new GoogleStrategy(
 	googleAuthConfig,
-	async (accessToken, refreshToken, profile, done) => {
-		try {
-			const { user: userData, status } =
-				await authenticateUserWithGoogle(profile);
+	(accessToken, refreshToken, profile, done) => {
+		const user = {
+			profile,
+			accessToken,
+		};
 
-			const user = {
-				profile: profile,
-				accessToken: accessToken,
-				userData: userData,
-				status: status,
-			};
-
-			return done(null, user);
-		} catch (error) {
-			console.error('Google authentication error:', error);
-			return done(error, null);
-		}
+		return done(null, user);
 	}
 );
 
 const facebookProvider = new FacebookStrategy(
 	facebookAuthConfig,
-	async (accessToken, refreshToken, profile, done) => {
-		try {
-			const { user: userData, status } =
-				await authenticateUserWithFacebook(profile);
+	(accessToken, refreshToken, profile, done) => {
+		const user = {
+			profile,
+			accessToken,
+		};
 
-			const user = {
-				profile: profile,
-				accessToken: accessToken,
-				userData: userData,
-				status: status,
-			};
-
-			return done(null, user);
-		} catch (error) {
-			console.error('Facebook authentication error:', error);
-			return done(error, null);
-		}
+		return done(null, user);
 	}
 );
 
@@ -57,20 +32,11 @@ passport.use(facebookProvider);
 
 //* to store user id in session
 passport.serializeUser((user, done) => {
-	done(null, user.userData.id);
+	done(null, user);
 });
 
-passport.deserializeUser(async (id, done) => {
-	try {
-		const user = await getUserById(id);
-
-		if (!user || user.error) return done(new Error("Couldn't find user"));
-
-		return done(null, user);
-	} catch (error) {
-		console.error('Error deserializing user:', error);
-		return done(error, null);
-	}
+passport.deserializeUser((user, done) => {
+	return done(null, user);
 });
 
 export default passport;
