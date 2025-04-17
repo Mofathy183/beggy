@@ -47,11 +47,13 @@ export const resendConfig = {
 	apiKey: process.env.RESEND_API_KEY,
 	testDomain: 'onboarding@resend.dev',
 	//* subjects
-	verify: 'verify Email',
-	reset: 'you have 10 minutes to reset your password',
+	verify: 'Welcome to Beggy! Please Verify Your Email Address',
+	reset: 'Forgot Your Password? Reset It Now',
 };
 
 export const resetPasswordUrl = '/api/beggy/auth/reset-password';
+
+export const verifyEmailUrl = '/api/beggy/auth/verify-email';
 
 export const googleAuthConfig = {
 	clientID: process.env.GOOGLE_CLIENT_ID,

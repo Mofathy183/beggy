@@ -16,6 +16,7 @@ const rootRoute = express.Router();
 rootRoute.use('/users', userRoute);
 
 rootRoute.use('/auth', authRoute);
+
 rootRoute.use('/auth', accountRoute);
 
 rootRoute.use('/items', itemsRoute);

@@ -3,6 +3,13 @@ import { signToken, signRefreshToken } from './jwt.js';
 import CSRF from 'csrf';
 
 //*=============================={SEND COOKIE}==============================
+
+/**
+ * Set cookies for access token and refresh token.
+ * 
+ * @param {String} userId - User id of the user.
+ * @param {Response} res - HTTP response object.
+ */
 export const sendCookies = (userId, res) => {
 	const token = signToken(userId);
 
@@ -14,6 +21,14 @@ export const sendCookies = (userId, res) => {
 	return;
 };
 
+/**
+ * Set cookies for social media providers like Google/Facebook.
+ * 
+ * @param {string} accessToken - Access token from the social media provider.
+ * @param {number} userId - User id of the user.
+ * @param {string} provider - Social media provider name.
+ * @param {Response} res - HTTP response object.
+ */
 export const sendProvideCookies = (accessToken, userId, provider, res) => {
 	res.cookie(`${provider}-access-token`, accessToken, cookieOptions);
 
@@ -24,8 +39,15 @@ export const sendProvideCookies = (accessToken, userId, provider, res) => {
 };
 
 //*=============================={Clear Cookies}==============================
+
+/**
+ * Clears authentication and provider-specific cookies from the response.
+ * @function clearCookies
+ * @param {Response} res - The response object used to clear cookies.
+ * @returns {undefined}
+ */
 export const clearCookies = (res) => {
-	const cookies = [
+	const cookiesToClear = [
 		'jwt-access-token',
 		'jwt-refresh-token',
 		'google-access-token',
@@ -34,12 +56,19 @@ export const clearCookies = (res) => {
 		'facebook-refresh-token',
 	];
 
-	cookies.forEach((cookie) => res.clearCookie(cookie));
-
-	return;
+	cookiesToClear.forEach((cookie) => res.clearCookie(cookie));
 };
 
 //*=============================={STORE SESSION}==============================
+
+/**
+ * Stores the user ID and user role in the session.
+ * @function storeSession
+ * @param {string} userId - The user's ID.
+ * @param {string} userRole - The user's role.
+ * @param {Request} req - The request object.
+ * @returns {undefined}
+ */
 export const storeSession = (userId, userRole, req) => {
 	req.session.userId = userId;
 	req.session.userRole = userRole;
@@ -48,6 +77,13 @@ export const storeSession = (userId, userRole, req) => {
 };
 
 //*=============================={DELETE SESSION}==============================
+
+/**
+ * Destroys the session, rejecting the promise if there is an error.
+ * @function deleteSession
+ * @param {Request} req - The request object.
+ * @returns {Promise<void>}
+ */
 export const deleteSession = async (req) => {
 	return new Promise((resolve, reject) => {
 		req.session.destroy((error) => {
@@ -62,6 +98,13 @@ export const deleteSession = async (req) => {
 };
 
 //*==============================={CSRF Generate Token}=============================
+
+/**
+ * Generates a CSRF token and stores it in a cookie.
+ *
+ * @param {Response} res
+ * @returns {string} The generated CSRF token
+ */
 export const generateCSRFToken = (res) => {
 	const csrf = new CSRF();
 

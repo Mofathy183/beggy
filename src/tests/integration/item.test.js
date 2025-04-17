@@ -7,6 +7,7 @@ import { signToken } from '../../utils/jwt.js';
 import { beforeEach } from '@jest/globals';
 
 let csrfToken;
+let csrfSecret;
 let cookies;
 let user;
 const items = [
@@ -175,11 +176,17 @@ const items = [
 beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
+	let secret = cookies
+		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.split(';')[0];
+
+	csrfSecret = secret.split('=')[1];
 	csrfToken = response.body.data.csrfToken;
 });
 
 test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
+	expect(csrfSecret).toBeDefined();
 });
 
 describe('Items Route For User to Get Item User Has By ID', () => {
@@ -208,7 +215,8 @@ describe('Items Route For User to Get Item User Has By ID', () => {
 		const res = await request(app)
 			.get(`/api/beggy/items/${item.id}`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response', res.body);
@@ -395,7 +403,8 @@ describe('Items Route For User to Get All Items User Has', () => {
 		const res = await request(app)
 			.get(`/api/beggy/items`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response', res.body);
@@ -411,7 +420,8 @@ describe('Items Route For User to Get All Items User Has', () => {
 		const res = await request(app)
 			.get(`/api/beggy/items/?page=2&limit=5`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response', res.body);
@@ -560,7 +570,8 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 			//* There is no match for color yellow
 			.get(`/api/beggy/items/?field=color&search=yellow`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response Not Match', res.body);
@@ -579,7 +590,8 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 			//* There is a match for color blue
 			.get(`/api/beggy/items/?field=category&search=electronics`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response Match for Search', res.body);
@@ -599,7 +611,8 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 				'/api/beggy/items/?field=category&search=electronics&page=2&limit=2&order=desc&sortBy=volume'
 			)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response For Search and Order and Pagination', res.body);
@@ -629,7 +642,8 @@ describe('Items Route For User To Create Item For User', () => {
 		const res = await request(app)
 			.post(`/api/beggy/items/`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Test Item 1',
@@ -715,7 +729,8 @@ describe('Items Route For User to Create Items For User', () => {
 		const res = await request(app)
 			.post('/api/beggy/items/multiple')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send(items);
 
@@ -756,7 +771,8 @@ describe('Items Route For User to Replace an Item User Has', () => {
 		const res = await request(app)
 			.put(`/api/beggy/items/${item.id}`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Updated Test Item 1',
@@ -831,7 +847,8 @@ describe('Items Route For User to Modify Item User Has', () => {
 		const res = await request(app)
 			.patch(`/api/beggy/items/${item.id}`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Updated Test Item 1',
@@ -903,7 +920,8 @@ describe('Items Route For User to Delete Item User Has By ID', () => {
 		const res = await request(app)
 			.delete(`/api/beggy/items/${item.id}`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response', res.body);
@@ -1107,7 +1125,8 @@ describe('Items Route For User To Delete All Items User Has', () => {
 		const res = await request(app)
 			.delete(`/api/beggy/items/`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,
@@ -1136,7 +1155,8 @@ describe('Items Route For User To Delete All Items User Has', () => {
 		const res = await request(app)
 			.delete(`/api/beggy/items/?field=color&search=blue`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,

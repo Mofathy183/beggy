@@ -1,7 +1,13 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { JWTConfig } from '../config/env.js';
 import { ErrorHandler } from './error.js';
 
+/**
+ * Generates a JWT token with the given id and expiration time.
+ * @param {number} id - The id to be included in the token.
+ * @returns {string} A JWT token containing the id.
+ */
 export const signToken = (id) => {
 	const token = jwt.sign({ id: id }, JWTConfig.secret, {
 		expiresIn: JWTConfig.expiresIn,
@@ -10,6 +16,12 @@ export const signToken = (id) => {
 	return token;
 };
 
+/**
+ * Verifies a JWT token.
+ * @param {string} token - The JWT token to verify.
+ * @returns {object|false} The decoded token if verification is successful, or false
+ * if the token is invalid.
+ */
 export const verifyToken = (token) => {
 	try {
 		const verified = jwt.verify(token, JWTConfig.secret);
@@ -24,6 +36,11 @@ export const verifyToken = (token) => {
 	}
 };
 
+/**
+ * Generates a JWT refresh token with the given id and expiration time.
+ * @param {number} id - The id to be included in the token.
+ * @returns {string} A JWT refresh token containing the id.
+ */
 export const signRefreshToken = (id) => {
 	const refreshToken = jwt.sign({ id: id }, JWTConfig.refreshSecret, {
 		expiresIn: JWTConfig.refreshExpiresIn,
@@ -32,6 +49,12 @@ export const signRefreshToken = (id) => {
 	return refreshToken;
 };
 
+/**
+ * Verifies a JWT refresh token.
+ * @param {string} refreshToken - The JWT refresh token to verify.
+ * @returns {object|false} The decoded token if verification is successful, or false
+ * if the token is invalid.
+ */
 export const verifyRefreshToken = (refreshToken) => {
 	try {
 		const verified = jwt.verify(refreshToken, JWTConfig.refreshSecret);
@@ -46,14 +69,26 @@ export const verifyRefreshToken = (refreshToken) => {
 	}
 };
 
-//* to generate Crypto Token for.
-//* reset password to store hash token in DB and send the token via email
-//* and for verify email to do the same
+
+
+/**
+ * to generate Crypto Token for.
+ * reset password to store hash token in DB and send the token via email
+ * and for verify email to do the same
+ * Generates a SHA256 hash of the given token.
+ * @param {string} token - The token to be hashed.
+ * @returns {string} The SHA256 hash of the token as a hexadecimal string.
+ */
 export const generateCryptoToken = (token) => {
 	return crypto.createHash('sha256').update(token).digest('hex');
 };
 
-//* generate random reset token for forgot password
+/**
+ * Generates a SHA256 hash of a randomly generated token, and returns the
+ * original token and the hash as an object with the properties `token` and
+ * `hashToken`.
+ * @returns {{token: string, hashToken: string}}
+ */
 export const generateCryptoHashToken = () => {
 	//* the reset token will send to the user via email
 	const token = crypto.randomBytes(32).toString('hex');

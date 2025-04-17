@@ -3,21 +3,28 @@ import prisma from '../../../prisma/prisma.js';
 import cookieParser from 'cookie-parser';
 import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
-import { generateResetToken } from '../../utils/authHelper.js';
-import { resetPasswordExpiredAt } from '../../utils/userHelper.js';
+import { generateCryptoHashToken } from '../../utils/jwt.js';
+import { setExpiredAt } from '../../utils/userHelper.js';
 import { signToken, signRefreshToken, verifyToken } from '../../utils/jwt.js';
 
 let csrfToken;
+let csrfSecret;
 let cookies;
 
 beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
+	let secret = cookies
+		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.split(';')[0];
+
+	csrfSecret = secret.split('=')[1];
 	csrfToken = response.body.data.csrfToken;
 });
 
 test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
+	expect(csrfSecret).toBeDefined();
 });
 
 describe('Auth API Tests For SignUp', () => {
@@ -25,7 +32,8 @@ describe('Auth API Tests For SignUp', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/signup')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.send({
 				firstName: 'John',
 				lastName: 'Doe',
@@ -40,7 +48,7 @@ describe('Auth API Tests For SignUp', () => {
 		expect(res.body.success).toBe(true);
 		expect(res.body.message).toBe('User Signed Up Successfully');
 
-		// ✅ Verify user in DB
+		//*✅ Verify user in DB
 		const user = await prisma.user.findUnique({
 			where: { email: 'testuser@test.com' },
 			select: {
@@ -74,7 +82,8 @@ describe('Auth API Tests For Login', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/login')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.send({
 				email: 'testuser22@test.com',
 				password: 'testing123',
@@ -101,34 +110,35 @@ describe('Auth API Tests For Login', () => {
 describe('Auth API Tests For Reset Password', () => {
 	test("Should reset a user's password", async () => {
 		//* Generate a random password by crypto
-		const { resetToken, hashResetToken } = generateResetToken();
-		const expiredAt = resetPasswordExpiredAt();
-
-		// ✅ First, register a new user before sending a password reset link
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'testuser44@test.com',
-				password: await hashingPassword('testing123'),
-				passwordResetToken: hashResetToken,
-				passwordResetExpiredAt: expiredAt,
-			},
-		});
+        const { token, hashToken } = generateCryptoHashToken();
+        const expiredAt = setExpiredAt();
+    
+        // ✅ First, register a new user before sending a password reset link
+        const user = await prisma.user.create({
+            data: {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'testuser44@test.com',
+                password: await hashingPassword('testing123'),
+                passwordResetToken: hashToken,
+                passwordResetExpiredAt: expiredAt,
+            },
+        });
 
 		console.log('Before Reset Password', user.password);
 
 		//* Send a password reset link
 		const res = await request(app)
-			.patch(`/api/beggy/auth/reset-password/${resetToken}`)
+			.patch(`/api/beggy/auth/reset-password/${token}`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.send({
 				password: 'testing12377@',
 				confirmPassword: 'testing12377@',
 			});
 
-		// console.log("RESPONSE: ", res.body);
+		console.log("RESPONSE: ", res.body);
 		console.log(
 			'After Reset Password',
 			await prisma.user.findUnique({
@@ -167,7 +177,8 @@ describe('Auth API Tests For Update User Password', () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/update-password')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${token}`)
 			.send({
 				currentPassword: 'testing123',
@@ -213,7 +224,8 @@ describe('Auth API Tests For Update User Data', () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/update-user-data')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				firstName: 'Jane',
@@ -260,7 +272,8 @@ describe('Auth API Tests For Deactivate', () => {
 		const res = await request(app)
 			.delete('/api/beggy/auth/deactivate')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log(
@@ -295,7 +308,8 @@ describe('Auth API Tests For Logout', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/logout')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log(
@@ -330,7 +344,8 @@ describe('Auth API Tests For Get Access Token', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/refresh-token')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${refreshToken}`)
 			.send({
 				refreshToken: refreshToken,

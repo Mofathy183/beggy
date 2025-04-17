@@ -158,7 +158,7 @@ export const userForgotPassword = async (email) => {
 		const { token, hashToken } = generateCryptoHashToken();
 
 		//* get the reset expired token date, than add it to database.
-		const resetExpiredAt = setExpiredAt();
+		const resetExpiredAt = setExpiredAt("password");
 
 		const updateUser = await prisma.user.update({
 			where: { id: user.id },
@@ -204,17 +204,21 @@ export const resetUserPassword = async (body, token) => {
 
 		const { password, confirmPassword } = body;
 
-		//* get user by reset token
-		const user = await prisma.user.findUnique({
-			where: { passwordResetToken: hashedToken },
-		});
-
-		if (!user)
-			return new ErrorHandler(
-				'user is null',
-				'invalid Reset Token',
-				'token is invalid or expired'
-			);
+        const user = await prisma.user.findUnique({
+            where: {
+                passwordResetToken: hashedToken,
+            },
+        });
+        
+        if (!user) {
+            return next(
+                new ErrorHandler(
+                    'Invalid token',
+                    'Password reset token is invalid',
+                    "Can't reset password with invalid token"
+                )
+            );
+        }
 
 		if (user.error)
 			return new ErrorHandler(
@@ -424,6 +428,61 @@ export const updateUserData = async (userId, body) => {
 	}
 };
 
+
+export const sendVerificationUserEmail = async (email) => {
+    try {
+        const user = await prisma.user.findUnique({ where: { email: email } });
+
+        if (!user) return new ErrorHandler(
+            'user',
+            'There is no user with that email',
+            'User not found'
+        );
+        
+        if (user.error) return new ErrorHandler(
+            'prisma',
+            user.error,
+            'User not found ' + user.error.message
+        );
+
+        const { token, hashToken } = generateCryptoHashToken();
+
+        const expiredAt = setExpiredAt("email");
+
+        const updateUser = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                emailVerifyToken: hashToken,
+                emailTokenExpiresAt: expiredAt,
+            }
+        });
+
+        if (!updateUser)
+            return new ErrorHandler(
+                'updateUser is null',
+                "Couldn't update user",
+                'Failed to update user'
+            );
+
+        if (updateUser.error)
+            return new ErrorHandler(
+                'prisma',
+                updateUser.error,
+                'Failed to update user ' + updateUser.error.message
+            );
+        
+        return { token, userName: user.displayName }
+    }
+
+    catch (error) {
+        return new ErrorHandler(
+            'catch',
+            error,
+            'Failed to verify user email'
+        )
+    }
+}
+
 export const deactivateUserAccount = async (userId) => {
 	try {
 		const deactivateUser = await prisma.user.update({
@@ -463,3 +522,26 @@ export const deactivateUserAccount = async (userId) => {
 		);
 	}
 };
+
+
+async function name() {
+    const { token, hashToken } = generateCryptoHashToken();
+    const expiredAt = setExpiredAt();
+
+    // ✅ First, register a new user before sending a password reset link
+    const user = await prisma.user.create({
+        data: {
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'testuser44@test.com',
+            password: await hashingPassword('testing123'),
+            passwordResetToken: hashToken,
+            passwordResetExpiredAt: expiredAt,
+        },
+    });
+    const kk = await resetUserPassword({ password: 'testing12377@', confirmPassword: 'testing12377@' }, token);
+
+    return console.log(kk)
+}
+
+await name()

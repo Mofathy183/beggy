@@ -1,5 +1,13 @@
 import { statusCode, statusStatement } from '../config/status.js';
 
+/**
+ * Create an error object with the given error, path, and message.
+ *
+ * @param {Error} error - The error object.
+ * @param {string} path - The path of the error.
+ * @param {string} [message='error'] - The message of the error.
+ * @returns {Object} - An object containing the error.
+ */
 const errorHandler = (error, path, message = 'error') => {
 	return {
 		message: message || error.message,
@@ -8,6 +16,18 @@ const errorHandler = (error, path, message = 'error') => {
 	};
 };
 
+/**
+ * Template for prisma errors.
+ *
+ * @param {string} name - The name of the error.
+ * @param {string} code - The code of the error.
+ * @param {string} message - The message of the error.
+ * @param {string} target - The target of the error.
+ * @param {number} status - The status of the error.
+ * @param {string} path - The path of the error.
+ * @param {string} type - The type of the error.
+ * @returns {Object} - An object containing the error.
+ */
 const prismaErrorTemplate = (
 	name,
 	code,
@@ -28,7 +48,16 @@ const prismaErrorTemplate = (
 	};
 };
 
-//* handle Prisma errors
+
+/**
+ * @description
+ * handle Prisma errors
+ * This function will handle the Prisma errors based on different error codes
+ * @param {Object} error - The error object from Prisma
+ * @param {String} path - The path of the route where the error happened
+ * @param {String} message - The message of the error
+ * @returns {Object} - The error object with the correct status code and message
+ */
 const prismaErrorHandler = (error, path, message) => {
 	const { name, code, meta } = error;
 
@@ -98,24 +127,45 @@ const prismaErrorHandler = (error, path, message) => {
 	);
 };
 
+
 class ErrorHandler extends Error {
+	/**
+	 * Constructs a new ErrorHandler instance.
+	 *
+	 * @param {string} name - The name of the error.
+	 * @param {Object} error - The error object.
+	 * @param {string} message - The error message.
+	 *
+	 * @returns {void}
+	 */
 	constructor(name, error, message) {
 		super(message);
 		this.name = name;
 		this.error = error;
 
-		//* Capture the stack trace for this error instance
+		// Capture the stack trace for this error instance
 		Error.captureStackTrace(this, this.constructor);
 
+		// Call the error handler to handle the error
 		this.whichError();
 	}
 
+	/**
+	 * Handle the error based on the error name.
+	 *
+	 * If the error name is 'prisma', it will call the prismaErrorHandler.
+	 * Otherwise, it will call the errorHandler.
+	 *
+	 * @returns {Object} - An object containing the error.
+	 *
+	 * @private
+	 */
 	whichError() {
 		if (this.name === 'prisma') {
 			return prismaErrorHandler(
 				this.error,
+				this.message,
 				this.stack, //* you can use this.stack because it's already set by captureStackTrace
-				this.message
 			);
 		} else {
 			return errorHandler(this.error, this.stack, this.message);
@@ -124,13 +174,42 @@ class ErrorHandler extends Error {
 }
 
 class ErrorResponse extends Error {
+	/**
+	 * Constructs a new ErrorResponse instance.
+	 *
+	 * @param {Object} error - The error object.
+	 * @param {string} message - The error message.
+	 * @param {number} [status] - The HTTP status code of the error.
+	 *
+	 * @returns {void}
+	 */
 	constructor(error, message, status) {
-		super(message);
+        super(message);
+		/**
+		 * The error object itself.
+		 * @type {Object}
+		 */
 		this.error = error;
-		this.statusCode = status || 500;
+
+		/**
+		 * The error message.
+		 * @type {string}
+		 */
 		this.message = message;
+
+		/**
+		 * The HTTP status code of the error.
+		 * @type {number}
+		 */
+		this.statusCode = status;
+
+		/**
+		 * The HTTP status statement of the error.
+		 * @type {string}
+		 */
 		this.statement = statusStatement[this.statusCode];
 
+		// Capture the stack trace for this error instance
 		Error.captureStackTrace(this, this.constructor);
 	}
 }

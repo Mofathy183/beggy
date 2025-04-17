@@ -44,8 +44,8 @@ export const verifyCSRF = (req, res, next) => {
 		return next(
 			new ErrorResponse(
 				'Invalid CSRF token',
-				'Invalid CSRF token',
-				statusCode.badRequestCode
+				'CSRF token is invalid, tampered, or doesn’t match the secret',
+				statusCode.forbiddenCode
 			)
 		);
 
@@ -92,16 +92,14 @@ export const AppResponse = (sucORerr, req, res, next) => {
 	}
 
 	//? if there a error response
-	else if (sucORerr instanceof ErrorResponse) {
-		//* handle it here
-		console.log(sucORerr.stack);
-		return res.status(sucORerr.statusCode).json({
-			success: false,
-			status: sucORerr.statement,
-			statusCode: sucORerr.statusCode,
-			message: sucORerr.message,
-			error: sucORerr.error,
-			stack: sucORerr.stack,
-		});
-	}
+    //* handle it here
+    console.log(sucORerr.stack);
+    return res.status(sucORerr.statusCode).json({
+        success: false,
+        status: sucORerr.statement,
+        statusCode: sucORerr.statusCode,
+        message: sucORerr.message,
+        error: sucORerr.error,
+        stack: sucORerr.stack,
+    });
 };

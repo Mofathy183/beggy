@@ -14,7 +14,8 @@ model User {
     city                   String?
     isActive               Boolean   @default(true) @map("is_active")
     isEmailVerified        Boolean   @default(false)
-    verifyToken            String?   @map("verify_token")
+    emailVerifyToken       String?   @unique @map("email_verify_token")
+    emailTokenExpiresAt    DateTime? @map("email_token_expires")
     passwordChangeAt       DateTime? @map("password_change_at")
     passwordResetToken     String?   @unique @map("password_reset_token")
     passwordResetExpiredAt DateTime? @map("password_reset_at")

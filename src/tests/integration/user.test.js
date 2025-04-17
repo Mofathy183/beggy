@@ -38,16 +38,23 @@ const users = [
 ];
 
 let csrfToken;
+let csrfSecret;
 let cookies;
 
 beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
+	let secret = cookies
+		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.split(';')[0];
+
+	csrfSecret = secret.split('=')[1];
 	csrfToken = response.body.data.csrfToken;
 });
 
 test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
+	expect(csrfSecret).toBeDefined();
 });
 
 describe('User API tests For Get User Private Data For Admin and Member', () => {
@@ -196,7 +203,8 @@ describe('User API Tests For Create User by only Admin', () => {
 		const res = await request(app)
 			.post(`/api/beggy/users/`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
 				firstName: 'Jane',
@@ -257,7 +265,8 @@ describe('User API Tests For Change User Role By Only Admin', () => {
 		const res = await request(app)
 			.patch(`/api/beggy/users/${user.id}/role`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
 				role: 'ADMIN',
@@ -316,7 +325,8 @@ describe('User API Tests For Delete User By User ID Just For Admin and Member', 
 		const res = await request(app)
 			.delete(`/api/beggy/users/${member.id}`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`);
 
 		console.log('Response', res.body);
@@ -359,7 +369,8 @@ describe('User API Tests For Delete All User From Database Only for Admin', () =
 		const res = await request(app)
 			.delete(`/api/beggy/users/`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
 				confirmDelete: true,
@@ -398,7 +409,8 @@ describe('User API Tests For Delete All User From Database Only for Admin', () =
 		const res = await request(app)
 			.delete(`/api/beggy/users/?firstName=John`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
 				confirmDelete: true,

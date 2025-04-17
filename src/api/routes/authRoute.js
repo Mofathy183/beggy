@@ -6,6 +6,8 @@ import {
 	resetPassword,
 	updatePassword,
 	updateData,
+    sendVerificationEmail,
+    verifyEmail,
 	deActivate,
 	logout,
 	csrfProtection,
@@ -80,6 +82,21 @@ authRoute.post(
 	checkPermissionMiddleware('delete:own', 'user'),
 	logout
 );
+
+//* route for send verification email
+//* POST {email} 
+// authRoute.post(
+//     "/send-verification-email",
+//     VReqToForgotPassword,
+//     sendVerificationEmail
+// )
+
+//* route for verify email
+//* query {token} and {email}
+// authRoute.get(
+//     "/verify-email",
+    
+// )
 
 //* to get csrf token to send with the request body
 authRoute.get('/csrf-token', csrfProtection);

@@ -5,9 +5,10 @@ import {
 	resetUserPassword,
 	updateUserData,
 	updateUserPassword,
+    sendVerificationUserEmail,
 	deactivateUserAccount,
 } from '../../services/authService.js';
-import { resetPasswordUrl } from '../../config/env.js';
+import { resetPasswordUrl, verifyEmailUrl } from '../../config/env.js';
 import { sendEmail } from '../../utils/sendMail.js';
 import { generateCSRFToken } from '../../utils/authHelper.js';
 import {
@@ -21,6 +22,21 @@ import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import { ErrorResponse } from '../../utils/error.js';
 
+/**
+ * @api {post} /api/beggy/auth/signup
+ * @apiName SignUp
+ * @apiGroup Auth
+ * @apiDescription Sign up a user
+ *
+ * @apiParam {string} firstName User first name
+ * @apiParam {string} lastName User last name
+ * @apiParam {string} email User email
+ * @apiParam {string} password User password
+ * @apiParam {string} confirmPassword User confirm password
+ *
+ * @apiSuccess {boolean} success Success
+ * @apiSuccess {object} user Logged user
+ */
 export const signUp = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -69,13 +85,28 @@ export const signUp = async (req, res, next) => {
 	}
 };
 
+
+/**
+ * @api {post} /api/beggy/auth/login
+ * @apiName Login
+ * @apiGroup Auth
+ * @apiDescription Login a user
+ *
+ * @apiParam {string} email User email
+ * @apiParam {string} password User password
+ *
+ * @apiSuccess {boolean} success Success
+ * @apiSuccess {object} user Logged user
+ */
 export const login = async (req, res, next) => {
 	try {
 		const { body } = req;
 
+		//* get the user from DB
 		const { safeUser, role } = await loginUser(body);
 
-		if (!safeUser)
+		if (!safeUser) {
+			//* if user not found
 			return next(
 				new ErrorResponse(
 					'User not found',
@@ -83,8 +114,10 @@ export const login = async (req, res, next) => {
 					statusCode.notFoundCode
 				)
 			);
+		}
 
-		if (safeUser.error)
+		if (safeUser.error) {
+			//* if there is an error in the user data
 			return next(
 				new ErrorResponse(
 					safeUser.error,
@@ -92,6 +125,7 @@ export const login = async (req, res, next) => {
 					statusCode.badRequestCode
 				)
 			);
+		}
 
 		//* for add the user id to session
 		storeSession(safeUser.id, role, req);
@@ -117,6 +151,22 @@ export const login = async (req, res, next) => {
 	}
 };
 
+/**
+ * @api {post} /api/beggy/auth/forgot-password
+ * @apiName ForgotPassword
+ * @apiGroup Auth
+ * @apiDescription Send a password reset link to the user's email
+ *
+ * @apiParam {string} email User email
+ *
+ * @apiSuccess {boolean} success Success
+ * @apiSuccess {string} message Message
+ * @apiSuccess {string} data Reset password instructions
+ *
+ * @apiError (400) BadRequestError Invalid request
+ * @apiError (401) UnauthorizedError Unauthorized
+ * @apiError (500) InternalServerErrorError Internal Server Error
+ */
 export const forgotPassword = async (req, res, next) => {
 	try {
 		const { email } = req.body;
@@ -165,6 +215,25 @@ export const forgotPassword = async (req, res, next) => {
 	}
 };
 
+/**
+ * @api {patch} /api/beggy/auth/reset-password/:token
+ * @apiName ResetPassword
+ * @apiGroup Auth
+ * @apiDescription Reset user password
+ *
+ * @apiParam {string} token Reset Token
+ * @apiParam {string} currentPassword Current Password
+ * @apiParam {string} newPassword New Password
+ * @apiParam {string} confirmPassword Confirm Password
+ *
+ * @apiSuccess {boolean} success Success
+ * @apiSuccess {string} message Message
+ * @apiSuccess {object} data Updated User Data
+ *
+ * @apiError (400) BadRequestError Invalid request
+ * @apiError (401) UnauthorizedError Unauthorized
+ * @apiError (500) InternalServerErrorError Internal Server Error
+ */
 export const resetPassword = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -215,6 +284,24 @@ export const resetPassword = async (req, res, next) => {
 	}
 };
 
+/**
+ * @api {patch} /api/beggy/auth/update-password
+ * @apiName UpdatePassword
+ * @apiGroup Auth
+ * @apiDescription Update user password
+ *
+ * @apiParam {string} currentPassword Current Password
+ * @apiParam {string} newPassword New Password
+ * @apiParam {string} confirmPassword Confirm Password
+ *
+ * @apiSuccess {boolean} success Success
+ * @apiSuccess {string} message Message
+ * @apiSuccess {object} data Updated User Data
+ *
+ * @apiError (400) BadRequestError Invalid request
+ * @apiError (401) UnauthorizedError Unauthorized
+ * @apiError (500) InternalServerErrorError Internal Server Error
+ */
 export const updatePassword = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -265,6 +352,29 @@ export const updatePassword = async (req, res, next) => {
 	}
 };
 
+/**
+ * @api {patch} /api/beggy/auth/update-user-data
+ * @apiName UpdateUserData
+ * @apiGroup Auth
+ * @apiDescription Update user data
+ *
+ * @apiParam {string} firstName First Name
+ * @apiParam {string} lastName Last Name
+ * @apiParam {string} email Email
+ * @apiParam {string} gender Gender
+ * @apiParam {date} birth Birth Date
+ * @apiParam {string} country Country
+ * @apiParam {string} city City
+ * @apiParam {string} profilePicture Profile Picture
+ *
+ * @apiSuccess {boolean} success Success
+ * @apiSuccess {string} message Message
+ * @apiSuccess {object} data Updated User Data
+ *
+ * @apiError (400) BadRequestError Invalid request
+ * @apiError (401) UnauthorizedError Unauthorized
+ * @apiError (500) InternalServerErrorError Internal Server Error
+ */
 export const updateData = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -315,6 +425,78 @@ export const updateData = async (req, res, next) => {
 	}
 };
 
+export const sendVerificationEmail = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const { token, userName } = await sendVerificationUserEmail(email);
+
+        const verifyEmailURL = `${req.protocol}://${req.get('host')}${verifyEmailUrl}?token=${token}email=${email}`;
+
+        const sended = await sendEmail(
+            verifyEmailURL,
+            userName,
+            email,
+            "verify-email",
+            "verify"
+        )
+
+        if (sended.error) return new ErrorResponse(
+            sended.error,
+            'Failed to send verification email '+sended.error.message,
+            statusCode.internalServerErrorCode
+        );
+
+        return next(
+            new SuccessResponse(
+                statusCode.okCode,
+                'Verification email sent successfully, Check your email inbox',
+                sended
+            )
+        )
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to send verification email',
+                statusCode.internalServerErrorCode
+            )
+        )
+    }
+}
+
+export const verifyEmail = async (req, res, next) => {
+    try {
+        
+    }
+
+    catch (error) {
+        return next(
+            new ErrorResponse(
+                error,
+                'Failed to verify email',
+                statusCode.internalServerErrorCode
+            )
+        )
+    }
+}
+
+/**
+ * @api {delete} /auth/deactivate Deactivate User
+ * @apiName Deactivate
+ * @apiGroup Auth
+ * @apiDescription Deactivate a user account
+ *
+ * @apiSuccess {boolean} success True if the request was successful
+ * @apiSuccess {string} message The message indicating that the user was deactivated
+ * @apiSuccess {Object} data The deactivated user data
+ *
+ * @apiError {boolean} success False if the request was not successful
+ * @apiError {string} message The message indicating that the user failed to deactivate
+ * @apiError {string} data The message indicating the failure to deactivate
+ */
 export const deActivate = async (req, res, next) => {
 	try {
 		const { userId } = req.session;
@@ -357,13 +539,32 @@ export const deActivate = async (req, res, next) => {
 	}
 };
 
+
+/**
+ * @api {post} /auth/logout Logout
+ * @apiName Logout
+ * @apiGroup Auth
+ * @apiDescription Logout a user, clear their session, and deactivate their account
+ *
+ * @apiSuccess {boolean} success True if the request was successful
+ * @apiSuccess {string} message The message indicating that the user was logged out
+ * @apiSuccess {string} data The message indicating that the user was logged out
+ *
+ * @apiError {boolean} success False if the request was not successful
+ * @apiError {string} message The message indicating that the user failed to logout
+ * @apiError {string} data The message indicating the failure to logout
+ */
 export const logout = async (req, res, next) => {
 	try {
 		const { userId } = req.session;
 
+		// Deactivate the user account
 		await deactivateUserAccount(userId);
 
+		// Clear the cookies
 		clearCookies(res);
+
+		// Delete the session
 		await deleteSession(req);
 
 		return next(
@@ -384,6 +585,35 @@ export const logout = async (req, res, next) => {
 	}
 };
 
+/**
+ * @api {post} /auth/refresh-token Get Access Token
+ * @apiName GetAccessToken
+ * @apiGroup Auth
+ * @apiDescription Get a new access token with a valid refresh token
+ *
+ * @apiParam {string} refreshToken The refresh token to get a new access token
+ *
+ * @apiSuccess {boolean} success True if the request was successful
+ * @apiSuccess {string} message The message indicating that the access token was sent via cookie
+ * @apiSuccess {string} data The message indicating that the access token was generated
+ *
+ * @apiError {boolean} success False if the request was not successful
+ * @apiError {string} message The message indicating that the refresh token is missing
+ * @apiError {string} data The message indicating the failure to get an access token
+ * @apiError {number} status The HTTP status code for Bad Request
+ *
+ * @apiErrorExample {json} Error-Response:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "success": false,
+ *       "message": "Missing refresh token",
+ *       "data": "Failed to get access token",
+ *       "status": 400
+ *     }
+ *
+ * @apiUse SuccessResponse
+ * @apiUse ErrorResponse
+ */
 export const getAccessToken = (req, res, next) => {
 	const { refreshToken } = req.body;
 
@@ -418,6 +648,26 @@ export const getAccessToken = (req, res, next) => {
 	);
 };
 
+/**
+ * @api {get} /api/beggy/auth/csrf-token Get CSRF Token
+ * @apiName GetCSRFToken
+ * @apiGroup Auth
+ *
+ * @apiSuccess (200) {String} csrfToken CSRF Token
+ *
+ * @apiSuccessExample {json} Success-Response:
+ *     {
+ *       "success": true,
+ *       "message": "CSRF token generated, send the token via cookie ( x-csrf-token )",
+ *       "data": {
+ *         "csrfToken": "X6ZpFJ3WnJrV5sG6pP4oMw=="
+ *       },
+ *       "statusCode": 200
+ *     }
+ * @apiDescription
+ *    This route is used to get CSRF Token.
+ *    The token will be sent via cookie ( x-csrf-secret ) and response body.
+ */
 export const csrfProtection = (req, res, next) => {
 	//* generateCSRFToken will handle send the secret via cookie
 	//* and return the generated token
@@ -426,7 +676,8 @@ export const csrfProtection = (req, res, next) => {
 	return next(
 		new SuccessResponse(
 			statusCode.okCode,
-			'CSRF token generated, send the token via cookie ( x-csrf-token )',
+			'CSRF token generated, send the token via cookie ( x-csrf-token )'+'\n'
+            +'The token will be sent via cookie ( x-csrf-secret ) and response body.',
 			{ csrfToken }
 		)
 	);

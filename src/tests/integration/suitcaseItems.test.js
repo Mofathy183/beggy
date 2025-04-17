@@ -6,16 +6,23 @@ import { hashingPassword } from '../../utils/hash.js';
 import { signToken } from '../../utils/jwt.js';
 
 let csrfToken;
+let csrfSecret;
 let cookies;
 
 beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
+	let secret = cookies
+		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.split(';')[0];
+
+	csrfSecret = secret.split('=')[1];
 	csrfToken = response.body.data.csrfToken;
 });
 
 test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
+	expect(csrfSecret).toBeDefined();
 });
 
 describe("Suitcases Route For User For Add User's Item to User's Suitcase", () => {
@@ -61,7 +68,8 @@ describe("Suitcases Route For User For Add User's Item to User's Suitcase", () =
 		const res = await request(app)
 			.post(`/api/beggy/suitcase-items/${suitcase.id}/item`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				itemId: item.id,
@@ -161,7 +169,8 @@ describe("Suitcases Route For User For Add User's Items to User's Suitcase", () 
 		const res = await request(app)
 			.post(`/api/beggy/suitcase-items/${suitcase.id}/items`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				itemsIds: myItems,
@@ -240,7 +249,8 @@ describe("Suitcases Route For User For Delete Item From User's Suitcase", () => 
 		const res = await request(app)
 			.delete(`/api/beggy/suitcase-items/${suitcase.id}/item`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({ itemId: item.id });
 
@@ -311,9 +321,10 @@ describe("Suitcases Route For User For Delete Items From User's Suitcase", () =>
 		const myItems = items.map((item) => item.id);
 
 		const res = await request(app)
-			.delete(`/api/beggy//suitcase-items/${suitcase.id}/items`)
+			.delete(`/api/beggy/suitcase-items/${suitcase.id}/items`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				itemsIds: myItems,
@@ -389,7 +400,8 @@ describe("Suitcases Route For User For Delete All Items From User's Suitcase", (
 		const res = await request(app)
 			.delete(`/api/beggy/suitcase-items/${suitcase.id}/items/bulk`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,
@@ -482,7 +494,8 @@ describe("Suitcases Route For User For Delete All Items From User's Suitcase", (
 				`/api/beggy/suitcase-items/${suitcase.id}/items/bulk?field=category&search=electronics`
 			)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,
