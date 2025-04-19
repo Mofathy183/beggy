@@ -3,6 +3,13 @@ import prisma from '../../prisma/prisma.js';
 
 //*======================================={Bags Private Route}==============================================
 
+/**
+ * @function replaceBagResource
+ * @description Replaces the details of a bag resource identified by its ID.
+ * @param {string} bagId - The ID of the bag to be replaced.
+ * @param {Object} body - The new data for the bag, including name, type, color, size, capacity, maxWeight, weight, material, and features.
+ * @returns {Promise<Object>} The updated bag details, or an error if the operation fails.
+ */
 export const replaceBagResource = async (bagId, body) => {
 	try {
 		const {
@@ -57,6 +64,13 @@ export const replaceBagResource = async (bagId, body) => {
 	}
 };
 
+/**
+ * @function modifyBagResource
+ * @description Modifies specific fields of a bag resource identified by its ID.
+ * @param {string} bagId - The ID of the bag to be modified.
+ * @param {Object} body - Partial fields to update, including name, type, color, size, capacity, maxWeight, weight, material, and features.
+ * @returns {Promise<Object>} The modified bag details, or an error if the operation fails.
+ */
 export const modifyBagResource = async (bagId, body) => {
 	try {
 		const {
@@ -111,6 +125,12 @@ export const modifyBagResource = async (bagId, body) => {
 	}
 };
 
+/**
+ * @function removeBagById
+ * @description Deletes a specific bag resource from the database identified by its ID.
+ * @param {string} bagId - The ID of the bag to be deleted.
+ * @returns {Promise<Object>} An object containing the deleted bag details and metadata, or an error if the operation fails.
+ */
 export const removeBagById = async (bagId) => {
 	try {
 		const bagDelete = await prisma.bags.delete({
@@ -145,6 +165,12 @@ export const removeBagById = async (bagId) => {
 	}
 };
 
+/**
+ * @function removeAllBags
+ * @description Deletes all bag resources from the database based on provided filtering criteria.
+ * @param {Object} searchFilter - Filtering conditions for the deletion operation.
+ * @returns {Promise<Object>} Metadata of the deletion operation, including the count of deleted bags, or an error if the operation fails.
+ */
 export const removeAllBags = async (searchFilter) => {
 	try {
 		const deleteCount = await prisma.bags.deleteMany({
@@ -174,6 +200,13 @@ export const removeAllBags = async (searchFilter) => {
 
 //*======================================={Suitcase Private Route}==============================================
 
+/**
+ * @function replaceSuitcaseResource
+ * @description Replaces the details of a suitcase resource identified by its ID.
+ * @param {string} suitcaseId - The ID of the suitcase to be replaced.
+ * @param {Object} body - The new data for the suitcase, including name, type, brand, color, size, capacity, maxWeight, weight, material, features, and wheels.
+ * @returns {Promise<Object>} The updated suitcase details, or an error if the operation fails.
+ */
 export const replaceSuitcaseResource = async (suitcaseId, body) => {
 	try {
 		const {
@@ -232,6 +265,13 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function modifySuitcaseResource
+ * @description Modifies specific fields of a suitcase resource identified by its ID, with support for feature additions and removals.
+ * @param {string} suitcaseId - The ID of the suitcase to be modified.
+ * @param {Object} body - Partial fields to update, including name, type, brand, color, size, capacity, maxWeight, weight, material, features, removeFeatures, and wheels.
+ * @returns {Promise<Object>} The modified suitcase details, or an error if the operation fails.
+ */
 export const modifySuitcaseResource = async (suitcaseId, body) => {
 	try {
 		const {
@@ -335,6 +375,12 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function removeSuitcaseById
+ * @description Deletes a specific suitcase resource from the database identified by its ID.
+ * @param {string} suitcaseId - The ID of the suitcase to be deleted.
+ * @returns {Promise<Object>} An object containing the deleted suitcase details and metadata, or an error if the operation fails.
+ */
 export const removeSuitcaseById = async (suitcaseId) => {
 	try {
 		const deletedSuitcase = await prisma.suitcases.delete({
@@ -373,6 +419,12 @@ export const removeSuitcaseById = async (suitcaseId) => {
 	}
 };
 
+/**
+ * @function removeAllSuitcases
+ * @description Deletes all suitcase resources from the database based on provided filtering criteria.
+ * @param {Object} searchFilter - Filtering conditions for the deletion operation.
+ * @returns {Promise<Object>} Metadata of the deletion operation, including the count of deleted suitcases, or an error if the operation fails.
+ */
 export const removeAllSuitcases = async (searchFilter) => {
 	try {
 		const deleteCount = await prisma.suitcases.deleteMany({
@@ -409,6 +461,13 @@ export const removeAllSuitcases = async (searchFilter) => {
 
 //*======================================={Items Private Route}==============================================
 
+/**
+ * @function replaceItemResource
+ * @description Replaces the details of an item resource identified by its ID.
+ * @param {string} itemId - The ID of the item to be replaced.
+ * @param {Object} body - The new data for the item, including name, category, weight, volume, color, isFragile, and quantity.
+ * @returns {Promise<Object>} The updated item details, or an error if the operation fails.
+ */
 export const replaceItemResource = async (itemId, body) => {
 	try {
 		const { name, category, weight, volume, color, isFragile, quantity } =
@@ -452,6 +511,13 @@ export const replaceItemResource = async (itemId, body) => {
 	}
 };
 
+/**
+ * @function modifyItemResource
+ * @description Modifies specific fields of an item resource identified by its ID.
+ * @param {string} itemId - The ID of the item to be modified.
+ * @param {Object} body - Partial fields to update, including name, category, weight, volume, color, isFragile, and quantity.
+ * @returns {Promise<Object>} The modified item details, or an error if the operation fails.
+ */
 export const modifyItemResource = async (itemId, body) => {
 	try {
 		const { name, category, weight, volume, color, isFragile, quantity } =
@@ -495,6 +561,12 @@ export const modifyItemResource = async (itemId, body) => {
 	}
 };
 
+/**
+ * @function removeItemById
+ * @description Deletes a specific item resource from the database identified by its ID.
+ * @param {string} itemId - The ID of the item to be deleted.
+ * @returns {Promise<Object>} An object containing the deleted item details and metadata, or an error if the operation fails.
+ */
 export const removeItemById = async (itemId) => {
 	try {
 		const deletedItem = await prisma.items.delete({
@@ -529,6 +601,12 @@ export const removeItemById = async (itemId) => {
 	}
 };
 
+/**
+ * @function removeAllItems
+ * @description Deletes all item resources from the database based on provided filtering criteria.
+ * @param {Object} searchFilter - Filtering conditions for the deletion operation.
+ * @returns {Promise<Object>} Metadata of the deletion operation, including the count of deleted items, or an error if the operation fails.
+ */
 export const removeAllItems = async (searchFilter) => {
 	try {
 		const deleteCount = await prisma.items.deleteMany({

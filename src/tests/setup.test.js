@@ -11,6 +11,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
 	console.log('Clearing test Database...');
+	await prisma.userToken.deleteMany();
 	await prisma.items.deleteMany();
 	await prisma.bags.deleteMany();
 	await prisma.suitcases.deleteMany();

@@ -10,7 +10,7 @@ import {
 	SuitcaseFeature,
 	WheelType,
 	Gender,
-} from '@prisma/client';
+} from '../generated/client/index.js';
 
 async function main() {
 	const size = Object.values(Size);
@@ -114,14 +114,14 @@ async function main() {
 	console.log('✅ Database seeded successfully!');
 }
 
-await main()
-	.catch((e) => {
-		console.error(e);
-		process.exit(1);
-	})
-	.finally(async () => {
-		await prisma.$disconnect();
-	});
+// await main()
+// 	.catch((e) => {
+// 		console.error(e);
+// 		process.exit(1);
+// 	})
+// 	.finally(async () => {
+// 		await prisma.$disconnect();
+// 	});
 
 async function seedPermissions(roleName, permissions) {
 	await prisma.permission.createManyAndReturn({

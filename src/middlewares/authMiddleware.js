@@ -9,7 +9,7 @@ import { VReqTo } from './validateRequest.js';
 import {
 	loginSchema,
 	singUpSchema,
-	forgotPasswordScheme,
+	emailScheme,
 	resetPasswordScheme,
 	updatePasswordScheme,
 	updateUserDataSchema,
@@ -99,7 +99,6 @@ export const headersMiddleware = async (req, res, next) => {
 	next();
 };
 
-
 /**
  * Defines the abilities for a given role.
  *
@@ -127,7 +126,6 @@ const defineAbilitiesFor = async (role) => {
 	// Return the ability builder
 	return build();
 };
-
 
 /**
  * Middleware to check if the user has the required permission for the given action and subject.
@@ -159,7 +157,8 @@ export const checkPermissionMiddleware =
 
 			// Add the permissions to the ability builder
 			permissions.forEach((perm) => {
-				let { action: permAction, subject: permSubject } = perm.permission;
+				let { action: permAction, subject: permSubject } =
+					perm.permission;
 				can(permAction, permSubject);
 			});
 
@@ -244,9 +243,7 @@ export const checkRoleMiddleware = (...roles) => {
 	};
 };
 
-export const verifyEmailMiddleware = (req, res, next) => {
-    
-}
+export const verifyEmailMiddleware = (req, res, next) => {};
 
 /**
  * Checks if the `confirmDelete` flag is set to `true` in the request body.
@@ -293,7 +290,6 @@ export const VReqToSignUp = (req, res, next) => {
 	return VReqTo(req, res, next, singUpSchema);
 };
 
-
 /**
  * check for the request body in Login (ValidateRequest === VReq)
  * Checks if the request body contains the required fields for logging in.
@@ -322,10 +318,9 @@ export const VReqToLogin = (req, res, next) => {
  * @param {NextFunction} next - The next middleware function.
  * @returns {void}
  */
-export const VReqToForgotPassword = (req, res, next) => {
-	return VReqTo(req, res, next, forgotPasswordScheme);
+export const VReqToEmail = (req, res, next) => {
+	return VReqTo(req, res, next, emailScheme);
 };
-
 
 /**
  * check for the request body in reset password request (ValidateRequest === VReq)
@@ -344,7 +339,6 @@ export const VReqToResetPassword = (req, res, next) => {
 	return VReqTo(req, res, next, resetPasswordScheme);
 };
 
-
 /**
  * check for the request body in update password request (ValidateRequest === VReq)
  * Checks if the request body contains the required fields for updating a user's
@@ -361,7 +355,6 @@ export const VReqToResetPassword = (req, res, next) => {
 export const VReqToUpdatePassword = (req, res, next) => {
 	return VReqTo(req, res, next, updatePasswordScheme);
 };
-
 
 /**
  * check for the request body in update user date request (ValidateRequest === VReq)
@@ -395,7 +388,6 @@ export const VReqToUpdateUserData = (req, res, next) => {
 export const VReqToConfirmDelete = (req, res, next) => {
 	return VReqTo(req, res, next, confirmDeleteSchema);
 };
-
 
 /**
  * if the token in params to reset password is not present or not valid

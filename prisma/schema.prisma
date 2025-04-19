@@ -6,8 +6,10 @@
 
 generator client {
     provider        = "prisma-client-js"
-    seed            = "node prisma/seed.js"
     previewFeatures = ["prismaSchemaFolder", "relationJoins"]
+    output          = "../generated/client"
+    seed            = "node prisma/seed.js"
+    moduleFormat    = "esm"
 }
 
 datasource db {
@@ -115,4 +117,10 @@ enum Role {
     MEMBER     @map("member")
     SUBSCRIBER @map("subscriber")
     USER       @map("user")
+}
+
+enum TokenType {
+    EMAIL_VERIFICATION @map("email_verification")
+    PASSWORD_RESET     @map("password_reset")
+    CHANGE_EMAIL       @map("change_email")
 }

@@ -31,6 +31,9 @@ CREATE TYPE "Providers" AS ENUM ('google', 'facebook');
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('admin', 'member', 'subscriber', 'user');
 
+-- CreateEnum
+CREATE TYPE "TokenType" AS ENUM ('email_verification', 'password_reset', 'change_email');
+
 -- CreateTable
 CREATE TABLE "accounts" (
     "id" TEXT NOT NULL,
@@ -134,15 +137,24 @@ CREATE TABLE "users" (
     "country" TEXT,
     "city" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
-    "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
-    "verify_token" TEXT,
+    "is_email_verified" BOOLEAN NOT NULL DEFAULT false,
     "password_change_at" TIMESTAMP(3),
-    "password_reset_token" TEXT,
-    "password_reset_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_tokens" (
+    "id" TEXT NOT NULL,
+    "type" "TokenType" NOT NULL,
+    "hashToken" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "user_tokens_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -170,7 +182,7 @@ CREATE UNIQUE INDEX "accounts_provider_id_key" ON "accounts"("provider_id");
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_password_reset_token_key" ON "users"("password_reset_token");
+CREATE UNIQUE INDEX "user_tokens_hashToken_key" ON "user_tokens"("hashToken");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "permissions_action_subject_key" ON "permissions"("action", "subject");
@@ -198,6 +210,9 @@ ALTER TABLE "suitcase_items" ADD CONSTRAINT "suitcase_items_suitcase_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "suitcase_items" ADD CONSTRAINT "suitcase_items_item_id_fkey" FOREIGN KEY ("item_id") REFERENCES "items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_tokens" ADD CONSTRAINT "user_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "role_on_permission" ADD CONSTRAINT "role_on_permission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

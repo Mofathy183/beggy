@@ -1,4 +1,5 @@
 import { statusCode, statusStatement } from '../config/status.js';
+import { logger } from '../middlewares/appMiddleware.js';
 
 /**
  * Create an error object with the given error, path, and message.
@@ -47,7 +48,6 @@ const prismaErrorTemplate = (
 		path,
 	};
 };
-
 
 /**
  * @description
@@ -127,7 +127,6 @@ const prismaErrorHandler = (error, path, message) => {
 	);
 };
 
-
 class ErrorHandler extends Error {
 	/**
 	 * Constructs a new ErrorHandler instance.
@@ -147,7 +146,7 @@ class ErrorHandler extends Error {
 		Error.captureStackTrace(this, this.constructor);
 
 		// Call the error handler to handle the error
-		this.whichError();
+		this.handle();
 	}
 
 	/**
@@ -160,16 +159,27 @@ class ErrorHandler extends Error {
 	 *
 	 * @private
 	 */
-	whichError() {
-		if (this.name === 'prisma') {
-			return prismaErrorHandler(
-				this.error,
-				this.message,
-				this.stack, //* you can use this.stack because it's already set by captureStackTrace
-			);
-		} else {
-			return errorHandler(this.error, this.stack, this.message);
-		}
+	handle() {
+		const errObj =
+			this.name === 'prisma'
+				? prismaErrorHandler(this.error, this.message, this.stack)
+				: errorHandler(this.error, this.stack, this.message);
+
+		// Structure the error log
+		const logDetails = {
+			message: errObj.message || 'An unknown error occurred',
+			error: errObj.error || this.error,
+			stack: this.stack || 'No stack available',
+		};
+
+		// Log the error using pino
+		logger.error(
+			logDetails,
+			`Error handled by: ${this.name} error handler`
+		);
+
+		// Return the error object for further handling if needed
+		return errObj;
 	}
 }
 
@@ -184,7 +194,7 @@ class ErrorResponse extends Error {
 	 * @returns {void}
 	 */
 	constructor(error, message, status) {
-        super(message);
+		super(message);
 		/**
 		 * The error object itself.
 		 * @type {Object}

@@ -4,8 +4,11 @@ import {
 	userForgotPassword,
 	resetUserPassword,
 	updateUserData,
+	changeUserEmail,
+	verifyUserEmail,
+	getUserPermissions,
 	updateUserPassword,
-    sendVerificationUserEmail,
+	sendVerificationUserEmail,
 	deactivateUserAccount,
 } from '../../services/authService.js';
 import { resetPasswordUrl, verifyEmailUrl } from '../../config/env.js';
@@ -22,21 +25,6 @@ import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import { ErrorResponse } from '../../utils/error.js';
 
-/**
- * @api {post} /api/beggy/auth/signup
- * @apiName SignUp
- * @apiGroup Auth
- * @apiDescription Sign up a user
- *
- * @apiParam {string} firstName User first name
- * @apiParam {string} lastName User last name
- * @apiParam {string} email User email
- * @apiParam {string} password User password
- * @apiParam {string} confirmPassword User confirm password
- *
- * @apiSuccess {boolean} success Success
- * @apiSuccess {object} user Logged user
- */
 export const signUp = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -85,19 +73,6 @@ export const signUp = async (req, res, next) => {
 	}
 };
 
-
-/**
- * @api {post} /api/beggy/auth/login
- * @apiName Login
- * @apiGroup Auth
- * @apiDescription Login a user
- *
- * @apiParam {string} email User email
- * @apiParam {string} password User password
- *
- * @apiSuccess {boolean} success Success
- * @apiSuccess {object} user Logged user
- */
 export const login = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -151,22 +126,6 @@ export const login = async (req, res, next) => {
 	}
 };
 
-/**
- * @api {post} /api/beggy/auth/forgot-password
- * @apiName ForgotPassword
- * @apiGroup Auth
- * @apiDescription Send a password reset link to the user's email
- *
- * @apiParam {string} email User email
- *
- * @apiSuccess {boolean} success Success
- * @apiSuccess {string} message Message
- * @apiSuccess {string} data Reset password instructions
- *
- * @apiError (400) BadRequestError Invalid request
- * @apiError (401) UnauthorizedError Unauthorized
- * @apiError (500) InternalServerErrorError Internal Server Error
- */
 export const forgotPassword = async (req, res, next) => {
 	try {
 		const { email } = req.body;
@@ -185,8 +144,11 @@ export const forgotPassword = async (req, res, next) => {
 			userName,
 			userEmail,
 			'reset-password',
-			'reset'
+			'reset',
+			'password_reset'
 		);
+
+		console.log('sended', sended, userEmail);
 
 		if (sended.error)
 			return next(
@@ -200,8 +162,9 @@ export const forgotPassword = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Reset password email sent successfully',
-				'Check your email for password reset instructions.'
+				'Reset password email send Successfully',
+				'Check your email inbox to reset your password',
+				sended
 			)
 		);
 	} catch (error) {
@@ -215,25 +178,6 @@ export const forgotPassword = async (req, res, next) => {
 	}
 };
 
-/**
- * @api {patch} /api/beggy/auth/reset-password/:token
- * @apiName ResetPassword
- * @apiGroup Auth
- * @apiDescription Reset user password
- *
- * @apiParam {string} token Reset Token
- * @apiParam {string} currentPassword Current Password
- * @apiParam {string} newPassword New Password
- * @apiParam {string} confirmPassword Confirm Password
- *
- * @apiSuccess {boolean} success Success
- * @apiSuccess {string} message Message
- * @apiSuccess {object} data Updated User Data
- *
- * @apiError (400) BadRequestError Invalid request
- * @apiError (401) UnauthorizedError Unauthorized
- * @apiError (500) InternalServerErrorError Internal Server Error
- */
 export const resetPassword = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -284,24 +228,6 @@ export const resetPassword = async (req, res, next) => {
 	}
 };
 
-/**
- * @api {patch} /api/beggy/auth/update-password
- * @apiName UpdatePassword
- * @apiGroup Auth
- * @apiDescription Update user password
- *
- * @apiParam {string} currentPassword Current Password
- * @apiParam {string} newPassword New Password
- * @apiParam {string} confirmPassword Confirm Password
- *
- * @apiSuccess {boolean} success Success
- * @apiSuccess {string} message Message
- * @apiSuccess {object} data Updated User Data
- *
- * @apiError (400) BadRequestError Invalid request
- * @apiError (401) UnauthorizedError Unauthorized
- * @apiError (500) InternalServerErrorError Internal Server Error
- */
 export const updatePassword = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -352,29 +278,6 @@ export const updatePassword = async (req, res, next) => {
 	}
 };
 
-/**
- * @api {patch} /api/beggy/auth/update-user-data
- * @apiName UpdateUserData
- * @apiGroup Auth
- * @apiDescription Update user data
- *
- * @apiParam {string} firstName First Name
- * @apiParam {string} lastName Last Name
- * @apiParam {string} email Email
- * @apiParam {string} gender Gender
- * @apiParam {date} birth Birth Date
- * @apiParam {string} country Country
- * @apiParam {string} city City
- * @apiParam {string} profilePicture Profile Picture
- *
- * @apiSuccess {boolean} success Success
- * @apiSuccess {string} message Message
- * @apiSuccess {object} data Updated User Data
- *
- * @apiError (400) BadRequestError Invalid request
- * @apiError (401) UnauthorizedError Unauthorized
- * @apiError (500) InternalServerErrorError Internal Server Error
- */
 export const updateData = async (req, res, next) => {
 	try {
 		const { body } = req;
@@ -425,78 +328,201 @@ export const updateData = async (req, res, next) => {
 	}
 };
 
+export const changeEmail = async (req, res, next) => {
+	try {
+		const { email } = req.body;
+
+		const { userId, userRole } = req.session;
+
+		const { token, userName, userEmail } = await changeUserEmail(
+			userId,
+			email
+		);
+
+		if (!token || !userEmail || !userName)
+			return next(
+				new ErrorResponse(
+					'Failed to change user email',
+					'Failed to generate token and get user email and name',
+					statusCode.badRequestCode
+				)
+			);
+
+		const verifyEmailURL = `${req.protocol}://${req.get('host') || 'localhost'}${verifyEmailUrl}?token=${token}type=change_email`;
+
+		const sended = await sendEmail(
+			verifyEmailURL,
+			userName,
+			userEmail,
+			'verify-email',
+			'verify',
+			'change_email'
+		);
+
+		if (sended.error)
+			return next(
+				new ErrorResponse(
+					sended.error,
+					'Failed to send verification email ' + sended.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		storeSession(userId, userRole, req);
+
+		sendCookies(userId, res);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Updated User Email',
+				'Check your email inbox to verify your email',
+				sended
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to change user email',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
 export const sendVerificationEmail = async (req, res, next) => {
-    try {
-        const { email } = req.body;
+	try {
+		const { email } = req.body;
 
-        const { token, userName } = await sendVerificationUserEmail(email);
+		const { token, userName } = await sendVerificationUserEmail(email);
 
-        const verifyEmailURL = `${req.protocol}://${req.get('host')}${verifyEmailUrl}?token=${token}email=${email}`;
+		const verifyEmailURL = `${req.protocol}://${req.get('host')}${verifyEmailUrl}?token=${token}type=email_verification`;
 
-        const sended = await sendEmail(
-            verifyEmailURL,
-            userName,
-            email,
-            "verify-email",
-            "verify"
-        )
+		const sended = await sendEmail(
+			verifyEmailURL,
+			userName,
+			email,
+			'verify-email',
+			'verify'
+		);
 
-        if (sended.error) return new ErrorResponse(
-            sended.error,
-            'Failed to send verification email '+sended.error.message,
-            statusCode.internalServerErrorCode
-        );
+		if (sended.error)
+			return new ErrorResponse(
+				sended.error,
+				'Failed to send verification email ' + sended.error.message,
+				statusCode.internalServerErrorCode
+			);
 
-        return next(
-            new SuccessResponse(
-                statusCode.okCode,
-                'Verification email sent successfully, Check your email inbox',
-                sended
-            )
-        )
-    }
-
-    catch (error) {
-        return next(
-            new ErrorResponse(
-                error,
-                'Failed to send verification email',
-                statusCode.internalServerErrorCode
-            )
-        )
-    }
-}
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Verification email send Successfully',
+				'Check your email inbox to verify your email',
+				sended
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to send verification email',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
 
 export const verifyEmail = async (req, res, next) => {
-    try {
-        
-    }
+	try {
+		const { token, type } = req.verified;
 
-    catch (error) {
-        return next(
-            new ErrorResponse(
-                error,
-                'Failed to verify email',
-                statusCode.internalServerErrorCode
-            )
-        )
-    }
-}
+		const userUpdate = await verifyUserEmail(token, type);
 
-/**
- * @api {delete} /auth/deactivate Deactivate User
- * @apiName Deactivate
- * @apiGroup Auth
- * @apiDescription Deactivate a user account
- *
- * @apiSuccess {boolean} success True if the request was successful
- * @apiSuccess {string} message The message indicating that the user was deactivated
- * @apiSuccess {Object} data The deactivated user data
- *
- * @apiError {boolean} success False if the request was not successful
- * @apiError {string} message The message indicating that the user failed to deactivate
- * @apiError {string} data The message indicating the failure to deactivate
- */
+		if (!userUpdate)
+			return next(
+				new ErrorResponse(
+					'userUpdate is null',
+					"Couldn't update user",
+					'Failed to verify user email'
+				)
+			);
+
+		if (userUpdate.error)
+			return next(
+				new ErrorResponse(
+					'prisma',
+					"Couldn't Find token" + userUpdate.error,
+					'Failed to verify user email ' + userUpdate.error.message
+				)
+			);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Verified User Email',
+				userUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to verify email',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const permissions = async (req, res, next) => {
+	try {
+		const { userId, userRole } = req.session;
+
+		const { permissions, meta } = await getUserPermissions(userRole);
+
+		if (!permissions)
+			return next(
+				new ErrorResponse(
+					'Failed to get user permissions',
+					'Failed to get user permissions',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (permissions.error)
+			return next(
+				new ErrorResponse(
+					permissions.error,
+					'Failed to get user permissions' +
+						permissions.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		storeSession(userId, userRole, req);
+
+		sendCookies(userId, res);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Get User Permissions',
+				permissions,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				error,
+				'Failed to get user permissions',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
 export const deActivate = async (req, res, next) => {
 	try {
 		const { userId } = req.session;
@@ -539,21 +565,6 @@ export const deActivate = async (req, res, next) => {
 	}
 };
 
-
-/**
- * @api {post} /auth/logout Logout
- * @apiName Logout
- * @apiGroup Auth
- * @apiDescription Logout a user, clear their session, and deactivate their account
- *
- * @apiSuccess {boolean} success True if the request was successful
- * @apiSuccess {string} message The message indicating that the user was logged out
- * @apiSuccess {string} data The message indicating that the user was logged out
- *
- * @apiError {boolean} success False if the request was not successful
- * @apiError {string} message The message indicating that the user failed to logout
- * @apiError {string} data The message indicating the failure to logout
- */
 export const logout = async (req, res, next) => {
 	try {
 		const { userId } = req.session;
@@ -585,35 +596,6 @@ export const logout = async (req, res, next) => {
 	}
 };
 
-/**
- * @api {post} /auth/refresh-token Get Access Token
- * @apiName GetAccessToken
- * @apiGroup Auth
- * @apiDescription Get a new access token with a valid refresh token
- *
- * @apiParam {string} refreshToken The refresh token to get a new access token
- *
- * @apiSuccess {boolean} success True if the request was successful
- * @apiSuccess {string} message The message indicating that the access token was sent via cookie
- * @apiSuccess {string} data The message indicating that the access token was generated
- *
- * @apiError {boolean} success False if the request was not successful
- * @apiError {string} message The message indicating that the refresh token is missing
- * @apiError {string} data The message indicating the failure to get an access token
- * @apiError {number} status The HTTP status code for Bad Request
- *
- * @apiErrorExample {json} Error-Response:
- *     HTTP/1.1 400 Bad Request
- *     {
- *       "success": false,
- *       "message": "Missing refresh token",
- *       "data": "Failed to get access token",
- *       "status": 400
- *     }
- *
- * @apiUse SuccessResponse
- * @apiUse ErrorResponse
- */
 export const getAccessToken = (req, res, next) => {
 	const { refreshToken } = req.body;
 
@@ -648,26 +630,6 @@ export const getAccessToken = (req, res, next) => {
 	);
 };
 
-/**
- * @api {get} /api/beggy/auth/csrf-token Get CSRF Token
- * @apiName GetCSRFToken
- * @apiGroup Auth
- *
- * @apiSuccess (200) {String} csrfToken CSRF Token
- *
- * @apiSuccessExample {json} Success-Response:
- *     {
- *       "success": true,
- *       "message": "CSRF token generated, send the token via cookie ( x-csrf-token )",
- *       "data": {
- *         "csrfToken": "X6ZpFJ3WnJrV5sG6pP4oMw=="
- *       },
- *       "statusCode": 200
- *     }
- * @apiDescription
- *    This route is used to get CSRF Token.
- *    The token will be sent via cookie ( x-csrf-secret ) and response body.
- */
 export const csrfProtection = (req, res, next) => {
 	//* generateCSRFToken will handle send the secret via cookie
 	//* and return the generated token
@@ -676,8 +638,9 @@ export const csrfProtection = (req, res, next) => {
 	return next(
 		new SuccessResponse(
 			statusCode.okCode,
-			'CSRF token generated, send the token via cookie ( x-csrf-token )'+'\n'
-            +'The token will be sent via cookie ( x-csrf-secret ) and response body.',
+			'CSRF token generated, send the token via cookie ( x-csrf-token )' +
+				'\n' +
+				'The token will be sent via cookie ( x-csrf-secret ) and response body.',
 			{ csrfToken }
 		)
 	);

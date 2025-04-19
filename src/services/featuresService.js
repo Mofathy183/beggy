@@ -5,6 +5,15 @@ import prisma from '../../prisma/prisma.js';
 
 const jsonRegExp = /```json\n([\s\S]+?)\n```/;
 
+/**
+ * @function itemAutoFilling
+ * @description Automatically estimates the total weight and volume for an item based on its name, category, and quantity.
+ * @param {Object} body - The input details of the item.
+ * @param {string} body.name - The name of the item to estimate.
+ * @param {number} body.quantity - The quantity of the item (number of units).
+ * @param {string} body.category - The category of the item (e.g., electronics, clothing, tools, food, furniture).
+ * @returns {Promise<Object>} An object containing the estimated weight (kg) and volume (m³), or an error if the operation fails.
+ */
 export const itemAutoFilling = async (body) => {
 	try {
 		const { name, quantity, category } = body;
@@ -105,6 +114,17 @@ export const itemAutoFilling = async (body) => {
 	}
 };
 
+/**
+ * @function bagAutoFilling
+ * @description Automatically estimates the weight, maximum weight capacity, and total volume (capacity) of a bag based on its name, type, size, material, and features.
+ * @param {Object} body - The input details of the bag.
+ * @param {string} body.name - The name of the bag to estimate.
+ * @param {string} body.type - The type of the bag (e.g., backpack, suitcase, duffel, tote).
+ * @param {string} body.size - The size of the bag (e.g., small, medium, large, or specific dimensions).
+ * @param {string} body.material - The material of the bag (e.g., leather, fabric, plastic, metal).
+ * @param {string} [body.feature] - Optional features of the bag (e.g., wheels, reinforced straps, waterproof).
+ * @returns {Promise<Object>} An object containing the estimated weight (kg), maximum weight capacity (kg), and capacity (m³), or an error if the operation fails.
+ */
 export const bagAutoFilling = async (body) => {
 	try {
 		const { name, type, size, material, feature } = body;
@@ -210,6 +230,19 @@ export const bagAutoFilling = async (body) => {
 	}
 };
 
+/**
+ * @function suitcaseAutoFilling
+ * @description Automatically estimates the capacity, maximum weight capacity, and empty weight of a suitcase based on its name, type, size, material, features, brand, and wheels.
+ * @param {Object} body - The input details of the suitcase.
+ * @param {string} body.name - The name of the suitcase to estimate.
+ * @param {string} body.type - The type of the suitcase (e.g., carry-on, checked, duffel, hard-shell, soft-shell, backpack).
+ * @param {string} body.size - The size of the suitcase (e.g., small, medium, large, extra-large, or specific dimensions like 20-inch).
+ * @param {string} [body.material] - The material of the suitcase (optional, e.g., polycarbonate, aluminum, fabric, leather).
+ * @param {string} [body.feature] - Optional features of the suitcase (e.g., expandable, waterproof, anti-theft, TSA lock).
+ * @param {string} [body.brand] - The brand of the suitcase (optional, e.g., Samsonite, American Tourister, Tumi, generic).
+ * @param {string} [body.wheels] - The type of wheels on the suitcase (optional, e.g., spinner, inline, no wheels).
+ * @returns {Promise<Object>} An object containing the estimated capacity (L), maximum weight capacity (kg), and empty weight (kg), or an error if the operation fails.
+ */
 export const suitcaseAutoFilling = async (body) => {
 	try {
 		const { name, type, size, material, feature, brand, wheels } = body;
@@ -318,6 +351,12 @@ export const suitcaseAutoFilling = async (body) => {
 	}
 };
 
+/**
+ * @function getLocation
+ * @description Retrieves the user's location (city and country) based on their IP address. If the IP is private or local, it fetches the public IP first.
+ * @param {string} userIp - The user's IP address. If local or private, a public IP is retrieved.
+ * @returns {Promise<Object>} An object containing the city and country, or an error if the operation fails.
+ */
 export const getLocation = async (userIp) => {
 	try {
 		// If IP is local or private, get the public IP
@@ -359,6 +398,12 @@ export const getLocation = async (userIp) => {
 	}
 };
 
+/**
+ * @function getWeather
+ * @description Fetches the current weather data for a user based on their stored city and country information.
+ * @param {string} userId - The ID of the user whose weather data is being retrieved.
+ * @returns {Promise<Object>} Weather data from the OpenWeatherMap API, or an error if the operation fails.
+ */
 export const getWeather = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({

@@ -11,26 +11,28 @@ import prisma from '../../prisma/prisma.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-
 //*=============================={Reset Password}============================
 
 /**
  * @description Removes the password reset token and expiration date from the database
- * for a specified user, identified by their email. This is done after the user 
+ * for a specified user, identified by their email. This is done after the user
  * successfully resets their password.
  * @param {string} email - The email of the user
+ * @param {string} type - the type of the token "email_verification", "password_reset" or "change_email"
  * @returns {Promise<void|ErrorHandler>} A promise that resolves to void if the
  * operation is successful, or an ErrorHandler if an error occurs.
  */
-const deleteResetTokenAndExpiration = async (email) => {
+const deleteResetTokenAndExpiration = async (email, type) => {
 	try {
-		await prisma.user.update({
+		const userId = await prisma.user.findUnique({
 			where: { email },
-			data: {
-				passwordResetToken: null,
-				passwordResetExpiredAt: null,
-                emailVerifyToken: null,
-                emailTokenExpiresAt: null
+			select: { id: true },
+		});
+
+		prisma.userToken.deleteMany({
+			where: {
+				userId: userId.id,
+				type: type.toUpperCase(),
 			},
 		});
 	} catch (error) {
@@ -42,7 +44,6 @@ const deleteResetTokenAndExpiration = async (email) => {
 	}
 };
 
-
 //*====================================={Email with Resend}=====================================
 /**
  * Sends an email to a user using the Resend API.
@@ -52,6 +53,8 @@ const deleteResetTokenAndExpiration = async (email) => {
  * @param {string} userEmail - The email address to send the email to.
  * @param {string} templateName - The name of the email template to use (without the .mjml extension).
  * @param {string} subjectKey - The key to use to retrieve the email subject from the resendConfig.
+ * @param {string} type - if the send email Failed, it will delete the reset token and expiration date by its type
+ * type must be "email_verification", "password_reset" or "change_email"
  *
  * @returns {Promise<Object>} An object containing the email ID and any error that occurred during sending.
  * @throws {ErrorHandler} If an error occurs during email sending.
@@ -61,13 +64,14 @@ export const sendEmail = async (
 	userName,
 	userEmail,
 	templateName,
-    subjectKey
+	subjectKey,
+	type
 ) => {
 	/**
 	 * Try to send the email. If an error occurs, return an ErrorHandler.
 	 */
 	try {
-		//* Read the email template from file
+		// Read the email template from file
 		const templatePath = join(
 			__dirname,
 			'..',
@@ -77,34 +81,45 @@ export const sendEmail = async (
 		);
 		const templateContent = await readFile(templatePath, 'utf-8');
 
-		//* Compile the email template
+		// Compile the email template
 		const compileTemplate = Handlebars.compile(templateContent);
 
-		//* Replace placeholders in the email template with real values
+		// Replace placeholders in the email template with real values
 		const mjmlData = compileTemplate({
 			url,
 			userName,
+			currentYear: new Date().getFullYear(),
 		});
 
-        //* get subject from config
-        const subject = resendConfig[subjectKey];
+		// Get the subject from the config
+		const subject = resendConfig[subjectKey];
 
-		//* Convert the MJML to HTML
+		if (!subject) {
+			return new Error('Subject key not found in the config');
+		}
+
+		// Convert the MJML to HTML
 		const { html } = mjml2html(mjmlData);
 
-		//* Send the email using the Resend API
+		// Initialize Resend API
 		const resend = new Resend(resendConfig.apiKey);
+
+		// Send the email
 		const sended = await resend.emails.send({
 			from: resendConfig.testDomain,
 			to: userEmail,
-            subject: subject,
+			subject: subject,
 			html: html,
 		});
 
-        if (sended.error) 
-            deleteResetTokenAndExpiration(userEmail);
+		// If sending fails, handle the error (e.g., delete reset token)
+		if (sended.error) {
+			console.log('S', sended);
+			await deleteResetTokenAndExpiration(userEmail, type);
+			return new Error('Failed to send email, reset token deleted.');
+		}
 
-        return sended
+		return sended;
 	} catch (error) {
 		//* If an error occurs, return an ErrorHandler
 		return new ErrorHandler(

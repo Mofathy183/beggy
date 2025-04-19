@@ -3,6 +3,14 @@ import prisma from '../../prisma/prisma.js';
 
 //*======================================={Bags Public Route}==============================================
 
+/**
+ * @function findAllBagsByQuery
+ * @description Fetches a list of bags based on filtering criteria, pagination, and sorting options.
+ * @param {Object} searchFilter - Filtering conditions for the bags query.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the fetched bags and metadata, or an error if the operation fails.
+ */
 export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 	try {
 		const { page, limit, offset } = pagination;
@@ -43,6 +51,12 @@ export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 	}
 };
 
+/**
+ * @function findBagById
+ * @description Retrieves a specific bag resource from the database based on its ID.
+ * @param {string} bagId - The ID of the bag to retrieve.
+ * @returns {Promise<Object>} The details of the bag, or an error if the operation fails.
+ */
 export const findBagById = async (bagId) => {
 	try {
 		const bag = await prisma.bags.findUnique({
@@ -78,6 +92,12 @@ export const findBagById = async (bagId) => {
 
 //*======================================={Items Public Route}==============================================
 
+/**
+ * @function findItemById
+ * @description Retrieves a specific item resource from the database based on its ID. Omits sensitive fields such as user data.
+ * @param {string} itemId - The ID of the item to retrieve.
+ * @returns {Promise<Object>} The details of the item, or an error if the operation fails.
+ */
 export const findItemById = async (itemId) => {
 	try {
 		const item = await prisma.items.findUnique({
@@ -108,6 +128,14 @@ export const findItemById = async (itemId) => {
 	}
 };
 
+/**
+ * @function findItemsByQuery
+ * @description Fetches a list of items based on filtering criteria, pagination, and sorting options. Omits sensitive fields such as user data.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} searchFilter - Filtering conditions for the items query.
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the fetched items and metadata, or an error if the operation fails.
+ */
 export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 	try {
 		const { page, limit, offset } = pagination;
@@ -155,6 +183,12 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 
 //*======================================={Suitcase Public Route}==============================================
 
+/**
+ * @function findItemById
+ * @description Retrieves a specific item resource from the database based on its ID.
+ * @param {string} itemId - The ID of the item to retrieve.
+ * @returns {Promise<Object>} The details of the item, or an error if the operation fails.
+ */
 export const findAllSuitcasesByQuery = async (
 	searchFilter,
 	pagination,
@@ -200,6 +234,14 @@ export const findAllSuitcasesByQuery = async (
 	}
 };
 
+/**
+ * @function findItemsByQuery
+ * @description Fetches a list of items based on filtering criteria, pagination, and sorting options.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} searchFilter - Filtering conditions for the items query.
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the fetched items and metadata, or an error if the operation fails.
+ */
 export const findSuitcaseById = async (suitcaseId) => {
 	try {
 		const suitcase = await prisma.suitcases.findUnique({
@@ -240,6 +282,14 @@ export const findSuitcaseById = async (suitcaseId) => {
 
 //*======================================={Users Public Route}==============================================
 
+/**
+ * @function findAllUsers
+ * @description Retrieves a paginated list of users based on filtering criteria and sorting options, omitting sensitive or unnecessary fields.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} searchFilter - Filtering conditions for the user query (supports logical OR operations).
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the fetched users and metadata, or an error if the operation fails.
+ */
 export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 	try {
 		const { page, limit, offset } = pagination;
@@ -253,8 +303,6 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 				account: true,
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 			},
 			skip: offset,
 			take: limit,
@@ -305,6 +353,12 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 	}
 };
 
+/**
+ * @function findUserPublicProfile
+ * @description Retrieves the public profile of a specific user based on their ID, ensuring the user is active.
+ * @param {string} userId - The ID of the user whose public profile is being retrieved.
+ * @returns {Promise<Object>} The public profile details of the user, or an error if the operation fails.
+ */
 export const findUserPublicProfile = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({

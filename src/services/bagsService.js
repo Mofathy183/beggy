@@ -1,6 +1,15 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
 
+/**
+ * @function findBagsUserHas
+ * @description Fetches the list of bags associated with a specific user, based on filters, pagination, and sorting criteria.
+ * @param {string} userId - The ID of the user whose bags are being retrieved.
+ * @param {Object} searchFilter - Filtering conditions for the bag search.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the user's bags and metadata, or an error if the operation fails.
+ */
 export const findBagsUserHas = async (
 	userId,
 	searchFilter,
@@ -75,6 +84,13 @@ export const findBagsUserHas = async (
 	}
 };
 
+/**
+ * @function findBagUserHasById
+ * @description Retrieves a specific bag owned by a user based on the bag's ID.
+ * @param {string} userId - The ID of the user who owns the bag.
+ * @param {string} bagId - The ID of the bag to retrieve.
+ * @returns {Promise<Object>} The bag details and metadata, or an error if the operation fails.
+ */
 export const findBagUserHasById = async (userId, bagId) => {
 	try {
 		const userBag = await prisma.bags.findUnique({
@@ -137,6 +153,13 @@ export const findBagUserHasById = async (userId, bagId) => {
 	}
 };
 
+/**
+ * @function addBagToUser
+ * @description Adds a new bag for a user with the specified details.
+ * @param {string} userId - The ID of the user to whom the bag is being added.
+ * @param {Object} body - Contains bag details such as name, type, color, size, etc.
+ * @returns {Promise<Object>} The newly created bag and metadata, or an error if the operation fails.
+ */
 export const addBagToUser = async (userId, body) => {
 	try {
 		const {
@@ -218,6 +241,14 @@ export const addBagToUser = async (userId, body) => {
 	}
 };
 
+/**
+ * @function replaceBagUserHas
+ * @description Replaces the details of an existing bag owned by a user.
+ * @param {string} userId - The ID of the user who owns the bag.
+ * @param {string} bagId - The ID of the bag to be replaced.
+ * @param {Object} body - New data to update the bag.
+ * @returns {Promise<Object>} The updated bag details, or an error if the operation fails.
+ */
 export const replaceBagUserHas = async (userId, bagId, body) => {
 	try {
 		const {
@@ -279,6 +310,14 @@ export const replaceBagUserHas = async (userId, bagId, body) => {
 	}
 };
 
+/**
+ * @function modifyBagUserHas
+ * @description Modifies specific fields of a bag owned by a user, with support for feature additions and removals.
+ * @param {string} userId - The ID of the user who owns the bag.
+ * @param {string} bagId - The ID of the bag to be modified.
+ * @param {Object} body - Partial fields to update, including features to add or remove.
+ * @returns {Promise<Object>} The modified bag details, or an error if the operation fails.
+ */
 export const modifyBagUserHas = async (userId, bagId, body) => {
 	try {
 		const {
@@ -387,6 +426,13 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 	}
 };
 
+/**
+ * @function removeBagUserHasById
+ * @description Removes a specific bag owned by a user based on the bag's ID.
+ * @param {string} userId - The ID of the user who owns the bag.
+ * @param {string} bagId - The ID of the bag to delete.
+ * @returns {Promise<Object>} An object with metadata and the deleted bag details, or an error if the operation fails.
+ */
 export const removeBagUserHasById = async (userId, bagId) => {
 	try {
 		const deletedBag = await prisma.bags.delete({
@@ -427,6 +473,13 @@ export const removeBagUserHasById = async (userId, bagId) => {
 	}
 };
 
+/**
+ * @function removeAllBagsUserHas
+ * @description Deletes all bags associated with a user based on filtering criteria.
+ * @param {string} userId - The ID of the user whose bags are being deleted.
+ * @param {Object} searchFilter - Filtering conditions for bag deletion.
+ * @returns {Promise<Object>} Metadata of the deletion operation, or an error if the operation fails.
+ */
 export const removeAllBagsUserHas = async (userId, searchFilter) => {
 	try {
 		const deletedBags = await prisma.bags.deleteMany({

@@ -9,13 +9,27 @@ import {
 	haveProfilePicture,
 } from '../utils/userHelper.js';
 
+/**
+ * Signs up a new user.
+ *
+ * @description This function handles the user registration process. It takes user details from the request body, validates them, and creates a new user in the database. It also hashes the user's password before storing it and sends a confirmation email for verification.
+ *
+ * @param {Object} body - The request body containing user details.
+ * @param {string} body.firstName - The first name of the user.
+ * @param {string} body.lastName - The last name of the user.
+ * @param {string} body.email - The email address of the user.
+ * @param {string} body.password - The password for the user.
+ * @param {string} body.confirmPassword - The confirmation of the user's password.
+ *
+ * @returns {Object|ErrorHandler} - Returns the role and safe user data or an ErrorHandler instance if an error occurs.
+ */
 export const singUpUser = async (body) => {
 	try {
 		const { firstName, lastName, email, password, confirmPassword } = body;
 
 		// Hashing the password
 		if (password !== confirmPassword)
-			throw new ErrorHandler(
+			return new ErrorHandler(
 				'password',
 				'password is not the same in confirmPassword',
 				'Enter the same password in confirm password'
@@ -54,7 +68,7 @@ export const singUpUser = async (body) => {
 		});
 
 		if (!newUser)
-			throw new ErrorHandler(
+			return new ErrorHandler(
 				'prisma',
 				'No user created',
 				'Failed to create user'
@@ -75,13 +89,24 @@ export const singUpUser = async (body) => {
 	}
 };
 
+/**
+ * Logs in a user.
+ *
+ * @description This function validates the user's email and password, and if valid, generates a JWT token for session management. The function also returns the user's role and safe user data.
+ *
+ * @param {Object} body - The request body containing the user's login credentials.
+ * @param {string} body.email - The email address of the user.
+ * @param {string} body.password - The password of the user.
+ *
+ * @returns {Object|ErrorHandler} - Returns the role and safe user data or an ErrorHandler instance if an error occurs.
+ */
 export const loginUser = async (body) => {
 	try {
 		const { email, password } = body;
 
 		// Check if user exists
 		const user = await prisma.user.findUnique({
-			where: { email: email },
+			where: { email },
 			include: {
 				suitcases: true,
 				bags: true,
@@ -90,26 +115,24 @@ export const loginUser = async (body) => {
 			},
 			omit: {
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 			},
 		});
 
-		const { role, isActive, password: userPassword, ...safeUser } = user;
-
 		if (!user)
-			new ErrorHandler(
+			return new ErrorHandler(
 				'user',
 				'There is no user with that email',
 				'User not found'
 			);
 
 		if (user.error)
-			new ErrorHandler(
+			return new ErrorHandler(
 				'prisma',
 				user.error,
 				'User not found ' + user.error.message
 			);
+
+		const { role, isActive, password: userPassword, ...safeUser } = user;
 
 		// Check if password matches
 		const isPasswordMatch = await verifyPassword(password, userPassword);
@@ -124,7 +147,7 @@ export const loginUser = async (body) => {
 		//? Check if user is deActive (isActive is false)
 		//* to make it isActive to true
 		if (!isActive) {
-			prisma.user.update({
+			await prisma.user.update({
 				where: { id: user.id },
 				data: { isActive: true },
 			});
@@ -136,12 +159,21 @@ export const loginUser = async (body) => {
 	}
 };
 
+/**
+ * Initiates the process for a user to reset their password.
+ *
+ * @description This function sends a password reset link to the user's email address. It generates a unique token for the password reset process and sends it along with instructions to the user's email.
+ *
+ * @param {string} email - The email address of the user requesting a password reset.
+ *
+ * @returns {Object|ErrorHandler} - Returns a token and user details for password reset or an ErrorHandler instance if an error occurs.
+ */
 export const userForgotPassword = async (email) => {
 	try {
 		const user = await prisma.user.findUnique({ where: { email: email } });
 
 		if (!user)
-			new ErrorHandler(
+			return new ErrorHandler(
 				'user',
 				'There is no user with that email',
 				'User not found'
@@ -157,37 +189,35 @@ export const userForgotPassword = async (email) => {
 		//* Generate a random password by crypto
 		const { token, hashToken } = generateCryptoHashToken();
 
-		//* get the reset expired token date, than add it to database.
-		const resetExpiredAt = setExpiredAt("password");
-
-		const updateUser = await prisma.user.update({
-			where: { id: user.id },
+		const userToken = await prisma.userToken.create({
 			data: {
-				passwordResetToken: hashToken,
-				passwordResetExpiredAt: resetExpiredAt,
+				userId: user.id,
+				type: 'PASSWORD_RESET',
+				hashToken: hashToken,
+				expiresAt: setExpiredAt('password'),
 			},
 		});
 
-		if (!updateUser)
+		if (!userToken)
 			return new ErrorHandler(
 				'user is null',
 				'Failed to update user password reset token and expired at',
 				'Failed to update user password reset token and expired at'
 			);
 
-		if (updateUser.error)
+		if (userToken.error)
 			return new ErrorHandler(
 				'prisma',
-				updateUser.error,
+				userToken.error,
 				'Failed to update user password reset token and expired at ' +
-					updateUser.error.message
+					userToken.error.message
 			);
 
 		//* return reset token to send an email
 		return {
 			token,
-			userName: updateUser.displayName,
-			userEmail: updateUser.email,
+			userName: user.displayName,
+			userEmail: user.email,
 		};
 	} catch (error) {
 		return new ErrorHandler(
@@ -198,37 +228,46 @@ export const userForgotPassword = async (email) => {
 	}
 };
 
+/**
+ * Resets a user's password using a reset token.
+ *
+ * @description This function verifies the provided reset token and checks that the new password and confirmation match. If valid, it updates the user's password and invalidates the reset token.
+ *
+ * @param {Object} body - The request body containing the new password and confirmation.
+ * @param {string} body.password - The new password for the user.
+ * @param {string} body.confirmPassword - The confirmation of the new password.
+ * @param {string} token - The password reset token.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated user data or an ErrorHandler instance if an error occurs.
+ */
 export const resetUserPassword = async (body, token) => {
 	try {
 		const hashedToken = generateCryptoToken(token);
 
 		const { password, confirmPassword } = body;
 
-        const user = await prisma.user.findUnique({
-            where: {
-                passwordResetToken: hashedToken,
-            },
-        });
-        
-        if (!user) {
-            return next(
-                new ErrorHandler(
-                    'Invalid token',
-                    'Password reset token is invalid',
-                    "Can't reset password with invalid token"
-                )
-            );
-        }
+		const userToken = await prisma.userToken.findUnique({
+			where: {
+				hashToken: hashedToken,
+			},
+		});
 
-		if (user.error)
+		if (!userToken)
+			return new ErrorHandler(
+				'Invalid token',
+				'Password reset token is invalid',
+				"Can't reset password with invalid token"
+			);
+
+		if (userToken.error)
 			return new ErrorHandler(
 				'prisma',
-				user.error,
-				'User not found ' + user.error.message
+				userToken.error,
+				'User not found ' + userToken.error.message
 			);
 
 		//? if the 10 minutes to reset the password is still in effect
-		if (new Date() > user.passwordResetExpiredAt)
+		if (new Date() > userToken.expiresAt)
 			return new ErrorHandler(
 				'timeout to reset password',
 				'You passed the time to reset your password',
@@ -246,18 +285,14 @@ export const resetUserPassword = async (body, token) => {
 
 		//* update the password
 		const updatePassword = await prisma.user.update({
-			where: { id: user.id },
+			where: { id: userToken.userId },
 			data: {
 				password: hashedPassword,
-				passwordResetToken: null,
-				passwordResetExpiredAt: null,
 				passwordChangeAt: passwordChangeAt(),
 			},
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				isActive: true,
 			},
 		});
@@ -276,6 +311,12 @@ export const resetUserPassword = async (body, token) => {
 				'Failed to update user password ' + updatePassword.error.message
 			);
 
+		await prisma.userToken.delete({
+			where: {
+				id: userToken.id,
+			},
+		});
+
 		return updatePassword;
 	} catch (error) {
 		return new ErrorHandler(
@@ -286,6 +327,19 @@ export const resetUserPassword = async (body, token) => {
 	}
 };
 
+/**
+ * Updates the user's password.
+ *
+ * @description This function verifies the user's current password and updates it to a new one. The new password must match the confirmation password. The update is saved in the database, and the user is notified of the change.
+ *
+ * @param {string} userId - The ID of the user whose password is being updated.
+ * @param {Object} body - The request body containing the current password, new password, and confirmation.
+ * @param {string} body.currentPassword - The current password of the user.
+ * @param {string} body.newPassword - The new password to be set.
+ * @param {string} body.confirmPassword - The confirmation of the new password.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated user data or an ErrorHandler instance if an error occurs.
+ */
 export const updateUserPassword = async (userId, body) => {
 	try {
 		const { currentPassword, newPassword, confirmPassword } = body;
@@ -318,14 +372,14 @@ export const updateUserPassword = async (userId, body) => {
 		);
 
 		if (!isMatch)
-			return ErrorHandler(
+			return new ErrorHandler(
 				'password',
 				'password is not correct',
 				'Incorrect password'
 			);
 
 		if (newPassword !== confirmPassword)
-			return ErrorHandler(
+			return new ErrorHandler(
 				'password',
 				'password is not the same in confirmPassword',
 				'Enter the same password in confirm password'
@@ -342,22 +396,20 @@ export const updateUserPassword = async (userId, body) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				isActive: true,
 				role: true,
 			},
 		});
 
 		if (!updatePassword)
-			return ErrorHandler(
+			return new ErrorHandler(
 				'update password is null',
 				"Couldn't update password",
 				'Failed to update user password'
 			);
 
 		if (updatePassword.error)
-			return ErrorHandler(
+			return new ErrorHandler(
 				'prisma',
 				updatePassword.error,
 				'Failed to update user password ' + updatePassword.error.message
@@ -373,12 +425,28 @@ export const updateUserPassword = async (userId, body) => {
 	}
 };
 
+/**
+ * Updates the user's profile data.
+ *
+ * @description This function allows users to update their profile information, including their name, gender, birth date, country, city, and profile picture. It ensures the data is validated before updating.
+ *
+ * @param {string} userId - The ID of the user whose data is being updated.
+ * @param {Object} body - The request body containing the updated user data.
+ * @param {string} body.firstName - The updated first name of the user.
+ * @param {string} body.lastName - The updated last name of the user.
+ * @param {string} body.gender - The updated gender of the user.
+ * @param {string} body.birth - The updated birth date of the user.
+ * @param {string} body.country - The updated country of the user.
+ * @param {string} body.city - The updated city of the user.
+ * @param {string} body.profilePicture - The updated profile picture URL of the user.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated user data or an ErrorHandler instance if an error occurs.
+ */
 export const updateUserData = async (userId, body) => {
 	try {
 		const {
 			firstName,
 			lastName,
-			email,
 			gender,
 			birth,
 			country,
@@ -391,7 +459,6 @@ export const updateUserData = async (userId, body) => {
 			data: {
 				firstName: firstName || undefined,
 				lastName: lastName || undefined,
-				email: email || undefined,
 				gender: gender || undefined,
 				birth: birthOfDate(birth),
 				country: country || undefined,
@@ -401,22 +468,20 @@ export const updateUserData = async (userId, body) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				isActive: true,
 				role: true,
 			},
 		});
 
 		if (!updatedUserData)
-			return ErrorHandler(
+			return new ErrorHandler(
 				'updateUserData is null',
 				"Couldn't update user data",
 				'Failed to update user data'
 			);
 
 		if (updatedUserData.error)
-			return ErrorHandler(
+			return new ErrorHandler(
 				'prisma',
 				updatedUserData.error,
 				'Failed to update user data ' + updatedUserData.error.message
@@ -428,61 +493,289 @@ export const updateUserData = async (userId, body) => {
 	}
 };
 
+/**
+ * Changes the email address of a user.
+ *
+ * @description This function allows the user to change their email address. It first checks if the new email is already in use, then sends an email verification link to the new address.
+ *
+ * @param {string} userId - The ID of the user whose email is being changed.
+ * @param {string} email - The new email address to be set.
+ *
+ * @returns {Object|ErrorHandler} - Returns the verification token and user details or an ErrorHandler instance if an error occurs.
+ */
+export const changeUserEmail = async (userId, email) => {
+	try {
+		//* check if email is never use before
+		const user = await prisma.user.findUnique({ where: { email: email } });
 
+		if (user)
+			return new ErrorHandler(
+				'user',
+				'Email is already in use',
+				'Email is already in use'
+			);
+
+		const { token, hashToken } = generateCryptoHashToken();
+
+		const userToken = await prisma.userToken.create({
+			data: {
+				userId,
+				type: 'CHANGE_EMAIL',
+				hashToken,
+				expiresAt: setExpiredAt('change'),
+			},
+		});
+
+		if (!userToken)
+			return new ErrorHandler(
+				'userToken is null',
+				"Couldn't update user",
+				'Failed to change user email'
+			);
+
+		if (userToken.error)
+			return new ErrorHandler(
+				'prisma',
+				userToken.error,
+				'Failed to change user email ' + userToken.error.message
+			);
+
+		const updateEmail = await prisma.user.update({
+			where: { id: userId },
+			data: {
+				email: email,
+			},
+			omit: {
+				password: true,
+				passwordChangeAt: true,
+				isActive: true,
+				role: true,
+			},
+		});
+
+		if (!updateEmail)
+			return new ErrorHandler(
+				'updateEmail is null',
+				"Couldn't update user",
+				'Failed to change user email'
+			);
+
+		if (updateEmail.error)
+			return new ErrorHandler(
+				'prisma',
+				updateEmail.error,
+				'Failed to change user email ' + updateEmail.error.message
+			);
+
+		return {
+			token: token,
+			userName: updateEmail.displayName,
+			userEmail: updateEmail.email,
+		};
+	} catch (error) {
+		return new ErrorHandler('catch', error, 'Failed to change user email');
+	}
+};
+
+/**
+ * Sends a verification email to the user for email verification.
+ *
+ * @description This function sends a verification email to the user after they initiate the email change process. The email contains a token that the user can use to verify the new email address.
+ *
+ * @param {string} email - The email address of the user requesting email verification.
+ *
+ * @returns {Object|ErrorHandler} - Returns a token and the user's name for email verification or an ErrorHandler instance if an error occurs.
+ */
 export const sendVerificationUserEmail = async (email) => {
-    try {
-        const user = await prisma.user.findUnique({ where: { email: email } });
+	try {
+		const user = await prisma.user.findUnique({ where: { email: email } });
 
-        if (!user) return new ErrorHandler(
-            'user',
-            'There is no user with that email',
-            'User not found'
-        );
-        
-        if (user.error) return new ErrorHandler(
-            'prisma',
-            user.error,
-            'User not found ' + user.error.message
-        );
+		if (!user)
+			return new ErrorHandler(
+				'user',
+				'There is no user with that email',
+				'User not found'
+			);
 
-        const { token, hashToken } = generateCryptoHashToken();
+		if (user.error)
+			return new ErrorHandler(
+				'prisma',
+				user.error,
+				'User not found ' + user.error.message
+			);
 
-        const expiredAt = setExpiredAt("email");
+		const { token, hashToken } = generateCryptoHashToken();
 
-        const updateUser = await prisma.user.update({
-            where: { id: user.id },
-            data: {
-                emailVerifyToken: hashToken,
-                emailTokenExpiresAt: expiredAt,
-            }
-        });
+		const userToken = await prisma.userToken.create({
+			data: {
+				userId: user.id,
+				type: 'EMAIL_VERIFICATION',
+				hashToken: hashToken,
+				expiresAt: setExpiredAt('verify'),
+			},
+		});
 
-        if (!updateUser)
-            return new ErrorHandler(
-                'updateUser is null',
-                "Couldn't update user",
-                'Failed to update user'
-            );
+		if (!userToken)
+			return new ErrorHandler(
+				'userToken is null',
+				"Couldn't update user",
+				'Failed to update user'
+			);
 
-        if (updateUser.error)
-            return new ErrorHandler(
-                'prisma',
-                updateUser.error,
-                'Failed to update user ' + updateUser.error.message
-            );
-        
-        return { token, userName: user.displayName }
-    }
+		if (userToken.error)
+			return new ErrorHandler(
+				'prisma',
+				userToken.error,
+				'Failed to update user ' + userToken.error.message
+			);
 
-    catch (error) {
-        return new ErrorHandler(
-            'catch',
-            error,
-            'Failed to verify user email'
-        )
-    }
-}
+		return { token, userName: user.displayName };
+	} catch (error) {
+		return new ErrorHandler('catch', error, 'Failed to verify user email');
+	}
+};
 
+/**
+ * Verifies a user's email address using a token.
+ *
+ * @description This function verifies the token sent to the user's email and confirms the new email address. If successful, it updates the user's email in the database.
+ *
+ * @param {string} token - The verification token sent to the user's email.
+ * @param {string} type - The type of verification (e.g., "EMAIL_VERIFICATION").
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated user data or an ErrorHandler instance if an error occurs.
+ */
+export const verifyUserEmail = async (token, type) => {
+	try {
+		const hashToken = generateCryptoToken(token);
+
+		const userToken = await prisma.userToken.findUnique({
+			where: {
+				hashToken: hashToken,
+				type: type,
+			},
+		});
+
+		if (!userToken)
+			return new ErrorHandler(
+				'userToken is null',
+				"Couldn't update user",
+				'Failed to verify user email'
+			);
+
+		if (userToken.error)
+			return new ErrorHandler(
+				'prisma',
+				"Couldn't Find token" + userToken.error,
+				'Failed to verify user email ' + userToken.error.message
+			);
+
+		if (userToken.expiresAt < new Date())
+			return new ErrorHandler(
+				'userToken is expired',
+				'token is expired',
+				'Failed to verify user email'
+			);
+
+		const updateUser = await prisma.user.update({
+			where: { id: userToken.userId },
+			data: {
+				isEmailVerified: true,
+			},
+			omit: {
+				password: true,
+				passwordChangeAt: true,
+				role: true,
+			},
+		});
+
+		if (!updateUser)
+			return new ErrorHandler(
+				'updateUser is null',
+				"Couldn't update user",
+				'Failed to verify user email'
+			);
+
+		if (updateUser.error)
+			return new ErrorHandler(
+				'prisma',
+				updateUser.error,
+				'Failed to verify user email ' + updateUser.error.message
+			);
+
+		await prisma.userToken.delete({
+			where: {
+				id: userToken.id,
+			},
+		});
+
+		return updateUser;
+	} catch (error) {
+		return new ErrorHandler('catch', error, 'Failed to verify user email');
+	}
+};
+
+/**
+ * Retrieves the permissions associated with a user role.
+ *
+ * @description This function fetches the permissions tied to a specific role (such as Admin, Member, etc.) from the database. It returns a list of permissions that dictate the actions allowed for users of that role.
+ *
+ * @param {string} userRole - The role of the user (e.g., "Admin", "Member").
+ *
+ * @returns {Object|ErrorHandler} - Returns the permissions associated with the user's role or an ErrorHandler instance if an error occurs.
+ */
+export const getUserPermissions = async (userRole) => {
+	try {
+		const userPermissions = await prisma.roleOnPermission.findMany({
+			where: { role: userRole },
+			include: {
+				permission: true,
+			},
+		});
+
+		if (!userPermissions)
+			return new ErrorHandler(
+				'userPermissions is null',
+				"Couldn't get user permissions",
+				'Failed to get user permissions'
+			);
+
+		if (userPermissions.error)
+			return new ErrorHandler(
+				'prisma',
+				userPermissions.error,
+				'Failed to get user permissions ' +
+					userPermissions.error.message
+			);
+
+		const totalPermissions = await prisma.roleOnPermission.count({
+			where: { role: userRole },
+		});
+
+		const meta = {
+			totalPermissions: totalPermissions,
+			role: userRole,
+		};
+
+		return { permissions: userPermissions, meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			error,
+			'Failed to get user permissions'
+		);
+	}
+};
+
+/**
+ * Deactivates a user's account.
+ *
+ * @description This function disables a user's account, preventing them from logging in or accessing the system. It can be used when a user requests to deactivate their account or when a system administrator disables an account.
+ *
+ * @param {string} userId - The ID of the user whose account is to be deactivated.
+ *
+ * @returns {Object|ErrorHandler} - Returns the deactivated user data or an ErrorHandler instance if an error occurs.
+ */
 export const deactivateUserAccount = async (userId) => {
 	try {
 		const deactivateUser = await prisma.user.update({
@@ -493,8 +786,6 @@ export const deactivateUserAccount = async (userId) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				role: true,
 			},
 		});
@@ -515,33 +806,10 @@ export const deactivateUserAccount = async (userId) => {
 
 		return deactivateUser;
 	} catch (error) {
-		return ErrorHandler(
+		return new ErrorHandler(
 			"Couldn't deactivate",
 			error,
 			'Failed to deactivate User Account'
 		);
 	}
 };
-
-
-async function name() {
-    const { token, hashToken } = generateCryptoHashToken();
-    const expiredAt = setExpiredAt();
-
-    // ✅ First, register a new user before sending a password reset link
-    const user = await prisma.user.create({
-        data: {
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'testuser44@test.com',
-            password: await hashingPassword('testing123'),
-            passwordResetToken: hashToken,
-            passwordResetExpiredAt: expiredAt,
-        },
-    });
-    const kk = await resetUserPassword({ password: 'testing12377@', confirmPassword: 'testing12377@' }, token);
-
-    return console.log(kk)
-}
-
-await name()

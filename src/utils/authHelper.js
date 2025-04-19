@@ -6,7 +6,7 @@ import CSRF from 'csrf';
 
 /**
  * Set cookies for access token and refresh token.
- * 
+ *
  * @param {String} userId - User id of the user.
  * @param {Response} res - HTTP response object.
  */
@@ -23,7 +23,7 @@ export const sendCookies = (userId, res) => {
 
 /**
  * Set cookies for social media providers like Google/Facebook.
- * 
+ *
  * @param {string} accessToken - Access token from the social media provider.
  * @param {number} userId - User id of the user.
  * @param {string} provider - Social media provider name.

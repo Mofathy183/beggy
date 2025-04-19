@@ -110,20 +110,27 @@ describe('Auth API Tests For Login', () => {
 describe('Auth API Tests For Reset Password', () => {
 	test("Should reset a user's password", async () => {
 		//* Generate a random password by crypto
-        const { token, hashToken } = generateCryptoHashToken();
-        const expiredAt = setExpiredAt();
-    
-        // ✅ First, register a new user before sending a password reset link
-        const user = await prisma.user.create({
-            data: {
-                firstName: 'John',
-                lastName: 'Doe',
-                email: 'testuser44@test.com',
-                password: await hashingPassword('testing123'),
-                passwordResetToken: hashToken,
-                passwordResetExpiredAt: expiredAt,
-            },
-        });
+		const { token, hashToken } = generateCryptoHashToken();
+		const expiredAt = setExpiredAt();
+
+		// ✅ First, register a new user before sending a password reset link
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser44@test.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		const userToken1 = await prisma.userToken.create({
+			data: {
+				userId: user.id,
+				type: 'PASSWORD_RESET',
+				hashToken: hashToken,
+				expiresAt: expiredAt,
+			},
+		});
 
 		console.log('Before Reset Password', user.password);
 
@@ -138,7 +145,7 @@ describe('Auth API Tests For Reset Password', () => {
 				confirmPassword: 'testing12377@',
 			});
 
-		console.log("RESPONSE: ", res.body);
+		console.log('RESPONSE: ', res.body);
 		console.log(
 			'After Reset Password',
 			await prisma.user.findUnique({
@@ -156,6 +163,14 @@ describe('Auth API Tests For Reset Password', () => {
 			lastName: 'Doe',
 			email: 'testuser44@test.com',
 		});
+
+		const userToken2 = await prisma.userToken.findUnique({
+			where: {
+				id: userToken1.id,
+			},
+		});
+
+		expect(userToken2).toBeNull();
 	});
 });
 
@@ -230,7 +245,6 @@ describe('Auth API Tests For Update User Data', () => {
 			.send({
 				firstName: 'Jane',
 				lastName: 'Doe',
-				email: 'testuser66@test.com',
 				gender: 'male',
 			});
 
@@ -250,9 +264,193 @@ describe('Auth API Tests For Update User Data', () => {
 			id: user.id,
 			firstName: 'Jane',
 			lastName: 'Doe',
-			email: 'testuser66@test.com',
 			gender: 'MALE',
 		});
+	});
+});
+
+describe('Auth API Tests For Change Email', () => {
+	test.skip("Should change a user's email", async () => {
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser77@test.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		const res = await request(app)
+			.patch('/api/beggy/auth/change-email')
+			.set('Cookie', cookies)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
+			.set('Authorization', `Bearer ${signToken(user.id)}`)
+			.send({
+				email: 'mofathy1833@gmail.com',
+			});
+
+		console.log('RESPONSE BODY', res.body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Successfully Updated User Email');
+		expect(res.body.data).toBe(
+			'Check your email inbox to verify your email'
+		);
+		const userEmail = await prisma.user.findUnique({
+			where: { id: user.id },
+			select: { email: true },
+		});
+
+		expect(userEmail.email).toBe('mofathy1833@gmail.com');
+	});
+});
+
+describe('Auth API Tests For send Verification Email', () => {
+	test.skip('Should send a verification email', async () => {
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'mofathy1833@gmail.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		const res = await request(app)
+			.post('/api/beggy/auth/send-verification-email')
+			.set('Cookie', cookies)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
+			.set('Authorization', `Bearer ${signToken(user.id)}`)
+			.send({
+				email: 'mofathy1833@gmail.com',
+			});
+
+		console.log('RESPONSE BODY', res.body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Verification email send Successfully');
+		expect(res.body.data).toBe(
+			'Check your email inbox to verify your email'
+		);
+	});
+});
+
+describe('Auth API Tests For Verify Email', () => {
+	test('Should verify email for first time', async () => {
+		//* Generate a random password by crypto
+		const { token, hashToken } = generateCryptoHashToken();
+		const expiredAt = setExpiredAt();
+
+		// ✅ First, register a new user before sending a password reset link
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser44@test.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		expect(user.isEmailVerified).toBe(false);
+
+		const userToken1 = await prisma.userToken.create({
+			data: {
+				userId: user.id,
+				type: 'EMAIL_VERIFICATION',
+				hashToken: hashToken,
+				expiresAt: expiredAt,
+			},
+		});
+
+		const res = await request(app).get(
+			`/api/beggy/auth/verify-email?token=${token}&type=email_verification`
+		);
+
+		console.log('RESPONSE BODY', res.body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Successfully Verified User Email');
+		expect(res.body.data.isEmailVerified).toBe(true);
+
+		const userToken2 = await prisma.userToken.findUnique({
+			where: { id: userToken1.id },
+		});
+
+		expect(userToken2).toBeNull();
+	});
+
+	test('Should verify email for Change Email', async () => {
+		//* Generate a random password by crypto
+		const { token, hashToken } = generateCryptoHashToken();
+		const expiredAt = setExpiredAt();
+
+		// ✅ First, register a new user before sending a password reset link
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser44@test.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		expect(user.isEmailVerified).toBe(false);
+
+		const userToken1 = await prisma.userToken.create({
+			data: {
+				userId: user.id,
+				type: 'CHANGE_EMAIL',
+				hashToken: hashToken,
+				expiresAt: expiredAt,
+			},
+		});
+
+		const res = await request(app).get(
+			`/api/beggy/auth/verify-email?token=${token}&type=change_email`
+		);
+
+		console.log('RESPONSE BODY', res.body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Successfully Verified User Email');
+		expect(res.body.data.isEmailVerified).toBe(true);
+
+		const userToken2 = await prisma.userToken.findUnique({
+			where: { id: userToken1.id },
+		});
+
+		expect(userToken2).toBeNull();
+	});
+});
+
+describe('Auth API Tests For get permissions by role', () => {
+	test('Should get user permissions', async () => {
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'mofathy1833@gmail.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		const res = await request(app)
+			.get('/api/beggy/auth/permissions')
+			.set('Authorization', `Bearer ${signToken(user.id)}`);
+
+		console.log('RESPONSE BODY', res.body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Successfully Get User Permissions');
+		expect(res.body.data).toBeDefined();
+		expect(Array.isArray(res.body.data)).toBe(true);
 	});
 });
 
@@ -387,7 +585,7 @@ describe('Auth API Tests For Forgot Password', () => {
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testuser33@test.com',
+				email: 'mofathy1833@gmail.com',
 				password: await hashingPassword('testing123'),
 			},
 		});
@@ -395,18 +593,19 @@ describe('Auth API Tests For Forgot Password', () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/forgot-password')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('x-csrf-secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.send({
-				email: 'testuser33@test.com',
+				email: 'mofathy1833@gmail.com',
 			});
 
 		console.log('RESPONSE', res.body);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Reset password email sent successfully');
+		expect(res.body.message).toBe('Reset password email send Successfully');
 		expect(res.body.data).toBe(
-			'Check your email for password reset instructions.'
+			'Check your email inbox to reset your password'
 		);
 	});
 });

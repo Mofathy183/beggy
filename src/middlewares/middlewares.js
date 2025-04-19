@@ -3,6 +3,16 @@ import { ErrorResponse } from '../utils/error.js';
 import { productStringRegExp } from '../api/validators/itemValidator.js';
 import { stringRegExp } from '../api/validators/authValidator.js';
 
+/**
+ * Middleware for paginating results based on query parameters.
+ * Validates page and limit query parameters and calculates the offset.
+ * Attaches pagination details to the request object.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * @throws {ErrorResponse} If page or limit is not an integer or out of range.
+ */
 export const paginateMiddleware = (req, res, next) => {
 	const { page = 1, limit = 10 } = req.query;
 	const MAX_LIMIT = 10; // Maximum items per page
@@ -48,6 +58,16 @@ export const paginateMiddleware = (req, res, next) => {
 	next();
 };
 
+/**
+ * Middleware for ordering results based on query parameters.
+ * Validates the "sortBy" and "order" query parameters and constructs the Prisma ordering object.
+ * Attaches the ordering details to the request object.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * @throws {ErrorResponse} If "sortBy" or "order" is invalid or missing.
+ */
 export const orderByMiddleware = (req, res, next) => {
 	let { order = undefined, sortBy = undefined } = req.query;
 
@@ -107,6 +127,16 @@ export const orderByMiddleware = (req, res, next) => {
 	next(); // Ensure the request moves forward
 };
 
+/**
+ * Middleware to filter results based on search query parameters.
+ * Validates and constructs search filters based on the "field" and "search" query parameters.
+ * Attaches the search filter to the request object.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * @throws {ErrorResponse} If the search query or field is invalid.
+ */
 export const searchMiddleware = (req, res, next) => {
 	let { field = undefined, search = undefined } = req.query;
 
@@ -202,6 +232,71 @@ export const searchMiddleware = (req, res, next) => {
 	next();
 };
 
+/**
+ * Middleware to validate and process email verification query parameters.
+ * Ensures both 'token' and 'type' are provided and valid strings.
+ * Converts the 'type' to uppercase and attaches it to the request object.
+ *
+ * @param {Request} req - The request object containing the query parameters.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * @throws {ErrorResponse} If token or type is missing, invalid, or incorrect.
+ */
+export const verifyEmailQueryMiddleware = (req, res, next) => {
+	const { token, type } = req.query;
+
+	// Check if both token and type are present
+	if (!token || !type)
+		return next(
+			new ErrorResponse(
+				'Missing token or type',
+				'Failed to verify user email',
+				statusCode.badRequestCode
+			)
+		);
+
+	// Validate that token and type are strings
+	if (typeof token !== 'string' || typeof type !== 'string')
+		return next(
+			new ErrorResponse(
+				'Invalid token or type',
+				'Failed to verify user email',
+				statusCode.badRequestCode
+			)
+		);
+
+	// Ensure type is either 'change_email' or 'email_verification'
+	if (type !== 'change_email' && type !== 'email_verification')
+		return next(
+			new ErrorResponse(
+				'Invalid type',
+				'type must be change_email or email_verification',
+				statusCode.badRequestCode
+			)
+		);
+
+	// Convert type to uppercase for further processing
+	const upperCaseType = type.toUpperCase();
+
+	// Attach verified token and type to the request object
+	req.verified = {
+		token,
+		type: upperCaseType,
+	};
+
+	next();
+};
+
+/**
+ * Middleware to retrieve and store the user's IP address.
+ * Retrieves the IP from the "x-forwarded-for" header or socket address.
+ * Stores the user's IP in the session.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * @throws {ErrorResponse} If unable to retrieve the user's IP.
+ */
 export const userIpMiddleware = (req, res, next) => {
 	const userIp = req.headers['x-forwarded-for']
 		? req.headers['x-forwarded-for'].split(',')[0].trim() // Get first IP from proxy chain
@@ -221,6 +316,16 @@ export const userIpMiddleware = (req, res, next) => {
 	next();
 };
 
+/**
+ * Middleware to validate and store the user's location permission.
+ * Ensures that the "locationPermission" is provided and is set to "granted".
+ * Stores the location permission in the session.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * @throws {ErrorResponse} If location permission is not provided or is denied.
+ */
 export const locationPermissionMiddleware = (req, res, next) => {
 	const locationPermission = req.body.permission;
 
@@ -249,6 +354,16 @@ export const locationPermissionMiddleware = (req, res, next) => {
 	next();
 };
 
+/**
+ * Middleware to filter users based on first name and last name query parameters.
+ * Validates that the first name and last name are strings and do not contain special characters.
+ * Constructs a search filter based on the validated parameters.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * @throws {ErrorResponse} If first name or last name is not a string or contains invalid characters.
+ */
 export const searchForUsersMiddleware = (req, res, next) => {
 	const { firstName, lastName } = req.query;
 

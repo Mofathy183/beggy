@@ -1,6 +1,15 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
 
+/**
+ * @function findItemsUserHas
+ * @description Fetches the list of items associated with a specific user, based on filters, pagination, and sorting criteria.
+ * @param {string} userId - The ID of the user whose items are being retrieved.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} searchFilter - Filtering conditions for the item search.
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the user's items and metadata, or an error if the operation fails.
+ */
 export const findItemsUserHas = async (
 	userId,
 	pagination,
@@ -64,6 +73,13 @@ export const findItemsUserHas = async (
 	}
 };
 
+/**
+ * @function findItemUserHas
+ * @description Retrieves a specific item owned by a user based on the item's ID.
+ * @param {string} userId - The ID of the user who owns the item.
+ * @param {string} itemId - The ID of the item to retrieve.
+ * @returns {Promise<Object>} The item details, or an error if the operation fails.
+ */
 export const findItemUserHas = async (userId, itemId) => {
 	try {
 		const item = await prisma.items.findUnique({
@@ -111,6 +127,13 @@ export const findItemUserHas = async (userId, itemId) => {
 	}
 };
 
+/**
+ * @function addItemToUser
+ * @description Adds a new item for a user with the specified details.
+ * @param {string} userId - The ID of the user to whom the item is being added.
+ * @param {Object} body - Contains item details such as name, category, quantity, weight, etc.
+ * @returns {Promise<Object>} The newly created item and metadata, or an error if the operation fails.
+ */
 export const addItemToUser = async (userId, body) => {
 	try {
 		const { name, category, quantity, weight, volume, color, isFragile } =
@@ -179,6 +202,13 @@ export const addItemToUser = async (userId, body) => {
 	}
 };
 
+/**
+ * @function addItemsToUSer
+ * @description Adds multiple items for a user in bulk, based on the input details.
+ * @param {string} userId - The ID of the user to whom the items are being added.
+ * @param {Array<Object>} body - Array containing details for each item to be added.
+ * @returns {Promise<Object>} Metadata for the created items, or an error if the operation fails.
+ */
 export const addItemsToUSer = async (userId, body) => {
 	try {
 		const items = body.map((item) => ({
@@ -219,6 +249,14 @@ export const addItemsToUSer = async (userId, body) => {
 	}
 };
 
+/**
+ * @function replaceItemUserHas
+ * @description Replaces the details of an existing item owned by a user.
+ * @param {string} userId - The ID of the user who owns the item.
+ * @param {string} itemId - The ID of the item to be replaced.
+ * @param {Object} body - New data to update the item.
+ * @returns {Promise<Object>} The updated item details, or an error if the operation fails.
+ */
 export const replaceItemUserHas = async (userId, itemId, body) => {
 	try {
 		const { name, category, weight, volume, color, isFragile, quantity } =
@@ -283,6 +321,14 @@ export const replaceItemUserHas = async (userId, itemId, body) => {
 	}
 };
 
+/**
+ * @function modifyItemUserHas
+ * @description Modifies specific fields of an item owned by a user, based on the provided details.
+ * @param {string} userId - The ID of the user who owns the item.
+ * @param {string} itemId - The ID of the item to be modified.
+ * @param {Object} body - Partial fields to update.
+ * @returns {Promise<Object>} The modified item details, or an error if the operation fails.
+ */
 export const modifyItemUserHas = async (userId, itemId, body) => {
 	try {
 		const { name, category, weight, volume, color, isFragile, quantity } =
@@ -347,6 +393,13 @@ export const modifyItemUserHas = async (userId, itemId, body) => {
 	}
 };
 
+/**
+ * @function removeAllItemsUserHas
+ * @description Deletes all items associated with a user based on filtering criteria.
+ * @param {string} userId - The ID of the user whose items are being deleted.
+ * @param {Object} searchFilter - Filtering conditions for item deletion.
+ * @returns {Promise<Object>} Metadata of the deletion operation, or an error if the operation fails.
+ */
 export const removeAllItemsUserHas = async (userId, searchFilter) => {
 	try {
 		const deletedItems = await prisma.items.deleteMany({
@@ -377,6 +430,13 @@ export const removeAllItemsUserHas = async (userId, searchFilter) => {
 	}
 };
 
+/**
+ * @function removeItemUserHas
+ * @description Removes a specific item owned by a user based on the item's ID.
+ * @param {string} userId - The ID of the user who owns the item.
+ * @param {string} itemId - The ID of the item to delete.
+ * @returns {Promise<Object>} An object with metadata and the deleted item details, or an error if the operation fails.
+ */
 export const removeItemUserHas = async (userId, itemId) => {
 	try {
 		const deletedItem = await prisma.items.delete({

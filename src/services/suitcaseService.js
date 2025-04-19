@@ -1,6 +1,15 @@
 import prisma from '../../prisma/prisma.js';
 import { ErrorHandler } from '../utils/error.js';
 
+/**
+ * @function findSuitcasesUserHas
+ * @description Fetches a list of suitcases owned by a specific user based on filters, pagination, and sorting criteria.
+ * @param {string} userId - The ID of the user whose suitcases are being retrieved.
+ * @param {Object} searchFilter - Filtering conditions for the suitcases search.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the user's suitcases and metadata, or an error if the operation fails.
+ */
 export const findSuitcasesUserHas = async (
 	userId,
 	searchFilter,
@@ -62,6 +71,13 @@ export const findSuitcasesUserHas = async (
 	}
 };
 
+/**
+ * @function findSuitcaseUserHasById
+ * @description Retrieves a specific suitcase owned by a user based on the suitcase's ID.
+ * @param {string} userId - The ID of the user who owns the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase to retrieve.
+ * @returns {Promise<Object>} The suitcase details, or an error if the operation fails.
+ */
 export const findSuitcaseUserHasById = async (userId, suitcaseId) => {
 	try {
 		const suitcase = await prisma.suitcases.findUnique({
@@ -100,6 +116,13 @@ export const findSuitcaseUserHasById = async (userId, suitcaseId) => {
 	}
 };
 
+/**
+ * @function addSuitcaseToUser
+ * @description Adds a new suitcase for a user with the specified details.
+ * @param {string} userId - The ID of the user to whom the suitcase is being added.
+ * @param {Object} body - Contains suitcase details such as name, type, brand, color, size, etc.
+ * @returns {Promise<Object>} The newly created suitcase and metadata, or an error if the operation fails.
+ */
 export const addSuitcaseToUser = async (userId, body) => {
 	try {
 		const {
@@ -174,6 +197,14 @@ export const addSuitcaseToUser = async (userId, body) => {
 	}
 };
 
+/**
+ * @function replaceSuitcaseUserHas
+ * @description Replaces the details of an existing suitcase owned by a user.
+ * @param {string} userId - The ID of the user who owns the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase to be replaced.
+ * @param {Object} body - New data to update the suitcase.
+ * @returns {Promise<Object>} The updated suitcase details, or an error if the operation fails.
+ */
 export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 	try {
 		const {
@@ -239,6 +270,14 @@ export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function modifySuitcaseUserHas
+ * @description Modifies specific fields of a suitcase owned by a user, with support for feature additions and removals.
+ * @param {string} userId - The ID of the user who owns the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase to be modified.
+ * @param {Object} body - Partial fields to update, including features to add or remove.
+ * @returns {Promise<Object>} The modified suitcase details, or an error if the operation fails.
+ */
 export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 	try {
 		const {
@@ -352,6 +391,13 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function removeSuitcaseUserHasById
+ * @description Removes a specific suitcase owned by a user based on the suitcase's ID.
+ * @param {string} userId - The ID of the user who owns the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase to delete.
+ * @returns {Promise<Object>} An object with metadata and the deleted suitcase details, or an error if the operation fails.
+ */
 export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 	try {
 		const deletedSuitcase = await prisma.suitcases.delete({
@@ -392,6 +438,13 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 	}
 };
 
+/**
+ * @function removeAllSuitcasesUserHas
+ * @description Deletes all suitcases owned by a user based on filtering criteria.
+ * @param {string} userId - The ID of the user whose suitcases are being deleted.
+ * @param {Object} searchFilter - Filtering conditions for suitcase deletion.
+ * @returns {Promise<Object>} Metadata of the deletion operation, or an error if the operation fails.
+ */
 export const removeAllSuitcasesUserHas = async (userId, searchFilter) => {
 	try {
 		const deletedSuitcases = await prisma.suitcases.deleteMany({

@@ -1,7 +1,7 @@
 import { statusStatement } from '../config/status.js';
 
 /**
- * @class 
+ * @class
  */
 class SuccessResponse {
 	/**

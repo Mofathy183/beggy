@@ -39,7 +39,6 @@ export const verifyPassword = async (password, hashedPassword) => {
 	}
 };
 
-
 /**
  * generate random reset token for forgot password
  * Generates a random password and returns its SHA256 hash.

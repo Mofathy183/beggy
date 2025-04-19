@@ -3,6 +3,22 @@ import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { hashingPassword } from '../utils/hash.js';
 import { ErrorHandler } from '../utils/error.js';
 
+/**
+ * @function addUser
+ * @description Creates a new user with the provided details, including password hashing and validation.
+ * @param {Object} body - The input details of the user.
+ * @param {string} body.firstName - The first name of the user.
+ * @param {string} body.lastName - The last name of the user.
+ * @param {string} body.email - The email of the user.
+ * @param {string} body.password - The password of the user.
+ * @param {string} body.confirmPassword - The confirmation password of the user.
+ * @param {string} body.gender - The gender of the user.
+ * @param {Date} body.birth - The date of birth of the user.
+ * @param {string} body.country - The country of residence of the user.
+ * @param {string} body.city - The city of residence of the user.
+ * @param {string} [body.profilePicture] - Optional profile picture URL of the user.
+ * @returns {Promise<Object>} The newly created user and metadata, or an error if the operation fails.
+ */
 export const addUser = async (body) => {
 	try {
 		const {
@@ -50,8 +66,6 @@ export const addUser = async (body) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				role: true,
 				isActive: true,
 			},
@@ -84,6 +98,12 @@ export const addUser = async (body) => {
 	}
 };
 
+/**
+ * @function getUserById
+ * @description Retrieves a user's information based on their ID, including associated suitcases, bags, items, and account details.
+ * @param {string} userId - The ID of the user to retrieve.
+ * @returns {Promise<Object>} The user's details, or an error if the operation fails.
+ */
 export const getUserById = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({
@@ -98,8 +118,6 @@ export const getUserById = async (userId) => {
 			},
 			omit: {
 				password: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				passwordChangeAt: true,
 			},
 		});
@@ -128,6 +146,14 @@ export const getUserById = async (userId) => {
 	}
 };
 
+/**
+ * @function getAllUsers
+ * @description Fetches a list of users based on filtering criteria, pagination, and sorting options. Includes associated suitcases, bags, items, and account details.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} searchFilter - Filtering conditions for the user query (supports logical OR operations).
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the fetched users and metadata, or an error if the operation fails.
+ */
 export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 	try {
 		const { page, limit, offset } = pagination;
@@ -143,8 +169,6 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 			},
 			skip: offset,
 			take: limit,
@@ -195,6 +219,14 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 	}
 };
 
+/**
+ * @function changeUserRole
+ * @description Updates the role of a specific user in the database.
+ * @param {string} id - The ID of the user whose role will be updated.
+ * @param {Object} body - The request body containing the new role.
+ * @param {string} body.role - The new role for the user.
+ * @returns {Promise<Object>} The updated user details, or an error if the operation fails.
+ */
 export const changeUserRole = async (id, body) => {
 	try {
 		const { role } = body;
@@ -207,8 +239,6 @@ export const changeUserRole = async (id, body) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				isActive: true,
 			},
 		});
@@ -237,6 +267,12 @@ export const changeUserRole = async (id, body) => {
 	}
 };
 
+/**
+ * @function removeUser
+ * @description Deletes a specific user from the database identified by their ID.
+ * @param {string} userId - The ID of the user to delete.
+ * @returns {Promise<Object>} An object containing the deleted user details and metadata, or an error if the operation fails.
+ */
 export const removeUser = async (userId) => {
 	try {
 		const userDeleted = await prisma.user.delete({
@@ -244,8 +280,6 @@ export const removeUser = async (userId) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
 				role: true,
 				isActive: true,
 			},
@@ -283,6 +317,12 @@ export const removeUser = async (userId) => {
 	}
 };
 
+/**
+ * @function removeAllUsers
+ * @description Deletes multiple users from the database based on filtering criteria.
+ * @param {Object} searchFilter - Filtering conditions for the deletion operation.
+ * @returns {Promise<Object>} Metadata of the deletion operation, including the count of deleted users, or an error if the operation fails.
+ */
 export const removeAllUsers = async (searchFilter) => {
 	try {
 		const usersDeleted = await prisma.user.deleteMany({

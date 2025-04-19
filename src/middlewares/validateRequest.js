@@ -65,7 +65,6 @@ export const VReqTo = (req, res, next, schema) => {
 	);
 };
 
-
 /**
  *if the id is not present or not valid
  *will prevent the request from being processed or continue
@@ -99,7 +98,6 @@ export const VReqToUUID = (req, res, next, value, paramName) => {
 };
 
 //* ======================={USER VRequests Validation}========================
-
 
 /**
  * if req.user is undefined or null means that Facebook authentication failed
@@ -273,7 +271,6 @@ export const VReqToCreateBag = (req, res, next) => {
 	return VReqTo(req, res, next, bagSchema);
 };
 
-
 /**
  * Validates a request body for modifying a bag against the bagModifySchema.
  * If validation passes, the request proceeds to the next middleware.
@@ -333,7 +330,6 @@ export const VReqToModifySuitcase = (req, res, next) => {
 export const VReqToItemAutoFilling = (req, res, next) => {
 	return VReqTo(req, res, next, itemAutoFillingSchema);
 };
-
 
 /**
  * Validates a request body for auto-filling bag fields against the bagAutoFillingSchema.

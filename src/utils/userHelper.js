@@ -1,8 +1,8 @@
-import { addMinutes } from "date-fns"
+import { addMinutes } from 'date-fns';
 
 /**
  * @description this will add to the database because birth is DateTime
- * @param {String} birth 
+ * @param {String} birth
  * @example birthOfDate("2005-12-12")// 2005-12-12T00:00:00.000Z
  * @returns {Date} new Date Object of the string Date
  */
@@ -16,8 +16,8 @@ export const birthOfDate = (birth) => {
  * @description this will add to the database because profile picture has default value
  * will add if user does not have profile picture
  * means that is value is undefined
- * 
- * @param {String} profilePicture 
+ *
+ * @param {String} profilePicture
  * @returns {String | undefined} if profilePicture exists will return it, if not will return undefined
  */
 export const haveProfilePicture = (profilePicture) => {
@@ -27,19 +27,22 @@ export const haveProfilePicture = (profilePicture) => {
 };
 
 /**
- * @description to store the email token expires at data, 
+ * @description to store the email token expires at data,
  * to store the password reset token expiration date
  * @param {String} type - Either 'email' or 'password'.
- * "email" returns expires in 1 hour, 
+ * "verify" returns expires in 1 hour,
+ * "change" returns expires in 15 minutes,
  * "password" returns expires in 10 minutes.
  * @returns {Date}
  */
 export const setExpiredAt = (type) => {
-    //* the email token will expires in 1 hour
-    if(type === "email") return addMinutes(new Date(), 10);
+	//* the verify email token will expires in 1 hour
+	if (type === 'verify') return addMinutes(new Date(), 60);
+	//* the change email token will expires in 15 minutes
+	if (type === 'change') return addMinutes(new Date(), 15);
 
-    //* the password token will expires in 10 minutes
-	return addMinutes(new Date(), 60);
+	//* the password token will expires in 10 minutes
+	return addMinutes(new Date(), 10);
 };
 
 //*=============================={Password Change}============================
@@ -57,8 +60,8 @@ export const passwordChangeAt = () => {
  * @description for compare it with the timestamp in token
  * to make sure that the user has not change has password after issued the token
  * (if it before issued the token that means that the user has not change has password)
- * 
- * @param {Date} changeAt 
+ *
+ * @param {Date} changeAt
  * @returns {Number} Timestamp
  */
 const passwordChangeTimestamp = (changeAt) => {
@@ -70,7 +73,7 @@ const passwordChangeTimestamp = (changeAt) => {
  * @description Check if user password change
  * by check if the password change at timestamp
  * and compare it with the timestamp in token
- * 
+ *
  * @param {Date} passwordChangeAt - will convert it to timestamp
  * @param {Number} tokenTimestamp - that is a timestamp from the token
  * @returns {Boolean} the result of compare passwordChangeAt timestamp and tokenTimestamp

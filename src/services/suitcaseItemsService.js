@@ -1,6 +1,15 @@
 import prisma from '../../prisma/prisma.js';
 import { ErrorHandler } from '../utils/error.js';
 
+/**
+ * @function addItemToUserSuitcase
+ * @description Adds a single item to a user's suitcase, ensuring that the suitcase's capacity and weight are not exceeded.
+ * @param {string} userId - The ID of the user owning the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase where the item will be added.
+ * @param {Object} body - The request body containing the item ID.
+ * @param {string} body.itemId - The ID of the item to add.
+ * @returns {Promise<Object>} An object containing updated suitcase items and metadata, or an error if the operation fails.
+ */
 export const addItemToUserSuitcase = async (userId, suitcaseId, body) => {
 	try {
 		const { itemId } = body;
@@ -137,6 +146,15 @@ export const addItemToUserSuitcase = async (userId, suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function addItemsToUserSuitcase
+ * @description Adds multiple items to a user's suitcase in bulk, ensuring that the suitcase's capacity and weight are not exceeded.
+ * @param {string} userId - The ID of the user owning the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase where the items will be added.
+ * @param {Object} body - The request body containing an array of item IDs.
+ * @param {Array<Object>} body.itemsIds - An array of objects containing item IDs to add.
+ * @returns {Promise<Object>} An object containing updated suitcase items and metadata, or an error if the operation fails.
+ */
 export const addItemsToUserSuitcase = async (userId, suitcaseId, body) => {
 	try {
 		const suitcase = await prisma.suitcases.findUnique({
@@ -251,6 +269,15 @@ export const addItemsToUserSuitcase = async (userId, suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function removeItemFromUserSuitcase
+ * @description Removes a single item from a user's suitcase.
+ * @param {string} userId - The ID of the user owning the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase from which the item will be removed.
+ * @param {Object} body - The request body containing the item ID.
+ * @param {string} body.itemId - The ID of the item to remove.
+ * @returns {Promise<Object>} An object containing updated suitcase items and metadata, or an error if the operation fails.
+ */
 export const removeItemFromUserSuitcase = async (userId, suitcaseId, body) => {
 	try {
 		const { itemId } = body;
@@ -304,6 +331,15 @@ export const removeItemFromUserSuitcase = async (userId, suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function removeItemsFromUserSuitcase
+ * @description Removes multiple items from a user's suitcase in bulk.
+ * @param {string} userId - The ID of the user owning the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase from which the items will be removed.
+ * @param {Object} body - The request body containing an array of item IDs.
+ * @param {Array<string>} body.itemsIds - An array of item IDs to remove.
+ * @returns {Promise<Object>} An object containing updated suitcase items and metadata, or an error if the operation fails.
+ */
 export const removeItemsFromUserSuitcase = async (userId, suitcaseId, body) => {
 	try {
 		const { itemsIds } = body;
@@ -355,6 +391,14 @@ export const removeItemsFromUserSuitcase = async (userId, suitcaseId, body) => {
 	}
 };
 
+/**
+ * @function removeAllItemsFromUserSuitcase
+ * @description Removes all items from a user's suitcase based on filtering criteria.
+ * @param {string} userId - The ID of the user owning the suitcase.
+ * @param {string} suitcaseId - The ID of the suitcase from which all items will be removed.
+ * @param {Object} searchFilter - Filtering conditions for the items to remove.
+ * @returns {Promise<Object>} An object containing updated suitcase items and metadata, or an error if the operation fails.
+ */
 export const removeAllItemsFromUserSuitcase = async (
 	userId,
 	suitcaseId,

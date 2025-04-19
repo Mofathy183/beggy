@@ -10,6 +10,8 @@ import { swaggerSpec } from './src/middlewares/appMiddleware.js';
 import { sessionConfig } from './src/config/env.js';
 import {
 	limiter,
+	loggerMiddleware,
+	pinoHttpLogger,
 	corsMiddleware,
 	routeErrorHandler,
 	AppResponse,
@@ -35,6 +37,12 @@ app.use(helmet());
 
 // Logger middleware (morgan) to log requests to the console.
 app.use(morgan('dev'));
+
+// Use pino-http middleware to automatically log incoming requests
+app.use(pinoHttpLogger);
+
+// Log the request method, URL, and IP address to the logger.
+app.use(loggerMiddleware);
 
 // CORS middleware (Cross-Origin Resource Sharing) to allow requests from different origins.
 app.use(corsMiddleware);

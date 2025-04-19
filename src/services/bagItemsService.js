@@ -1,6 +1,16 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
 
+/**
+ * Removes multiple items from the user's bag.
+ *
+ * @param {string} userId - The unique ID of the user.
+ * @param {string} bagId - The unique ID of the bag.
+ * @param {Object} body - The request body containing the item IDs to be removed.
+ * @param {Array<string>} body.itemIds - The IDs of the items to be removed from the bag.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated bag items and metadata, or an ErrorHandler if an error occurs.
+ */
 export const removeItemsFromUserBag = async (userId, bagId, body) => {
 	try {
 		const { itemIds } = body;
@@ -52,6 +62,16 @@ export const removeItemsFromUserBag = async (userId, bagId, body) => {
 	}
 };
 
+/**
+ * Removes a single item from the user's bag.
+ *
+ * @param {string} userId - The unique ID of the user.
+ * @param {string} bagId - The unique ID of the bag.
+ * @param {Object} body - The request body containing the item ID to be removed.
+ * @param {string} body.itemId - The ID of the item to be removed from the bag.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated bag items and metadata, or an ErrorHandler if an error occurs.
+ */
 export const removeItemFromUserBag = async (userId, bagId, body) => {
 	try {
 		const { itemId } = body;
@@ -105,6 +125,15 @@ export const removeItemFromUserBag = async (userId, bagId, body) => {
 	}
 };
 
+/**
+ * Removes all items from the user's bag based on a search filter.
+ *
+ * @param {string} userId - The unique ID of the user.
+ * @param {string} bagId - The unique ID of the bag.
+ * @param {Object} searchFilter - The filter to search for items to be removed.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated bag items and metadata, or an ErrorHandler if an error occurs.
+ */
 export const removeAllItemsFromUserBag = async (
 	userId,
 	bagId,
@@ -158,6 +187,16 @@ export const removeAllItemsFromUserBag = async (
 	}
 };
 
+/**
+ * Adds a single item to the user's bag.
+ *
+ * @param {string} userId - The unique ID of the user.
+ * @param {string} bagId - The unique ID of the bag.
+ * @param {Object} body - The request body containing the item ID to be added.
+ * @param {string} body.itemId - The ID of the item to be added to the bag.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated bag items and metadata, or an ErrorHandler if an error occurs.
+ */
 export const addItemToUserBag = async (userId, bagId, body) => {
 	try {
 		const { itemId } = body;
@@ -289,6 +328,17 @@ export const addItemToUserBag = async (userId, bagId, body) => {
 	}
 };
 
+/**
+ * Adds multiple items to the user's bag.
+ *
+ * @param {string} userId - The unique ID of the user.
+ * @param {string} bagId - The unique ID of the bag.
+ * @param {Object} body - The request body containing the items to be added.
+ * @param {Array<Object>} body.itemsIds - An array of objects containing the IDs of the items to be added to the bag.
+ * @param {string} body.itemsIds.itemId - The ID of the item to be added.
+ *
+ * @returns {Object|ErrorHandler} - Returns the updated bag items and metadata, or an ErrorHandler if an error occurs.
+ */
 export const addItemsToUserBag = async (userId, bagId, body) => {
 	try {
 		const bag = await prisma.bags.findUnique({

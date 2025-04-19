@@ -1,4 +1,4 @@
-//* Importint make relationship between User and Accout (one to many) 
+//* Important make relationship between User and Account (one to many) 
 
 model Account {
     id         String    @id @default(uuid())
@@ -7,7 +7,7 @@ model Account {
     createdAt  DateTime  @default(now()) @map("created_at")
     updatedAt  DateTime  @updatedAt @map("updated_at")
 
-    //* User make relationship between User and Accout
+    //* User make relationship between User and Account
     userId String @map("user_id")
     user   User   @relation(fields: [userId], references: [id])
 

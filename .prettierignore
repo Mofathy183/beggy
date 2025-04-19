@@ -1,6 +1,8 @@
 node_modules
 build
 dist
+generated/client
+prisma/migrations
 *.min.js
 *.prisma
 *.yaml

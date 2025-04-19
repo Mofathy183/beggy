@@ -2,7 +2,7 @@ export default {
 	setupFilesAfterEnv: ['./src/tests/setup.test.js'],
 	testTimeout: 4000,
 	testMatch: [
-        '**/src/tests/**/auth.test.js',
+		'**/src/tests/**/auth.test.js',
 		'**/src/tests/**/bag.test.js',
 		'**/src/tests/**/bagItems.test.js',
 		// '**/src/tests/**/features.test.js', //* it takes more time to test, it makes many api requests

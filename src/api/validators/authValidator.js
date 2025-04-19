@@ -53,7 +53,7 @@ export const loginSchema = Joi.object({
 		.required(),
 });
 
-export const forgotPasswordScheme = Joi.object({
+export const emailScheme = Joi.object({
 	email: Joi.string()
 		.email({ tlds: { allow: false } })
 		.message('Invalid email Format')
@@ -106,10 +106,6 @@ export const updateUserDataSchema = Joi.object({
 			"Please Enter your Last Name\nAnd Don't add any special characters or numbers"
 		)
 		.required(),
-
-	email: Joi.string()
-		.email({ tlds: { allow: false } })
-		.message('Invalid email Format'),
 
 	birth: Joi.date().iso(),
 

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client/index.js';
 import {
 	//*======={User}========
 	getDisplayName,
@@ -14,7 +14,7 @@ import {
 } from './prismaHelper.js';
 
 //* add extension for Prisma to get the age of the user and the display name
-/** @type {import('@prisma/client').PrismaClient} */
+/** @type {import("../generated/client/index.js").PrismaClient} */
 const prisma = new PrismaClient().$extends({
 	name: 'Make Enum Fields TO Uppercase & Make Compute Fields',
 	query: {

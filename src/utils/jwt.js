@@ -69,8 +69,6 @@ export const verifyRefreshToken = (refreshToken) => {
 	}
 };
 
-
-
 /**
  * to generate Crypto Token for.
  * reset password to store hash token in DB and send the token via email
