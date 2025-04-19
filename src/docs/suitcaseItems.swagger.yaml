@@ -17,11 +17,18 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    csefToken:
+    CsrfToken:
       type: apiKey
-      name: X-CSEF-Token
       in: header
-      description: "CSRF token required for state-changing requests. Obtain from the '/api/baggy/auth/csrf-token' endpoint"
+      name: x-csrf-token
+      description: |
+        CSRF token provided and Obtain from the '/api/baggy/auth/csrf-token' endpoint, for state-changing requests. This should match the token from the server response.
+    CsrfSecret:
+      type: apiKey
+      in: header
+      name: x-csrf-secret
+      description: |
+        CSRF secret provided and Obtain from the '/api/baggy/auth/csrf-token' endpoint, for state-changing requests. This should match the secret from the server response.
 
   schemas:
     ItemCategory:
