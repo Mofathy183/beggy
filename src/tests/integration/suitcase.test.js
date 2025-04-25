@@ -173,11 +173,12 @@ describe("Suitcases Route For User For Get User's Suitcases", () => {
 
 		const res = await request(app)
 			.get(
-				`/api/beggy/suitcases/?field=features&search=scratch_resistant`
+				`/api/beggy/suitcases?features=scratch_resistant`
 			)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
 		console.log('Response', res.body);
+        console.log('Response', res.body.meta.searchFilter.AND[0].features);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);

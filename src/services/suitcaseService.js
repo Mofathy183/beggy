@@ -20,7 +20,7 @@ export const findSuitcasesUserHas = async (
 		const { page, limit, offset } = pagination;
 
 		const suitcases = await prisma.suitcases.findMany({
-			where: { ...searchFilter, userId: userId },
+			where: { userId: userId , ...searchFilter },
 			include: {
 				suitcaseItems: {
 					select: {

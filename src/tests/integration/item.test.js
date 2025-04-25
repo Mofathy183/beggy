@@ -568,7 +568,7 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 	test('Should return items by search query If there is no Match to the Query', async () => {
 		const res = await request(app)
 			//* There is no match for color yellow
-			.get(`/api/beggy/items/?field=color&search=yellow`)
+			.get(`/api/beggy/items/?color=yellow`)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -588,7 +588,7 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 	test('Should return items by search query if there are Match to the search', async () => {
 		const res = await request(app)
 			//* There is a match for color blue
-			.get(`/api/beggy/items/?field=category&search=electronics`)
+			.get(`/api/beggy/items/?category=electronics`)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -608,7 +608,7 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 	test('Should return items by Search and Order and Pagination if there are Match', async () => {
 		const res = await request(app)
 			.get(
-				'/api/beggy/items/?field=category&search=electronics&page=2&limit=2&order=desc&sortBy=volume'
+				'/api/beggy/items/?category=electronics&page=2&limit=2&order=desc&sortBy=volume'
 			)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
@@ -1153,7 +1153,7 @@ describe('Items Route For User To Delete All Items User Has', () => {
 
 	test('Should delete all items Belongs To User', async () => {
 		const res = await request(app)
-			.delete(`/api/beggy/items/?field=color&search=blue`)
+			.delete(`/api/beggy/items/?color=blue`)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)

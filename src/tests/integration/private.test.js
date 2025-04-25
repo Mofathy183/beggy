@@ -514,7 +514,7 @@ describe('Base Bags Route Tests To Delete All Bags From DB For Only Admin', () =
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/private/bags?field=size&search=small`)
+			.delete(`/api/beggy/private/bags?size=small`)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -769,7 +769,7 @@ describe('Base suitcases Route Tests Delete All Suitcases For Only Admin', () =>
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/private/suitcases?field=size&search=small`)
+			.delete(`/api/beggy/private/suitcases?size=small`)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -1054,7 +1054,7 @@ describe('Base Items Route Tests For Delete All Items for Admin Only', () => {
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/private/items?field=category&search=books`)
+			.delete(`/api/beggy/private/items?category=books`)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)

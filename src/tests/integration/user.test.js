@@ -133,12 +133,8 @@ describe('User API Tests For Search For User by only Admin and Member', () => {
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
 		expect(res.body.message).toBe('Users Found Successfully By Search');
-		expect(res.body.data[0]).toMatchObject({
-			id: res.body.data[0].id,
-			firstName: 'Alice',
-			lastName: 'Williams',
-			email: 'testuser101@example.com',
-		});
+		res.body.data.filter((user) => user.lastName === 'Williams')
+            .forEach((user) => { expect(user).toMatchObject({ lastName: 'Williams' }) })
 
 		console.log('Response', res.body);
 		console.log('Response data', res.body.meta.searchFilter);

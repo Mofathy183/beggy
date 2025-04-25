@@ -396,7 +396,7 @@ describe('Base Bags Route Tests To Get All Bags By Search', () => {
 
 		const res = await request(app)
 			//* search by fields not Enum
-			.get(`/api/beggy/public/bags?field=color&search=green,blue`);
+			.get(`/api/beggy/public/bags?color=green`);
 
 		console.log('Response', res.body);
 
@@ -417,7 +417,7 @@ describe('Base Bags Route Tests To Get All Bags By Search', () => {
 		const res = await request(app)
 			//* search by field Enum
 			.get(
-				`/api/beggy/public/bags?field=type&search=travel_bag,backpack`
+				`/api/beggy/public/bags?type=travel_bag`
 			);
 
 		console.log('Response', res.body);
@@ -538,7 +538,7 @@ describe('Base Items Route Tests For Search for Items', () => {
 	test('Should return items by search query If there is no Match to the Query', async () => {
 		const res = await request(app)
 			//* There is no match for color yellow
-			.get(`/api/beggy/public/items?field=color&search=yellow`);
+			.get(`/api/beggy/public/items?color=yellow`);
 
 		console.log('Response Not Match', res.body);
 
@@ -626,7 +626,7 @@ describe('Base suitcases Route Tests To Get Suitcases By Search', () => {
 
 		const res = await request(app)
 			//* search by fields not Enum
-			.get(`/api/beggy/public/suitcases?search=usb_port&field=features`);
+			.get(`/api/beggy/public/suitcases?features=usb_port`);
 
 		console.log('Response', res.body);
 

@@ -491,7 +491,7 @@ describe("Suitcases Route For User For Delete All Items From User's Suitcase", (
 
 		const res = await request(app)
 			.delete(
-				`/api/beggy/suitcase-items/${suitcase.id}/items/bulk?field=category&search=electronics`
+				`/api/beggy/suitcase-items/${suitcase.id}/items/bulk?category=electronics&color=blue`
 			)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)

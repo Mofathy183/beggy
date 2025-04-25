@@ -128,106 +128,144 @@ export const orderByMiddleware = (req, res, next) => {
 };
 
 /**
- * Middleware to filter results based on search query parameters.
- * Validates and constructs search filters based on the "field" and "search" query parameters.
- * Attaches the search filter to the request object.
+ * @middleware searchMiddleware
+ * @description
+ * Middleware to build a dynamic Prisma search filter based on query parameters.
+ * It distinguishes between fields that require strict matching (AND with uppercased values)
+ * and fields that allow looser matching (OR without case transformation).
  *
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function in the stack.
- * @throws {ErrorResponse} If the search query or field is invalid.
+ * @queryparam {string} [name] - Bag name to match exactly (case-sensitive, OR condition).
+ * @queryparam {string} [brand] - Brand name to match exactly (case-sensitive, OR condition).
+ * @queryparam {string} [color] - Color to match exactly (case-sensitive, OR condition).
+ * @queryparam {string} [category] - Category to match exactly (uppercased, AND condition).
+ * @queryparam {string} [size] - Size to match exactly (uppercased, AND condition).
+ * @queryparam {string} [type] - Type to match exactly (uppercased, AND condition).
+ * @queryparam {string} [wheels] - Wheels type to match exactly (uppercased, AND condition).
+ * @queryparam {string} [material] - Material to match exactly (uppercased, AND condition).
+ * @queryparam {string} [features] - Comma-separated list of features to partially match (uppercased, AND condition).
+ *
+ * @validations
+ * - All query parameters must be strings.
+ * - All fields must match the provided regular expression (stringRegExp).
+ * - `features` must be a comma-separated string and each feature must match the regex.
+ *
+ * @adds
+ * Adds a `searchFilter` object to the `req` object with the structure:
+ * ```
+ * req.searchFilter = {
+ *   AND: [...], // fields with uppercased strict matching
+ *   OR: [...]   // fields with regular case-sensitive loose matching
+ * }
+ * ```
+ *
+ * @usage
+ * Used to dynamically filter bags based on provided query parameters in Prisma's `findMany()`.
+ * Example usage in a route handler:
+ * ```
+ * const bags = await prisma.bags.findMany({
+ *   where: req.searchFilter
+ * });
+ * ```
+ *
+ * @param {Request} req - Express request object containing query parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
  */
 export const searchMiddleware = (req, res, next) => {
-	let { field = undefined, search = undefined } = req.query;
+    const { 
+        //* field that will not be upper case
+        name,
+        brand,
+        color,
+        //* field that will not be upper case
+        //* field that will be upper case
+        category,
+        size,
+        type,
+        wheels,
+        material,
+        features, //* an array of upper case features
+        //* field that will be upper case
+    } = req.query;
+    // Check if any search query is provided
 
-	// If no search query is provided, continue without filtering
-	if (!search && !field) {
-		return next();
-	}
+    if (!name && !brand && !color && !category && !size && !type && !wheels && !material && !features) return next();
 
-	if (!search.length && !field.length) return next(); // Ignore empty queries
+    const featuresArray = features ? features.split(',') : [];
 
-	const searchRegExp = /^[A-Za-z_-]+$/;
-	const fieldRegExp = /^[A-Za-z]+$/;
+    // Validate that all search queries are strings
+    if (
+        (name && typeof name !== 'string') ||
+        (brand && typeof brand !== 'string') ||
+        (color && typeof color !== 'string') ||
+        (category && typeof category !== 'string') ||
+        (size && typeof size !== 'string') ||
+        (type && typeof type !== 'string') ||
+        (wheels && typeof wheels !== 'string') ||
+        (material && typeof material !== 'string') ||
+        (featuresArray && !Array.isArray(featuresArray))
+    ) {
+        return next(
+            new ErrorResponse(
+                'Invalid search query',
+                'Search queries must be strings or an array',
+                statusCode.badRequestCode
+            )
+        );
+    }
+    // Validate that the search queries do not contain special characters
+    if (
+        (name && !stringRegExp.test(name)) ||
+        (brand && !stringRegExp.test(brand)) ||
+        (color && !stringRegExp.test(color)) ||
+        (category && !productStringRegExp.test(category)) ||
+        (size && !productStringRegExp.test(size)) ||
+        (type && !productStringRegExp.test(type)) ||
+        (wheels && !productStringRegExp.test(wheels)) ||
+        (material && !productStringRegExp.test(material)) ||
+        (featuresArray.length > 0 && !featuresArray.every((f) => productStringRegExp.test(f)))
+    ) {
+        return next(
+            new ErrorResponse(
+                'Invalid search query',
+                'Search queries cannot contain special characters',
+                statusCode.badRequestCode
+            )
+        );
+    }
 
-	//* to separate the search values and make it array
-	search = String(search)
-		.split(',')
-		.map((s) => String(s).trim());
-	//* convert fields to string
-	field = String(field).trim();
+    // Construct search filter dynamically
+    const orFilter = [] //* the Filter that will be used in the OR condition
+    const andFilter = [] //* the Filter that will be used in the AND condition
 
-	if (!fieldRegExp.test(field))
-		return next(
-			new ErrorResponse(
-				`Invalid fields query.`,
-				'Fields query must be a string',
-				statusCode.badRequestCode
-			)
-		);
+    if (name) orFilter.push( { name: { equals: name.trim() } } )
 
-	// Convert search to uppercase for enums (Prisma requires exact matches for enums)
-	const searchUpper = search.map((s) => String(s).toUpperCase().trim());
+    if (brand) orFilter.push( { brand: { equals: brand.trim() } } )
 
-	// Default fields for searching (string and enum)
-	const defaultStringFields = ['name', 'color', 'brand'];
-	const defaultEnumFields = [
-		'category',
-		'size',
-		'type',
-		'wheels',
-		'material',
-		'features',
-	];
+    if (color) orFilter.push( { color: { equals: color.trim() } } )
 
-	if (defaultStringFields.includes(field)) {
-		if (!search.every((s) => productStringRegExp.test(s)))
-			return next(
-				new ErrorResponse(
-					`Invalid search query.`,
-					'Search query must be a string and can contain (-) or digits up until 3 digits',
-					statusCode.badRequestCode
-				)
-			);
-	}
+    if (category) andFilter.push( { category: { equals: category.trim().toUpperCase() } } )
 
-	if (defaultEnumFields.includes(field)) {
-		if (!search.every((s) => searchRegExp.test(s)))
-			return next(
-				new ErrorResponse(
-					`Invalid search query.`,
-					'Search query must be a string and can contain (_) or (-)',
-					statusCode.badRequestCode
-				)
-			);
-	}
+    if (size) andFilter.push( { size: { equals: size.trim().toUpperCase() } } )
 
-	let filter;
+    if (type) andFilter.push( { type: { equals: type.trim().toUpperCase() } } )
 
-	if (field === 'features') {
-		//* For Fields Are save in database as Array
-		filter = {
-			[field]: {
-				hasSome: searchUpper, // Convert to uppercase for exact match
-			},
-		};
-	} else if (defaultStringFields.includes(field)) {
-		//* For Fields Are Not save in database as Array and Not Enum
-		filter = {
-			[field]: {
-				in: search, // Convert to uppercase for exact match
-			},
-		};
-	} else {
-		//* For Fields Are save in database as Array and Enum
-		filter = {
-			[field]: {
-				in: searchUpper, // Convert to uppercase for exact match
-			},
-		};
-	}
+    if (wheels) andFilter.push( { wheels: { equals: wheels.trim().toUpperCase() } } )
 
-	req.searchFilter = filter;
+    if (material) andFilter.push( { material: { equals: material.trim().toUpperCase() } } )
+
+    if (featuresArray.length > 0) {
+        andFilter.push({
+            features: {
+                hasSome: featuresArray.map((f) => f.trim().toUpperCase())
+            }
+        })
+    }
+
+    req.searchFilter = {}
+
+    if (orFilter.length > 0) req.searchFilter.OR = orFilter
+    if (andFilter.length > 0) req.searchFilter.AND = andFilter
 
 	next();
 };
@@ -338,8 +376,8 @@ export const locationPermissionMiddleware = (req, res, next) => {
 			)
 		);
 
-	//* locationPermission must be granted that means you can you ip to get location
-	//* Or denied that means can not use ip to get location
+	//* locationPermission must be "granted" that means you can you ip to get location
+	//* Or "denied" that means can not use ip to get location
 	if (locationPermission !== 'granted')
 		return next(
 			new ErrorResponse(
@@ -408,7 +446,7 @@ export const searchForUsersMiddleware = (req, res, next) => {
 			lastName: { contains: lastName, mode: 'insensitive' },
 		});
 
-	req.searchFilter = searchFilter.length > 0 ? searchFilter : undefined;
+	req.searchFilter = { AND: searchFilter.length > 0 ? searchFilter : undefined };
 
 	next();
 };

@@ -522,7 +522,7 @@ describe("Bags Route For User For Delete All Items In User's Bag", () => {
 
 		const res = await request(app)
 			.delete(
-				`/api/beggy/bag-items/${bag.id}/items/bulk?field=category&search=electronics`
+				`/api/beggy/bag-items/${bag.id}/items/bulk?category=electronics`
 			)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)

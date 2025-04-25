@@ -114,14 +114,14 @@ async function main() {
 	console.log('✅ Database seeded successfully!');
 }
 
-// await main()
-// 	.catch((e) => {
-// 		console.error(e);
-// 		process.exit(1);
-// 	})
-// 	.finally(async () => {
-// 		await prisma.$disconnect();
-// 	});
+await main()
+	.catch((e) => {
+		console.error(e);
+		process.exit(1);
+	})
+	.finally(async () => {
+		await prisma.$disconnect();
+	});
 
 async function seedPermissions(roleName, permissions) {
 	await prisma.permission.createManyAndReturn({

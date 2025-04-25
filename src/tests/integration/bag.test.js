@@ -556,7 +556,7 @@ describe("Bags Route For User For Delete All User's Bags", () => {
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/bags/?field=material&search=nylon`)
+			.delete(`/api/beggy/bags/?material=nylon`)
 			.set('Cookie', cookies)
 			.set('x-csrf-secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)

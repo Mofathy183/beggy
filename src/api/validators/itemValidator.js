@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { ItemCategory } from '@prisma/client';
 import { stringRegExp } from './authValidator.js';
 
-export const productStringRegExp = /^(?=.*[a-zA-Z])(?!^\d+$)[a-zA-Z0-9\s-]+$/;
+export const productStringRegExp = /^(?=.*[a-zA-Z])(?!^\d+$)[a-zA-Z0-9\s-_]+$/;
 
 //*######################################{JOI Check Items Felids}############################################
 

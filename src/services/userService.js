@@ -159,7 +159,7 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 		const { page, limit, offset } = pagination;
 
 		const users = await prisma.user.findMany({
-			where: { OR: searchFilter },
+			where: searchFilter,
 			include: {
 				suitcases: true,
 				bags: true,
@@ -326,9 +326,7 @@ export const removeUser = async (userId) => {
 export const removeAllUsers = async (searchFilter) => {
 	try {
 		const usersDeleted = await prisma.user.deleteMany({
-			where: {
-				OR: searchFilter,
-			},
+			where: searchFilter,
 		});
 
 		if (usersDeleted.error)

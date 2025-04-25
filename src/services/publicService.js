@@ -295,7 +295,7 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 		const { page, limit, offset } = pagination;
 
 		const users = await prisma.user.findMany({
-			where: { OR: searchFilter },
+			where: searchFilter,
 			omit: {
 				suitcases: true,
 				bags: true,
