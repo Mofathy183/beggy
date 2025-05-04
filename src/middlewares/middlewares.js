@@ -73,13 +73,13 @@ export const orderByMiddleware = (req, res, next) => {
 
 	// List of allowed sort fields
 	const allowedSortFields = [
-		'size',
-		'capacity',
-		'quantity',
-		'maxWeight',
-		'weight',
-		'volume',
-		'createdAt',
+		'size', //* in Bags and Suitcases
+		'capacity', //* in Bags and Suitcases
+		'quantity', //* in Items
+		'maxWeight', //* in Bags and Suitcases
+		'weight', //* in Bags, Suitcases and Items
+		'volume', //* In Items
+		'createdAt', //* in All
 	];
 
 	// If neither sortBy nor order is provided, just continue without sorting
