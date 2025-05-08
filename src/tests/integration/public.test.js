@@ -416,9 +416,7 @@ describe('Base Bags Route Tests To Get All Bags By Search', () => {
 
 		const res = await request(app)
 			//* search by field Enum
-			.get(
-				`/api/beggy/public/bags?type=travel_bag`
-			);
+			.get(`/api/beggy/public/bags?type=travel_bag`);
 
 		console.log('Response', res.body);
 

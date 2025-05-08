@@ -1,10 +1,12 @@
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
+import { JWTConfig } from '../../config/env.js';
 import prisma from '../../../prisma/prisma.js';
 import cookieParser from 'cookie-parser';
 import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
 import { generateCryptoHashToken } from '../../utils/jwt.js';
-import { setExpiredAt } from '../../utils/userHelper.js';
+import { setExpiredAt, birthOfDate } from '../../utils/userHelper.js';
 import { signToken, signRefreshToken, verifyToken } from '../../utils/jwt.js';
 
 let csrfToken;
@@ -104,6 +106,84 @@ describe('Auth API Tests For Login', () => {
 		expect(user).toMatchObject({
 			email: 'testuser22@test.com',
 		});
+	});
+});
+
+describe('Auth API Tests For Authentic User For Frontend', () => {
+	test('Should Authentic User Successfully', async () => {
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser22@test.com',
+				password: await hashingPassword('testing123'),
+				birth: birthOfDate('2005-12-12'),
+			},
+		});
+
+		const res = await request(app)
+			.get('/api/beggy/auth/me')
+			.set('Authorization', `Bearer ${signToken(user.id)}`);
+
+		console.log('Response: ', res.body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.success).toBe(true);
+		expect(res.body.message).toBe('Authenticated user successfully');
+		expect(res.body.data).toMatchObject({
+			firstName: 'John',
+			lastName: 'Doe',
+			email: 'testuser22@test.com',
+			isActive: true,
+			isEmailVerified: false,
+			role: 'USER',
+		});
+	});
+
+	test('Should Return Error 401 Unauthorized Because User ID i not Valid', async () => {
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser22@test.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		const res = await request(app)
+			.get('/api/beggy/auth/me')
+			.set('Authorization', `Bearer ${signToken(user.id + 'ffffff')}`);
+
+		console.log('Response: ', res.body);
+
+		expect(res.status).toBe(401);
+		expect(res.body.status).toBe('Unauthorized');
+	});
+
+	test('Should Return Error 401 Unauthorized Because JWT Token is Expired', async () => {
+		const user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser22@test.com',
+				password: await hashingPassword('testing123'),
+			},
+		});
+
+		const expiredToken = jwt.sign(
+			{ id: user.id }, // your payload
+			JWTConfig.secret, // use the same secret as in your app
+			{ expiresIn: -10 } // token expired 10 seconds ago
+		);
+
+		const res = await request(app)
+			.get('/api/beggy/auth/me')
+			.set('Authorization', `Bearer ${expiredToken}`);
+
+		console.log('Response: ', res.body);
+
+		expect(res.status).toBe(401);
+		expect(res.body.status).toBe('Unauthorized');
 	});
 });
 

@@ -1,6 +1,7 @@
 import {
 	singUpUser,
 	loginUser,
+	authUser,
 	userForgotPassword,
 	resetUserPassword,
 	updateUserData,
@@ -120,6 +121,60 @@ export const login = async (req, res, next) => {
 			new ErrorResponse(
 				error,
 				'Failed to login',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const authMe = async (req, res, next) => {
+	try {
+		// Destructure user ID and role from the session
+		const { userId, userRole } = req.session;
+
+		// Attempt to authenticate the user by ID
+		const user = await authUser(userId);
+
+		// If no user is returned, forward a not found error
+		if (!user) {
+			return next(
+				new ErrorResponse(
+					'User Not Found',
+					'User must exist to authenticate',
+					statusCode.notFoundCode
+				)
+			);
+		}
+
+		// If user has an embedded error (e.g., from authUser), forward a bad request error
+		if (user.error) {
+			return next(
+				new ErrorResponse(
+					user.error,
+					'Error occurred while authenticating user',
+					statusCode.badRequestCode
+				)
+			);
+		}
+
+		// Send cookies and update session with user info
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		// Return a success response with the user data
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Authenticated user successfully',
+				user
+			)
+		);
+	} catch (error) {
+		// Catch unexpected errors and forward an internal server error response
+		next(
+			new ErrorResponse(
+				error,
+				'Failed to authenticate user',
 				statusCode.internalServerErrorCode
 			)
 		);

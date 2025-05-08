@@ -15,6 +15,7 @@ export const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 export const corsMiddleware = cors({
 	origin: coreConfig.origin,
+	credentials: true, // ✅ This line is required for cookies
 	methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
 });
 

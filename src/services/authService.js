@@ -129,7 +129,7 @@ export const loginUser = async (body) => {
 			return new ErrorHandler(
 				'prisma',
 				user.error,
-				'User not found ' + user.error.message
+				'Error Occur Login User ' + user.error.message
 			);
 
 		const { role, isActive, password: userPassword, ...safeUser } = user;
@@ -156,6 +156,55 @@ export const loginUser = async (body) => {
 		return { role: role, safeUser: safeUser };
 	} catch (error) {
 		return new ErrorHandler('catch', error, 'Failed to login user');
+	}
+};
+
+/**
+ * Authenticates a user by fetching them from the database using their ID.
+ *
+ * - Retrieves the user from the database with sensitive fields omitted.
+ * - If the user does not exist, returns a custom `ErrorHandler`.
+ * - If Prisma returns an error in the response, returns an `ErrorHandler`.
+ * - If an exception is thrown during the process, it catches and wraps it in an `ErrorHandler`.
+ *
+ * @param {string} userId - The unique ID of the user to authenticate.
+ * @returns {Promise<Object|ErrorHandler>} The user object without sensitive fields, or an error handler object.
+ */
+export const authUser = async (userId) => {
+	try {
+		// Attempt to retrieve the user from the database by ID, excluding sensitive fields
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+			omit: {
+				password: true,
+				passwordChangeAt: true,
+			},
+		});
+
+		// If user is not found, return a custom error
+		if (!user) {
+			return new ErrorHandler(
+				'User Not Found',
+				"User Doesn't exist in Database",
+				'User needs to exist to be authenticated'
+			);
+		}
+
+		// If Prisma returned an error (rare case), return a different custom error
+		if (user.error) {
+			return new ErrorHandler(
+				'prisma',
+				user.error,
+				'Error occurred while authenticating user: ' +
+					user.error.message
+			);
+		}
+
+		// If all good, return the user object
+		return user;
+	} catch (error) {
+		// Catch any unexpected exceptions and return them wrapped in a custom error
+		return new ErrorHandler('catch', error, 'Failed to authenticate user');
 	}
 };
 

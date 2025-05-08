@@ -420,28 +420,44 @@ export const VReqToResetToken = (req, res, next) => {
 };
 
 /**
- * Checks if the token in the request headers is present and valid.
+ * Middleware to validate the JWT token from the `Authorization` header.
  *
- * - If the token is not present, prevents the request from being processed.
- * - If the token is present, adds the authenticated user's ID and role to the request session.
+ * - Extracts the token from the `Authorization` header.
+ * - Verifies the token using `verifyToken`.
+ * - If valid, attaches the user info to `req.auth` and continues the request.
+ * - If the token is invalid or expired, responds with an appropriate unauthorized error.
+ * - If the token is missing, returns an error indicating that the header is required.
  *
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
+ * @param {Request} req - The Express request object.
+ * @param {Response} res - The Express response object.
  * @param {NextFunction} next - The next middleware function.
  * @returns {void}
  */
 export const VReqToHeaderToken = (req, res, next) => {
+	// Extract token from Authorization header if it exists
 	const token = req.headers.authorization?.split(' ')[1];
 
+	// Attempt to verify the token
 	const isAuth = verifyToken(token);
 
+	// If token exists and is valid, attach user info to request and continue
 	if (token && isAuth) {
-		// Add the authenticated user's ID and role to the request session
-		req.auth = isAuth;
+		req.auth = isAuth; // Typically includes user ID, role, etc.
 		return next();
 	}
 
-	// If the token is not present, prevent the request from being processed
+	// If token is present but invalid or expired, return an error
+	if (token && !isAuth) {
+		return next(
+			new ErrorResponse(
+				'Failed to Verify token',
+				'The Token is Expired or Secret not match',
+				statusCode.unauthorizedCode
+			)
+		);
+	}
+
+	// If token is missing, return a header-related error
 	return next(
 		new ErrorResponse(
 			'Header "Authorization" is required',

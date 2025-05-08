@@ -133,8 +133,11 @@ describe('User API Tests For Search For User by only Admin and Member', () => {
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
 		expect(res.body.message).toBe('Users Found Successfully By Search');
-		res.body.data.filter((user) => user.lastName === 'Williams')
-            .forEach((user) => { expect(user).toMatchObject({ lastName: 'Williams' }) })
+		res.body.data
+			.filter((user) => user.lastName === 'Williams')
+			.forEach((user) => {
+				expect(user).toMatchObject({ lastName: 'Williams' });
+			});
 
 		console.log('Response', res.body);
 		console.log('Response data', res.body.meta.searchFilter);

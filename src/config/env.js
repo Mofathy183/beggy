@@ -13,7 +13,7 @@ export const JWTConfig = {
 };
 
 export const coreConfig = {
-	origin: process.env.CORE_ORIGIN,
+	origin: 'http://localhost:5173',
 };
 
 export const sessionConfig = {

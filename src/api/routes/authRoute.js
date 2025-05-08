@@ -2,6 +2,7 @@ import express from 'express';
 import {
 	signUp,
 	login,
+	authMe,
 	forgotPassword,
 	resetPassword,
 	updatePassword,
@@ -94,6 +95,9 @@ authRoute.post(
 	checkPermissionMiddleware('delete:own', 'user'),
 	logout
 );
+
+//* route for frontend to check if user is authentic
+authRoute.get('/me', VReqToHeaderToken, headersMiddleware, authMe);
 
 //* route for send verification email
 //* POST {email}

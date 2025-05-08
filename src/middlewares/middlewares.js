@@ -172,100 +172,115 @@ export const orderByMiddleware = (req, res, next) => {
  * @param {NextFunction} next - Express next middleware function
  */
 export const searchMiddleware = (req, res, next) => {
-    const { 
-        //* field that will not be upper case
-        name,
-        brand,
-        color,
-        //* field that will not be upper case
-        //* field that will be upper case
-        category,
-        size,
-        type,
-        wheels,
-        material,
-        features, //* an array of upper case features
-        //* field that will be upper case
-    } = req.query;
-    // Check if any search query is provided
+	const {
+		//* field that will not be upper case
+		name,
+		brand,
+		color,
+		//* field that will not be upper case
+		//* field that will be upper case
+		category,
+		size,
+		type,
+		wheels,
+		material,
+		features, //* an array of upper case features
+		//* field that will be upper case
+	} = req.query;
+	// Check if any search query is provided
 
-    if (!name && !brand && !color && !category && !size && !type && !wheels && !material && !features) return next();
+	if (
+		!name &&
+		!brand &&
+		!color &&
+		!category &&
+		!size &&
+		!type &&
+		!wheels &&
+		!material &&
+		!features
+	)
+		return next();
 
-    const featuresArray = features ? features.split(',') : [];
+	const featuresArray = features ? features.split(',') : [];
 
-    // Validate that all search queries are strings
-    if (
-        (name && typeof name !== 'string') ||
-        (brand && typeof brand !== 'string') ||
-        (color && typeof color !== 'string') ||
-        (category && typeof category !== 'string') ||
-        (size && typeof size !== 'string') ||
-        (type && typeof type !== 'string') ||
-        (wheels && typeof wheels !== 'string') ||
-        (material && typeof material !== 'string') ||
-        (featuresArray && !Array.isArray(featuresArray))
-    ) {
-        return next(
-            new ErrorResponse(
-                'Invalid search query',
-                'Search queries must be strings or an array',
-                statusCode.badRequestCode
-            )
-        );
-    }
-    // Validate that the search queries do not contain special characters
-    if (
-        (name && !stringRegExp.test(name)) ||
-        (brand && !stringRegExp.test(brand)) ||
-        (color && !stringRegExp.test(color)) ||
-        (category && !productStringRegExp.test(category)) ||
-        (size && !productStringRegExp.test(size)) ||
-        (type && !productStringRegExp.test(type)) ||
-        (wheels && !productStringRegExp.test(wheels)) ||
-        (material && !productStringRegExp.test(material)) ||
-        (featuresArray.length > 0 && !featuresArray.every((f) => productStringRegExp.test(f)))
-    ) {
-        return next(
-            new ErrorResponse(
-                'Invalid search query',
-                'Search queries cannot contain special characters',
-                statusCode.badRequestCode
-            )
-        );
-    }
+	// Validate that all search queries are strings
+	if (
+		(name && typeof name !== 'string') ||
+		(brand && typeof brand !== 'string') ||
+		(color && typeof color !== 'string') ||
+		(category && typeof category !== 'string') ||
+		(size && typeof size !== 'string') ||
+		(type && typeof type !== 'string') ||
+		(wheels && typeof wheels !== 'string') ||
+		(material && typeof material !== 'string') ||
+		(featuresArray && !Array.isArray(featuresArray))
+	) {
+		return next(
+			new ErrorResponse(
+				'Invalid search query',
+				'Search queries must be strings or an array',
+				statusCode.badRequestCode
+			)
+		);
+	}
+	// Validate that the search queries do not contain special characters
+	if (
+		(name && !stringRegExp.test(name)) ||
+		(brand && !stringRegExp.test(brand)) ||
+		(color && !stringRegExp.test(color)) ||
+		(category && !productStringRegExp.test(category)) ||
+		(size && !productStringRegExp.test(size)) ||
+		(type && !productStringRegExp.test(type)) ||
+		(wheels && !productStringRegExp.test(wheels)) ||
+		(material && !productStringRegExp.test(material)) ||
+		(featuresArray.length > 0 &&
+			!featuresArray.every((f) => productStringRegExp.test(f)))
+	) {
+		return next(
+			new ErrorResponse(
+				'Invalid search query',
+				'Search queries cannot contain special characters',
+				statusCode.badRequestCode
+			)
+		);
+	}
 
-    // Construct search filter dynamically
-    const orFilter = [] //* the Filter that will be used in the OR condition
-    const andFilter = [] //* the Filter that will be used in the AND condition
+	// Construct search filter dynamically
+	const orFilter = []; //* the Filter that will be used in the OR condition
+	const andFilter = []; //* the Filter that will be used in the AND condition
 
-    if (name) orFilter.push( { name: { equals: name.trim() } } )
+	if (name) orFilter.push({ name: { equals: name.trim() } });
 
-    if (brand) orFilter.push( { brand: { equals: brand.trim() } } )
+	if (brand) orFilter.push({ brand: { equals: brand.trim() } });
 
-    if (color) orFilter.push( { color: { equals: color.trim() } } )
+	if (color) orFilter.push({ color: { equals: color.trim() } });
 
-    if (category) andFilter.push( { category: { equals: category.trim().toUpperCase() } } )
+	if (category)
+		andFilter.push({ category: { equals: category.trim().toUpperCase() } });
 
-    if (size) andFilter.push( { size: { equals: size.trim().toUpperCase() } } )
+	if (size) andFilter.push({ size: { equals: size.trim().toUpperCase() } });
 
-    if (type) andFilter.push( { type: { equals: type.trim().toUpperCase() } } )
+	if (type) andFilter.push({ type: { equals: type.trim().toUpperCase() } });
 
-    if (wheels) andFilter.push( { wheels: { equals: wheels.trim().toUpperCase() } } )
+	if (wheels)
+		andFilter.push({ wheels: { equals: wheels.trim().toUpperCase() } });
 
-    if (material) andFilter.push( { material: { equals: material.trim().toUpperCase() } } )
+	if (material)
+		andFilter.push({ material: { equals: material.trim().toUpperCase() } });
 
-    if (featuresArray.length > 0) {
-        andFilter.push({
-            features: {
-                hasSome: featuresArray.map((f) => f.trim().toUpperCase())
-            }
-        })
-    }
+	if (featuresArray.length > 0) {
+		andFilter.push({
+			features: {
+				hasSome: featuresArray.map((f) => f.trim().toUpperCase()),
+			},
+		});
+	}
 
-    req.searchFilter = {}
+	req.searchFilter = {};
 
-    if (orFilter.length > 0) req.searchFilter.OR = orFilter
-    if (andFilter.length > 0) req.searchFilter.AND = andFilter
+	if (orFilter.length > 0) req.searchFilter.OR = orFilter;
+	if (andFilter.length > 0) req.searchFilter.AND = andFilter;
 
 	next();
 };
@@ -446,7 +461,9 @@ export const searchForUsersMiddleware = (req, res, next) => {
 			lastName: { contains: lastName, mode: 'insensitive' },
 		});
 
-	req.searchFilter = { AND: searchFilter.length > 0 ? searchFilter : undefined };
+	req.searchFilter = {
+		AND: searchFilter.length > 0 ? searchFilter : undefined,
+	};
 
 	next();
 };
