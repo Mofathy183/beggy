@@ -13,7 +13,7 @@ beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
 	let secret = cookies
-		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.find((cookie) => cookie.startsWith('X-CSRF-Secret='))
 		.split(';')[0];
 
 	csrfSecret = secret.split('=')[1];
@@ -67,7 +67,7 @@ describe("Bags Route For User For Add User's Item To User's Bag", () => {
 		const res = await request(app)
 			.post(`/api/beggy/bag-items/${bag.id}/item`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			//* Send ItemId in the body
@@ -156,7 +156,7 @@ describe("Bags Route For User For Add User's Items To User's Bag", () => {
 		const res = await request(app)
 			.post(`/api/beggy/bag-items/${bag.id}/items`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			//* Send ItemsIds in the body
@@ -255,7 +255,7 @@ describe("Bags Route For User For Delete Items User's Bags", () => {
 		const res = await request(app)
 			.delete(`/api/beggy/bag-items/${bag.id}/items`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -340,7 +340,7 @@ describe("Bags Route For User For Delete Item From User's Bag", () => {
 		const res = await request(app)
 			.delete(`/api/beggy/bag-items/${bag.id}/item`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({ itemId: item[0].id });
@@ -423,7 +423,7 @@ describe("Bags Route For User For Delete All Items In User's Bag", () => {
 		const res = await request(app)
 			.delete(`/api/beggy/bag-items/${bag.id}/items/bulk`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -525,7 +525,7 @@ describe("Bags Route For User For Delete All Items In User's Bag", () => {
 				`/api/beggy/bag-items/${bag.id}/items/bulk?category=electronics`
 			)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({

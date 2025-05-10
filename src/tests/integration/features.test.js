@@ -5,16 +5,23 @@ import { hashingPassword } from '../../utils/hash.js';
 import { signToken, signRefreshToken } from '../../utils/jwt.js';
 
 let csrfToken;
+let csrfSecret;
 let cookies;
 
 beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
+	let secret = cookies
+		.find((cookie) => cookie.startsWith('X-CSRF-Secret='))
+		.split(';')[0];
+
+	csrfSecret = secret.split('=')[1];
 	csrfToken = response.body.data.csrfToken;
 });
 
 test('Should return a CSRF token', async () => {
 	expect(csrfToken).toBeDefined();
+	expect(csrfSecret).toBeDefined();
 });
 
 describe('Features API Tests For Auto Filling Fields When Creating Items', () => {
@@ -31,7 +38,8 @@ describe('Features API Tests For Auto Filling Fields When Creating Items', () =>
 		const res = await request(app)
 			.post('/api/beggy/features/ai/auto-fill/item')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('X-CSRF-Secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'T-Shirt',
@@ -87,7 +95,8 @@ describe('Features API Tests For Auto Filling Fields When Creating Bag', () => {
 		const res = await request(app)
 			.post('/api/beggy/features/ai/auto-fill/bag')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('X-CSRF-Secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'ninjahood',
@@ -145,7 +154,8 @@ describe('Features API Tests For Auto Filling Fields When Creating Suitcase', ()
 		const res = await request(app)
 			.post('/api/beggy/features/ai/auto-fill/suitcase')
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('X-CSRF-Secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Coolife',
@@ -209,7 +219,8 @@ describe('Features API Tests For Get User location By his IP', () => {
 		const res = await request(app)
 			.post(`/api/beggy/features/location`)
 			.set('Cookie', cookies)
-			.set('X-XSRF-TOKEN', csrfToken)
+			.set('X-CSRF-Secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				permission: 'granted',

@@ -100,7 +100,7 @@ beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
 	let secret = cookies
-		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.find((cookie) => cookie.startsWith('X-CSRF-Secret='))
 		.split(';')[0];
 
 	csrfSecret = secret.split('=')[1];
@@ -259,7 +259,7 @@ describe('Suitcases Route For User For Creating Suitcase For User', () => {
 		const res = await request(app)
 			.post(`/api/beggy/suitcases/`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -326,7 +326,7 @@ describe("Suitcases Route For User For Replace User's Suitcase", () => {
 		const res = await request(app)
 			.put(`/api/beggy/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -397,7 +397,7 @@ describe("Suitcases Route For User For Modify User's Suitcase", () => {
 		const res = await request(app)
 			.patch(`/api/beggy/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -454,7 +454,7 @@ describe("Suitcases Route For User For Delete User's Suitcase By Its ID", () => 
 		const res = await request(app)
 			.delete(`/api/beggy/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
@@ -500,7 +500,7 @@ describe("Suitcases Route For User For Delete All User's Suitcases", () => {
 		const res = await request(app)
 			.delete(`/api/beggy/suitcases/`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({ confirmDelete: true });

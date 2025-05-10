@@ -235,7 +235,7 @@ beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
 	let secret = cookies
-		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.find((cookie) => cookie.startsWith('X-CSRF-Secret='))
 		.split(';')[0];
 
 	csrfSecret = secret.split('=')[1];
@@ -278,7 +278,7 @@ describe('Base Bags Route Tests To Replace Bag By ID For Admin and Member', () =
 		const res = await request(app)
 			.put(`/api/beggy/private/bags/${bag.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -361,7 +361,7 @@ describe('Base Bags Route Tests To Modify Bag By ID For Admin and Member', () =>
 		const res = await request(app)
 			.patch(`/api/beggy/private/bags/${bag.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(member.id)}`)
 			.send({
@@ -429,7 +429,7 @@ describe('Base Bags Route Tests To Delete Bag By ID For Admin and Member', () =>
 		const res = await request(app)
 			.delete(`/api/beggy/private/bags/${bag.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`);
 
@@ -480,7 +480,7 @@ describe('Base Bags Route Tests To Delete All Bags From DB For Only Admin', () =
 		const res = await request(app)
 			.delete(`/api/beggy/private/bags`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -516,7 +516,7 @@ describe('Base Bags Route Tests To Delete All Bags From DB For Only Admin', () =
 		const res = await request(app)
 			.delete(`/api/beggy/private/bags?size=small`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -574,7 +574,7 @@ describe('Base suitcases Route Tests To Replace Suitcase For Only Admin and Memb
 		const res = await request(app)
 			.put(`/api/beggy/private/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -643,7 +643,7 @@ describe('Base suitcases Route Tests Modify Suitcase For Only Admin and Member',
 		const res = await request(app)
 			.patch(`/api/beggy/private/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -706,7 +706,7 @@ describe('Base suitcases Route Tests Delete Suitcase By ID For Only Admin and Me
 		const res = await request(app)
 			.delete(`/api/beggy/private/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`);
 
@@ -740,7 +740,7 @@ describe('Base suitcases Route Tests Delete All Suitcases For Only Admin', () =>
 		const res = await request(app)
 			.delete(`/api/beggy/private/suitcases`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({ confirmDelete: true });
@@ -771,7 +771,7 @@ describe('Base suitcases Route Tests Delete All Suitcases For Only Admin', () =>
 		const res = await request(app)
 			.delete(`/api/beggy/private/suitcases?size=small`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -819,7 +819,7 @@ describe('Base Items Route Tests For Replace By ID For Admin and Member Only', (
 		const res = await request(app)
 			.put(`/api/beggy/private/items/${item.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -894,7 +894,7 @@ describe('Base Item Route Tests For Modify Item For Admin and Member Only', () =
 		const res = await request(app)
 			.patch(`/api/beggy/private/items/${item.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -965,7 +965,7 @@ describe('Base Items Route Tests For Deleted Item By ID for Admin and Member Onl
 		const res = await request(app)
 			.delete(`/api/beggy/private/items/${item.id}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`);
 
@@ -1016,7 +1016,7 @@ describe('Base Items Route Tests For Delete All Items for Admin Only', () => {
 		const res = await request(app)
 			.delete(`/api/beggy/private/items`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({
@@ -1056,7 +1056,7 @@ describe('Base Items Route Tests For Delete All Items for Admin Only', () => {
 		const res = await request(app)
 			.delete(`/api/beggy/private/items?category=books`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(admin.id)}`)
 			.send({

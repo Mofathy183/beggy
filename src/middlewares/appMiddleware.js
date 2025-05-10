@@ -109,7 +109,7 @@ export const verifyCSRF = (req, res, next) => {
 	const verifyCSRFToken = new CSRF();
 
 	const csrfToken = req.headers['x-csrf-token'];
-	const secret = req.headers['x-csrf-secret'];
+	const secret = req.cookies['X-CSRF-Secret'];
 
 	if (!csrfToken || !secret)
 		return next(

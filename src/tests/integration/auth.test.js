@@ -17,7 +17,7 @@ beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
 	let secret = cookies
-		.find((cookie) => cookie.startsWith('x-csrf-secret='))
+		.find((cookie) => cookie.startsWith('X-CSRF-Secret='))
 		.split(';')[0];
 
 	csrfSecret = secret.split('=')[1];
@@ -34,7 +34,7 @@ describe('Auth API Tests For SignUp', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/signup')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				firstName: 'John',
@@ -84,7 +84,7 @@ describe('Auth API Tests For Login', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/login')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				email: 'testuser22@test.com',
@@ -218,7 +218,7 @@ describe('Auth API Tests For Reset Password', () => {
 		const res = await request(app)
 			.patch(`/api/beggy/auth/reset-password/${token}`)
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				password: 'testing12377@',
@@ -272,7 +272,7 @@ describe('Auth API Tests For Update User Password', () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/update-password')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${token}`)
 			.send({
@@ -319,7 +319,7 @@ describe('Auth API Tests For Update User Data', () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/update-user-data')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -363,7 +363,7 @@ describe('Auth API Tests For Change Email', () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/change-email')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -401,7 +401,7 @@ describe('Auth API Tests For send Verification Email', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/send-verification-email')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
@@ -550,7 +550,7 @@ describe('Auth API Tests For Deactivate', () => {
 		const res = await request(app)
 			.delete('/api/beggy/auth/deactivate')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
@@ -586,7 +586,7 @@ describe('Auth API Tests For Logout', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/logout')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${signToken(user.id)}`);
 
@@ -622,7 +622,7 @@ describe('Auth API Tests For Get Access Token', () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/refresh-token')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.set('Authorization', `Bearer ${refreshToken}`)
 			.send({
@@ -673,7 +673,7 @@ describe('Auth API Tests For Forgot Password', () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/forgot-password')
 			.set('Cookie', cookies)
-			.set('x-csrf-secret', csrfSecret)
+			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				email: 'mofathy1833@gmail.com',

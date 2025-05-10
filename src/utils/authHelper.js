@@ -110,7 +110,7 @@ export const generateCSRFToken = (res) => {
 
 	const secret = csrf.secretSync();
 
-	res.cookie('x-csrf-secret', secret, {
+	res.cookie('X-CSRF-Secret', secret, {
 		...cookieOptions,
 		maxAge: 3600000, // 1 hour
 	});

@@ -693,9 +693,7 @@ export const csrfProtection = (req, res, next) => {
 	return next(
 		new SuccessResponse(
 			statusCode.okCode,
-			'CSRF token generated, send the token via cookie ( x-csrf-token )' +
-				'\n' +
-				'The token will be sent via cookie ( x-csrf-secret ) and response body.',
+			'CSRF token generated Successfully',
 			{ csrfToken }
 		)
 	);

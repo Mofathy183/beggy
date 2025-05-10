@@ -1,27 +1,34 @@
 import prisma from '../../prisma/prisma.js';
 
+export const resetTestDatabase = async () => {
+	console.log('🔄 Resetting test database...');
+
+	await prisma.$transaction([
+		prisma.userToken.deleteMany(),
+		prisma.suitcaseItems.deleteMany(),
+		prisma.bagItems.deleteMany(),
+		prisma.items.deleteMany(),
+		prisma.bags.deleteMany(),
+		prisma.suitcases.deleteMany(),
+		prisma.account.deleteMany(),
+		prisma.user.deleteMany(),
+	]);
+
+	console.log('✅ Test database reset complete.');
+};
+
 beforeAll(async () => {
-	console.log('Setting up test Database...');
-
-	// Use `migrate reset` if you want to apply migrations and seed data
-	// execSync("npx prisma db push", { stdio: "inherit" });
-
-	console.log('Testing Database is Ready');
+	console.log('🧪 Connecting to the test database...');
+	await prisma.$connect();
+	console.log('✅ Connected.');
 });
 
 beforeEach(async () => {
-	console.log('Clearing test Database...');
-	await prisma.userToken.deleteMany();
-	await prisma.items.deleteMany();
-	await prisma.bags.deleteMany();
-	await prisma.suitcases.deleteMany();
-	await prisma.suitcaseItems.deleteMany();
-	await prisma.bagItems.deleteMany();
-	await prisma.account.deleteMany();
-	await prisma.user.deleteMany();
+	await resetTestDatabase();
 });
 
 afterAll(async () => {
-	console.log('Closing test Database connection');
+	console.log('🧹 Tearing down test environment...');
 	await prisma.$disconnect();
+	console.log('✅ Database connection closed.');
 });
