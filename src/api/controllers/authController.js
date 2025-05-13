@@ -24,50 +24,56 @@ import {
 import { verifyRefreshToken } from '../../utils/jwt.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
-import { ErrorResponse } from '../../utils/error.js';
+import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 
 export const signUp = async (req, res, next) => {
 	try {
 		const { body } = req;
 
-		const { safeUser, role } = await singUpUser(body);
+		const user = await singUpUser(body);
 
-		if (!safeUser)
+		if (sendServiceResponse(next, user)) return;
+
+		if (!user)
 			return next(
 				new ErrorResponse(
-					"User couldn't sign up",
-					'Invalid user',
-					statusCode.notFoundCode
-				)
-			);
-
-		if (safeUser.error)
-			return next(
-				new ErrorResponse(
-					safeUser.error,
-					'Invalid user data ' + safeUser.error.message,
+					'Failed to create user',
+					'Failed to create',
 					statusCode.badRequestCode
 				)
 			);
 
+		if (user.error)
+			return next(
+				new ErrorResponse(
+					user.error,
+					"Error Couldn't create user " + user.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		const { role, id } = user;
+
 		//* for add the user id to session
-		storeSession(safeUser.id, role, req);
+		storeSession(id, role, req);
 
 		//* send the token as a cookie
-		sendCookies(safeUser.id, res);
+		sendCookies(id, res);
 
 		return next(
 			new SuccessResponse(
 				statusCode.createdCode,
-				'User Signed Up Successfully',
-				safeUser
+				"You've Signed Up Successfully",
+				'Will send email to verify your account'
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
-				'Failed to sign up',
+				Object.keys(error).length === 0
+					? 'Error Occur while Signing Up'
+					: error,
+				'Failed to Sign Up',
 				statusCode.internalServerErrorCode
 			)
 		);
@@ -79,47 +85,49 @@ export const login = async (req, res, next) => {
 		const { body } = req;
 
 		//* get the user from DB
-		const { safeUser, role } = await loginUser(body);
+		const user = await loginUser(body);
 
-		if (!safeUser) {
-			//* if user not found
+		if (sendServiceResponse(next, user)) return;
+
+		if (!user)
 			return next(
 				new ErrorResponse(
-					'User not found',
-					'Invalid email or password',
+					'User Not Found',
+					'User must exist to authenticate',
 					statusCode.notFoundCode
 				)
 			);
-		}
 
-		if (safeUser.error) {
-			//* if there is an error in the user data
+		if (user.error)
 			return next(
 				new ErrorResponse(
-					safeUser.error,
-					'Invalid user data ' + safeUser.error.message,
+					user.error,
+					'Error occurred while authenticating user',
 					statusCode.badRequestCode
 				)
 			);
-		}
+
+		const { role, id } = user;
 
 		//* for add the user id to session
-		storeSession(safeUser.id, role, req);
+		storeSession(id, role, req);
 
 		//* send the token as a cookie
-		sendCookies(safeUser.id, res);
+		sendCookies(id, res);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'User logged In Successfully',
-				safeUser
+				"You've logged In Successfully",
+				'Will send email to verify your account'
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Logs In'
+					: error,
 				'Failed to login',
 				statusCode.internalServerErrorCode
 			)
@@ -134,6 +142,8 @@ export const authMe = async (req, res, next) => {
 
 		// Attempt to authenticate the user by ID
 		const user = await authUser(userId);
+
+		if (sendServiceResponse(next, user)) return;
 
 		// If no user is returned, forward a not found error
 		if (!user) {
@@ -165,7 +175,7 @@ export const authMe = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Authenticated user successfully',
+				"You've Authenticated Successfully",
 				user
 			)
 		);
@@ -173,7 +183,9 @@ export const authMe = async (req, res, next) => {
 		// Catch unexpected errors and forward an internal server error response
 		next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Authenticating You'
+					: error,
 				'Failed to authenticate user',
 				statusCode.internalServerErrorCode
 			)
@@ -185,8 +197,39 @@ export const forgotPassword = async (req, res, next) => {
 	try {
 		const { email } = req.body;
 
-		const { resetToken, userName, userEmail } =
-			await userForgotPassword(email);
+		const sendEmail = await userForgotPassword(email);
+
+		if (sendServiceResponse(next, sendEmail)) return;
+
+		if (!sendEmail)
+			return next(
+				new ErrorResponse(
+					'Failed to send reset password email to user',
+					'Failed to update',
+					statusCode.badRequestCode
+				)
+			);
+
+		if (sendEmail.error)
+			return next(
+				new ErrorResponse(
+					sendEmail.error,
+					"Error Couldn't send reset password email to user " +
+						sendEmail.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		const { resetToken, userName, userEmail } = sendEmail;
+
+		if (!resetToken || !userEmail || !userName)
+			return next(
+				new ErrorResponse(
+					'Failed to send reset password email to user',
+					'Failed to generate token and get user email and name',
+					statusCode.badRequestCode
+				)
+			);
 
 		//* send email to reset the password to the user
 		//* send a link to reset the password as a patch request
@@ -202,8 +245,6 @@ export const forgotPassword = async (req, res, next) => {
 			'reset',
 			'password_reset'
 		);
-
-		console.log('sended', sended, userEmail);
 
 		if (sended.error)
 			return next(
@@ -225,7 +266,9 @@ export const forgotPassword = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Send Reset Password Email'
+					: error,
 				'Failed to send reset password email to user',
 				statusCode.internalServerErrorCode
 			)
@@ -239,6 +282,8 @@ export const resetPassword = async (req, res, next) => {
 		const { token } = req.params;
 
 		const updatePassword = await resetUserPassword(body, token);
+
+		if (sendServiceResponse(next, updatePassword)) return;
 
 		if (!updatePassword)
 			return next(
@@ -268,14 +313,16 @@ export const resetPassword = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'User Change Password Successfully',
-				updatePassword
+				"You've successfully changed your password",
+				"You've Change Password Successfully"
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Reset Password'
+					: error,
 				'Failed to Reset Password',
 				statusCode.internalServerErrorCode
 			)
@@ -289,6 +336,8 @@ export const updatePassword = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const updatePassword = await updateUserPassword(userId, body);
+
+		if (sendServiceResponse(next, updatePassword)) return;
 
 		if (!updatePassword)
 			return next(
@@ -318,14 +367,16 @@ export const updatePassword = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'User Updated Password Successfully',
-				updatePassword
+				"You've successfully changed your password",
+				"You've Updated Password Successfully"
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Update User Password'
+					: error,
 				'Failed to update password',
 				statusCode.internalServerErrorCode
 			)
@@ -339,6 +390,8 @@ export const updateData = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const updatedUserData = await updateUserData(userId, body);
+
+		if (sendServiceResponse(next, updatedUserData)) return;
 
 		if (!updatedUserData)
 			return next(
@@ -368,14 +421,16 @@ export const updateData = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully Updated User Profile',
-				updatedUserData
+				'Successfully Updated Your Profile',
+				"You've Updated Your Profile Successfully"
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Update Your Info'
+					: error,
 				'Failed to update user data',
 				statusCode.internalServerErrorCode
 			)
@@ -389,10 +444,30 @@ export const changeEmail = async (req, res, next) => {
 
 		const { userId, userRole } = req.session;
 
-		const { token, userName, userEmail } = await changeUserEmail(
-			userId,
-			email
-		);
+		const updateEmail = await changeUserEmail(userId, email);
+
+		if (sendServiceResponse(next, updateEmail)) return;
+
+		if (!updateEmail)
+			return next(
+				new ErrorResponse(
+					'Failed to change user email',
+					'Failed to update',
+					statusCode.badRequestCode
+				)
+			);
+
+		if (updateEmail.error)
+			return next(
+				new ErrorResponse(
+					updateEmail.error,
+					"Error Couldn't change user email " +
+						updateEmail.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		const { token, userEmail, userName } = updateEmail;
 
 		if (!token || !userEmail || !userName)
 			return next(
@@ -430,7 +505,7 @@ export const changeEmail = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully Updated User Email',
+				'Successfully Updated Your Email',
 				'Check your email inbox to verify your email',
 				sended
 			)
@@ -438,7 +513,9 @@ export const changeEmail = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Change Your Email'
+					: error,
 				'Failed to change user email',
 				statusCode.internalServerErrorCode
 			)
@@ -450,7 +527,30 @@ export const sendVerificationEmail = async (req, res, next) => {
 	try {
 		const { email } = req.body;
 
-		const { token, userName } = await sendVerificationUserEmail(email);
+		const userToken = await sendVerificationUserEmail(email);
+
+		if (sendServiceResponse(next, userToken)) return;
+
+		if (!userToken)
+			return next(
+				new ErrorResponse(
+					'Failed to send verification email',
+					'Failed to update',
+					statusCode.badRequestCode
+				)
+			);
+
+		if (userToken.error)
+			return next(
+				new ErrorResponse(
+					userToken.error,
+					"Error Couldn't send verification email " +
+						userToken.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		const { token, userName } = userToken;
 
 		const verifyEmailURL = `${req.protocol}://${req.get('host')}${verifyEmailUrl}?token=${token}type=email_verification`;
 
@@ -480,7 +580,9 @@ export const sendVerificationEmail = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Sending Verification Email'
+					: error,
 				'Failed to send verification email',
 				statusCode.internalServerErrorCode
 			)
@@ -493,6 +595,8 @@ export const verifyEmail = async (req, res, next) => {
 		const { token, type } = req.verified;
 
 		const userUpdate = await verifyUserEmail(token, type);
+
+		if (sendServiceResponse(next, userUpdate)) return;
 
 		if (!userUpdate)
 			return next(
@@ -522,7 +626,9 @@ export const verifyEmail = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Verify Your Email'
+					: error,
 				'Failed to verify email',
 				statusCode.internalServerErrorCode
 			)
@@ -534,7 +640,11 @@ export const permissions = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
 
-		const { permissions, meta } = await getUserPermissions(userRole);
+		const userPermissions = await getUserPermissions(userRole);
+
+		if (sendServiceResponse(next, userPermissions)) return;
+
+		const { permissions, meta } = userPermissions;
 
 		if (!permissions)
 			return next(
@@ -570,7 +680,9 @@ export const permissions = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Get User Permissions'
+					: error,
 				'Failed to get user permissions',
 				statusCode.internalServerErrorCode
 			)
@@ -583,6 +695,8 @@ export const deActivate = async (req, res, next) => {
 		const { userId } = req.session;
 
 		const deActivateUser = await deactivateUserAccount(userId);
+
+		if (sendServiceResponse(next, deActivateUser)) return;
 
 		if (!deActivateUser)
 			return next(
@@ -606,13 +720,15 @@ export const deActivate = async (req, res, next) => {
 			new SuccessResponse(
 				statusCode.okCode,
 				'Successfully Deactivated User Account',
-				deActivateUser
+				'Your Account Deactivated Successfully'
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Deactivate Your Account'
+					: error,
 				'Failed to deactivate user account',
 				statusCode.internalServerErrorCode
 			)
@@ -625,7 +741,27 @@ export const logout = async (req, res, next) => {
 		const { userId } = req.session;
 
 		// Deactivate the user account
-		await deactivateUserAccount(userId);
+		const deactivateUser = await deactivateUserAccount(userId);
+
+		if (sendServiceResponse(next, deactivateUser)) return;
+
+		if (!deactivateUser)
+			return next(
+				new ErrorResponse(
+					'Failed to logout',
+					'Failed to logout',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (deactivateUser.error)
+			return next(
+				new ErrorResponse(
+					deactivateUser.error,
+					'Failed to logout ' + deactivateUser.error.message,
+					statusCode.badRequestCode
+				)
+			);
 
 		// Clear the cookies
 		clearCookies(res);
@@ -636,14 +772,16 @@ export const logout = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'User Logged Out Successfully',
-				'User Logout'
+				"You're Logged Out Successfully",
+				"You're Logout"
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Logout'
+					: error,
 				'Failed to logout',
 				statusCode.internalServerErrorCode
 			)

@@ -48,7 +48,8 @@ describe('Auth API Tests For SignUp', () => {
 
 		expect(res.status).toBe(201);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Signed Up Successfully');
+		expect(res.body.message).toBe("You've Signed Up Successfully");
+		expect(res.body.data).toBe('Will send email to verify your account');
 
 		//*✅ Verify user in DB
 		const user = await prisma.user.findUnique({
@@ -95,7 +96,8 @@ describe('Auth API Tests For Login', () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User logged In Successfully');
+		expect(res.body.message).toBe("You've logged In Successfully");
+		expect(res.body.data).toBe('Will send email to verify your account');
 
 		// ✅ Ensure user exists in DB
 		const user = await prisma.user.findUnique({
@@ -129,7 +131,7 @@ describe('Auth API Tests For Authentic User For Frontend', () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Authenticated user successfully');
+		expect(res.body.message).toBe("You've Authenticated Successfully");
 		expect(res.body.data).toMatchObject({
 			firstName: 'John',
 			lastName: 'Doe',
@@ -229,20 +231,17 @@ describe('Auth API Tests For Reset Password', () => {
 		console.log(
 			'After Reset Password',
 			await prisma.user.findUnique({
-				where: { id: res.body.data.id },
+				where: { id: user.id },
 				select: { password: true },
 			})
 		);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Change Password Successfully');
-		expect(res.body.data).toMatchObject({
-			id: res.body.data.id,
-			firstName: 'John',
-			lastName: 'Doe',
-			email: 'testuser44@test.com',
-		});
+		expect(res.body.message).toBe(
+			"You've successfully changed your password"
+		);
+		expect(res.body.data).toBe("You've Change Password Successfully");
 
 		const userToken2 = await prisma.userToken.findUnique({
 			where: {
@@ -293,13 +292,10 @@ describe('Auth API Tests For Update User Password', () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Updated Password Successfully');
-		expect(res.body.data).toMatchObject({
-			id: user.id,
-			firstName: 'John',
-			lastName: 'Doe',
-			email: 'testuser55@test.com',
-		});
+		expect(res.body.message).toBe(
+			"You've successfully changed your password"
+		);
+		expect(res.body.data).toBe("You've Updated Password Successfully");
 	});
 });
 
@@ -328,19 +324,19 @@ describe('Auth API Tests For Update User Data', () => {
 				gender: 'male',
 			});
 
-		console.log(
-			'After Update User Data',
-			await prisma.user.findUnique({
-				where: { id: user.id },
-			})
-		);
+		console.log('After Update User Data');
+		const updatedUser = await prisma.user.findUnique({
+			where: { id: user.id },
+		});
 
 		console.log('RESPONSE BODY', res.body);
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Updated User Profile');
-		expect(res.body.data).toMatchObject({
+		expect(res.body.message).toBe('Successfully Updated Your Profile');
+		expect(res.body.data).toBe("You've Updated Your Profile Successfully");
+
+		expect(updatedUser).toMatchObject({
 			id: user.id,
 			firstName: 'Jane',
 			lastName: 'Doe',
@@ -374,10 +370,11 @@ describe('Auth API Tests For Change Email', () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Updated User Email');
+		expect(res.body.message).toBe('Successfully Updated Your Email');
 		expect(res.body.data).toBe(
 			'Check your email inbox to verify your email'
 		);
+
 		const userEmail = await prisma.user.findUnique({
 			where: { id: user.id },
 			select: { email: true },
@@ -567,6 +564,7 @@ describe('Auth API Tests For Deactivate', () => {
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
 		expect(res.body.message).toBe('Successfully Deactivated User Account');
+		expect(res.body.data).toBe('Your Account Deactivated Successfully');
 	});
 });
 
@@ -602,7 +600,8 @@ describe('Auth API Tests For Logout', () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Logged Out Successfully');
+		expect(res.body.message).toBe("You're Logged Out Successfully");
+		expect(res.body.data).toBe("You're Logout");
 	});
 });
 

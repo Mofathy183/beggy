@@ -2,6 +2,7 @@ import prisma from '../../prisma/prisma.js';
 import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { hashingPassword } from '../utils/hash.js';
 import { ErrorHandler } from '../utils/error.js';
+import { statusCode } from '../config/status.js';
 
 /**
  * @function addUser
@@ -39,7 +40,8 @@ export const addUser = async (body) => {
 			return new ErrorHandler(
 				'password',
 				'password is not the same in confirmPassword',
-				'Enter the same password in confirm password'
+				'Enter the same password in confirm password',
+				statusCode.badRequestCode
 			);
 
 		const hashPassword = await hashingPassword(password);
@@ -75,14 +77,16 @@ export const addUser = async (body) => {
 			return new ErrorHandler(
 				'user error',
 				'No user created',
-				'Failed to create user'
+				'Failed to create user',
+				statusCode.notFoundCode
 			);
 
 		if (newUser.error)
 			return new ErrorHandler(
 				'prisma',
 				newUser.error,
-				'User already exists ' + newUser.error.message
+				'User already exists ' + newUser.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.user.count();
@@ -92,9 +96,16 @@ export const addUser = async (body) => {
 			totalCreate: newUser ? 1 : 0,
 		};
 
-		return { newUser: newUser, meta: meta };
+		return { newUser, meta };
 	} catch (error) {
-		return new ErrorHandler('catch error', error, 'Failed to create user');
+		return new ErrorHandler(
+			'catch error',
+			Object.keys(error).length === 0
+				? 'Error Occur while Create User'
+				: error,
+			'Failed to create user',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -107,9 +118,7 @@ export const addUser = async (body) => {
 export const getUserById = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: {
-				id: userId,
-			},
+			where: { id: userId },
 			include: {
 				suitcases: true,
 				bags: true,
@@ -126,22 +135,27 @@ export const getUserById = async (userId) => {
 			return new ErrorHandler(
 				'User null',
 				'User not found',
-				'There is no user with that id'
+				'There is no user with that id',
+				statusCode.notFoundCode
 			);
 
 		if (user.error)
 			return new ErrorHandler(
 				'prisma',
 				user.error,
-				'User not found ' + user.error.message
+				'User not found ' + user.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return user;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
-			error,
-			'Failed to get user by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Fine User By Id'
+				: error,
+			'Failed to get user by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -179,14 +193,16 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 			return new ErrorHandler(
 				'user',
 				'No users found',
-				'No users found in the database'
+				'No users found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (users.error)
 			return new ErrorHandler(
 				'prisma',
 				'No users found ' + users.error,
-				'No users found in the database ' + users.error.message
+				'No users found in the database ' + users.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalUsers = await prisma.user.count({
@@ -197,7 +213,8 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 			return new ErrorHandler(
 				'Total users null',
 				'No users found' || totalUsers.error,
-				'No users found in the database'
+				'No users found in the database',
+				statusCode.internalServerErrorCode
 			);
 
 		const meta = {
@@ -213,8 +230,11 @@ export const getAllUsers = async (pagination, searchFilter, orderBy) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
-			error,
-			'Failed to get all users'
+			Object.keys(error).length === 0
+				? 'Error Occur while Fine All Users'
+				: error,
+			'Failed to get all users',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -247,22 +267,27 @@ export const changeUserRole = async (id, body) => {
 			return new ErrorHandler(
 				'User null',
 				'User Cannot be modified',
-				'There is no user with that id to modify'
+				'There is no user with that id to modify',
+				statusCode.notFoundCode
 			);
 
 		if (updatedUser.error)
 			return new ErrorHandler(
 				'prisma',
 				updatedUser.error,
-				'User cannot be modified ' + updatedUser.error.message
+				'User cannot be modified ' + updatedUser.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedUser;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
-			error,
-			'Failed to modify user by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Change User Role'
+				: error,
+			'Failed to modify user by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -289,7 +314,8 @@ export const removeUser = async (userId) => {
 			return new ErrorHandler(
 				'Delete null zero',
 				'User cannot be deleted',
-				'There is no user with that id to delete'
+				'There is no user with that id to delete',
+				statusCode.notFoundCode
 			);
 
 		if (userDeleted.error)
@@ -297,7 +323,8 @@ export const removeUser = async (userId) => {
 				'prisma',
 				userDeleted.error,
 				'User cannot be deleted for database ' +
-					userDeleted.error.message
+					userDeleted.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.user.count();
@@ -311,8 +338,11 @@ export const removeUser = async (userId) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
-			error,
-			'Failed to remove user by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Delete User'
+				: error,
+			'Failed to remove user by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -334,7 +364,8 @@ export const removeAllUsers = async (searchFilter) => {
 				'prisma',
 				usersDeleted.error,
 				'Cannot remove all users for database ' +
-					usersDeleted.error.message
+					usersDeleted.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.user.count();
@@ -349,8 +380,11 @@ export const removeAllUsers = async (searchFilter) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
-			error,
-			'Failed to remove all users'
+			Object.keys(error).length === 0
+				? 'Error Occur while Delete Users By Filter'
+				: error,
+			'Failed to remove all users',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

@@ -1,6 +1,10 @@
 import { statusCode } from '../../config/status.js';
-import { storeSession, sendProvideCookies } from '../../utils/authHelper.js';
-import { ErrorResponse } from '../../utils/error.js';
+import {
+	storeSession,
+	sendProvideCookies,
+	sendCookies,
+} from '../../utils/authHelper.js';
+import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import {
 	loginUserWithGoogle,
 	loginUserWithFacebook,
@@ -9,28 +13,51 @@ import SuccessResponse from '../../utils/successResponse.js';
 
 export const loginWithGoogle = async (req, res, next) => {
 	try {
-		console.log('***User from REQ**', req.user.profile);
 		const { accessToken, profile } = req.user;
 
-		const { role, safeUser } = await loginUserWithGoogle(profile);
+		const user = await loginUserWithGoogle(profile);
 
-		console.log('role, data', role, safeUser);
+		if (sendServiceResponse(next, user)) return;
 
-		sendProvideCookies(accessToken, safeUser.id, 'google', res);
+		if (!user)
+			return next(
+				new ErrorResponse(
+					'User Not Found',
+					'User must exist to authenticate',
+					statusCode.notFoundCode
+				)
+			);
 
-		storeSession(safeUser.id, role, req);
+		if (user.error)
+			return next(
+				new ErrorResponse(
+					user.error,
+					"Error Couldn't login with Google " + user.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		const { role, userId } = user;
+
+		sendProvideCookies(accessToken, userId, 'google', res);
+
+		sendCookies(userId, res);
+
+		storeSession(userId, role, req);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
 				`Successfully Logged In with Google`,
-				safeUser
+				"You're Successfully Logged in with Google"
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Login with Google'
+					: error,
 				'Failed to authenticate with Google',
 				statusCode.internalServerErrorCode
 			)
@@ -42,34 +69,49 @@ export const authenticateWithFacebook = async (req, res, next) => {
 	try {
 		const { profile, accessToken } = req.user;
 
-		const { role, safeUser, emailError } =
-			await loginUserWithFacebook(profile);
+		const user = await loginUserWithFacebook(profile);
 
-		if (emailError)
+		if (sendServiceResponse(next, user)) return;
+
+		if (!user)
 			return next(
 				new ErrorResponse(
-					emailError,
-					'We couldn’t access your email from Facebook. ' +
-						'Please make sure your Facebook account has an email and you granted permission to share it.',
+					'User Not Found',
+					'User must exist to authenticate',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (user.error)
+			return next(
+				new ErrorResponse(
+					user.error,
+					"Error Couldn't login with Facebook " + user.error.message,
 					statusCode.badRequestCode
 				)
 			);
 
-		sendProvideCookies(accessToken, safeUser.id, 'facebook', res);
+		const { role, userId } = user;
 
-		storeSession(safeUser.id, role, req);
+		sendProvideCookies(accessToken, userId, 'facebook', res);
+
+		sendCookies(userId, res);
+
+		storeSession(userId, role, req);
 
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
 				`Successfully Logged In with Facebook`,
-				safeUser
+				"You're Successfully Logged in with Facebook"
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Login with Facebook'
+					: error,
 				'Failed to authenticate with Facebook',
 				statusCode.internalServerErrorCode
 			)

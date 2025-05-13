@@ -2,6 +2,7 @@ import axios from 'axios';
 import { AIConfig, openweatherApiConfig } from '../config/env.js';
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
+import { statusCode } from '../config/status.js';
 
 const jsonRegExp = /```json\n([\s\S]+?)\n```/;
 
@@ -21,8 +22,9 @@ export const itemAutoFilling = async (body) => {
 		if (!name || !quantity || !category)
 			return new ErrorHandler(
 				'input',
-				'Missing required fields: name and quantity',
-				'Missing required fields: name and quantity'
+				'Missing required fields: name and quantity and category',
+				'Missing required fields: name and quantity and category',
+				statusCode.badRequestCode
 			);
 
 		const prompt = `Estimate the total weight and volume for an item based on the following details:
@@ -69,7 +71,8 @@ export const itemAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'response',
 				'Empty response from AI API',
-				'AI API returned an empty response'
+				'AI API returned an empty response',
+				statusCode.internalServerErrorCode
 			);
 		}
 
@@ -79,7 +82,8 @@ export const itemAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to extract JSON output from AI response',
-				'Failed to extract JSON output from AI response'
+				'Failed to extract JSON output from AI response',
+				statusCode.badRequestCode
 			);
 
 		let jsonParsed;
@@ -90,7 +94,8 @@ export const itemAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to parse JSON output from AI response',
-				'Failed to parse JSON output from AI response'
+				'Failed to parse JSON output from AI response',
+				statusCode.badRequestCode
 			);
 		}
 
@@ -101,15 +106,19 @@ export const itemAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to parse JSON output from AI response',
-				'Failed to parse JSON output from AI response'
+				'Failed to parse JSON output from AI response',
+				statusCode.badRequestCode
 			);
 
 		return { volume: volume, weight: weight };
 	} catch (error) {
 		return new ErrorHandler(
 			'axios',
-			error,
-			'Failed to fetch item details from AI API'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Item Volume and Weight from AI'
+				: error,
+			'Failed to fetch item details from AI API',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -133,7 +142,8 @@ export const bagAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'input',
 				'Missing required fields: name, type, size, material, and feature',
-				'Missing required fields: name, type, size, material, and feature'
+				'Missing required fields: name, type, size, material, and feature',
+				statusCode.badRequestCode
 			);
 
 		const prompt = `Estimate the weight, maximum weight capacity, 
@@ -184,7 +194,8 @@ export const bagAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'response',
 				'Empty response from AI API',
-				'AI API returned an empty response'
+				'AI API returned an empty response',
+				statusCode.internalServerErrorCode
 			);
 		}
 
@@ -194,7 +205,8 @@ export const bagAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to extract JSON output from AI response',
-				'Failed to extract JSON output from AI response'
+				'Failed to extract JSON output from AI response',
+				statusCode.badRequestCode
 			);
 
 		let jsonParsed;
@@ -205,7 +217,8 @@ export const bagAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to parse JSON output from AI response',
-				'Failed to parse JSON output from AI response'
+				'Failed to parse JSON output from AI response',
+				statusCode.badRequestCode
 			);
 		}
 
@@ -217,15 +230,19 @@ export const bagAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to parse JSON output from AI response',
-				'Failed to parse JSON output from AI response'
+				'Failed to parse JSON output from AI response',
+				statusCode.badRequestCode
 			);
 
 		return { weight: weight, maxWeight: maxWeight, capacity: capacity };
 	} catch (error) {
 		return new ErrorHandler(
 			'axios',
-			error,
-			'Failed to fetch bag details from AI API'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Bag Weight, Capacity and Max Weight from AI'
+				: error,
+			'Failed to fetch bag details from AI API',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -251,7 +268,8 @@ export const suitcaseAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'input',
 				'Missing required fields: name, type, and size',
-				'Missing required fields: name, type, and size'
+				'Missing required fields: name, type, and size',
+				statusCode.badRequestCode
 			);
 
 		const prompt = `Estimate the suitcase's **capacity, maxWeight, and weight** based on the following details:
@@ -305,7 +323,8 @@ export const suitcaseAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'response',
 				'Empty response from AI API',
-				'AI API returned an empty response'
+				'AI API returned an empty response',
+				statusCode.internalServerErrorCode
 			);
 		}
 
@@ -315,7 +334,8 @@ export const suitcaseAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to extract JSON output from AI response',
-				'Failed to extract JSON output from AI response'
+				'Failed to extract JSON output from AI response',
+				statusCode.badRequestCode
 			);
 
 		let jsonParsed;
@@ -326,7 +346,8 @@ export const suitcaseAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to parse JSON output from AI response',
-				'Failed to parse JSON output from AI response'
+				'Failed to parse JSON output from AI response',
+				statusCode.badRequestCode
 			);
 		}
 
@@ -338,15 +359,19 @@ export const suitcaseAutoFilling = async (body) => {
 			return new ErrorHandler(
 				'json',
 				'Failed to parse JSON output from AI response',
-				'Failed to parse JSON output from AI response'
+				'Failed to parse JSON output from AI response',
+				statusCode.badRequestCode
 			);
 
 		return { capacity: capacity, maxWeight: maxWeight, weight: weight };
 	} catch (error) {
 		return new ErrorHandler(
 			'axios',
-			error,
-			'Failed to fetch suitcase details from AI API'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Suitcase Weight, Capacity and Max Weight from AI'
+				: error,
+			'Failed to fetch suitcase details from AI API',
+			statusCode.badRequestCode
 		);
 	}
 };
@@ -372,6 +397,34 @@ export const getLocation = async (userIp) => {
 		}
 
 		const geoResponse = await axios.get(`http://ip-api.com/json/${userIp}`);
+
+		if (geoResponse.status !== 200) {
+			throw new ErrorHandler(
+				'ip-api',
+				'Failed to retrieve location data from IP geolocation API',
+				'Failed to retrieve location data from IP geolocation API',
+				geoResponse.status
+			);
+		}
+
+		if (geoResponse.data.status !== 'success') {
+			throw new ErrorHandler(
+				'ip-api',
+				'Failed to retrieve location data from IP geolocation API',
+				'Failed to retrieve location data from IP geolocation API',
+				geoResponse.status
+			);
+		}
+
+		if (!geoResponse.data.city || !geoResponse.data.country) {
+			throw new ErrorHandler(
+				'ip-api',
+				'Failed to retrieve location data from IP geolocation API',
+				'Failed to retrieve location data from IP geolocation API',
+				geoResponse.status
+			);
+		}
+
 		let { city, country } = geoResponse.data;
 
 		// Validate the response
@@ -379,7 +432,8 @@ export const getLocation = async (userIp) => {
 			throw new ErrorHandler(
 				'ip-api',
 				'Failed to retrieve location data from IP geolocation API',
-				'Failed to retrieve location data from IP geolocation API'
+				'Failed to retrieve location data from IP geolocation API',
+				statusCode.badRequestCode
 			);
 		}
 
@@ -391,9 +445,12 @@ export const getLocation = async (userIp) => {
 	} catch (error) {
 		throw new ErrorHandler(
 			'Catch axios',
-			error,
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Your Location'
+				: error,
 			'Failed to fetch location data from IP geolocation API ' +
-				error.message
+				error.message,
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -418,14 +475,16 @@ export const getWeather = async (userId) => {
 			return new ErrorHandler(
 				'User not found',
 				'User not found',
-				'There no user with that id'
+				'There no user with that id',
+				statusCode.notFoundCode
 			);
 
 		if (!user.city && !user.country)
 			return new ErrorHandler(
 				'City and country must be provided',
 				'Please provide a city and country to get weather',
-				'Please provide a city and country to get weather'
+				'Please provide a city and country to get weather',
+				statusCode.notFoundCode
 			);
 
 		const { baseURL, apiKey, units } = openweatherApiConfig;
@@ -434,6 +493,14 @@ export const getWeather = async (userId) => {
 
 		const response = await axios.get(url);
 
+		if (response.status !== 200)
+			return new ErrorHandler(
+				'OpenWeatherMap API',
+				'Failed to fetch weather data from OpenWeatherMap',
+				'Failed to fetch weather data from OpenWeatherMap',
+				response.status
+			);
+
 		if (!response)
 			return new ErrorHandler(
 				'OpenWeatherMap API',
@@ -441,12 +508,23 @@ export const getWeather = async (userId) => {
 				'Failed to fetch weather data from OpenWeatherMap'
 			);
 
+		if (!response.data)
+			return new ErrorHandler(
+				'OpenWeatherMap API',
+				'Failed to fetch weather data from OpenWeatherMap',
+				'Failed to fetch weather data from OpenWeatherMap',
+				response.status
+			);
+
 		return response.data;
 	} catch (error) {
 		return new ErrorHandler(
 			'Catch axios',
-			error,
-			'Failed to fetch weather data from OpenWeatherMap'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Weather'
+				: error,
+			'Failed to fetch weather data from OpenWeatherMap',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

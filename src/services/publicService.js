@@ -1,5 +1,6 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
+import { statusCode } from '../config/status.js';
 
 //*======================================={Bags Public Route}==============================================
 
@@ -29,9 +30,10 @@ export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 
 		if (bags.error)
 			return new ErrorHandler(
-				'prisma',
-				bags.error,
-				'Failed to find bags in the database ' + bags.error.message
+				'prisma Error',
+				'Failed to find Bags in the database ' + bags.error,
+				'Failed to find Bags in the database ' + bags.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.bags.count();
@@ -47,7 +49,14 @@ export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
 
 		return { bags, meta };
 	} catch (error) {
-		new ErrorHandler('catch', error, 'Failed to get all bags');
+		new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Bags By Filter'
+				: error,
+			'Failed to get all bags',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -72,19 +81,28 @@ export const findBagById = async (bagId) => {
 			return new ErrorHandler(
 				'bag not found',
 				'Failed to find bag in the database',
-				'prisma Error'
+				'Failed To Find Bag By Id',
+				statusCode.notFoundCode
 			);
 
 		if (bag.error)
 			return new ErrorHandler(
 				'prisma',
-				bag.error,
-				'Failed to find bag in the database ' + bag.error.message
+				'Failed to find Bag in the database ' + bag.error,
+				'Failed to find Bag in the database ' + bag.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return bag;
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to get bag by id');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Bags By Id'
+				: error,
+			'Failed to get bag by id',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -112,19 +130,28 @@ export const findItemById = async (itemId) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (item.error)
 			return new ErrorHandler(
 				'prisma',
 				'Failed to find item in the database ' + item.error,
-				'Failed to find item in the database ' + item.error.message
+				'Failed to find item in the database ' + item.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return item;
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to find item by id');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Item By Id'
+				: error,
+			'Failed to find item by id',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -154,8 +181,9 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 		if (items.error)
 			return new ErrorHandler(
 				'prisma',
-				items.error || 'Failed to find items in the database',
-				'Failed to find items in the database'
+				'Failed to find items in the database ' + items.error,
+				'Failed to find items in the database ' + items.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.items.count();
@@ -173,8 +201,11 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to find items by query'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Items By Filter'
+				: error,
+			'Failed to find items by query',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -212,9 +243,10 @@ export const findAllSuitcasesByQuery = async (
 		if (suitcases.error)
 			return new ErrorHandler(
 				'prisma',
-				suitcases.error,
+				'Failed to find suitcases in the database ' + suitcases.error,
 				'Failed to find suitcases in the database ' +
-					suitcases.error.message
+					suitcases.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.suitcases.count();
@@ -230,7 +262,14 @@ export const findAllSuitcasesByQuery = async (
 
 		return { meta: meta, suitcases: suitcases };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to find all suitcases');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Suitcases By Filter'
+				: error,
+			'Failed to find all suitcases',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -256,24 +295,29 @@ export const findSuitcaseById = async (suitcaseId) => {
 		if (!suitcase)
 			return new ErrorHandler(
 				'suitcase not found',
+				'prisma Error',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				statusCode.notFoundCode
 			);
 
 		if (suitcase.error)
 			return new ErrorHandler(
 				'prisma',
-				suitcase.error,
+				'Failed to find suitcase in the database ' + suitcase.error,
 				'Failed to find suitcase in the database ' +
-					suitcase.error.message
+					suitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return suitcase;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to find suitcase by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Suitcase By Id'
+				: error,
+			'Failed to find suitcase by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -313,14 +357,16 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 			return new ErrorHandler(
 				'user',
 				'No users found',
-				'No users found in the database'
+				'No users found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (users.error)
 			return new ErrorHandler(
 				'prisma',
 				'No users found ' + users.error,
-				'No users found in the database ' + users.error.message
+				'No users found in the database ' + users.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalUsers = await prisma.user.count({
@@ -331,7 +377,8 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 			return new ErrorHandler(
 				'Total users null',
 				'No users found' || totalUsers.error,
-				'No users found in the database'
+				'No users found in the database',
+				statusCode.internalServerErrorCode
 			);
 
 		const meta = {
@@ -347,8 +394,11 @@ export const findAllUsers = async (pagination, searchFilter, orderBy) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch error',
-			error,
-			'Failed to get all users'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Users By Search'
+				: error,
+			'Failed to get all users',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -363,9 +413,9 @@ export const findUserPublicProfile = async (userId) => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: {
-				id: userId, // Only return active users
+				id: userId,
 				AND: {
-					isActive: true,
+					isActive: true, // Only return active users
 				},
 			},
 			select: {
@@ -388,13 +438,14 @@ export const findUserPublicProfile = async (userId) => {
 			return new ErrorHandler(
 				'user',
 				'User not found',
-				'User not found in the database'
+				'User not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (user.error)
 			return new ErrorHandler(
 				'prisma',
-				user.error,
+				'something went wrong ' + user.error,
 				'User not found in the database ' + user.error.message
 			);
 
@@ -402,8 +453,11 @@ export const findUserPublicProfile = async (userId) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to get user public profile'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting User By Id'
+				: error,
+			'Failed to get user public profile',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

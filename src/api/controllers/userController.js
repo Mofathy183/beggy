@@ -7,14 +7,38 @@ import {
 	removeAllUsers,
 } from '../../services/userService.js';
 import { statusCode } from '../../config/status.js';
-import { ErrorResponse } from '../../utils/error.js';
+import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
+import { storeSession, sendCookies } from '../../utils/authHelper.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
 export const createUser = async (req, res, next) => {
 	try {
 		const { body } = req;
+		const { userRole, userId } = req.session;
 
-		const { newUser, meta } = await addUser(body);
+		const user = await addUser(body);
+
+		if (sendServiceResponse(next, user)) return;
+
+		if (!user)
+			return next(
+				new ErrorResponse(
+					'Failed to create user',
+					'Failed to create',
+					statusCode.badRequestCode
+				)
+			);
+
+		if (user.error)
+			return next(
+				new ErrorResponse(
+					user.error,
+					"Error Couldn't create user " + user.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		const { newUser, meta } = user;
 
 		if (!newUser) {
 			return next(
@@ -36,6 +60,11 @@ export const createUser = async (req, res, next) => {
 			);
 		}
 
+		//* for add the user id to session
+		storeSession(userId, userRole, req);
+
+		sendCookies(userId, res);
+
 		return next(
 			new SuccessResponse(
 				statusCode.createdCode,
@@ -47,7 +76,9 @@ export const createUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Creating User'
+					: error,
 				'Failed to create user',
 				statusCode.internalServerErrorCode
 			)
@@ -59,7 +90,11 @@ export const findUserById = async (req, res, next) => {
 	try {
 		const { id } = req.params;
 
+		const { userRole, userId } = req.session;
+
 		const user = await getUserById(id);
+
+		if (sendServiceResponse(next, user)) return;
 
 		if (!user)
 			return next(
@@ -79,6 +114,9 @@ export const findUserById = async (req, res, next) => {
 				)
 			);
 
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
@@ -89,7 +127,9 @@ export const findUserById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Fine User By Id'
+					: error,
 				'Failed to find user by id',
 				statusCode.internalServerErrorCode
 			)
@@ -105,11 +145,31 @@ export const findAllUsers = async (req, res, next) => {
 			orderBy = undefined,
 		} = req;
 
-		const { users, meta } = await getAllUsers(
-			pagination,
-			searchFilter,
-			orderBy
-		);
+		const { userRole, userId } = req.session;
+
+		const AllUser = await getAllUsers(pagination, searchFilter, orderBy);
+
+		if (sendServiceResponse(next, AllUser)) return;
+
+		if (!AllUser)
+			return next(
+				new ErrorResponse(
+					'No users found',
+					"Couldn't find any users",
+					statusCode.notFoundCode
+				)
+			);
+
+		if (AllUser.error)
+			return next(
+				new ErrorResponse(
+					AllUser.error,
+					"Couldn't find all users " + AllUser.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		const { users, meta } = AllUser;
 
 		if (!users)
 			return next(
@@ -129,6 +189,9 @@ export const findAllUsers = async (req, res, next) => {
 				)
 			);
 
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
@@ -140,7 +203,9 @@ export const findAllUsers = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Fine All Users'
+					: error,
 				'Failed to find all users',
 				statusCode.internalServerErrorCode
 			)
@@ -154,7 +219,11 @@ export const changeUserRoleById = async (req, res, next) => {
 
 		const { body } = req;
 
+		const { userRole, userId } = req.session;
+
 		const updatedUser = await changeUserRole(id, body);
+
+		if (sendServiceResponse(next, updatedUser)) return;
 
 		if (!updatedUser)
 			return next(
@@ -175,6 +244,9 @@ export const changeUserRoleById = async (req, res, next) => {
 				)
 			);
 
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
@@ -185,7 +257,9 @@ export const changeUserRoleById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Change User Role'
+					: error,
 				'Failed to modify user by id',
 				statusCode.internalServerErrorCode
 			)
@@ -197,7 +271,13 @@ export const deleteUserById = async (req, res, next) => {
 	try {
 		const { id } = req.params;
 
-		const { userDeleted, meta } = await removeUser(id);
+		const { userRole, userId } = req.session;
+
+		const removingUser = await removeUser(id);
+
+		if (sendServiceResponse(next, removingUser)) return;
+
+		const { userDeleted, meta } = removingUser;
 
 		if (!userDeleted)
 			return next(
@@ -218,6 +298,9 @@ export const deleteUserById = async (req, res, next) => {
 				)
 			);
 
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
@@ -229,7 +312,9 @@ export const deleteUserById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Delete User'
+					: error,
 				'Failed to delete user by id',
 				statusCode.internalServerErrorCode
 			)
@@ -240,7 +325,14 @@ export const deleteUserById = async (req, res, next) => {
 export const deleteAllUsers = async (req, res, next) => {
 	try {
 		const { searchFilter = undefined } = req;
-		const { usersDeleted, meta } = await removeAllUsers(searchFilter);
+
+		const { userRole, userId } = req.session;
+
+		const removeUsers = await removeAllUsers(searchFilter);
+
+		if (sendServiceResponse(next, removeUsers)) return;
+
+		const { usersDeleted, meta } = removeUsers;
 
 		if (usersDeleted.error)
 			return next(
@@ -250,6 +342,9 @@ export const deleteAllUsers = async (req, res, next) => {
 					statusCode.internalServerErrorCode
 				)
 			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
 
 		return next(
 			new SuccessResponse(
@@ -262,7 +357,9 @@ export const deleteAllUsers = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Delete Users By Filter'
+					: error,
 				'Failed to delete all users',
 				statusCode.internalServerErrorCode
 			)

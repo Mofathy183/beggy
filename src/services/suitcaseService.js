@@ -1,4 +1,5 @@
 import prisma from '../../prisma/prisma.js';
+import { statusCode } from '../config/status.js';
 import { ErrorHandler } from '../utils/error.js';
 
 /**
@@ -37,7 +38,8 @@ export const findSuitcasesUserHas = async (
 			return new ErrorHandler(
 				'suitcases not found',
 				'Failed to find suitcases in the database',
-				'prisma Error'
+				"Could'nt find suitcases you have",
+				statusCode.notFoundCode
 			);
 
 		if (suitcases.error)
@@ -45,7 +47,8 @@ export const findSuitcasesUserHas = async (
 				'prisma',
 				suitcases.error,
 				'Failed to find suitcases in the database ' +
-					suitcases.error.message
+					suitcases.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.suitcases.count({
@@ -65,8 +68,11 @@ export const findSuitcasesUserHas = async (
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to find suitcases user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Your Suitcases'
+				: error,
+			'Failed to find suitcases user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -95,7 +101,8 @@ export const findSuitcaseUserHasById = async (userId, suitcaseId) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				"Could'nt find suitcase you have",
+				statusCode.notFoundCode
 			);
 
 		if (suitcase.error)
@@ -103,15 +110,19 @@ export const findSuitcaseUserHasById = async (userId, suitcaseId) => {
 				'prisma',
 				suitcase.error,
 				'Failed to find suitcase in the database ' +
-					suitcase.error.message
+					suitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return suitcase;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to find suitcase user has by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Your Suitcase'
+				: error,
+			'Failed to find suitcase user has by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -167,7 +178,8 @@ export const addSuitcaseToUser = async (userId, body) => {
 			return new ErrorHandler(
 				'suitcase not created',
 				'Failed to create suitcase in the database',
-				'prisma Error'
+				"Could'nt create suitcase you have",
+				statusCode.notFoundCode
 			);
 
 		if (newSuitcase.error)
@@ -175,7 +187,8 @@ export const addSuitcaseToUser = async (userId, body) => {
 				'prisma',
 				newSuitcase.error,
 				'Failed to create suitcase in the database ' +
-					newSuitcase.error.message
+					newSuitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.suitcases.count({
@@ -191,7 +204,9 @@ export const addSuitcaseToUser = async (userId, body) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
+			Object.keys(error).length === 0
+				? 'Error Occur while Making Your Suitcase'
+				: error,
 			'Failed to add suitcase to user'
 		);
 	}
@@ -249,7 +264,8 @@ export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				"Could'nt find suitcase you have to replace",
+				statusCode.notFoundCode
 			);
 
 		if (updatedSuitcase.error)
@@ -257,15 +273,19 @@ export const replaceSuitcaseUserHas = async (userId, suitcaseId, body) => {
 				'prisma',
 				updatedSuitcase.error,
 				'Failed to modify suitcase in the database ' +
-					updatedSuitcase.error.message
+					updatedSuitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedSuitcase;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to modify suitcase user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Replacing Your Suitcase'
+				: error,
+			'Failed to modify suitcase user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -306,7 +326,8 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				"Could'nt find suitcase you have to modify",
+				statusCode.notFoundCode
 			);
 
 		if (suitcase.error)
@@ -314,21 +335,20 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 				'prisma',
 				suitcase.error,
 				'Failed to find suitcase in the database ' +
-					suitcase.error.message
+					suitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		// Normalize `removeFeatures` for case-insensitive matching
 		let removeSet = [
 			...new Set([...removeFeatures.map((f) => f.toUpperCase())]),
 		];
-		console.log('Removing features: ', removeSet);
 
 		// Filter out features that need to be removed
 		let newFeatures =
 			suitcase.features?.filter(
 				(f) => !removeSet.includes(f.toUpperCase())
 			) || [];
-		console.log('New features: ', newFeatures);
 
 		// Convert `features` to uppercase to match `suitcase.features`
 		let updatedFeatures = [
@@ -337,7 +357,6 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 				...newFeatures,
 			]),
 		];
-		console.log('Updated features: ', updatedFeatures);
 
 		const updatedSuitcase = await prisma.suitcases.update({
 			where: { userId: userId, id: suitcaseId },
@@ -370,7 +389,8 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				"Could'nt find suitcase you have to modify",
+				statusCode.notFoundCode
 			);
 
 		if (updatedSuitcase.error)
@@ -378,15 +398,19 @@ export const modifySuitcaseUserHas = async (userId, suitcaseId, body) => {
 				'prisma',
 				updatedSuitcase.error,
 				'Failed to find suitcase in the database ' +
-					updatedSuitcase.error.message
+					updatedSuitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedSuitcase;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to modify suitcase user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Modifying Your Suitcase'
+				: error,
+			'Failed to modify suitcase user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -408,7 +432,8 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				"Could'nt find suitcase you have to delete",
+				statusCode.notFoundCode
 			);
 
 		if (deletedSuitcase.error)
@@ -416,7 +441,8 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 				'prisma',
 				deletedSuitcase.error,
 				'Failed to delete suitcase in the database ' +
-					deletedSuitcase.error.message
+					deletedSuitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.suitcases.count({
@@ -432,8 +458,11 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove suitcase user has by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Your Suitcase'
+				: error,
+			'Failed to remove suitcase user has by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -451,12 +480,21 @@ export const removeAllSuitcasesUserHas = async (userId, searchFilter) => {
 			where: { ...searchFilter, userId: userId },
 		});
 
+		if (!deletedSuitcases)
+			return new ErrorHandler(
+				'suitcase not found',
+				'Failed to find suitcase in the database',
+				"Could'nt find suitcase you have to delete",
+				statusCode.notFoundCode
+			);
+
 		if (deletedSuitcases.error)
 			return new ErrorHandler(
 				'prisma',
 				deletedSuitcases.error,
 				'Failed to delete suitcases in the database ' +
-					deletedSuitcases.error.description
+					deletedSuitcases.error.description,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.suitcases.count({
@@ -472,8 +510,11 @@ export const removeAllSuitcasesUserHas = async (userId, searchFilter) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove all suitcases user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Your Suitcases By Filter'
+				: error,
+			'Failed to remove all suitcases user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

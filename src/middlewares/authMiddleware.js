@@ -243,8 +243,6 @@ export const checkRoleMiddleware = (...roles) => {
 	};
 };
 
-export const verifyEmailMiddleware = (req, res, next) => {};
-
 /**
  * Checks if the `confirmDelete` flag is set to `true` in the request body.
  *

@@ -8,6 +8,7 @@ import {
 	birthOfDate,
 	haveProfilePicture,
 } from '../utils/userHelper.js';
+import { statusCode } from '../config/status.js';
 
 /**
  * Signs up a new user.
@@ -31,10 +32,24 @@ export const singUpUser = async (body) => {
 		if (password !== confirmPassword)
 			return new ErrorHandler(
 				'password',
-				'password is not the same in confirmPassword',
-				'Enter the same password in confirm password'
+				'Password is not the same in Confirm Password',
+				'Enter the same password in Confirm Password',
+				statusCode.badRequestCode
 			);
 		const hashPassword = await hashingPassword(password);
+
+		// Check if user email is unique
+		const userEmail = await prisma.user.findUnique({
+			where: { email },
+		});
+
+		if (userEmail)
+			return new ErrorHandler(
+				'User Email Error',
+				'Error Duplicate Unique Field',
+				'That Email is Already Exists',
+				statusCode.badRequestCode
+			);
 
 		// Create new user in Prisma
 		const newUser = await prisma.user.create({
@@ -44,48 +59,36 @@ export const singUpUser = async (body) => {
 				email,
 				password: hashPassword,
 			},
-			include: {
-				account: true,
-				suitcases: {
-					include: {
-						suitcaseItems: {
-							include: {
-								item: true,
-							},
-						},
-					},
-				},
-				bags: {
-					include: {
-						bagItems: {
-							include: {
-								item: true,
-							},
-						},
-					},
-				},
-			},
 		});
 
 		if (!newUser)
 			return new ErrorHandler(
-				'prisma',
-				'No user created',
-				'Failed to create user'
+				'User Not Found',
+				"Could'\t Created user",
+				'Failed to create user',
+				statusCode.notFoundCode
 			);
 
 		if (newUser.error)
 			return new ErrorHandler(
-				'prisma',
+				'Database Error',
 				newUser.error,
-				'User already exists ' + newUser.error.message
+				'User already exists ' + newUser.error.message,
+				statusCode.internalServerErrorCode
 			);
 
-		const { role, ...safeUser } = newUser;
+		const { role, id } = newUser;
 
-		return { role: role, safeUser: safeUser };
+		return { role, id };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to sign up user');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Signing Up'
+				: error,
+			'Failed To Sign Up User',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -107,12 +110,6 @@ export const loginUser = async (body) => {
 		// Check if user exists
 		const user = await prisma.user.findUnique({
 			where: { email },
-			include: {
-				suitcases: true,
-				bags: true,
-				items: true,
-				account: true,
-			},
 			omit: {
 				passwordChangeAt: true,
 			},
@@ -122,14 +119,16 @@ export const loginUser = async (body) => {
 			return new ErrorHandler(
 				'user',
 				'There is no user with that email',
-				'User not found'
+				'User not found',
+				statusCode.notFoundCode
 			);
 
 		if (user.error)
 			return new ErrorHandler(
 				'prisma',
 				user.error,
-				'Error Occur Login User ' + user.error.message
+				'Error Occur Login User ' + user.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const { role, isActive, password: userPassword, ...safeUser } = user;
@@ -140,8 +139,9 @@ export const loginUser = async (body) => {
 		if (!isPasswordMatch)
 			return new ErrorHandler(
 				'password',
-				'Incorrect Password',
-				'Incorrect password'
+				'Password is not correct',
+				'Incorrect password',
+				statusCode.unauthorizedCode
 			);
 
 		//? Check if user is deActive (isActive is false)
@@ -153,9 +153,16 @@ export const loginUser = async (body) => {
 			});
 		}
 
-		return { role: role, safeUser: safeUser };
+		return { role, id: safeUser.id };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to login user');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Logs In'
+				: error,
+			'Failed to login user',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -175,6 +182,33 @@ export const authUser = async (userId) => {
 		// Attempt to retrieve the user from the database by ID, excluding sensitive fields
 		const user = await prisma.user.findUnique({
 			where: { id: userId },
+			include: {
+				account: true,
+				suitcases: {
+					include: {
+						suitcaseItems: {
+							include: {
+								item: true,
+							},
+						},
+					},
+				},
+				bags: {
+					include: {
+						bagItems: {
+							include: {
+								item: true,
+							},
+						},
+					},
+				},
+				items: {
+					include: {
+						bagItems: true,
+						suitcaseItems: true,
+					},
+				},
+			},
 			omit: {
 				password: true,
 				passwordChangeAt: true,
@@ -186,7 +220,8 @@ export const authUser = async (userId) => {
 			return new ErrorHandler(
 				'User Not Found',
 				"User Doesn't exist in Database",
-				'User needs to exist to be authenticated'
+				'User needs to exist to be authenticated',
+				statusCode.notFoundCode
 			);
 		}
 
@@ -196,7 +231,8 @@ export const authUser = async (userId) => {
 				'prisma',
 				user.error,
 				'Error occurred while authenticating user: ' +
-					user.error.message
+					user.error.message,
+				statusCode.internalServerErrorCode
 			);
 		}
 
@@ -204,7 +240,14 @@ export const authUser = async (userId) => {
 		return user;
 	} catch (error) {
 		// Catch any unexpected exceptions and return them wrapped in a custom error
-		return new ErrorHandler('catch', error, 'Failed to authenticate user');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Authenticating You'
+				: error,
+			'Failed to authenticate user',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -225,14 +268,16 @@ export const userForgotPassword = async (email) => {
 			return new ErrorHandler(
 				'user',
 				'There is no user with that email',
-				'User not found'
+				'User not found',
+				statusCode.notFoundCode
 			);
 
 		if (user.error)
 			return new ErrorHandler(
 				'prisma',
 				user.error,
-				'User not found ' + user.error.message
+				'User not found ' + user.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		//* Generate a random password by crypto
@@ -251,7 +296,8 @@ export const userForgotPassword = async (email) => {
 			return new ErrorHandler(
 				'user is null',
 				'Failed to update user password reset token and expired at',
-				'Failed to update user password reset token and expired at'
+				'Failed to update user password',
+				statusCode.badRequestCode
 			);
 
 		if (userToken.error)
@@ -259,7 +305,8 @@ export const userForgotPassword = async (email) => {
 				'prisma',
 				userToken.error,
 				'Failed to update user password reset token and expired at ' +
-					userToken.error.message
+					userToken.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		//* return reset token to send an email
@@ -271,7 +318,9 @@ export const userForgotPassword = async (email) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
+			Object.keys(error).length === 0
+				? 'Error Occur while Send Reset Password Email'
+				: error,
 			'Failed to send reset password email to user'
 		);
 	}
@@ -305,14 +354,16 @@ export const resetUserPassword = async (body, token) => {
 			return new ErrorHandler(
 				'Invalid token',
 				'Password reset token is invalid',
-				"Can't reset password with invalid token"
+				"Can't reset password with invalid token",
+				statusCode.notFoundCode
 			);
 
 		if (userToken.error)
 			return new ErrorHandler(
 				'prisma',
 				userToken.error,
-				'User not found ' + userToken.error.message
+				'User not found ' + userToken.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		//? if the 10 minutes to reset the password is still in effect
@@ -320,14 +371,16 @@ export const resetUserPassword = async (body, token) => {
 			return new ErrorHandler(
 				'timeout to reset password',
 				'You passed the time to reset your password',
-				'Password reset token expired'
+				'Password reset token expired',
+				statusCode.badRequestCode
 			);
 
 		if (password !== confirmPassword)
 			return new ErrorHandler(
 				'password',
 				'password is not the same in confirmPassword',
-				'Enter the same password in confirm password'
+				'Enter the same password in confirm password',
+				statusCode.badRequestCode
 			);
 
 		const hashedPassword = await hashingPassword(password);
@@ -350,14 +403,17 @@ export const resetUserPassword = async (body, token) => {
 			return new ErrorHandler(
 				'user is null',
 				'Failed to update user password',
-				'Failed to update user password'
+				'Failed to update user password',
+				statusCode.notFoundCode
 			);
 
 		if (updatePassword.error)
 			return new ErrorHandler(
 				'prisma',
 				updatePassword.error,
-				'Failed to update user password ' + updatePassword.error.message
+				'Failed to update user password ' +
+					updatePassword.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		await prisma.userToken.delete({
@@ -370,8 +426,11 @@ export const resetUserPassword = async (body, token) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to reset user password'
+			Object.keys(error).length === 0
+				? 'Error Occur while Reset Password'
+				: error,
+			'Failed to reset user password',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -405,14 +464,16 @@ export const updateUserPassword = async (userId, body) => {
 			return new ErrorHandler(
 				'user is null',
 				'User not found',
-				'User not found'
+				'User Not Signing Up',
+				statusCode.notFoundCode
 			);
 
 		if (userPassword.error)
 			return new ErrorHandler(
 				'prisma',
 				userPassword.error,
-				'User not found ' + userPassword.error.message
+				'User Not Signing Up ' + userPassword.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const isMatch = await verifyPassword(
@@ -424,14 +485,16 @@ export const updateUserPassword = async (userId, body) => {
 			return new ErrorHandler(
 				'password',
 				'password is not correct',
-				'Incorrect password'
+				'Incorrect password',
+				statusCode.badRequestCode
 			);
 
 		if (newPassword !== confirmPassword)
 			return new ErrorHandler(
 				'password',
-				'password is not the same in confirmPassword',
-				'Enter the same password in confirm password'
+				'password is not the same in Confirm Password',
+				'Enter the same password in Confirm Password',
+				statusCode.badRequestCode
 			);
 
 		const hashedPassword = await hashingPassword(newPassword);
@@ -454,22 +517,28 @@ export const updateUserPassword = async (userId, body) => {
 			return new ErrorHandler(
 				'update password is null',
 				"Couldn't update password",
-				'Failed to update user password'
+				'Failed to update user password',
+				statusCode.notFoundCode
 			);
 
 		if (updatePassword.error)
 			return new ErrorHandler(
 				'prisma',
 				updatePassword.error,
-				'Failed to update user password ' + updatePassword.error.message
+				'Failed to update user password ' +
+					updatePassword.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatePassword;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to update user password'
+			Object.keys(error).length === 0
+				? 'Error Occur while Update Your Password'
+				: error,
+			'Failed to update user password',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -526,19 +595,27 @@ export const updateUserData = async (userId, body) => {
 			return new ErrorHandler(
 				'updateUserData is null',
 				"Couldn't update user data",
-				'Failed to update user data'
+				'Failed to update user data',
+				statusCode.notFoundCode
 			);
 
 		if (updatedUserData.error)
 			return new ErrorHandler(
 				'prisma',
 				updatedUserData.error,
-				'Failed to update user data ' + updatedUserData.error.message
+				'Failed to update user data ' + updatedUserData.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedUserData;
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to update user data');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Update Your Info'
+				: error,
+			'Failed to update user data'
+		);
 	}
 };
 
@@ -559,9 +636,10 @@ export const changeUserEmail = async (userId, email) => {
 
 		if (user)
 			return new ErrorHandler(
-				'user',
-				'Email is already in use',
-				'Email is already in use'
+				'User Email Error',
+				'Error Duplicate Unique Field',
+				'That Email is Already Exists',
+				statusCode.badRequestCode
 			);
 
 		const { token, hashToken } = generateCryptoHashToken();
@@ -579,14 +657,16 @@ export const changeUserEmail = async (userId, email) => {
 			return new ErrorHandler(
 				'userToken is null',
 				"Couldn't update user",
-				'Failed to change user email'
+				'Failed to change user email',
+				statusCode.notFoundCode
 			);
 
 		if (userToken.error)
 			return new ErrorHandler(
 				'prisma',
 				userToken.error,
-				'Failed to change user email ' + userToken.error.message
+				'Failed to change user email ' + userToken.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const updateEmail = await prisma.user.update({
@@ -606,14 +686,16 @@ export const changeUserEmail = async (userId, email) => {
 			return new ErrorHandler(
 				'updateEmail is null',
 				"Couldn't update user",
-				'Failed to change user email'
+				'Failed to change user email',
+				statusCode.notFoundCode
 			);
 
 		if (updateEmail.error)
 			return new ErrorHandler(
 				'prisma',
 				updateEmail.error,
-				'Failed to change user email ' + updateEmail.error.message
+				'Failed to change user email ' + updateEmail.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return {
@@ -622,7 +704,14 @@ export const changeUserEmail = async (userId, email) => {
 			userEmail: updateEmail.email,
 		};
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to change user email');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Change Your Email'
+				: error,
+			'Failed to change user email',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -643,14 +732,16 @@ export const sendVerificationUserEmail = async (email) => {
 			return new ErrorHandler(
 				'user',
 				'There is no user with that email',
-				'User not found'
+				'User not found',
+				statusCode.notFoundCode
 			);
 
 		if (user.error)
 			return new ErrorHandler(
 				'prisma',
 				user.error,
-				'User not found ' + user.error.message
+				'User not found ' + user.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const { token, hashToken } = generateCryptoHashToken();
@@ -668,19 +759,28 @@ export const sendVerificationUserEmail = async (email) => {
 			return new ErrorHandler(
 				'userToken is null',
 				"Couldn't update user",
-				'Failed to update user'
+				'Failed to update user',
+				statusCode.notFoundCode
 			);
 
 		if (userToken.error)
 			return new ErrorHandler(
 				'prisma',
 				userToken.error,
-				'Failed to update user ' + userToken.error.message
+				'Failed to update user ' + userToken.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return { token, userName: user.displayName };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to verify user email');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Sending Verification Email'
+				: error,
+			'Failed to verify user email',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -709,21 +809,24 @@ export const verifyUserEmail = async (token, type) => {
 			return new ErrorHandler(
 				'userToken is null',
 				"Couldn't update user",
-				'Failed to verify user email'
+				'Failed to verify user email',
+				statusCode.notFoundCode
 			);
 
 		if (userToken.error)
 			return new ErrorHandler(
 				'prisma',
 				"Couldn't Find token" + userToken.error,
-				'Failed to verify user email ' + userToken.error.message
+				'Failed to verify user email ' + userToken.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		if (userToken.expiresAt < new Date())
 			return new ErrorHandler(
 				'userToken is expired',
 				'token is expired',
-				'Failed to verify user email'
+				'Failed to verify user email',
+				statusCode.badRequestCode
 			);
 
 		const updateUser = await prisma.user.update({
@@ -742,14 +845,16 @@ export const verifyUserEmail = async (token, type) => {
 			return new ErrorHandler(
 				'updateUser is null',
 				"Couldn't update user",
-				'Failed to verify user email'
+				'Failed to verify user email',
+				statusCode.notFoundCode
 			);
 
 		if (updateUser.error)
 			return new ErrorHandler(
 				'prisma',
 				updateUser.error,
-				'Failed to verify user email ' + updateUser.error.message
+				'Failed to verify user email ' + updateUser.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		await prisma.userToken.delete({
@@ -760,7 +865,14 @@ export const verifyUserEmail = async (token, type) => {
 
 		return updateUser;
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to verify user email');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Verify Your Email'
+				: error,
+			'Failed to verify user email',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -786,7 +898,8 @@ export const getUserPermissions = async (userRole) => {
 			return new ErrorHandler(
 				'userPermissions is null',
 				"Couldn't get user permissions",
-				'Failed to get user permissions'
+				'Failed to get user permissions',
+				statusCode.notFoundCode
 			);
 
 		if (userPermissions.error)
@@ -794,7 +907,8 @@ export const getUserPermissions = async (userRole) => {
 				'prisma',
 				userPermissions.error,
 				'Failed to get user permissions ' +
-					userPermissions.error.message
+					userPermissions.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalPermissions = await prisma.roleOnPermission.count({
@@ -810,8 +924,11 @@ export const getUserPermissions = async (userRole) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to get user permissions'
+			Object.keys(error).length === 0
+				? 'Error Occur while Get User Permissions'
+				: error,
+			'Failed to get user permissions',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -843,22 +960,27 @@ export const deactivateUserAccount = async (userId) => {
 			return new ErrorHandler(
 				'deactivateUser is null',
 				"Couldn't deactivate user",
-				'Failed to deactivate User Account'
+				'Failed to deactivate User Account',
+				statusCode.notFoundCode
 			);
 
 		if (deactivateUser.error)
 			return new ErrorHandler(
 				'prisma',
 				deactivateUser.error,
-				'Failed to deactivate user ' + deactivateUser.error.message
+				'Failed to deactivate user ' + deactivateUser.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return deactivateUser;
 	} catch (error) {
 		return new ErrorHandler(
 			"Couldn't deactivate",
-			error,
-			'Failed to deactivate User Account'
+			Object.keys(error).length === 0
+				? 'Error Occur while Deactivate Your Account'
+				: error,
+			'Failed to deactivate User Account',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

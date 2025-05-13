@@ -1,5 +1,6 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
+import { statusCode } from '../config/status.js';
 
 /**
  * @function findItemsUserHas
@@ -21,15 +22,6 @@ export const findItemsUserHas = async (
 
 		const userItems = await prisma.items.findMany({
 			where: { ...searchFilter, userId: userId },
-			include: {
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-					},
-				},
-			},
 			take: limit,
 			skip: offset,
 			orderBy: orderBy,
@@ -39,7 +31,8 @@ export const findItemsUserHas = async (
 			return new ErrorHandler(
 				'prisma',
 				'User has no item' || userItems.error,
-				'There is no item to that user' || userItems.error.message
+				'There is no item to that user' || userItems.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const itemsCount = await prisma.items.count({
@@ -50,7 +43,8 @@ export const findItemsUserHas = async (
 			return new ErrorHandler(
 				'prisma',
 				'User has no item ' + itemsCount.error,
-				'There is no item to that user ' + itemsCount.error.message
+				'There is no item to that user ' + itemsCount.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const meta = {
@@ -67,8 +61,11 @@ export const findItemsUserHas = async (
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			error.message || 'Failed to get items user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Your Items'
+				: error,
+			'Failed to get items user has ' + error.message,
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -94,16 +91,6 @@ export const findItemUserHas = async (userId, itemId) => {
 				color: true,
 				isFragile: true,
 				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						birth: true,
-						age: true,
-					},
-				},
 			},
 		});
 
@@ -111,19 +98,28 @@ export const findItemUserHas = async (userId, itemId) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (item.error)
 			return new ErrorHandler(
 				'prisma',
 				'Failed to find item in the database ' + item.error,
-				'Failed to find item in the database ' + item.error.message
+				'Failed to find item in the database ' + item.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return item;
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to find item user has');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Your Item'
+				: error,
+			'Failed to find item user has',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -160,16 +156,6 @@ export const addItemToUser = async (userId, body) => {
 				color: true,
 				isFragile: true,
 				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						birth: true,
-						age: true,
-					},
-				},
 			},
 		});
 
@@ -177,14 +163,16 @@ export const addItemToUser = async (userId, body) => {
 			return new ErrorHandler(
 				'Item null',
 				'Item not Created',
-				'Item not created'
+				'Could not Make item',
+				statusCode.noContentCode
 			);
 
 		if (item.error)
 			return new ErrorHandler(
 				'prisma',
 				'Failed to create item in the database ' + item.error,
-				'Failed to create item in the database ' + item.error.message
+				'Failed to create item in the database ' + item.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.items.count({
@@ -198,7 +186,14 @@ export const addItemToUser = async (userId, body) => {
 
 		return { item: item, meta: meta };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to add item to user');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Making Your Item'
+				: error,
+			'Failed to add item to user',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -216,22 +211,31 @@ export const addItemsToUSer = async (userId, body) => {
 			name: item.name,
 			category: item.category,
 			quantity: item.quantity,
-			weight: item.weight,
-			volume: item.volume,
-			color: item.color,
-			isFragile: item.isFragile,
+			weight: item.weight || undefined,
+			volume: item.volume || undefined,
+			color: item.color || undefined,
+			isFragile: item.isFragile || undefined,
 		}));
 
 		const createdItems = await prisma.items.createMany({
 			data: items,
 		});
 
+		if (!createdItems)
+			return new ErrorHandler(
+				'Items null',
+				'Items not Created',
+				'Could not Make items',
+				statusCode.notFoundCode
+			);
+
 		if (createdItems.error)
 			return new ErrorHandler(
 				'prisma',
 				'Failed to create items in the database ' + createdItems.error,
 				'Failed to create items in the database ' +
-					createdItems.error.message
+					createdItems.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.items.count({
@@ -245,7 +249,14 @@ export const addItemsToUSer = async (userId, body) => {
 
 		return { createdItems: createdItems, meta: meta };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to add items to user');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Making Your Items'
+				: error,
+			'Failed to add items to user',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -283,16 +294,6 @@ export const replaceItemUserHas = async (userId, itemId, body) => {
 				color: true,
 				isFragile: true,
 				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						birth: true,
-						age: true,
-					},
-				},
 			},
 		});
 
@@ -300,7 +301,8 @@ export const replaceItemUserHas = async (userId, itemId, body) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (itemUpdate.error)
@@ -308,15 +310,19 @@ export const replaceItemUserHas = async (userId, itemId, body) => {
 				'prisma',
 				'Failed to update item in the database ' + itemUpdate.error,
 				'Failed to update item in the database ' +
-					itemUpdate.error.message
+					itemUpdate.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return itemUpdate;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			error.message || 'Failed to replace item user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Replacing Your Item'
+				: error,
+			'Failed to replace item user has ' + error.message,
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -355,16 +361,6 @@ export const modifyItemUserHas = async (userId, itemId, body) => {
 				color: true,
 				isFragile: true,
 				userId: true,
-				user: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						displayName: true,
-						birth: true,
-						age: true,
-					},
-				},
 			},
 		});
 
@@ -372,7 +368,8 @@ export const modifyItemUserHas = async (userId, itemId, body) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (itemUpdate.error)
@@ -380,15 +377,19 @@ export const modifyItemUserHas = async (userId, itemId, body) => {
 				'prisma',
 				'Failed to update item in the database ' + itemUpdate.error,
 				'Failed to update item in the database ' +
-					itemUpdate.error.message
+					itemUpdate.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return itemUpdate;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			error.message || 'Failed to modify item user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Modifying Your Item'
+				: error,
+			'Failed to modify item user has' + error.message,
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -406,13 +407,22 @@ export const removeAllItemsUserHas = async (userId, searchFilter) => {
 			where: { ...searchFilter, userId: userId },
 		});
 
+		if (!deletedItems)
+			return new ErrorHandler(
+				'item',
+				'Items not found',
+				'You have no items to delete',
+				statusCode.notFoundCode
+			);
+
 		if (deletedItems.error)
 			return new ErrorHandler(
 				'prisma',
 				'Failed to delete all items from the database ' +
 					deletedItems.error,
 				'Failed to delete all items from the database ' +
-					deletedItems.error.message
+					deletedItems.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const meta = {
@@ -424,8 +434,11 @@ export const removeAllItemsUserHas = async (userId, searchFilter) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove all items user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Your Items By Filter'
+				: error,
+			'Failed to remove all items user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -447,7 +460,8 @@ export const removeItemUserHas = async (userId, itemId) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (deletedItem.error)
@@ -455,7 +469,8 @@ export const removeItemUserHas = async (userId, itemId) => {
 				'prisma',
 				'Failed to delete item from the database ' + deletedItem.error,
 				'Failed to delete item from the database ' +
-					deletedItem.error.message
+					deletedItem.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.items.count({
@@ -471,8 +486,11 @@ export const removeItemUserHas = async (userId, itemId) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove item user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Your Item'
+				: error,
+			'Failed to remove item user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

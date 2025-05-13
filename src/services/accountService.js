@@ -2,6 +2,7 @@ import prisma from '../../prisma/prisma.js';
 import { generateHashPassword } from '../utils/hash.js';
 import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { ErrorHandler } from '../utils/error.js';
+import { statusCode } from '../config/status.js';
 
 /**
  * Logs in or creates a user using Google OAuth profile data.
@@ -59,24 +60,29 @@ export const loginUserWithGoogle = async (profile) => {
 			new ErrorHandler(
 				'user',
 				'There is no user with that email',
-				'User not found'
+				'User not found',
+				statusCode.notFoundCode
 			);
 
 		if (user.error)
 			new ErrorHandler(
 				'prisma',
 				user.error,
-				'Could not create user ' + user.error.message
+				'Could not create user ' + user.error.message,
+				statusCode.internalServerErrorCode
 			);
 
-		const { role, ...safeUser } = user;
+		const { role, id: userId } = user;
 
-		return { role, safeUser };
+		return { role, userId };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'An error occurred while trying to Login with Google'
+			Object.keys(error).length === 0
+				? 'Error Occur while Login with Google'
+				: error,
+			'An error occurred while trying to Login with Google',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -111,11 +117,12 @@ export const loginUserWithFacebook = async (profile) => {
 		const { value: email = undefined } = emails[0];
 
 		if (!email)
-			return {
-				emailError:
-					'Email is required to sign up with Facebook.' +
-					'Please ensure your Facebook account has a valid email.',
-			};
+			return new ErrorHandler(
+				'email',
+				'We couldn’t access your email from Facebook. ',
+				'Please make sure your Facebook account has an email and you granted permission to share it.',
+				statusCode.badRequestCode
+			);
 
 		const user = await prisma.user.upsert({
 			where: { email },
@@ -149,24 +156,29 @@ export const loginUserWithFacebook = async (profile) => {
 			new ErrorHandler(
 				'user',
 				'There is no user with that email',
-				'User not found'
+				'User not found',
+				statusCode.notFoundCode
 			);
 
 		if (user.error)
 			new ErrorHandler(
 				'prisma',
 				user.error,
-				'Could not create user ' + user.error.message
+				'Could not create user ' + user.error.message,
+				statusCode.internalServerErrorCode
 			);
 
-		const { role, ...safeUser } = user;
+		const { role, id: userId } = user;
 
-		return { role, safeUser };
+		return { role, userId };
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'An error occurred while trying to Login with Facebook'
+			Object.keys(error).length === 0
+				? 'Error Occur while Login with Facebook'
+				: error,
+			'An error occurred while trying to Login with Facebook',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

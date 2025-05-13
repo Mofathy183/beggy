@@ -1,4 +1,4 @@
-import { ErrorResponse } from '../../utils/error.js';
+import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import { sendCookies, storeSession } from '../../utils/authHelper.js';
@@ -16,11 +16,15 @@ export const createItemForUserSuitcase = async (req, res, next) => {
 		const { suitcaseId } = req.params;
 		const { body } = req;
 
-		const { suitcaseItems, meta } = await addItemToUserSuitcase(
+		const addHisItem = await addItemToUserSuitcase(
 			userId,
 			suitcaseId,
 			body
 		);
+
+		if (sendServiceResponse(next, addHisItem)) return;
+
+		const { suitcaseItems, meta } = addHisItem;
 
 		if (!suitcaseItems)
 			return next(
@@ -55,7 +59,9 @@ export const createItemForUserSuitcase = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Adding Your Item To Your Suitcase'
+					: error,
 				'Failed to create item for suitcase for user',
 				statusCode.internalServerErrorCode
 			)
@@ -69,11 +75,15 @@ export const createItemsForUserSuitcase = async (req, res, next) => {
 		const { suitcaseId } = req.params;
 		const { body } = req;
 
-		const { suitcaseItems, meta } = await addItemsToUserSuitcase(
+		const addHisItems = await addItemsToUserSuitcase(
 			userId,
 			suitcaseId,
 			body
 		);
+
+		if (sendServiceResponse(next, addHisItems)) return;
+
+		const { suitcaseItems, meta } = addHisItems;
 
 		if (!suitcaseItems)
 			return next(
@@ -108,7 +118,9 @@ export const createItemsForUserSuitcase = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Adding Your Items To Your Suitcase'
+					: error,
 				'Failed to create items for suitcase for user',
 				statusCode.internalServerErrorCode
 			)
@@ -122,11 +134,15 @@ export const deleteItemsFromUserSuitcase = async (req, res, next) => {
 		const { suitcaseId } = req.params;
 		const { body } = req;
 
-		const { suitcaseItems, meta } = await removeItemsFromUserSuitcase(
+		const removeItems = await removeItemsFromUserSuitcase(
 			userId,
 			suitcaseId,
 			body
 		);
+
+		if (sendServiceResponse(next, removeItems)) return;
+
+		const { suitcaseItems, meta } = removeItems;
 
 		if (!suitcaseItems)
 			return next(
@@ -161,7 +177,9 @@ export const deleteItemsFromUserSuitcase = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Your Items From Your Suitcase'
+					: error,
 				'Failed to delete all items from suitcase for user',
 				statusCode.internalServerErrorCode
 			)
@@ -175,11 +193,24 @@ export const deleteAllItemsFromUserSuitcase = async (req, res, next) => {
 		const { suitcaseId } = req.params;
 		const { searchFilter = undefined } = req;
 
-		const { suitcaseItems, meta } = await removeAllItemsFromUserSuitcase(
+		const removeAllItems = await removeAllItemsFromUserSuitcase(
 			userId,
 			suitcaseId,
 			searchFilter
 		);
+
+		if (sendServiceResponse(next, removeAllItems)) return;
+
+		const { suitcaseItems, meta } = removeAllItems;
+
+		if (!suitcaseItems)
+			return next(
+				new ErrorResponse(
+					'Suitcase not found',
+					'Failed to delete all items from suitcase for user',
+					statusCode.notFoundCode
+				)
+			);
 
 		if (suitcaseItems.error)
 			return next(
@@ -205,7 +236,9 @@ export const deleteAllItemsFromUserSuitcase = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Your Items From Your Suitcase By Filter'
+					: error,
 				'Failed to delete all items from suitcase for user',
 				statusCode.internalServerErrorCode
 			)
@@ -219,11 +252,15 @@ export const deleteItemFromUserSuitcase = async (req, res, next) => {
 		const { suitcaseId } = req.params;
 		const { body } = req;
 
-		const { suitcaseItems, meta } = await removeItemFromUserSuitcase(
+		const removeItem = await removeItemFromUserSuitcase(
 			userId,
 			suitcaseId,
 			body
 		);
+
+		if (sendServiceResponse(next, removeItem)) return;
+
+		const { suitcaseItems, meta } = removeItem;
 
 		if (!suitcaseItems)
 			return next(
@@ -258,7 +295,9 @@ export const deleteItemFromUserSuitcase = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Your Item From Your Suitcase'
+					: error,
 				'Failed to delete item from suitcase for user',
 				statusCode.internalServerErrorCode
 			)

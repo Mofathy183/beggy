@@ -10,7 +10,7 @@ import {
 } from '../../services/itemsService.js';
 import { statusCode } from '../../config/status.js';
 import { sendCookies, storeSession } from '../../utils/authHelper.js';
-import { ErrorResponse } from '../../utils/error.js';
+import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
 export const getItemsBelongsToUser = async (req, res, next) => {
@@ -22,12 +22,16 @@ export const getItemsBelongsToUser = async (req, res, next) => {
 		} = req;
 		const { userId, userRole } = req.session;
 
-		const { userItems, meta } = await findItemsUserHas(
+		const hisItems = await findItemsUserHas(
 			userId,
 			pagination,
 			searchFilter,
 			orderBy
 		);
+
+		if (sendServiceResponse(next, hisItems)) return;
+
+		const { userItems, meta } = hisItems;
 
 		if (!userItems)
 			return next(
@@ -61,7 +65,9 @@ export const getItemsBelongsToUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Your Items'
+					: error,
 				'Failed to get items Belongs to user',
 				statusCode.internalServerErrorCode
 			)
@@ -75,6 +81,8 @@ export const getItemBelongsToUser = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const item = await findItemUserHas(userId, itemId);
+
+		if (sendServiceResponse(next, item)) return;
 
 		if (!item)
 			return next(
@@ -107,7 +115,9 @@ export const getItemBelongsToUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Your Item'
+					: error,
 				'Failed to get item Belongs to user',
 				statusCode.internalServerErrorCode
 			)
@@ -120,7 +130,11 @@ export const createItemForUser = async (req, res, next) => {
 		const { body } = req;
 		const { userId, userRole } = req.session;
 
-		const { item, meta } = await addItemToUser(userId, body);
+		const hisItem = await addItemToUser(userId, body);
+
+		if (sendServiceResponse(next, hisItem)) return;
+
+		const { item, meta } = hisItem;
 
 		if (!item)
 			return next(
@@ -154,7 +168,9 @@ export const createItemForUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Making Your Item'
+					: error,
 				'Failed to Create item for User',
 				statusCode.internalServerErrorCode
 			)
@@ -167,7 +183,20 @@ export const createItemsForUser = async (req, res, next) => {
 		const { body } = req;
 		const { userId, userRole } = req.session;
 
-		const { createdItems, meta } = await addItemsToUSer(userId, body);
+		const hisItem = await addItemsToUSer(userId, body);
+
+		if (sendServiceResponse(next, hisItem)) return;
+
+		const { createdItems, meta } = hisItem;
+
+		if (!createdItems)
+			return next(
+				new ErrorResponse(
+					'Items are not defined',
+					'Items not defined',
+					statusCode.badRequestCode
+				)
+			);
 
 		if (createdItems.error)
 			return next(
@@ -194,7 +223,9 @@ export const createItemsForUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Making Your Items'
+					: error,
 				'Failed to Create items for User',
 				statusCode.internalServerErrorCode
 			)
@@ -209,6 +240,8 @@ export const replaceItemBelongsToUser = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const itemUpdate = await replaceItemUserHas(userId, itemId, body);
+
+		if (sendServiceResponse(next, itemUpdate)) return;
 
 		if (!itemUpdate)
 			return next(
@@ -242,7 +275,9 @@ export const replaceItemBelongsToUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Replacing Your Item'
+					: error,
 				'Failed to replace item Belongs to user',
 				statusCode.internalServerErrorCode
 			)
@@ -257,6 +292,8 @@ export const modifyItemBelongsToUser = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const itemUpdate = await modifyItemUserHas(userId, itemId, body);
+
+		if (sendServiceResponse(next, itemUpdate)) return;
 
 		if (!itemUpdate)
 			return next(
@@ -290,7 +327,9 @@ export const modifyItemBelongsToUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Modifying Your Item'
+					: error,
 				'Failed to modify item Belongs to user',
 				statusCode.internalServerErrorCode
 			)
@@ -303,7 +342,11 @@ export const deleteItemBelongsTo = async (req, res, next) => {
 		const { itemId } = req.params;
 		const { userId, userRole } = req.session;
 
-		const { deletedItem, meta } = await removeItemUserHas(userId, itemId);
+		const deletingHisItem = await removeItemUserHas(userId, itemId);
+
+		if (sendServiceResponse(next, deletingHisItem)) return;
+
+		const { deletedItem, meta } = deletingHisItem;
 
 		if (!deletedItem)
 			return next(
@@ -339,7 +382,9 @@ export const deleteItemBelongsTo = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Your Item'
+					: error,
 				'Failed to delete item Belongs to user',
 				statusCode.internalServerErrorCode
 			)
@@ -352,10 +397,14 @@ export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 		const { searchFilter = undefined } = req;
 
-		const { deletedItems, meta } = await removeAllItemsUserHas(
+		const deletingHisItems = await removeAllItemsUserHas(
 			userId,
 			searchFilter
 		);
+
+		if (sendServiceResponse(next, deletingHisItems)) return;
+
+		const { deletedItems, meta } = deletingHisItems;
 
 		if (deletedItems.error)
 			return next(
@@ -382,7 +431,9 @@ export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Your Items By Filter'
+					: error,
 				'Failed to delete all items Belongs to user',
 				statusCode.internalServerErrorCode
 			)

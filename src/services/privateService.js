@@ -1,5 +1,6 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
+import { statusCode } from '../config/status.js';
 
 //*======================================={Bags Private Route}==============================================
 
@@ -43,7 +44,8 @@ export const replaceBagResource = async (bagId, body) => {
 			return new ErrorHandler(
 				'bag not found',
 				'Failed to find bag in the database',
-				'prisma Error'
+				'prisma Error',
+				statusCode.notFoundCode
 			);
 
 		if (bagUpdate.error)
@@ -51,15 +53,19 @@ export const replaceBagResource = async (bagId, body) => {
 				'prisma',
 				bagUpdate.error,
 				'Failed to update bag in the database ' +
-					bagUpdate.error.message
+					bagUpdate.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return bagUpdate;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to replace bag resource'
+			Object.keys(error).length === 0
+				? 'Error Occur while Replacing Bag'
+				: error,
+			'Failed to replace bag resource',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -104,7 +110,8 @@ export const modifyBagResource = async (bagId, body) => {
 			return new ErrorHandler(
 				'bag not found',
 				'Failed to find bag in the database',
-				'prisma Error'
+				'prisma Error',
+				statusCode.notFoundCode
 			);
 
 		if (bagUpdate.error)
@@ -112,15 +119,19 @@ export const modifyBagResource = async (bagId, body) => {
 				'prisma',
 				bagUpdate.error,
 				'Failed to update bag in the database ' +
-					bagUpdate.error.message
+					bagUpdate.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return bagUpdate;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to modify bag resource'
+			Object.keys(error).length === 0
+				? 'Error Occur while Modifying Bag'
+				: error,
+			'Failed to modify bag resource',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -141,7 +152,8 @@ export const removeBagById = async (bagId) => {
 			return new ErrorHandler(
 				'bag not found',
 				'Failed to find bag in the database',
-				'prisma Error'
+				'prisma Error',
+				statusCode.notFoundCode
 			);
 
 		if (bagDelete.error)
@@ -149,7 +161,8 @@ export const removeBagById = async (bagId) => {
 				'prisma',
 				bagDelete.error,
 				'Failed to delete bag in the database ' +
-					bagDelete.error.message
+					bagDelete.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.bags.count();
@@ -161,7 +174,14 @@ export const removeBagById = async (bagId) => {
 
 		return { bagDelete: bagDelete, meta: meta };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to remove bag by id');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Bag'
+				: error,
+			'Failed to remove bag by id',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -181,7 +201,8 @@ export const removeAllBags = async (searchFilter) => {
 			return new ErrorHandler(
 				'prisma',
 				deleteCount.error,
-				'Failed to delete all bags from the database'
+				'Failed to delete all bags from the database',
+				statusCode.internalServerErrorCode
 			);
 
 		const meta = {
@@ -192,7 +213,13 @@ export const removeAllBags = async (searchFilter) => {
 
 		return { deleteCount: deleteCount, meta: meta };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to remove all bags');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Bags By Filter'
+				: error,
+			'Failed to remove all bags'
+		);
 	}
 };
 
@@ -244,7 +271,8 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				'prisma Error',
+				statusCode.notFoundCode
 			);
 
 		if (updatedSuitcase.error)
@@ -252,15 +280,19 @@ export const replaceSuitcaseResource = async (suitcaseId, body) => {
 				'prisma',
 				updatedSuitcase.error,
 				'Failed to modify suitcase in the database ' +
-					updatedSuitcase.error.message
+					updatedSuitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedSuitcase;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to replace suitcase resource'
+			Object.keys(error).length === 0
+				? 'Error Occur while Replacing Suitcase'
+				: error,
+			'Failed to replace suitcase resource',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -300,7 +332,8 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				'prisma Error',
+				statusCode.notFoundCode
 			);
 
 		if (suitcase.error)
@@ -308,7 +341,8 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 				'prisma',
 				suitcase.error,
 				'Failed to find suitcase in the database ' +
-					suitcase.error.message
+					suitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		// Normalize `removeFeatures` for case-insensitive matching
@@ -354,7 +388,8 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				'prisma Error',
+				statusCode.notFoundCode
 			);
 
 		if (updatedSuitcase.error)
@@ -362,15 +397,19 @@ export const modifySuitcaseResource = async (suitcaseId, body) => {
 				'prisma',
 				updatedSuitcase.error,
 				'Failed to modify suitcase in the database ' +
-					updatedSuitcase.error.message
+					updatedSuitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedSuitcase;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to modify suitcase resource'
+			Object.keys(error).length === 0
+				? 'Error Occur while Modifying Suitcase'
+				: error,
+			'Failed to modify suitcase resource',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -391,7 +430,8 @@ export const removeSuitcaseById = async (suitcaseId) => {
 			return new ErrorHandler(
 				'suitcase not found',
 				'Failed to find suitcase in the database',
-				'prisma Error'
+				'prisma Error',
+				statusCode.notFoundCode
 			);
 
 		if (deletedSuitcase.error)
@@ -399,7 +439,8 @@ export const removeSuitcaseById = async (suitcaseId) => {
 				'prisma',
 				deletedSuitcase.error,
 				'Failed to remove suitcase from the database ' +
-					deletedSuitcase.error.message
+					deletedSuitcase.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.suitcases.count();
@@ -413,8 +454,11 @@ export const removeSuitcaseById = async (suitcaseId) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove suitcase by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Suitcase'
+				: error,
+			'Failed to remove suitcase by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -436,7 +480,8 @@ export const removeAllSuitcases = async (searchFilter) => {
 				'prisma',
 				deleteCount.error,
 				'Failed to remove all suitcases from the database ' +
-					deleteCount.error.message
+					deleteCount.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.suitcases.count();
@@ -451,8 +496,11 @@ export const removeAllSuitcases = async (searchFilter) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove all suitcases'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Suitcases By Filter'
+				: error,
+			'Failed to remove all suitcases',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -490,7 +538,8 @@ export const replaceItemResource = async (itemId, body) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (itemUpdate.error)
@@ -498,15 +547,19 @@ export const replaceItemResource = async (itemId, body) => {
 				'prisma',
 				'Failed to update item in the database ' + itemUpdate.error,
 				'Failed to update item in the database ' +
-					itemUpdate.error.message
+					itemUpdate.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return itemUpdate;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			error.message || 'Failed to replace item resource'
+			Object.keys(error).length === 0
+				? 'Error Occur while Replacing Item'
+				: error,
+			error.message || 'Failed to replace item resource',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -540,7 +593,8 @@ export const modifyItemResource = async (itemId, body) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (itemUpdate.error)
@@ -548,15 +602,19 @@ export const modifyItemResource = async (itemId, body) => {
 				'prisma',
 				'Failed to update item in the database ' + itemUpdate.error,
 				'Failed to update item in the database ' +
-					itemUpdate.error.message
+					itemUpdate.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return itemUpdate;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			error.message || 'Failed to modify item resource'
+			Object.keys(error).length === 0
+				? 'Error Occur while Modifying Item'
+				: error,
+			error.message || 'Failed to modify item resource',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -577,7 +635,8 @@ export const removeItemById = async (itemId) => {
 			return new ErrorHandler(
 				'item',
 				'Item not found',
-				'Item not found in the database'
+				'Item not found in the database',
+				statusCode.notFoundCode
 			);
 
 		if (deletedItem.error)
@@ -585,7 +644,8 @@ export const removeItemById = async (itemId) => {
 				'prisma',
 				'Failed to delete item from the database ' + deletedItem.error,
 				'Failed to delete item from the database ' +
-					deletedItem.error.message
+					deletedItem.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.items.count();
@@ -597,7 +657,14 @@ export const removeItemById = async (itemId) => {
 
 		return { deletedItem: deletedItem, meta: meta };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to remove item by id');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Item'
+				: error,
+			'Failed to remove item by id',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -617,7 +684,8 @@ export const removeAllItems = async (searchFilter) => {
 			return new ErrorHandler(
 				'prisma',
 				'Failed to delete all items ' + deleteCount.error,
-				'Failed to delete all items ' + deleteCount.error.message
+				'Failed to delete all items ' + deleteCount.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.items.count();
@@ -630,7 +698,14 @@ export const removeAllItems = async (searchFilter) => {
 
 		return { deleteCount: deleteCount, meta: meta };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to remove all items');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Items By Filter'
+				: error,
+			'Failed to remove all items',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 

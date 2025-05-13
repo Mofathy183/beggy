@@ -1,5 +1,6 @@
 import { ErrorHandler } from '../utils/error.js';
 import prisma from '../../prisma/prisma.js';
+import { statusCode } from '../config/status.js';
 
 /**
  * @function findBagsUserHas
@@ -54,14 +55,16 @@ export const findBagsUserHas = async (
 			return new ErrorHandler(
 				'bags not found',
 				'Failed to find bags in the database',
-				'prisma Error'
+				'Could not find bags for the user',
+				statusCode.notFoundCode
 			);
 
 		if (userBags.error)
 			return new ErrorHandler(
 				'prisma',
 				userBags.error,
-				'Failed to find bags in the database ' + userBags.error.message
+				'Failed to find bags in the database ' + userBags.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.bags.count({
@@ -80,7 +83,14 @@ export const findBagsUserHas = async (
 
 		return { userBags: userBags, meta: meta };
 	} catch (error) {
-		new ErrorHandler('catch', error, 'Failed to get bags user has');
+		new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Your Bags'
+				: error,
+			'Failed to get bags user has',
+			statusCode.internalServerErrorCode
+		);
 	}
 };
 
@@ -124,14 +134,16 @@ export const findBagUserHasById = async (userId, bagId) => {
 			return new ErrorHandler(
 				'bag not found',
 				'Failed to find bag in the database',
-				'prisma Error'
+				'Could not find bag for the user',
+				statusCode.notFoundCode
 			);
 
 		if (userBag.error)
 			return new ErrorHandler(
 				'prisma',
 				userBag.error,
-				'Failed to find bag in the database'
+				'Failed to find bag in the database',
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.bags.count({
@@ -147,8 +159,11 @@ export const findBagUserHasById = async (userId, bagId) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to get bag user has by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Your Bag By Id'
+				: error,
+			'Failed to get bag user has by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -205,10 +220,15 @@ export const addBagToUser = async (userId, body) => {
 						firstName: true,
 						lastName: true,
 						displayName: true,
+						birth: true,
 						age: true,
 					},
 				},
-				bagItems: true,
+				bagItems: {
+					include: {
+						item: true,
+					},
+				},
 			},
 		});
 
@@ -216,14 +236,16 @@ export const addBagToUser = async (userId, body) => {
 			return new ErrorHandler(
 				'bag not created',
 				'Failed to create bag in the database',
-				'prisma Error'
+				'Could not create bag for the user',
+				statusCode.badRequestCode
 			);
 
 		if (newBag.error)
 			return new ErrorHandler(
 				'prisma',
 				newBag.error,
-				'Failed to create bag in the database ' + newBag.error.message
+				'Failed to create bag in the database ' + newBag.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.bags.count({
@@ -237,7 +259,13 @@ export const addBagToUser = async (userId, body) => {
 
 		return { meta: meta, newBag: newBag };
 	} catch (error) {
-		return new ErrorHandler('catch', error, 'Failed to add bag to user');
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Making Your New Bag'
+				: error,
+			'Failed to add bag to user'
+		);
 	}
 };
 
@@ -289,7 +317,8 @@ export const replaceBagUserHas = async (userId, bagId, body) => {
 			return new ErrorHandler(
 				'bag not updated',
 				'Failed to update bag in the database',
-				'prisma Error'
+				'Could not update bag for the user',
+				statusCode.badRequestCode
 			);
 
 		if (updatedBag.error)
@@ -297,15 +326,19 @@ export const replaceBagUserHas = async (userId, bagId, body) => {
 				'prisma',
 				updatedBag.error,
 				'Failed to update bag in the database ' +
-					updatedBag.error.message
+					updatedBag.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedBag;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to replace bag user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Replacing Your Bag'
+				: error,
+			'Failed to replace bag user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -345,27 +378,27 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 			return new ErrorHandler(
 				'bag not found',
 				'Failed to find bag in the database',
-				'prisma Error'
+				'Could not find bag for the user',
+				statusCode.notFoundCode
 			);
 
 		if (bag.error)
 			return new ErrorHandler(
 				'prisma',
 				bag.error,
-				'Failed to find bag in the database ' + bag.error.message
+				'Failed to find bag in the database ' + bag.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		// Normalize `removeFeatures` for case-insensitive matching
 		let removeSet = [
 			...new Set([...removeFeatures.map((f) => f.toUpperCase())]),
 		];
-		console.log('Removing features: ', removeSet);
 
 		// Filter out features that need to be removed
 		let newFeatures =
 			bag.features?.filter((f) => !removeSet.includes(f.toUpperCase())) ||
 			[];
-		console.log('New features: ', newFeatures);
 
 		// Convert `features` to uppercase to match `bag.features`
 		let updatedFeatures = [
@@ -374,7 +407,6 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 				...newFeatures,
 			]),
 		];
-		console.log('Updated features: ', updatedFeatures);
 
 		const updatedBag = await prisma.bags.update({
 			where: { userId: userId, id: bagId },
@@ -405,7 +437,8 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 			return new ErrorHandler(
 				'bag not modified',
 				'Failed to modify bag in the database',
-				'prisma Error'
+				'Could not modify bag for the user',
+				statusCode.badRequestCode
 			);
 
 		if (updatedBag.error)
@@ -413,15 +446,19 @@ export const modifyBagUserHas = async (userId, bagId, body) => {
 				'prisma',
 				updatedBag.error,
 				'Failed to modify bag in the database ' +
-					updatedBag.error.message
+					updatedBag.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		return updatedBag;
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to modify bag user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Modifying Your Bag'
+				: error,
+			'Failed to modify bag user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -443,7 +480,8 @@ export const removeBagUserHasById = async (userId, bagId) => {
 			return new ErrorHandler(
 				'bag not deleted',
 				'Failed to delete bag from the database',
-				'prisma Error'
+				'Could not delete bag for the user',
+				statusCode.notFoundCode
 			);
 
 		if (deletedBag.error)
@@ -451,7 +489,8 @@ export const removeBagUserHasById = async (userId, bagId) => {
 				'prisma',
 				deletedBag.error,
 				'Failed to delete bag from the database ' +
-					deletedBag.error.message
+					deletedBag.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.bags.count({
@@ -467,8 +506,11 @@ export const removeBagUserHasById = async (userId, bagId) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove bag user has by id'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Your Bag'
+				: error,
+			'Failed to remove bag user has by id',
+			statusCode.internalServerErrorCode
 		);
 	}
 };
@@ -494,7 +536,8 @@ export const removeAllBagsUserHas = async (userId, searchFilter) => {
 				'prisma',
 				deletedBags.error,
 				'Failed to delete all bags from the database ' +
-					deletedBags.error.message
+					deletedBags.error.message,
+				statusCode.internalServerErrorCode
 			);
 
 		const totalCount = await prisma.bags.count({
@@ -510,8 +553,11 @@ export const removeAllBagsUserHas = async (userId, searchFilter) => {
 	} catch (error) {
 		return new ErrorHandler(
 			'catch',
-			error,
-			'Failed to remove all bags user has'
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Your Bags By Filter'
+				: error,
+			'Failed to remove all bags user has',
+			statusCode.internalServerErrorCode
 		);
 	}
 };

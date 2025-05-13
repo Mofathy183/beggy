@@ -1,4 +1,4 @@
-import { ErrorResponse } from '../../utils/error.js';
+import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import {
@@ -22,11 +22,15 @@ export const getAllBagsByQuery = async (req, res, next) => {
 			orderBy = undefined,
 		} = req;
 
-		const { bags, meta } = await findAllBagsByQuery(
+		const allBags = await findAllBagsByQuery(
 			searchFilter,
 			pagination,
 			orderBy
 		);
+
+		if (sendServiceResponse(next, allBags)) return;
+
+		const { bags, meta } = allBags;
 
 		if (bags.error)
 			return next(
@@ -48,7 +52,9 @@ export const getAllBagsByQuery = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Bags By Filter'
+					: error,
 				'Failed to retrieve bags ' + error.message,
 				statusCode.internalServerErrorCode
 			)
@@ -59,7 +65,10 @@ export const getAllBagsByQuery = async (req, res, next) => {
 export const getBagById = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
+
 		const bag = await findBagById(bagId);
+
+		if (sendServiceResponse(next, bag)) return;
 
 		if (!bag)
 			return next(
@@ -89,7 +98,9 @@ export const getBagById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Bags By Id'
+					: error,
 				'Failed to retrieve bag',
 				statusCode.internalServerErrorCode
 			)
@@ -106,6 +117,8 @@ export const getItemsById = async (req, res, next) => {
 		const { itemId } = req.params;
 
 		const item = await findItemById(itemId);
+
+		if (sendServiceResponse(next, item)) return;
 
 		if (!item)
 			return next(
@@ -135,7 +148,9 @@ export const getItemsById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Item By Id'
+					: error,
 				'Failed to get item by id',
 				statusCode.internalServerErrorCode
 			)
@@ -151,17 +166,21 @@ export const getItemsByQuery = async (req, res, next) => {
 			searchFilter = undefined,
 		} = req;
 
-		const { items, meta } = await findItemsByQuery(
+		const allItems = await findItemsByQuery(
 			pagination,
 			searchFilter,
 			orderBy
 		);
 
+		if (sendServiceResponse(next, allItems)) return;
+
+		const { items, meta } = allItems;
+
 		if (items.error)
 			return next(
 				new ErrorResponse(
-					items.error || 'Failed to find all items',
-					'Failed to find all items',
+					'Failed to find all items ' + items.error,
+					'Failed to find all items ' + items.error.message,
 					statusCode.internalServerErrorCode
 				)
 			);
@@ -177,7 +196,9 @@ export const getItemsByQuery = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Items By Filter'
+					: error,
 				'Failed to get all items',
 				statusCode.internalServerErrorCode
 			)
@@ -196,16 +217,21 @@ export const getAllSuitcasesByQuery = async (req, res, next) => {
 			pagination,
 			orderBy = undefined,
 		} = req;
-		const { suitcases, meta } = await findAllSuitcasesByQuery(
+
+		const allSuitcases = await findAllSuitcasesByQuery(
 			searchFilter,
 			pagination,
 			orderBy
 		);
 
+		if (sendServiceResponse(next, allSuitcases)) return;
+
+		const { suitcases, meta } = allSuitcases;
+
 		if (suitcases.error)
 			return next(
 				new ErrorResponse(
-					suitcases.error,
+					'Failed to retrieve suitcases ' + suitcases.error,
 					'Failed to retrieve suitcases ' + suitcases.error.message,
 					statusCode.internalServerErrorCode
 				)
@@ -222,7 +248,9 @@ export const getAllSuitcasesByQuery = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Suitcases By Filter'
+					: error,
 				'Failed to get all suitcases by query',
 				statusCode.internalServerErrorCode
 			)
@@ -233,7 +261,10 @@ export const getAllSuitcasesByQuery = async (req, res, next) => {
 export const getSuitcaseById = async (req, res, next) => {
 	try {
 		const { suitcaseId } = req.params;
+
 		const suitcase = await findSuitcaseById(suitcaseId);
+
+		if (sendServiceResponse(next, suitcase)) return;
 
 		if (!suitcase)
 			return next(
@@ -284,16 +315,16 @@ export const getAllUsers = async (req, res, next) => {
 			orderBy = undefined,
 		} = req;
 
-		const { users, meta } = await findAllUsers(
-			pagination,
-			searchFilter,
-			orderBy
-		);
+		const allUsers = await findAllUsers(pagination, searchFilter, orderBy);
+
+		if (sendServiceResponse(next, allUsers)) return;
+
+		const { users, meta } = allUsers;
 
 		if (users.error)
 			return next(
 				new ErrorResponse(
-					users.error,
+					"Couldn't find all users " + users.error,
 					"Couldn't find all users " + users.error.message,
 					statusCode.internalServerErrorCode
 				)
@@ -310,7 +341,9 @@ export const getAllUsers = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Users By Search'
+					: error,
 				'Failed to find all users',
 				statusCode.internalServerErrorCode
 			)
@@ -323,6 +356,8 @@ export const getUserPublicProfile = async (req, res, next) => {
 		const { id } = req.params;
 
 		const user = await findUserPublicProfile(id);
+
+		if (sendServiceResponse(next, user)) return;
 
 		if (!user)
 			return next(
@@ -352,7 +387,9 @@ export const getUserPublicProfile = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting User By Id'
+					: error,
 				'Failed to retrieve public user profile',
 				statusCode.internalServerErrorCode
 			)

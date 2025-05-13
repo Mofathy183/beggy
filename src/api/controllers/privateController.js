@@ -1,4 +1,4 @@
-import { ErrorResponse } from '../../utils/error.js';
+import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import { statusCode } from '../../config/status.js';
 import SuccessResponse from '../../utils/successResponse.js';
 import { sendCookies, storeSession } from '../../utils/authHelper.js';
@@ -23,8 +23,11 @@ export const replaceBagById = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
 		const { body } = req;
+		const { userId, userRole } = req.session;
 
 		const bagUpdate = await replaceBagResource(bagId, body);
+
+		if (sendServiceResponse(next, bagUpdate)) return;
 
 		if (!bagUpdate)
 			return next(
@@ -44,6 +47,9 @@ export const replaceBagById = async (req, res, next) => {
 				)
 			);
 
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
@@ -54,7 +60,9 @@ export const replaceBagById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Replacing Bag'
+					: error,
 				'Failed to replace bag',
 				statusCode.internalServerErrorCode
 			)
@@ -66,8 +74,11 @@ export const modifyBagById = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
 		const { body } = req;
+		const { userId, userRole } = req.session;
 
 		const bagUpdate = await modifyBagResource(bagId, body);
+
+		if (sendServiceResponse(next, bagUpdate)) return;
 
 		if (!bagUpdate)
 			return next(
@@ -87,6 +98,9 @@ export const modifyBagById = async (req, res, next) => {
 				)
 			);
 
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
@@ -97,7 +111,9 @@ export const modifyBagById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Modifying Bag'
+					: error,
 				'Failed to modify bag',
 				statusCode.internalServerErrorCode
 			)
@@ -108,8 +124,13 @@ export const modifyBagById = async (req, res, next) => {
 export const deleteBagById = async (req, res, next) => {
 	try {
 		const { bagId } = req.params;
+		const { userId, userRole } = req.session;
 
-		const { bagDelete, meta } = await removeBagById(bagId);
+		const removeBag = await removeBagById(bagId);
+
+		if (sendServiceResponse(next, removeBag)) return;
+
+		const { bagDelete, meta } = removeBag;
 
 		if (!bagDelete)
 			return next(
@@ -129,6 +150,9 @@ export const deleteBagById = async (req, res, next) => {
 				)
 			);
 
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
@@ -140,7 +164,9 @@ export const deleteBagById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Bag'
+					: error,
 				'Failed to delete bag',
 				statusCode.internalServerErrorCode
 			)
@@ -151,7 +177,13 @@ export const deleteBagById = async (req, res, next) => {
 export const deleteAllBags = async (req, res, next) => {
 	try {
 		const { searchFilter = undefined } = req;
-		const { deleteCount, meta } = await removeAllBags(searchFilter);
+		const { userId, userRole } = req.session;
+
+		const removeBags = await removeAllBags(searchFilter);
+
+		if (sendServiceResponse(next, removeBags)) return;
+
+		const { deleteCount, meta } = removeBags;
 
 		if (deleteCount.error)
 			return next(
@@ -161,6 +193,9 @@ export const deleteAllBags = async (req, res, next) => {
 					statusCode.badRequestCode
 				)
 			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
 
 		return next(
 			new SuccessResponse(
@@ -173,7 +208,9 @@ export const deleteAllBags = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Bags By Filter'
+					: error,
 				'Failed to delete all bags',
 				statusCode.internalServerErrorCode
 			)
@@ -192,6 +229,8 @@ export const replaceSuitcaseById = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const updatedSuitcase = await replaceSuitcaseResource(suitcaseId, body);
+
+		if (sendServiceResponse(next, updatedSuitcase)) return;
 
 		if (!updatedSuitcase)
 			return next(
@@ -225,7 +264,9 @@ export const replaceSuitcaseById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Replacing Suitcase'
+					: error,
 				'Failed to replace suitcase by id',
 				statusCode.internalServerErrorCode
 			)
@@ -242,6 +283,8 @@ export const modifySuitcaseById = async (req, res, next) => {
 		console.log(suitcaseId, body, userRole, userId);
 
 		const updatedSuitcase = await modifySuitcaseResource(suitcaseId, body);
+
+		if (sendServiceResponse(next, updatedSuitcase)) return;
 
 		if (!updatedSuitcase)
 			return next(
@@ -275,7 +318,9 @@ export const modifySuitcaseById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Modifying Suitcase'
+					: error,
 				'Failed to modify suitcase by id',
 				statusCode.internalServerErrorCode
 			)
@@ -288,7 +333,11 @@ export const deleteSuitcaseById = async (req, res, next) => {
 		const { suitcaseId } = req.params;
 		const { userId, userRole } = req.session;
 
-		const { deletedSuitcase, meta } = await removeSuitcaseById(suitcaseId);
+		const removeSuitcase = await removeSuitcaseById(suitcaseId);
+
+		if (sendServiceResponse(next, removeSuitcase)) return;
+
+		const { deletedSuitcase, meta } = removeSuitcase;
 
 		if (!deletedSuitcase)
 			return next(
@@ -323,7 +372,9 @@ export const deleteSuitcaseById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Suitcase'
+					: error,
 				'Failed to delete suitcase by id',
 				statusCode.internalServerErrorCode
 			)
@@ -336,7 +387,11 @@ export const deleteAllSuitcases = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 		const { searchFilter = undefined } = req;
 
-		const { deleteCount, meta } = await removeAllSuitcases(searchFilter);
+		const removedSuitcases = await removeAllSuitcases(searchFilter);
+
+		if (sendServiceResponse(next, removedSuitcases)) return;
+
+		const { deleteCount, meta } = removedSuitcases;
 
 		if (deleteCount.error)
 			return next(
@@ -362,7 +417,9 @@ export const deleteAllSuitcases = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Suitcases By Filter'
+					: error,
 				'Failed to delete all suitcases',
 				statusCode.internalServerErrorCode
 			)
@@ -381,6 +438,8 @@ export const replaceItemById = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const itemUpdate = await replaceItemResource(itemId, body);
+
+		if (sendServiceResponse(next, itemUpdate)) return;
 
 		if (!itemUpdate)
 			return next(
@@ -414,7 +473,9 @@ export const replaceItemById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Replacing Item'
+					: error,
 				'Failed to replace item by id',
 				statusCode.internalServerErrorCode
 			)
@@ -429,6 +490,8 @@ export const modifyItemById = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		const itemUpdate = await modifyItemResource(itemId, body);
+
+		if (sendServiceResponse(next, itemUpdate)) return;
 
 		if (!itemUpdate)
 			return next(
@@ -461,7 +524,9 @@ export const modifyItemById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Modifying Item'
+					: error,
 				'Failed to modify item by id',
 				statusCode.internalServerErrorCode
 			)
@@ -474,7 +539,11 @@ export const deleteItemById = async (req, res, next) => {
 		const { itemId } = req.params;
 		const { userId, userRole } = req.session;
 
-		const { deletedItem, meta } = await removeItemById(itemId);
+		const removeItem = await removeItemById(itemId);
+
+		if (sendServiceResponse(next, removeItem)) return;
+
+		const { deletedItem, meta } = removeItem;
 
 		if (deletedItem.error)
 			return next(
@@ -499,7 +568,9 @@ export const deleteItemById = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Item'
+					: error,
 				'Failed to delete item by id',
 				statusCode.internalServerErrorCode
 			)
@@ -512,7 +583,11 @@ export const deleteAllItems = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 		const { searchFilter = undefined } = req;
 
-		const { deleteCount, meta } = await removeAllItems(searchFilter);
+		const removeItems = await removeAllItems(searchFilter);
+
+		if (sendServiceResponse(next, removeItems)) return;
+
+		const { deleteCount, meta } = removeItems;
 
 		if (deleteCount.error)
 			return next(
@@ -537,7 +612,9 @@ export const deleteAllItems = async (req, res, next) => {
 	} catch (error) {
 		return next(
 			new ErrorResponse(
-				error,
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Items By Filter'
+					: error,
 				'Failed to delete all items',
 				statusCode.internalServerErrorCode
 			)

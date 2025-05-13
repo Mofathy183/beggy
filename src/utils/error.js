@@ -1,4 +1,4 @@
-import { statusCode, statusStatement } from '../config/status.js';
+import { statusStatement } from '../config/status.js';
 import { logger } from '../middlewares/appMiddleware.js';
 
 /**
@@ -18,210 +18,137 @@ const errorHandler = (error, path, message = 'error') => {
 };
 
 /**
- * Template for prisma errors.
+ * Custom ErrorHandler class to represent structured errors
+ * and route them through the appropriate internal handler.
  *
- * @param {string} name - The name of the error.
- * @param {string} code - The code of the error.
- * @param {string} message - The message of the error.
- * @param {string} target - The target of the error.
- * @param {number} status - The status of the error.
- * @param {string} path - The path of the error.
- * @param {string} type - The type of the error.
- * @returns {Object} - An object containing the error.
+ * This class extends the native Error object and adds:
+ * - A name to identify the error source (e.g., 'prisma', 'custom')
+ * - The original error object
+ * - An optional HTTP status code
+ * - Internal logging using Pino
  */
-const prismaErrorTemplate = (
-	name,
-	code,
-	message,
-	target,
-	status,
-	path,
-	type
-) => {
-	return {
-		status,
-		type,
-		message,
-		name,
-		code,
-		target,
-		path,
-	};
-};
-
-/**
- * @description
- * handle Prisma errors
- * This function will handle the Prisma errors based on different error codes
- * @param {Object} error - The error object from Prisma
- * @param {String} path - The path of the route where the error happened
- * @param {String} message - The message of the error
- * @returns {Object} - The error object with the correct status code and message
- */
-const prismaErrorHandler = (error, path, message) => {
-	const { name, code, meta } = error;
-
-	if (name === 'PrismaClientKnownRequestError') {
-		switch (code) {
-			case 'P2002':
-				return prismaErrorTemplate(
-					name,
-					code,
-					message,
-					'Unique constraint violation',
-					meta.target,
-					statusCode.badRequestCode,
-					path
-				);
-			case 'P2003':
-				return prismaErrorTemplate(
-					name,
-					code,
-					'Foreign key constraint violation',
-					message,
-					meta.target,
-					statusCode.unprocessableEntityCode,
-					path
-				);
-			case 'P2013':
-				return prismaErrorTemplate(
-					name,
-					code,
-					'Missing required argument for field ',
-					message,
-					meta.target,
-					statusCode.badRequestCode,
-					path
-				);
-			case 'P2025':
-				return prismaErrorTemplate(
-					name,
-					code,
-					'Record not found',
-					message,
-					meta.target,
-					statusCode.notFoundCode,
-					path
-				);
-			default:
-				return prismaErrorTemplate(
-					name,
-					code,
-					'Database error',
-					message,
-					meta.target,
-					statusCode.internalServerErrorCode,
-					path
-				);
-		}
-	}
-
-	return prismaErrorTemplate(
-		name,
-		code,
-		'Database error',
-		message,
-		meta.target,
-		statusCode.internalServerErrorCode,
-		path
-	);
-};
-
 class ErrorHandler extends Error {
 	/**
 	 * Constructs a new ErrorHandler instance.
 	 *
-	 * @param {string} name - The name of the error.
-	 * @param {Object} error - The error object.
-	 * @param {string} message - The error message.
-	 *
-	 * @returns {void}
+	 * @param {string} name - A short name to identify the error handler source (e.g., 'prisma', 'validation').
+	 * @param {Object} error - The original error object to be handled.
+	 * @param {string} message - A human-readable error message.
+	 * @param {number} [status] - Optional HTTP status code to be returned (e.g., 400, 500).
 	 */
-	constructor(name, error, message) {
+	constructor(name, error, message, status = undefined) {
 		super(message);
 		this.name = name;
 		this.error = error;
+		this.status = status;
 
-		// Capture the stack trace for this error instance
+		// Capture the stack trace for debugging
 		Error.captureStackTrace(this, this.constructor);
 
-		// Call the error handler to handle the error
+		// Handle and log the error immediately
 		this.handle();
 	}
 
 	/**
-	 * Handle the error based on the error name.
-	 *
-	 * If the error name is 'prisma', it will call the prismaErrorHandler.
-	 * Otherwise, it will call the errorHandler.
-	 *
-	 * @returns {Object} - An object containing the error.
+	 * Handles the error internally using the generic error handler.
+	 * Automatically logs the error using Pino.
 	 *
 	 * @private
+	 * @returns {Object} An object containing structured error information.
 	 */
 	handle() {
-		const errObj =
-			this.name === 'prisma'
-				? prismaErrorHandler(this.error, this.message, this.stack)
-				: errorHandler(this.error, this.stack, this.message);
+		// Pass error to the centralized error handler
+		const errObj = errorHandler(this.error, this.stack, this.message);
 
-		// Structure the error log
+		// Create a log entry
 		const logDetails = {
 			message: errObj.message || 'An unknown error occurred',
 			error: errObj.error || this.error,
 			stack: this.stack || 'No stack available',
 		};
 
-		// Log the error using pino
+		// Log the error using Pino
 		logger.error(
 			logDetails,
 			`Error handled by: ${this.name} error handler`
 		);
 
-		// Return the error object for further handling if needed
+		// Return error object in case it's used by future extensions
 		return errObj;
 	}
 }
 
+/**
+ * Custom error class used to send structured error responses
+ * from Express middleware to the client.
+ *
+ * This class is typically used with `next()` to format errors
+ * consistently across the app.
+ */
 class ErrorResponse extends Error {
 	/**
 	 * Constructs a new ErrorResponse instance.
 	 *
-	 * @param {Object} error - The error object.
-	 * @param {string} message - The error message.
-	 * @param {number} [status] - The HTTP status code of the error.
-	 *
-	 * @returns {void}
+	 * @param {Object} error - The raw error object (e.g., validation error, Prisma error).
+	 * @param {string} message - A human-readable message to display in the response.
+	 * @param {number} status - The HTTP status code to send (e.g., 400, 500).
 	 */
 	constructor(error, message, status) {
 		super(message);
+
 		/**
-		 * The error object itself.
+		 * The raw error object passed in for context.
 		 * @type {Object}
 		 */
 		this.error = error;
 
 		/**
-		 * The error message.
+		 * The human-readable message to be shown in the response.
 		 * @type {string}
 		 */
 		this.message = message;
 
 		/**
-		 * The HTTP status code of the error.
+		 * The HTTP status code to send in the response.
 		 * @type {number}
 		 */
 		this.statusCode = status;
 
 		/**
-		 * The HTTP status statement of the error.
+		 * The textual HTTP status description (e.g., "Bad Request").
+		 * Pulled from a status statement utility object.
 		 * @type {string}
 		 */
-		this.statement = statusStatement[this.statusCode];
+		this.statement = statusStatement[this.statusCode] || 'Unknown Status';
 
-		// Capture the stack trace for this error instance
+		// Capture the stack trace specific to this class for debugging
 		Error.captureStackTrace(this, this.constructor);
 	}
 }
+
+/**
+ * Sends a standardized error response using Express's `next()` middleware
+ * if the provided object is an instance of ErrorHandler.
+ *
+ * @param {Function} next - Express `next()` function to pass errors to global error handler.
+ * @param {*} error - The result returned from a service. Can be an ErrorHandler or any other type.
+ * @returns {null} Returns null if an ErrorHandler is handled, allowing caller to return early.
+ */
+export const sendServiceResponse = (next, error) => {
+	// Check if the response from service is an instance of ErrorHandler
+	if (error instanceof ErrorHandler) {
+		// Wrap it in ErrorResponse and pass to Express error middleware
+		return next(
+			new ErrorResponse(
+				error.error, // Short code or type of the error
+				error.message, // Human-readable message
+				error.status // HTTP status code
+			)
+		);
+	}
+
+	// No error, let the controller continue
+	return null;
+};
 
 export { ErrorResponse, ErrorHandler };
