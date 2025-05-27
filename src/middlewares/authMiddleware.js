@@ -466,35 +466,52 @@ export const VReqToHeaderToken = (req, res, next) => {
 };
 
 /**
- * Checks if the token in the request headers is present and valid as a refresh token.
+ * Middleware to verify a refresh token from an HttpOnly cookie.
  *
- * - If the token is not present, prevents the request from being processed.
- * - If the token is present, adds the authenticated user's ID and role to the request session.
+ * - Checks if a refresh token exists in the request cookies.
+ * - Verifies the validity of the token.
+ * - If valid, attaches the decoded payload to `req.auth` and the raw token to `req.refreshToken`.
+ * - If invalid or missing, passes an appropriate error to the error handler.
  *
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function.
+ * @function VReqToCookieRefreshToken
+ * @param {import('express').Request} req - Express request object
+ * @param {import('express').Response} res - Express response object
+ * @param {import('express').NextFunction} next - Express next middleware function
  * @returns {void}
  */
-export const VReqToHeaderRefreshToken = (req, res, next) => {
+export const VReqToCookieRefreshToken = (req, res, next) => {
+	// Get token from HttpOnly cookie
 	const token = req.headers.authorization?.split(' ')[1];
 
-	const isAuth = verifyRefreshToken(token);
-
-	if (token && isAuth) {
-		// Add the authenticated user's ID and role to the request session
-		req.auth = isAuth;
-		return next();
+	// If no token is present, return 401 Unauthorized
+	if (!token) {
+		return next(
+			new ErrorResponse(
+				'Missing refresh token',
+				'Authorization must start with "Bearer " and be a valid refresh token',
+				statusCode.unauthorizedCode
+			)
+		);
 	}
 
-	// If the token is not present, prevent the request from being processed
-	return next(
-		new ErrorResponse(
-			'Header "Authorization" is required',
-			'Authorization must start with "Bearer " and be a valid JWT refresh token',
-			statusCode.unauthorizedCode
-		)
-	);
-};
+	// Verify the refresh token
+	const isAuth = verifyRefreshToken(token);
 
+	// If token is invalid or expired
+	if (!isAuth) {
+		return next(
+			new ErrorResponse(
+				'Invalid refresh token',
+				'Token is either expired or malformed',
+				statusCode.unauthorizedCode
+			)
+		);
+	}
+
+	// Add the verified token payload and the raw token to the request object
+	req.auth = isAuth;
+	req.refreshToken = token;
+
+	return next();
+};
 //*====================={Request Validations}====================

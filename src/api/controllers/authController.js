@@ -773,7 +773,7 @@ export const logout = async (req, res, next) => {
 			new SuccessResponse(
 				statusCode.okCode,
 				"You're Logged Out Successfully",
-				"You're Logout"
+				"You're Out Now"
 			)
 		);
 	} catch (error) {
@@ -790,7 +790,7 @@ export const logout = async (req, res, next) => {
 };
 
 export const getAccessToken = (req, res, next) => {
-	const { refreshToken } = req.body;
+	const { refreshToken } = req;
 
 	if (!refreshToken)
 		return next(
@@ -804,21 +804,22 @@ export const getAccessToken = (req, res, next) => {
 	if (!verifyRefreshToken(refreshToken))
 		return next(
 			new ErrorResponse(
-				'Invalid refresh token',
-				'User must be logged in again to get access token',
+				'Session expired or invalid',
+				'Please login again to continue.',
 				statusCode.badRequestCode
 			)
 		);
 
-	const { userId } = req.session;
+	const { userId, userRole } = req.session;
 
 	sendCookies(userId, res);
+	storeSession(userId, userRole, req);
 
 	return next(
 		new SuccessResponse(
 			statusCode.okCode,
-			'Access Token Sending Via Cookie',
-			'Access Token Generated'
+			'Access token sent via cookie',
+			'New access token has been successfully generated'
 		)
 	);
 };

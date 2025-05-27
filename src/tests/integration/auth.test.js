@@ -601,7 +601,7 @@ describe('Auth API Tests For Logout', () => {
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
 		expect(res.body.message).toBe("You're Logged Out Successfully");
-		expect(res.body.data).toBe("You're Logout");
+		expect(res.body.data).toBe("You're Out Now");
 	});
 });
 
@@ -632,8 +632,10 @@ describe('Auth API Tests For Get Access Token', () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Access Token Sending Via Cookie');
-		expect(res.body.data).toBe('Access Token Generated');
+		expect(res.body.message).toBe('Access token sent via cookie');
+		expect(res.body.data).toBe(
+			'New access token has been successfully generated'
+		);
 		expect(res.headers['set-cookie']).toBeDefined();
 
 		// Extract the cookie

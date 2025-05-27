@@ -6,7 +6,7 @@
 
 generator client {
     provider        = "prisma-client-js"
-    previewFeatures = ["relationJoins"]
+    previewFeatures = ["prismaSchemaFolder", "relationJoins"]
     output          = "../generated/client"
     seed            = "node prisma/seed.js"
     moduleFormat    = "esm"

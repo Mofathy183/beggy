@@ -26,7 +26,7 @@ import {
 	VReqToResetToken,
 	VReqToUpdatePassword,
 	VReqToHeaderToken,
-	VReqToHeaderRefreshToken,
+	VReqToCookieRefreshToken,
 	headersMiddleware,
 	checkPermissionMiddleware,
 } from '../../middlewares/authMiddleware.js';
@@ -129,7 +129,7 @@ authRoute.get('/csrf-token', csrfProtection);
 //* to get new access token => POST refresh token in the request body
 authRoute.post(
 	'/refresh-token',
-	VReqToHeaderRefreshToken,
+	VReqToCookieRefreshToken,
 	headersMiddleware,
 	getAccessToken
 );
