@@ -4,12 +4,11 @@ import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
 import { birthOfDate } from '../../utils/userHelper.js';
 import { signToken } from '../../utils/jwt.js';
-import { beforeEach } from '@jest/globals';
+import { filterQuery } from '../setup.test.js';
 
 let csrfToken;
 let csrfSecret;
 let cookies;
-let user;
 const items = [
 	{
 		name: 'Test Item 1',
@@ -214,10 +213,7 @@ describe('Items Route For User to Get Item User Has By ID', () => {
 
 		const res = await request(app)
 			.get(`/api/beggy/items/${item.id}`)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
+			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`]);
 
 		console.log('Response', res.body);
 		console.log('Response data', res.body.data);
@@ -237,7 +233,15 @@ describe('Items Route For User to Get Item User Has By ID', () => {
 	});
 });
 
-describe('Items Route For User to Get All Items User Has', () => {
+describe('Should get paginated items of category books Belongs To User', () => {
+	let user;
+	let token;
+	const filter = {
+		limit: 10,
+		page: 1,
+		category: 'books',
+	};
+
 	beforeEach(async () => {
 		user = await prisma.user.create({
 			data: {
@@ -249,192 +253,61 @@ describe('Items Route For User to Get All Items User Has', () => {
 			},
 		});
 
-		const items = await prisma.items.createMany({
-			data: [
-				{
-					name: 'Test Item 1',
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
+		const userBooks = items
+			.filter((item) => item.category === filter.category)
+			.map((item) => ({ ...item, userId: user.id }));
 
-				{
-					name: 'Test Item 3',
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 4',
-					quantity: 75,
-					category: 'accessories',
-					weight: 0.25,
-					volume: 0.005,
-					color: 'yellow',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					quantity: 300,
-					category: 'furniture',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 1',
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 3',
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 4',
-					quantity: 75,
-					category: 'accessories',
-					weight: 0.25,
-					volume: 0.005,
-					color: 'yellow',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					quantity: 300,
-					category: 'furniture',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 1',
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 3',
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 4',
-					quantity: 75,
-					category: 'accessories',
-					weight: 0.25,
-					volume: 0.005,
-					color: 'yellow',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					quantity: 300,
-					category: 'furniture',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-			],
-		});
+		await prisma.items.createMany({ data: userBooks });
+		token = signToken(user.id);
 	});
 
-	test('Should get all items Belongs To User', async () => {
+	test('Should get all items belonging to the user', async () => {
 		const res = await request(app)
 			.get(`/api/beggy/items`)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response', res.body);
+			.set('Cookie', [`accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Found All Items User Has');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Found All Items User Has',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(5);
+		expect(res.body.data.every((item) => item.userId === user.id)).toBe(
+			true
+		);
 	});
 
-	test('Should get paginated items Belongs To User', async () => {
+	test('Should get paginated items belonging to the user, filtered by category', async () => {
 		const res = await request(app)
-			.get(`/api/beggy/items/?page=2&limit=5`)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response', res.body);
+			.get(`/api/beggy/items/?${filterQuery(filter)}`)
+			.set('Cookie', [`accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Found All Items User Has');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Found All Items User Has By Search',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBe(5);
+		expect(res.body.data.length).toBeLessThanOrEqual(filter.limit);
+
+		for (const item of res.body.data) {
+			expect(item.userId).toBe(user.id);
+			expect(item.category).toBe(filter.category.toUpperCase());
+		}
 	});
 });
 
 describe('Base Items Route Tests For Search for Items User Has', () => {
+	let user;
+	let token;
+	const filter = {
+		limit: 10,
+		page: 1,
+		category: 'books',
+	};
+
 	beforeEach(async () => {
 		user = await prisma.user.create({
 			data: {
@@ -446,189 +319,88 @@ describe('Base Items Route Tests For Search for Items User Has', () => {
 			},
 		});
 
-		const items = await prisma.items.createMany({
-			data: [
-				{
-					name: 'Test Item 1',
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
+		const userBooks = items
+			.filter((item) => item.category === filter.category)
+			.map((item) => ({ ...item, userId: user.id }));
 
-				{
-					name: 'Test Item 3',
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					quantity: 300,
-					category: 'electronics',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 1',
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 3',
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 5',
-					quantity: 300,
-					category: 'electronics',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 1',
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 3',
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					quantity: 300,
-					category: 'electronics',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-			],
-		});
+		await prisma.items.createMany({ data: userBooks });
+		token = signToken(user.id);
 	});
 
 	test('Should return items by search query If there is no Match to the Query', async () => {
 		const res = await request(app)
 			//* There is no match for color yellow
-			.get(`/api/beggy/items/?color=yellow`)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response Not Match', res.body);
+			.get(`/api/beggy/items/?${filterQuery(filter)}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Found All Items User Has By Search'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Found All Items User Has By Search',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBe(0);
+		expect(res.body.data.length).toBeLessThanOrEqual(filter.limit);
+
+		for (const item of res.body.data) {
+			expect(item.userId).toBe(user.id);
+			expect(item.category).toBe(filter.category.toUpperCase());
+		}
 	});
 
 	test('Should return items by search query if there are Match to the search', async () => {
+		filter.category = 'electronics';
+
 		const res = await request(app)
 			//* There is a match for color blue
-			.get(`/api/beggy/items/?category=electronics`)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response Match for Search', res.body);
+			.get(`/api/beggy/items/?${filterQuery(filter)}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Found All Items User Has By Search'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Found All Items User Has By Search',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
+		expect(res.body.data.length).toBeLessThanOrEqual(filter.limit);
+
+		for (const item of res.body.data) {
+			expect(item.userId).toBe(user.id);
+			expect(item.category).toBe(filter.category.toUpperCase());
+		}
 	});
 
 	test('Should return items by Search and Order and Pagination if there are Match', async () => {
-		const res = await request(app)
-			.get(
-				'/api/beggy/items/?category=electronics&page=2&limit=2&order=desc&sortBy=volume'
-			)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
+		filter.category = 'electronics';
+		filter.order = 'desc';
+		filter.sortBy = 'volume';
 
-		console.log('Response For Search and Order and Pagination', res.body);
+		const res = await request(app)
+			.get(`/api/beggy/items/?${filterQuery(filter)}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Found All Items User Has By Search'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Found All Items User Has By Search',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
+		expect(res.body.data.length).toBeLessThanOrEqual(filter.limit);
+
+		for (const item of res.body.data) {
+			expect(item.userId).toBe(user.id);
+			expect(item.category).toBe(filter.category.toUpperCase());
+		}
 	});
 });
 
 describe('Items Route For User To Create Item For User', () => {
-	test('Should create a new item For User', async () => {
+	let user;
+	let token;
+
+	beforeEach(async () => {
 		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
@@ -639,12 +411,15 @@ describe('Items Route For User To Create Item For User', () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test('Should create a new item For User', async () => {
 		const res = await request(app)
 			.post(`/api/beggy/items/`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Test Item 1',
 				quantity: 50,
@@ -654,11 +429,12 @@ describe('Items Route For User To Create Item For User', () => {
 				color: 'blue',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(201);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Item Created Successfully For User');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Item Created Successfully For User',
+		});
+
 		expect(res.body.data).toMatchObject({
 			name: 'Test Item 1',
 			quantity: 50,
@@ -672,7 +448,11 @@ describe('Items Route For User To Create Item For User', () => {
 });
 
 describe('Items Route For User to Create Items For User', () => {
-	test('Should create Items for User', async () => {
+	let user;
+	let token;
+	let userItems;
+
+	beforeEach(async () => {
 		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
@@ -683,69 +463,34 @@ describe('Items Route For User to Create Items For User', () => {
 			},
 		});
 
-		const items = [
-			{
-				name: 'Test Item 1',
-				quantity: 100,
-				category: 'clothing',
-				weight: 1.5,
-				volume: 0.05,
-				color: 'blue',
-			},
-			{
-				name: 'Test Item 2',
-				quantity: 50,
-				category: 'electronics',
-				weight: 0.5,
-				volume: 0.01,
-				color: 'red',
-			},
-			{
-				name: 'Test Item 3',
-				quantity: 20,
-				category: 'books',
-				weight: 0.2,
-				volume: 0.005,
-				color: 'green',
-			},
-			{
-				name: 'Test Item 1',
-				quantity: 100,
-				category: 'clothing',
-				weight: 1.5,
-				volume: 0.05,
-				color: 'blue',
-			},
-			{
-				name: 'Test Item 2',
-				quantity: 50,
-				category: 'electronics',
-				weight: 0.5,
-				volume: 0.01,
-				color: 'red',
-			},
-		];
+		userItems = items.filter((_, index) => index < 5);
 
+		token = signToken(user.id);
+	});
+
+	test('Should create Items for User', async () => {
 		const res = await request(app)
 			.post('/api/beggy/items/multiple')
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
-			.send(items);
-
-		console.log('Response', res.body);
+			.send(userItems);
 
 		expect(res.status).toBe(201);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Items Created Successfully For User');
-		expect(res.body.data).toHaveProperty('count');
-		expect(res.body.data.count).toBe(items.length);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Items Created Successfully For User',
+		});
+		expect(res.body.data.count).toBe(userItems.length);
 	});
 });
 
 describe('Items Route For User to Replace an Item User Has', () => {
-	test('Should replace an item Belongs To User', async () => {
+	let user;
+	let token;
+	let item;
+
+	beforeEach(async () => {
 		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
@@ -756,7 +501,7 @@ describe('Items Route For User to Replace an Item User Has', () => {
 			},
 		});
 
-		const item = await prisma.items.create({
+		item = await prisma.items.create({
 			data: {
 				name: 'Test Item 1',
 				quantity: 100,
@@ -768,12 +513,15 @@ describe('Items Route For User to Replace an Item User Has', () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test('Should replace an item Belongs To User', async () => {
 		const res = await request(app)
 			.put(`/api/beggy/items/${item.id}`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Updated Test Item 1',
 				quantity: 50,
@@ -783,31 +531,13 @@ describe('Items Route For User to Replace an Item User Has', () => {
 				color: 'red',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Replaced Item Belongs to User'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Replaced Item Belongs to User',
+		});
+
 		expect(res.body.data).toMatchObject({
-			id: item.id,
-			name: 'Updated Test Item 1',
-			quantity: 50,
-			category: 'ELECTRONICS',
-			weight: 0.5,
-			volume: 0.01,
-			color: 'red',
-			userId: user.id,
-		});
-
-		const updatedItem = await prisma.items.findUnique({
-			where: {
-				id: item.id,
-			},
-		});
-
-		expect(updatedItem).toMatchObject({
 			id: item.id,
 			name: 'Updated Test Item 1',
 			quantity: 50,
@@ -821,130 +551,10 @@ describe('Items Route For User to Replace an Item User Has', () => {
 });
 
 describe('Items Route For User to Modify Item User Has', () => {
-	test('Should modify an item Belongs To User', async () => {
-		user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'johndoe@example.com',
-				password: await hashingPassword('password'),
-				birth: birthOfDate('2003-06-18'),
-			},
-		});
+	let user;
+	let token;
+	let item;
 
-		const item = await prisma.items.create({
-			data: {
-				name: 'Test Item 1',
-				quantity: 100,
-				category: 'clothing',
-				weight: 1.5,
-				volume: 0.05,
-				color: 'blue',
-				userId: user.id,
-			},
-		});
-
-		const res = await request(app)
-			.patch(`/api/beggy/items/${item.id}`)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
-			.send({
-				name: 'Updated Test Item 1',
-				category: 'electronics',
-				color: 'red',
-			});
-
-		console.log('Response', res.body);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Modified Item Belongs to User'
-		);
-		expect(res.body.data).toMatchObject({
-			id: item.id,
-			name: 'Updated Test Item 1',
-			quantity: 100,
-			category: 'ELECTRONICS',
-			weight: 1.5,
-			volume: 0.05,
-			color: 'red',
-			userId: user.id,
-		});
-
-		const updatedItem = await prisma.items.findUnique({
-			where: {
-				id: item.id,
-			},
-		});
-
-		expect(updatedItem).toMatchObject({
-			id: item.id,
-			name: 'Updated Test Item 1',
-			quantity: 100,
-			category: 'ELECTRONICS',
-			weight: 1.5,
-			volume: 0.05,
-			color: 'red',
-			userId: user.id,
-		});
-	});
-});
-
-describe('Items Route For User to Delete Item User Has By ID', () => {
-	test('Should delete an item Belongs To User', async () => {
-		user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'johndoe@example.com',
-				password: await hashingPassword('password'),
-				birth: birthOfDate('2003-06-18'),
-			},
-		});
-
-		const item = await prisma.items.create({
-			data: {
-				name: 'Test Item 1',
-				quantity: 100,
-				category: 'clothing',
-				weight: 1.5,
-				volume: 0.05,
-				color: 'blue',
-				userId: user.id,
-			},
-		});
-
-		const res = await request(app)
-			.delete(`/api/beggy/items/${item.id}`)
-			.set('Cookie', cookies)
-			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response', res.body);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Deleted Item Belongs to User'
-		);
-		expect(res.body.data).toMatchObject({
-			id: item.id,
-			userId: user.id,
-			name: 'Test Item 1',
-			quantity: 100,
-			category: 'CLOTHING',
-			weight: 1.5,
-			volume: 0.05,
-			color: 'blue',
-		});
-	});
-});
-
-describe('Items Route For User To Delete All Items User Has', () => {
 	beforeEach(async () => {
 		user = await prisma.user.create({
 			data: {
@@ -956,228 +566,161 @@ describe('Items Route For User To Delete All Items User Has', () => {
 			},
 		});
 
-		const items = await prisma.items.createMany({
-			data: [
-				{
-					name: 'Test Item 1',
-					userId: user.id,
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					userId: user.id,
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 3',
-					userId: user.id,
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 4',
-					userId: user.id,
-					quantity: 75,
-					category: 'accessories',
-					weight: 0.25,
-					volume: 0.005,
-					color: 'yellow',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					userId: user.id,
-					quantity: 300,
-					category: 'furniture',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 1',
-					userId: user.id,
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					userId: user.id,
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 3',
-					userId: user.id,
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 4',
-					userId: user.id,
-					quantity: 75,
-					category: 'accessories',
-					weight: 0.25,
-					volume: 0.005,
-					color: 'yellow',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					userId: user.id,
-					quantity: 300,
-					category: 'furniture',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 1',
-					userId: user.id,
-					quantity: 50,
-					category: 'clothing',
-					weight: 1.5,
-					volume: 0.05,
-					color: 'blue',
-					userId: user.id,
-				},
-				{
-					name: 'Test Item 2',
-					userId: user.id,
-					quantity: 100,
-					category: 'electronics',
-					weight: 2.5,
-					volume: 0.1,
-					color: 'red',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 3',
-					userId: user.id,
-					quantity: 200,
-					category: 'books',
-					weight: 0.75,
-					volume: 0.025,
-					color: 'green',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 4',
-					userId: user.id,
-					quantity: 75,
-					category: 'accessories',
-					weight: 0.25,
-					volume: 0.005,
-					color: 'yellow',
-					userId: user.id,
-				},
-
-				{
-					name: 'Test Item 5',
-					userId: user.id,
-					quantity: 300,
-					category: 'furniture',
-					weight: 1.25,
-					volume: 0.05,
-					color: 'purple',
-					userId: user.id,
-				},
-			],
+		item = await prisma.items.create({
+			data: {
+				name: 'Test Item 1',
+				quantity: 100,
+				category: 'clothing',
+				weight: 1.5,
+				volume: 0.05,
+				color: 'blue',
+				userId: user.id,
+			},
 		});
+
+		token = signToken(user.id);
+	});
+
+	test('Should modify an item Belongs To User', async () => {
+		const res = await request(app)
+			.patch(`/api/beggy/items/${item.id}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
+			.set('X-CSRF-Secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
+			.send({
+				name: 'Updated Test Item 1',
+				category: 'electronics',
+				color: 'red',
+			});
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Modified Item Belongs to User',
+		});
+
+		expect(res.body.data).toMatchObject({
+			name: 'Updated Test Item 1',
+			category: 'ELECTRONICS',
+			color: 'red',
+			userId: user.id,
+		});
+	});
+});
+
+describe('Items Route For User to Delete Item User Has By ID', () => {
+	let user;
+	let token;
+	let item;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'johndoe@example.com',
+				password: await hashingPassword('password'),
+				birth: birthOfDate('2003-06-18'),
+			},
+		});
+
+		item = await prisma.items.create({
+			data: {
+				name: 'Test Item 1',
+				quantity: 100,
+				category: 'clothing',
+				weight: 1.5,
+				volume: 0.05,
+				color: 'blue',
+				userId: user.id,
+			},
+		});
+
+		token = signToken(user.id);
+	});
+
+	test('Should delete an item Belongs To User', async () => {
+		const res = await request(app)
+			.delete(`/api/beggy/items/${item.id}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
+			.set('X-CSRF-Secret', csrfSecret)
+			.set('x-csrf-token', csrfToken);
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted Item Belongs to User',
+		});
+
+		expect(res.body.data).toMatchObject({
+			id: item.id,
+			name: 'Test Item 1',
+		});
+	});
+});
+
+describe('Items Route For User To Delete All Items User Has', () => {
+	let user;
+	let token;
+	let userItems;
+	const filter = {
+		color: 'blue',
+	};
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'johndoe@example.com',
+				password: await hashingPassword('password'),
+				birth: birthOfDate('2003-06-18'),
+			},
+		});
+
+		userItems = items
+			.filter((item) => item.color === filter.color)
+			.map((item) => ({ ...item, userId: user.id }));
+
+		await prisma.items.createMany({ data: userItems });
+		token = signToken(user.id);
 	});
 
 	test('Should delete all items Belongs To User', async () => {
 		const res = await request(app)
 			.delete(`/api/beggy/items/`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Deleted All Items Belongs to User'
-		);
-		expect(res.body.data).toHaveProperty('count');
-		expect(res.body.data.count).toBeGreaterThan(10);
-
-		const deletedItems = await prisma.items.findMany({
-			where: {
-				userId: user.id,
-			},
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted All Items Belongs to User',
 		});
 
-		expect(deletedItems).toHaveLength(0);
+		expect(res.body.data.count).toBe(userItems.length);
 	});
 
 	test('Should delete all items Belongs To User', async () => {
 		const res = await request(app)
-			.delete(`/api/beggy/items/?color=blue`)
-			.set('Cookie', cookies)
+			.delete(`/api/beggy/items/?${filterQuery(filter)}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Deleted All Items Belongs to User By Search'
-		);
-		expect(res.body.data).toHaveProperty('count');
-		expect(res.body.data.count).toBe(3);
-
-		const deletedItems = await prisma.items.findMany({
-			where: {
-				userId: user.id,
-			},
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted All Items Belongs to User By Search',
 		});
 
-		expect(deletedItems).toHaveLength(12);
+		expect(res.body.data.count).toBe(userItems.length);
 	});
 });

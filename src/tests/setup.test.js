@@ -32,3 +32,9 @@ afterAll(async () => {
 	await prisma.$disconnect();
 	console.log('✅ Database connection closed.');
 });
+
+export const filterQuery = (filter) => {
+	const query = new URLSearchParams(filter).toString();
+
+	return query;
+};

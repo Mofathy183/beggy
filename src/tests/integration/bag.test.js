@@ -126,7 +126,7 @@ describe('Bags Route For User For Get All Bags Belongs To User', () => {
 
 		const res = await request(app)
 			.get(`/api/beggy/bags/`)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
+			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
 
 		console.log('Response', res.body);
 
@@ -158,7 +158,7 @@ describe('Bags Route For User For Get All Bags Belongs To User', () => {
 
 		const res = await request(app)
 			.get(`/api/beggy/bags/?field=features&search=usb_port`)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
+			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
 
 		console.log('Response', res.body);
 
@@ -198,7 +198,7 @@ describe('Bags Route For User For Get User Bag By Its ID', () => {
 
 		const res = await request(app)
 			.get(`/api/beggy/bags/${bag.id}`)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
+			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
 
 		console.log('Response', res.body);
 
@@ -235,10 +235,9 @@ describe('Bags Route For User For Create Bag For User', () => {
 
 		const res = await request(app)
 			.post(`/api/beggy/bags/`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -308,10 +307,9 @@ describe("Bags Route For User For Replace User's Bag", () => {
 
 		const res = await request(app)
 			.put(`/api/beggy/bags/${bag.id}`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				name: 'Updated Test Bag 1',
 				type: 'backpack',
@@ -377,10 +375,9 @@ describe("Bags Route For User For Modify User's Bag", () => {
 
 		const res = await request(app)
 			.patch(`/api/beggy/bags/${bag.id}`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				material: 'leather',
 				features: ['waterproof', 'expandable'],
@@ -433,10 +430,9 @@ describe("Bags Route For User For Delete User's Bags By ID", () => {
 
 		const res = await request(app)
 			.delete(`/api/beggy/bags/${bag1.id}`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
 			.set('X-CSRF-Secret', csrfSecret)
-			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
+			.set('x-csrf-token', csrfToken);
 
 		console.log('Response', res.body);
 
@@ -494,10 +490,9 @@ describe("Bags Route For User For Delete All User's Bags", () => {
 
 		const res = await request(app)
 			.delete(`/api/beggy/bags/`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,
 			});
@@ -557,10 +552,9 @@ describe("Bags Route For User For Delete All User's Bags", () => {
 
 		const res = await request(app)
 			.delete(`/api/beggy/bags/?material=nylon`)
-			.set('Cookie', cookies)
+			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
 			.send({
 				confirmDelete: true,
 			});

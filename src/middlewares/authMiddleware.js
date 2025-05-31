@@ -18,85 +18,78 @@ import {
 import { ErrorResponse } from '../utils/error.js';
 
 /**
- * Middleware to validate JWT token from the Authorization header and authenticate the user.
+ * Middleware to authenticate a user from the verified JWT payload in `req.auth`.
  *
- * - Ensures the Authorization header exists and starts with "Bearer ".
- * - Verifies the token and checks for user existence in the database.
- * - Confirms the user's password has not been changed after the token was issued.
- * - Adds authenticated user's ID and role to the request session.
+ * - Assumes `req.auth` is already populated by a previous middleware (access or refresh token verification).
+ * - Validates the existence of the user in the database.
+ * - Checks if the user has changed their password after the token was issued.
+ * - Stores the user's ID and role in the request session.
  *
  * @async
  * @function headersMiddleware
- * @param {Request} req - Express request object containing headers and JWT payload in `req.auth`.
+ * @param {Request} req - Express request object with `req.auth` populated.
  * @param {Response} res - Express response object.
  * @param {NextFunction} next - Express next middleware function.
- * @returns {Promise<void>} Returns nothing but passes control to the next middleware or throws an error.
+ * @returns {Promise<void>}
  *
- * @throws {ErrorResponse} - If the Authorization header is missing or invalid.
- * @throws {ErrorResponse} - If the user is not found or has changed their password.
+ * @throws {ErrorResponse} - If the user is not found or password has changed after token issue time.
  */
 export const headersMiddleware = async (req, res, next) => {
-	//* Check if the request has a valid JWT token
-	if (
-		!req.headers.authorization &&
-		!req.headers.authorization.startsWith('Bearer ')
-	) {
-		return next(
+	try {
+		const { id, iat } = req.auth;
+
+		// Fetch the user by ID
+		const user = await prisma.user.findUnique({ where: { id } });
+
+		// If user does not exist
+		if (!user) {
+			return next(
+				new ErrorResponse(
+					'User not found',
+					'User not found in the database. Please login again.',
+					statusCode.unauthorizedCode
+				)
+			);
+		}
+
+		// If Prisma returns error somehow (defensive, in case of future API changes)
+		if (user?.error) {
+			return next(
+				new ErrorResponse(
+					user.error,
+					`Failed to retrieve user: ${user.error.message}`,
+					statusCode.internalServerErrorCode
+				)
+			);
+		}
+
+		// Check if user changed password after token was issued
+		const passwordChanged = passwordChangeAfter(user.passwordChangeAt, iat);
+
+		if (passwordChanged) {
+			return next(
+				new ErrorResponse(
+					'Password recently changed',
+					'Please log in again, your credentials have been reset.',
+					statusCode.unauthorizedCode
+				)
+			);
+		}
+
+		// Store user info in session
+		storeSession(user.id, user.role, req);
+
+		// Continue to next middleware
+		next();
+	} catch (error) {
+		next(
 			new ErrorResponse(
-				"Header 'Authorization' is required",
-				"Authorization must start with 'Bearer ' and be a valid JWT token",
-				statusCode.unauthorizedCode
-			)
-		);
-	}
-
-	//* if user are authenticated will pass the verification jwt token data to req.auth
-	const isAuthenticated = req.auth;
-
-	//* check if the id in the token is the same as the user has
-	const userAuth = await prisma.user.findUnique({
-		where: { id: isAuthenticated.id },
-	});
-
-	//* if the user is not found in the database, return an error response with a 401 status code
-	if (!userAuth)
-		return next(
-			new ErrorResponse(
-				'User not found',
-				'User not found in the database. Please login again',
-				statusCode.unauthorizedCode
-			)
-		);
-
-	//* if the user has an error, return an error response with a 500 status code
-	if (userAuth.error)
-		return next(
-			new ErrorResponse(
-				userAuth.error,
-				'Failed to find user by this id ' + userAuth.error.message,
+				'Internal Server Error',
+				error.message || 'Unexpected error in headersMiddleware',
 				statusCode.internalServerErrorCode
 			)
 		);
-
-	//* check if the user changed their password after login
-	const passwordHasChanged = passwordChangeAfter(
-		userAuth.passwordChangeAt,
-		isAuthenticated.iat
-	);
-
-	//* if the user has changed their password, return an error response with a 401 status code
-	if (passwordHasChanged)
-		return next(
-			new ErrorResponse(
-				'User has changed their password',
-				'User has changed their password. Please login again',
-				statusCode.unauthorizedCode
-			)
-		);
-
-	//* if the user is authenticated and the password has not changed, add the user's id and role to the request object
-	storeSession(userAuth.id, userAuth.role, req);
-	next();
+	}
 };
 
 /**
@@ -418,100 +411,104 @@ export const VReqToResetToken = (req, res, next) => {
 };
 
 /**
- * Middleware to validate the JWT token from the `Authorization` header.
+ * Middleware to verify an access token from HttpOnly cookies or the `Authorization` header.
  *
- * - Extracts the token from the `Authorization` header.
+ * - Checks for access token in cookies first, then in the Authorization header.
  * - Verifies the token using `verifyToken`.
- * - If valid, attaches the user info to `req.auth` and continues the request.
- * - If the token is invalid or expired, responds with an appropriate unauthorized error.
- * - If the token is missing, returns an error indicating that the header is required.
+ * - If valid, attaches the decoded payload to `req.auth`.
+ * - If invalid or expired, responds with an unauthorized error.
+ * - If token is missing, responds with a clear error.
  *
- * @param {Request} req - The Express request object.
- * @param {Response} res - The Express response object.
- * @param {NextFunction} next - The next middleware function.
+ * @function VReqToHeaderToken
+ * @param {Request} req - Express request object.
+ * @param {Response} res - Express response object.
+ * @param {NextFunction} next - Express next middleware function.
  * @returns {void}
  */
 export const VReqToHeaderToken = (req, res, next) => {
-	// Extract token from Authorization header if it exists
-	const token = req.headers.authorization?.split(' ')[1];
+	// Prefer access token from cookies, fallback to Authorization header
+	const token =
+		req.cookies?.accessToken ||
+		(req.headers.authorization?.startsWith('Bearer ')
+			? req.headers.authorization.split(' ')[1]
+			: null);
 
-	// Attempt to verify the token
-	const isAuth = verifyToken(token);
-
-	// If token exists and is valid, attach user info to request and continue
-	if (token && isAuth) {
-		req.auth = isAuth; // Typically includes user ID, role, etc.
-		return next();
-	}
-
-	// If token is present but invalid or expired, return an error
-	if (token && !isAuth) {
+	// If token is not found
+	if (!token) {
 		return next(
 			new ErrorResponse(
-				'Failed to Verify token',
-				'The Token is Expired or Secret not match',
+				'Access token not provided',
+				'Access token is missing. Please login or provide a valid token.',
 				statusCode.unauthorizedCode
 			)
 		);
 	}
 
-	// If token is missing, return a header-related error
-	return next(
-		new ErrorResponse(
-			'Header "Authorization" is required',
-			'Authorization must start with "Bearer " and be a valid JWT token',
-			statusCode.unauthorizedCode
-		)
-	);
+	// Verify the token
+	const decoded = verifyToken(token);
+
+	// If verification fails
+	if (!decoded) {
+		return next(
+			new ErrorResponse(
+				'Invalid access token',
+				'Access token is expired or invalid. Please login again.',
+				statusCode.unauthorizedCode
+			)
+		);
+	}
+
+	// If valid, attach decoded payload and continue
+	req.auth = decoded;
+	next();
 };
 
 /**
- * Middleware to verify a refresh token from an HttpOnly cookie.
+ * Middleware to verify a refresh token from HttpOnly cookies.
  *
- * - Checks if a refresh token exists in the request cookies.
- * - Verifies the validity of the token.
+ * - Checks if a refresh token exists in cookies.
+ * - Verifies the validity of the token using `verifyRefreshToken`.
  * - If valid, attaches the decoded payload to `req.auth` and the raw token to `req.refreshToken`.
- * - If invalid or missing, passes an appropriate error to the error handler.
+ * - If invalid or missing, forwards an appropriate `ErrorResponse`.
  *
  * @function VReqToCookieRefreshToken
- * @param {import('express').Request} req - Express request object
- * @param {import('express').Response} res - Express response object
- * @param {import('express').NextFunction} next - Express next middleware function
+ * @param {Request} req - Express request object.
+ * @param {Response} res - Express response object.
+ * @param {NextFunction} next - Express next middleware function.
  * @returns {void}
  */
 export const VReqToCookieRefreshToken = (req, res, next) => {
-	// Get token from HttpOnly cookie
-	const token = req.headers.authorization?.split(' ')[1];
+	// Prefer refresh token from HttpOnly cookie
+	const token = req.cookies?.refreshToken;
 
-	// If no token is present, return 401 Unauthorized
+	// If no token is found, return error
 	if (!token) {
 		return next(
 			new ErrorResponse(
-				'Missing refresh token',
-				'Authorization must start with "Bearer " and be a valid refresh token',
+				'Refresh token not provided',
+				'Refresh token is missing. Please login again.',
 				statusCode.unauthorizedCode
 			)
 		);
 	}
 
 	// Verify the refresh token
-	const isAuth = verifyRefreshToken(token);
+	const decoded = verifyRefreshToken(token);
 
-	// If token is invalid or expired
-	if (!isAuth) {
+	// If verification fails
+	if (!decoded) {
 		return next(
 			new ErrorResponse(
 				'Invalid refresh token',
-				'Token is either expired or malformed',
+				'Refresh token is expired or invalid. Please login again.',
 				statusCode.unauthorizedCode
 			)
 		);
 	}
 
-	// Add the verified token payload and the raw token to the request object
-	req.auth = isAuth;
+	// If valid, attach info to request and continue
+	req.auth = decoded;
 	req.refreshToken = token;
-
-	return next();
+	next();
 };
 //*====================={Request Validations}====================

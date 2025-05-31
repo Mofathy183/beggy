@@ -1,7 +1,7 @@
 import { hash, compare, genSalt } from 'bcrypt';
+import crypto from 'crypto';
 import { bcryptConfig } from '../config/env.js';
 import { ErrorHandler } from './error.js';
-import crypto from 'crypto';
 
 /**
  * @async

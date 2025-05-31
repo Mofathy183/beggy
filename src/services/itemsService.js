@@ -454,6 +454,10 @@ export const removeItemUserHas = async (userId, itemId) => {
 	try {
 		const deletedItem = await prisma.items.delete({
 			where: { id: itemId, userId: userId },
+			select: {
+				id: true,
+				name: true,
+			},
 		});
 
 		if (!deletedItem)
