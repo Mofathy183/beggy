@@ -83,6 +83,16 @@ export const removeItemFromUserBag = async (userId, bagId, body) => {
 
 		const deletedBagItem = await prisma.bagItems.delete({
 			where: { bagId_itemId: { bagId, itemId } },
+            select: {
+                bagId: true,
+                itemId: true,
+                item: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            }
 		});
 
 		if (!deletedBagItem)

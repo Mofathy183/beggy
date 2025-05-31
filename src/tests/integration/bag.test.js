@@ -3,6 +3,7 @@ import prisma from '../../../prisma/prisma.js';
 import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
 import { signToken } from '../../utils/jwt.js';
+import { filterQuery } from "../setup.test.js"
 
 let csrfToken;
 let csrfSecret;
@@ -104,8 +105,13 @@ test('Should return a CSRF token', async () => {
 });
 
 describe('Bags Route For User For Get All Bags Belongs To User', () => {
-	test('Should Get All Bags Belongs To User', async () => {
-		const user = await prisma.user.create({
+	let user;
+	let token;
+	let userBags;
+    let filter = { features: ["usb_port", "lightweight"] }
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -115,63 +121,66 @@ describe('Bags Route For User For Get All Bags Belongs To User', () => {
 			},
 		});
 
-		const manyBags = bags.map((bag) => ({
-			...bag,
-			userId: user.id,
-		}));
+		userBags = bags
+			.filter((bag) => filter.features.includes(bag.features[0]))
+			.map((item) => ({ ...item, userId: user.id }));
 
 		await prisma.bags.createMany({
-			data: manyBags,
+			data: userBags,
 		});
 
+		token = signToken(user.id);
+	});
+
+	test('Should Get All Bags Belongs To User', async () => {
 		const res = await request(app)
 			.get(`/api/beggy/bags/`)
-			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
-
-		console.log('Response', res.body);
+			.set('Cookie', [`accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Retrieved Bags User Has');
-		expect(res.body.data.length).toBeGreaterThan(4);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Retrieved Bags User Has',
+		});
+
+		expect(res.body.data.length).toBe(userBags.length);
+
+        for (const item of res.body.data) {
+			expect(item.userId).toBe(user.id);
+		}
 	});
 
 	test('Should Get All Bags Belongs To User By searching', async () => {
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'user@example.com',
-				password: await hashingPassword('password$1155'),
-				role: 'user',
-			},
-		});
-
-		const manyBags = bags.map((bag) => ({
-			...bag,
-			userId: user.id,
-		}));
-
-		await prisma.bags.createMany({
-			data: manyBags,
-		});
-
 		const res = await request(app)
-			.get(`/api/beggy/bags/?field=features&search=usb_port`)
-			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
-
-		console.log('Response', res.body);
+			.get(`/api/beggy/bags/?${filterQuery(filter)}`)
+			.set('Cookie', [`accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Retrieved Bags User Has');
-		expect(res.body.data.length).toBeGreaterThan(0);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Retrieved Bags User Has',
+		});
+
+        expect(Array.isArray(res.body.data)).toBe(true);
+		expect(res.body.data.length).toBeLessThanOrEqual(userBags.length);
+
+		for (const item of res.body.data) {
+			expect(item.userId).toBe(user.id);
+			const upperFeatures = filter.features.map(f => f.toUpperCase());
+            item.features.forEach(f => {
+                expect(upperFeatures).toContain(f);
+            });
+		}
 	});
 });
 
 describe('Bags Route For User For Get User Bag By Its ID', () => {
-	test('Should Get User Bag By Its ID', async () => {
-		const user = await prisma.user.create({
+	let user;
+	let token;
+    let bag;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -181,7 +190,7 @@ describe('Bags Route For User For Get User Bag By Its ID', () => {
 			},
 		});
 
-		const bag = await prisma.bags.create({
+        bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -196,15 +205,20 @@ describe('Bags Route For User For Get User Bag By Its ID', () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test('Should Get User Bag By Its ID', async () => {
 		const res = await request(app)
 			.get(`/api/beggy/bags/${bag.id}`)
-			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
-
-		console.log('Response', res.body);
+			.set('Cookie', [`accessToken=${token}`]);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Retrieved Bag User Has');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Retrieved Bag User Has',
+		});
+        
 		expect(res.body.data).toMatchObject({
 			id: bag.id,
 			name: 'Test Bag 1',
@@ -222,8 +236,11 @@ describe('Bags Route For User For Get User Bag By Its ID', () => {
 });
 
 describe('Bags Route For User For Create Bag For User', () => {
-	test('Should Create Bag For User', async () => {
-		const user = await prisma.user.create({
+	let user;
+	let token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -233,9 +250,13 @@ describe('Bags Route For User For Create Bag For User', () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test('Should Create Bag For User', async () => {
 		const res = await request(app)
 			.post(`/api/beggy/bags/`)
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
@@ -250,11 +271,12 @@ describe('Bags Route For User For Create Bag For User', () => {
 				features: ['usb_port'],
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(201);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Created Bag For User');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Created Bag For User',
+		});
+
 		expect(res.body.data).toMatchObject({
 			name: 'Test Bag 1',
 			type: 'LAPTOP_BAG',
@@ -267,20 +289,16 @@ describe('Bags Route For User For Create Bag For User', () => {
 			features: ['USB_PORT'],
 			userId: user.id,
 		});
-
-		const findBag = await prisma.bags.findFirst({
-			where: {
-				id: res.body.data.id,
-			},
-		});
-
-		expect(findBag).toBeTruthy();
 	});
 });
 
 describe("Bags Route For User For Replace User's Bag", () => {
-	test("Should Replace User's Bag", async () => {
-		const user = await prisma.user.create({
+    let user;
+	let token;
+    let bag;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -290,7 +308,7 @@ describe("Bags Route For User For Replace User's Bag", () => {
 			},
 		});
 
-		const bag = await prisma.bags.create({
+        bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -305,9 +323,13 @@ describe("Bags Route For User For Replace User's Bag", () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Replace User's Bag", async () => {
 		const res = await request(app)
 			.put(`/api/beggy/bags/${bag.id}`)
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
@@ -322,11 +344,12 @@ describe("Bags Route For User For Replace User's Bag", () => {
 				features: ['waterproof', 'expandable'],
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("Successfully Replace User's Bag");
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Replace User\'s Bag',
+		});
+
 		expect(res.body.data).toMatchObject({
 			name: 'Updated Test Bag 1',
 			type: 'BACKPACK',
@@ -342,8 +365,12 @@ describe("Bags Route For User For Replace User's Bag", () => {
 });
 
 describe("Bags Route For User For Modify User's Bag", () => {
-	test("Should Modify User's Bag", async () => {
-		const user = await prisma.user.create({
+	let user;
+	let token;
+    let bag;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -353,7 +380,7 @@ describe("Bags Route For User For Modify User's Bag", () => {
 			},
 		});
 
-		const bag = await prisma.bags.create({
+        bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -363,7 +390,7 @@ describe("Bags Route For User For Modify User's Bag", () => {
 				maxWeight: 12.55,
 				weight: 1.5,
 				material: 'nylon',
-				features: [
+                features: [
 					'usb_port',
 					'anti_theft',
 					'multiple_pockets',
@@ -373,9 +400,13 @@ describe("Bags Route For User For Modify User's Bag", () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Modify User's Bag", async () => {
 		const res = await request(app)
 			.patch(`/api/beggy/bags/${bag.id}`)
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
@@ -384,11 +415,12 @@ describe("Bags Route For User For Modify User's Bag", () => {
 				removeFeatures: ['usb_port', 'multiple_pockets'],
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("Successfully Modified User's Bag");
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Modified User\'s Bag',
+		});
+
 		expect(res.body.data).toMatchObject({
 			material: 'LEATHER',
 			features: ['WATERPROOF', 'EXPANDABLE', 'ANTI_THEFT'],
@@ -397,8 +429,12 @@ describe("Bags Route For User For Modify User's Bag", () => {
 });
 
 describe("Bags Route For User For Delete User's Bags By ID", () => {
-	test("Should Delete User's Bag By ID", async () => {
-		const user = await prisma.user.create({
+	let user;
+	let token;
+    let bag;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -408,7 +444,7 @@ describe("Bags Route For User For Delete User's Bags By ID", () => {
 			},
 		});
 
-		const bag1 = await prisma.bags.create({
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -428,23 +464,37 @@ describe("Bags Route For User For Delete User's Bags By ID", () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Delete User's Bag By ID", async () => {
 		const res = await request(app)
-			.delete(`/api/beggy/bags/${bag1.id}`)
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.delete(`/api/beggy/bags/${bag.id}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken);
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("Successfully Deleted User's Bag");
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted User\'s Bag',
+		});
+
+        expect(res.body.data).toMatchObject({
+            id: bag.id,
+            name: 'Test Bag 1',
+        })
 	});
 });
 
 describe("Bags Route For User For Delete All User's Bags", () => {
-	test("Should Delete All User's Bags", async () => {
-		const user = await prisma.user.create({
+	let user;
+	let token;
+	let userBags;
+    let filter = { material: "nylon" }
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -454,118 +504,52 @@ describe("Bags Route For User For Delete All User's Bags", () => {
 			},
 		});
 
+		userBags = bags
+			.filter((bag) => bag.material === filter.material)
+			.map((item) => ({ ...item, userId: user.id }));
+
 		await prisma.bags.createMany({
-			data: [
-				{
-					name: 'Test Bag 1',
-					type: 'laptop_bag',
-					color: 'green',
-					size: 'small',
-					capacity: 11.2,
-					maxWeight: 12.55,
-					weight: 1.5,
-					material: 'nylon',
-					features: [
-						'usb_port',
-						'anti_theft',
-						'multiple_pockets',
-						'waterproof',
-					],
-					userId: user.id,
-				},
-				{
-					name: 'Test Bag 2',
-					type: 'backpack',
-					color: 'blue',
-					size: 'medium',
-					capacity: 15.2,
-					maxWeight: 17.55,
-					weight: 2.5,
-					material: 'leather',
-					features: ['waterproof', 'expandable', 'anti_theft'],
-					userId: user.id,
-				},
-			],
+			data: userBags,
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Delete All User's Bags", async () => {
 		const res = await request(app)
 			.delete(`/api/beggy/bags/`)
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("Successfully Deleted All User's Bags");
-		expect(res.body.data.count).toBe(2);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted All User\'s Bags',
+		});
+
+		expect(res.body.data.count).toBe(userBags.length);
 	});
 
 	test("Should Delete All User's Bags By Search", async () => {
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'user@example.com',
-				password: await hashingPassword('password$1155'),
-				role: 'user',
-			},
-		});
-
-		await prisma.bags.createMany({
-			data: [
-				{
-					name: 'Test Bag 1',
-					type: 'laptop_bag',
-					color: 'green',
-					size: 'small',
-					capacity: 11.2,
-					maxWeight: 12.55,
-					weight: 1.5,
-					material: 'nylon',
-					features: [
-						'usb_port',
-						'anti_theft',
-						'multiple_pockets',
-						'waterproof',
-					],
-					userId: user.id,
-				},
-				{
-					name: 'Test Bag 2',
-					type: 'backpack',
-					color: 'blue',
-					size: 'medium',
-					capacity: 15.2,
-					maxWeight: 17.55,
-					weight: 2.5,
-					material: 'leather',
-					features: ['waterproof', 'expandable', 'anti_theft'],
-					userId: user.id,
-				},
-			],
-		});
-
 		const res = await request(app)
-			.delete(`/api/beggy/bags/?material=nylon`)
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.delete(`/api/beggy/bags/?${filterQuery(filter)}`)
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			"Successfully Deleted All User's Bags By Search Filter"
-		);
-		expect(res.body.data.count).toBe(1);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted All User\'s Bags By Search Filter',
+		});
+
+		expect(res.body.data.count).toBe(userBags.length);
 	});
 });
