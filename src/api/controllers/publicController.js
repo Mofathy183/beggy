@@ -188,7 +188,7 @@ export const getItemsByQuery = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully found all items by Search',
+				`Successfully found all items${searchFilter ? ' by Search' : ''}`,
 				items,
 				meta
 			)

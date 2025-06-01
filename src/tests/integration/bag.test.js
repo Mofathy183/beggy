@@ -3,7 +3,7 @@ import prisma from '../../../prisma/prisma.js';
 import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
 import { signToken } from '../../utils/jwt.js';
-import { filterQuery } from "../setup.test.js"
+import { filterQuery } from '../setup.test.js';
 
 let csrfToken;
 let csrfSecret;
@@ -108,7 +108,7 @@ describe('Bags Route For User For Get All Bags Belongs To User', () => {
 	let user;
 	let token;
 	let userBags;
-    let filter = { features: ["usb_port", "lightweight"] }
+	let filter = { features: ['usb_port', 'lightweight'] };
 
 	beforeEach(async () => {
 		user = await prisma.user.create({
@@ -145,7 +145,7 @@ describe('Bags Route For User For Get All Bags Belongs To User', () => {
 
 		expect(res.body.data.length).toBe(userBags.length);
 
-        for (const item of res.body.data) {
+		for (const item of res.body.data) {
 			expect(item.userId).toBe(user.id);
 		}
 	});
@@ -161,15 +161,15 @@ describe('Bags Route For User For Get All Bags Belongs To User', () => {
 			message: 'Successfully Retrieved Bags User Has',
 		});
 
-        expect(Array.isArray(res.body.data)).toBe(true);
+		expect(Array.isArray(res.body.data)).toBe(true);
 		expect(res.body.data.length).toBeLessThanOrEqual(userBags.length);
 
 		for (const item of res.body.data) {
 			expect(item.userId).toBe(user.id);
-			const upperFeatures = filter.features.map(f => f.toUpperCase());
-            item.features.forEach(f => {
-                expect(upperFeatures).toContain(f);
-            });
+			const upperFeatures = filter.features.map((f) => f.toUpperCase());
+			item.features.forEach((f) => {
+				expect(upperFeatures).toContain(f);
+			});
 		}
 	});
 });
@@ -177,7 +177,7 @@ describe('Bags Route For User For Get All Bags Belongs To User', () => {
 describe('Bags Route For User For Get User Bag By Its ID', () => {
 	let user;
 	let token;
-    let bag;
+	let bag;
 
 	beforeEach(async () => {
 		user = await prisma.user.create({
@@ -190,7 +190,7 @@ describe('Bags Route For User For Get User Bag By Its ID', () => {
 			},
 		});
 
-        bag = await prisma.bags.create({
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -218,7 +218,7 @@ describe('Bags Route For User For Get User Bag By Its ID', () => {
 			success: true,
 			message: 'Successfully Retrieved Bag User Has',
 		});
-        
+
 		expect(res.body.data).toMatchObject({
 			id: bag.id,
 			name: 'Test Bag 1',
@@ -293,9 +293,9 @@ describe('Bags Route For User For Create Bag For User', () => {
 });
 
 describe("Bags Route For User For Replace User's Bag", () => {
-    let user;
+	let user;
 	let token;
-    let bag;
+	let bag;
 
 	beforeEach(async () => {
 		user = await prisma.user.create({
@@ -308,7 +308,7 @@ describe("Bags Route For User For Replace User's Bag", () => {
 			},
 		});
 
-        bag = await prisma.bags.create({
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -347,7 +347,7 @@ describe("Bags Route For User For Replace User's Bag", () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toMatchObject({
 			success: true,
-			message: 'Successfully Replace User\'s Bag',
+			message: "Successfully Replace User's Bag",
 		});
 
 		expect(res.body.data).toMatchObject({
@@ -367,7 +367,7 @@ describe("Bags Route For User For Replace User's Bag", () => {
 describe("Bags Route For User For Modify User's Bag", () => {
 	let user;
 	let token;
-    let bag;
+	let bag;
 
 	beforeEach(async () => {
 		user = await prisma.user.create({
@@ -380,7 +380,7 @@ describe("Bags Route For User For Modify User's Bag", () => {
 			},
 		});
 
-        bag = await prisma.bags.create({
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -390,7 +390,7 @@ describe("Bags Route For User For Modify User's Bag", () => {
 				maxWeight: 12.55,
 				weight: 1.5,
 				material: 'nylon',
-                features: [
+				features: [
 					'usb_port',
 					'anti_theft',
 					'multiple_pockets',
@@ -418,7 +418,7 @@ describe("Bags Route For User For Modify User's Bag", () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toMatchObject({
 			success: true,
-			message: 'Successfully Modified User\'s Bag',
+			message: "Successfully Modified User's Bag",
 		});
 
 		expect(res.body.data).toMatchObject({
@@ -431,7 +431,7 @@ describe("Bags Route For User For Modify User's Bag", () => {
 describe("Bags Route For User For Delete User's Bags By ID", () => {
 	let user;
 	let token;
-    let bag;
+	let bag;
 
 	beforeEach(async () => {
 		user = await prisma.user.create({
@@ -477,13 +477,13 @@ describe("Bags Route For User For Delete User's Bags By ID", () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toMatchObject({
 			success: true,
-			message: 'Successfully Deleted User\'s Bag',
+			message: "Successfully Deleted User's Bag",
 		});
 
-        expect(res.body.data).toMatchObject({
-            id: bag.id,
-            name: 'Test Bag 1',
-        })
+		expect(res.body.data).toMatchObject({
+			id: bag.id,
+			name: 'Test Bag 1',
+		});
 	});
 });
 
@@ -491,7 +491,7 @@ describe("Bags Route For User For Delete All User's Bags", () => {
 	let user;
 	let token;
 	let userBags;
-    let filter = { material: "nylon" }
+	let filter = { material: 'nylon' };
 
 	beforeEach(async () => {
 		user = await prisma.user.create({
@@ -528,7 +528,7 @@ describe("Bags Route For User For Delete All User's Bags", () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toMatchObject({
 			success: true,
-			message: 'Successfully Deleted All User\'s Bags',
+			message: "Successfully Deleted All User's Bags",
 		});
 
 		expect(res.body.data.count).toBe(userBags.length);
@@ -547,7 +547,7 @@ describe("Bags Route For User For Delete All User's Bags", () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toMatchObject({
 			success: true,
-			message: 'Successfully Deleted All User\'s Bags By Search Filter',
+			message: "Successfully Deleted All User's Bags By Search Filter",
 		});
 
 		expect(res.body.data.count).toBe(userBags.length);

@@ -104,7 +104,7 @@ export const modifyBagById = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully Replaced Bag By ID',
+				'Successfully Modifying Bag By ID',
 				bagUpdate
 			)
 		);

@@ -146,6 +146,10 @@ export const removeBagById = async (bagId) => {
 	try {
 		const bagDelete = await prisma.bags.delete({
 			where: { id: bagId },
+			select: {
+				id: true,
+				name: true,
+			},
 		});
 
 		if (!bagDelete)
@@ -424,6 +428,10 @@ export const removeSuitcaseById = async (suitcaseId) => {
 	try {
 		const deletedSuitcase = await prisma.suitcases.delete({
 			where: { id: suitcaseId },
+			select: {
+				id: true,
+				name: true,
+			},
 		});
 
 		if (!deletedSuitcase)
@@ -629,6 +637,10 @@ export const removeItemById = async (itemId) => {
 	try {
 		const deletedItem = await prisma.items.delete({
 			where: { id: itemId },
+			select: {
+				id: true,
+				name: true,
+			},
 		});
 
 		if (!deletedItem)

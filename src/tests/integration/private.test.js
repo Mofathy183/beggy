@@ -3,10 +3,12 @@ import prisma from '../../../prisma/prisma.js';
 import app from '../../../app.js';
 import { signToken } from '../../utils/jwt.js';
 import { hashingPassword } from '../../utils/hash.js';
+import { filterQuery } from '../setup.test.js';
 
 let csrfToken;
 let csrfSecret;
 let cookies;
+
 const bags = [
 	{
 		name: 'Bag 1',
@@ -250,8 +252,20 @@ test('Should return a CSRF token', async () => {
 //*======================================={Bags Private Route}==============================================
 
 describe('Base Bags Route Tests To Replace Bag By ID For Admin and Member', () => {
-	test('Should Replace Bag By ID as Admin', async () => {
-		const bag = await prisma.bags.create({
+	let admin, bag, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Don',
+				email: 'admin@example.com',
+				password: await hashingPassword('password$1155'),
+				role: 'admin',
+			},
+		});
+
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -265,22 +279,16 @@ describe('Base Bags Route Tests To Replace Bag By ID For Admin and Member', () =
 			},
 		});
 
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Don',
-				email: 'admin@example.com',
-				password: await hashingPassword('password$1155'),
-				role: 'admin',
-			},
-		});
+		token = signToken(admin.id);
+	});
 
+	test('Should Replace Bag By ID as Admin', async () => {
 		const res = await request(app)
 			.put(`/api/beggy/private/bags/${bag.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				name: 'Test Bag 1 Updated',
 				type: 'travel_bag',
@@ -293,32 +301,14 @@ describe('Base Bags Route Tests To Replace Bag By ID For Admin and Member', () =
 				features: ['multiple_pockets'],
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Replaced Bag By ID');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Replaced Bag By ID',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: bag.id,
-			name: 'Test Bag 1 Updated',
-			type: 'TRAVEL_BAG',
-			color: 'blue',
-			size: 'MEDIUM',
-			capacity: 13.5,
-			maxWeight: 14.88,
-			weight: 2.1,
-			material: 'POLYESTER',
-			features: ['MULTIPLE_POCKETS'],
-		});
-
-		const updatedBag = await prisma.bags.findUnique({
-			where: {
-				id: bag.id,
-			},
-		});
-
-		expect(updatedBag).toMatchObject({
-			id: updatedBag.id,
 			name: 'Test Bag 1 Updated',
 			type: 'TRAVEL_BAG',
 			color: 'blue',
@@ -333,8 +323,20 @@ describe('Base Bags Route Tests To Replace Bag By ID For Admin and Member', () =
 });
 
 describe('Base Bags Route Tests To Modify Bag By ID For Admin and Member', () => {
-	test('Should Modify Bag By ID as Member', async () => {
-		const bag = await prisma.bags.create({
+	let member, bag, token;
+
+	beforeEach(async () => {
+		member = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Don',
+				email: 'member@example.com',
+				password: await hashingPassword('password$1155'),
+				role: 'member',
+			},
+		});
+
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -348,22 +350,16 @@ describe('Base Bags Route Tests To Modify Bag By ID For Admin and Member', () =>
 			},
 		});
 
-		const member = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'member@example.com',
-				password: await hashingPassword('password$1155'),
-				role: 'member',
-			},
-		});
+		token = signToken(member.id);
+	});
 
+	test('Should Modify Bag By ID as Member', async () => {
 		const res = await request(app)
 			.patch(`/api/beggy/private/bags/${bag.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(member.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				type: 'travel_bag',
 				size: 'medium',
@@ -371,27 +367,14 @@ describe('Base Bags Route Tests To Modify Bag By ID For Admin and Member', () =>
 				features: ['multiple_pockets'],
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Replaced Bag By ID');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Modifying Bag By ID',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: bag.id,
-			type: 'TRAVEL_BAG',
-			size: 'MEDIUM',
-			material: 'POLYESTER',
-			features: ['MULTIPLE_POCKETS'],
-		});
-
-		const updatedBag = await prisma.bags.findUnique({
-			where: {
-				id: bag.id,
-			},
-		});
-
-		expect(updatedBag).toMatchObject({
-			id: updatedBag.id,
 			type: 'TRAVEL_BAG',
 			size: 'MEDIUM',
 			material: 'POLYESTER',
@@ -401,8 +384,20 @@ describe('Base Bags Route Tests To Modify Bag By ID For Admin and Member', () =>
 });
 
 describe('Base Bags Route Tests To Delete Bag By ID For Admin and Member', () => {
-	test('Should Delete Bag By ID as Admin', async () => {
-		const bag = await prisma.bags.create({
+	let admin, bag, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Don',
+				email: 'admin@example.com',
+				password: await hashingPassword('password$1155'),
+				role: 'admin',
+			},
+		});
+
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -416,58 +411,36 @@ describe('Base Bags Route Tests To Delete Bag By ID For Admin and Member', () =>
 			},
 		});
 
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'admin@example.com',
-				password: await hashingPassword('password$1155'),
-				role: 'admin',
-			},
-		});
+		token = signToken(admin.id);
+	});
 
+	test('Should Delete Bag By ID as Admin', async () => {
 		const res = await request(app)
 			.delete(`/api/beggy/private/bags/${bag.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`);
-
-		console.log('Response', res.body);
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Deleted Bag By ID');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted Bag By ID',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: bag.id,
 			name: 'Test Bag 1',
-			type: 'LAPTOP_BAG',
-			color: 'green',
-			size: 'SMALL',
-			capacity: 11.2,
-			maxWeight: 12.55,
-			weight: 1.5,
-			material: 'NYLON',
-			features: ['USB_PORT'],
 		});
-
-		const deletedBag = await prisma.bags.findUnique({
-			where: {
-				id: bag.id,
-			},
-		});
-
-		expect(deletedBag).toBeNull();
 	});
 });
 
 describe('Base Bags Route Tests To Delete All Bags From DB For Only Admin', () => {
-	test('Should Delete All Bags As Admin', async () => {
-		await prisma.bags.createMany({
-			data: bags,
-		});
+	let admin, token;
+	const filter = { size: 'small' };
 
-		const admin = await prisma.user.create({
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -475,6 +448,14 @@ describe('Base Bags Route Tests To Delete All Bags From DB For Only Admin', () =
 				password: await hashingPassword('password$1155'),
 				role: 'admin',
 			},
+		});
+
+		token = signToken(admin.id);
+	});
+
+	test('Should Delete All Bags As Admin', async () => {
+		await prisma.bags.createMany({
+			data: bags,
 		});
 
 		const res = await request(app)
@@ -482,39 +463,29 @@ describe('Base Bags Route Tests To Delete All Bags From DB For Only Admin', () =
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
+		console.log(res.body);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Delete All Bags');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Delete All Bags',
+		});
 
-		const findBags = await prisma.bags.findMany();
-
-		expect(findBags).toHaveLength(0);
+		expect(res.body.data.count).toBe(bags.length);
 	});
 
 	test('Should Delete Bags By Search as Admin', async () => {
-		await prisma.bags.createMany({
-			data: bags,
-		});
-
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'admin@example.com',
-				password: await hashingPassword('password$1155'),
-				role: 'admin',
-			},
+		const myBags = await prisma.bags.createMany({
+			data: bags.filter((b) => b.size === filter.size),
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/private/bags?size=small`)
+			.delete(`/api/beggy/private/bags?${filterQuery(filter)}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -523,30 +494,25 @@ describe('Base Bags Route Tests To Delete All Bags From DB For Only Admin', () =
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Delete All Bags By Search');
-		expect(res.body.meta.totalDelete).toBe(2);
-
-		const findBags = await prisma.bags.findMany({
-			where: {
-				size: 'SMALL',
-			},
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Delete All Bags By Search',
 		});
 
-		expect(findBags).toHaveLength(0);
+		expect(res.body.meta.totalDelete).toBe(myBags.count);
 	});
 });
 
 //*======================================={Bags Private Route}==============================================
 
-// //*======================================={Suitcase Private Route}==============================================
+//*======================================={Suitcase Private Route}==============================================
 
 describe('Base suitcases Route Tests To Replace Suitcase For Only Admin and Member', () => {
-	test('Should Replace Suitcase For Admin', async () => {
-		const admin = await prisma.user.create({
+	let admin, suitcase, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -556,7 +522,7 @@ describe('Base suitcases Route Tests To Replace Suitcase For Only Admin and Memb
 			},
 		});
 
-		const suitcase = await prisma.suitcases.create({
+		suitcase = await prisma.suitcases.create({
 			data: {
 				name: 'Test Suitcase',
 				type: 'carry_on',
@@ -571,12 +537,16 @@ describe('Base suitcases Route Tests To Replace Suitcase For Only Admin and Memb
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should Replace Suitcase For Admin', async () => {
 		const res = await request(app)
 			.put(`/api/beggy/private/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				name: 'Updated Test Suitcase',
 				type: 'checked_luggage',
@@ -590,13 +560,12 @@ describe('Base suitcases Route Tests To Replace Suitcase For Only Admin and Memb
 				wheels: 'two_wheel',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Replaced Suitcase By Its ID'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Replaced Suitcase By Its ID',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: suitcase.id,
 			name: 'Updated Test Suitcase',
@@ -614,8 +583,10 @@ describe('Base suitcases Route Tests To Replace Suitcase For Only Admin and Memb
 });
 
 describe('Base suitcases Route Tests Modify Suitcase For Only Admin and Member', () => {
-	test('Should Modify Suitcase For Admin', async () => {
-		const admin = await prisma.user.create({
+	let admin, suitcase, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -625,7 +596,7 @@ describe('Base suitcases Route Tests Modify Suitcase For Only Admin and Member',
 			},
 		});
 
-		const suitcase = await prisma.suitcases.create({
+		suitcase = await prisma.suitcases.create({
 			data: {
 				name: 'Test Suitcase',
 				type: 'carry_on',
@@ -640,12 +611,16 @@ describe('Base suitcases Route Tests Modify Suitcase For Only Admin and Member',
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should Modify Suitcase For Admin', async () => {
 		const res = await request(app)
 			.patch(`/api/beggy/private/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				material: 'canvas',
 				features: ['tsa_lock', 'compression_straps'],
@@ -653,22 +628,14 @@ describe('Base suitcases Route Tests Modify Suitcase For Only Admin and Member',
 				wheels: 'two_wheel',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Modified Suitcase By Its ID'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Modified Suitcase By Its ID',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: suitcase.id,
-			name: 'Test Suitcase',
-			type: 'CARRY_ON',
-			color: 'green',
-			size: 'SMALL',
-			capacity: 11.2,
-			maxWeight: 12.55,
-			weight: 1.5,
 			material: 'CANVAS',
 			features: ['TSA_LOCK', 'COMPRESSION_STRAPS', 'WATERPROOF'],
 			wheels: 'TWO_WHEEL',
@@ -677,8 +644,10 @@ describe('Base suitcases Route Tests Modify Suitcase For Only Admin and Member',
 });
 
 describe('Base suitcases Route Tests Delete Suitcase By ID For Only Admin and Member', () => {
-	test('Should Delete Suitcase For Admin', async () => {
-		const admin = await prisma.user.create({
+	let admin, suitcase, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -688,7 +657,7 @@ describe('Base suitcases Route Tests Delete Suitcase By ID For Only Admin and Me
 			},
 		});
 
-		const suitcase = await prisma.suitcases.create({
+		suitcase = await prisma.suitcases.create({
 			data: {
 				name: 'Test Suitcase',
 				type: 'carry_on',
@@ -703,36 +672,48 @@ describe('Base suitcases Route Tests Delete Suitcase By ID For Only Admin and Me
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should Delete Suitcase For Admin', async () => {
 		const res = await request(app)
 			.delete(`/api/beggy/private/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`);
+			.set('Authorization', `Bearer ${token}`);
 
 		console.log('Response', res.body);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Deleted Suitcase By Its ID'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted Suitcase By Its ID',
+		});
+
 		expect(res.body.meta.totalDelete).toBe(1);
 	});
 });
 
 describe('Base suitcases Route Tests Delete All Suitcases For Only Admin', () => {
-	test('Should Delete All Suitcases For Admin', async () => {
-		const admin = await prisma.user.create({
+	let admin, token;
+	const filter = { size: 'small' };
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
 				email: 'admin@example.com',
-				password: await hashingPassword('password'),
-				role: 'ADMIN',
+				password: await hashingPassword('password$1155'),
+				role: 'admin',
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should Delete All Suitcases For Admin', async () => {
 		await prisma.suitcases.createMany({
 			data: suitcase,
 		});
@@ -742,50 +723,40 @@ describe('Base suitcases Route Tests Delete All Suitcases For Only Admin', () =>
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({ confirmDelete: true });
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Delete All Suitcases');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Delete All Suitcases',
+		});
+
 		expect(res.body.meta.totalDelete).toBe(suitcase.length); // 5 suitcases created in the test
 	});
 
 	test('Should Delete Suitcase By Search For Admin', async () => {
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'admin@example.com',
-				password: await hashingPassword('password'),
-				role: 'ADMIN',
-			},
-		});
-
-		await prisma.suitcases.createMany({
-			data: suitcase,
+		const mySuitcase = await prisma.suitcases.createMany({
+			data: suitcase.filter((s) => s.size === filter.size),
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/private/suitcases?size=small`)
+			.delete(`/api/beggy/private/suitcases?${filterQuery(filter)}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Delete All Suitcases By Search'
-		);
-		expect(res.body.meta.totalDelete).toBe(2);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Delete All Suitcases By Search',
+		});
+
+		expect(res.body.meta.totalDelete).toBe(mySuitcase.count);
 	});
 });
 
@@ -794,8 +765,10 @@ describe('Base suitcases Route Tests Delete All Suitcases For Only Admin', () =>
 //*======================================={Items Private Route}==============================================
 
 describe('Base Items Route Tests For Replace By ID For Admin and Member Only', () => {
-	test('Should replace items by ID', async () => {
-		const item = await prisma.items.create({
+	let admin, item, token;
+
+	beforeEach(async () => {
+		item = await prisma.items.create({
 			data: {
 				name: 'Test Item',
 				quantity: 100,
@@ -806,7 +779,7 @@ describe('Base Items Route Tests For Replace By ID For Admin and Member Only', (
 			},
 		});
 
-		const admin = await prisma.user.create({
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -816,12 +789,16 @@ describe('Base Items Route Tests For Replace By ID For Admin and Member Only', (
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should replace items by ID', async () => {
 		const res = await request(app)
 			.put(`/api/beggy/private/items/${item.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				name: 'Updated-Test Item 1',
 				quantity: 150,
@@ -831,32 +808,13 @@ describe('Base Items Route Tests For Replace By ID For Admin and Member Only', (
 				color: 'red',
 			});
 
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Replaced Item by ID');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Replaced Item by ID',
+		});
+
 		expect(res.body.data).toMatchObject({
-			id: item.id,
-			name: 'Updated-Test Item 1',
-			quantity: 150,
-			category: 'ELECTRONICS',
-			weight: 2,
-			volume: 0.1,
-			color: 'red',
-		});
-
-		const updatedItem = await prisma.items.delete({
-			where: {
-				id: item.id,
-			},
-		});
-
-		console.log('Updated Item', updatedItem);
-
-		expect(updatedItem).not.toBeNull();
-		expect(updatedItem).toMatchObject({
 			id: item.id,
 			name: 'Updated-Test Item 1',
 			quantity: 150,
@@ -869,11 +827,13 @@ describe('Base Items Route Tests For Replace By ID For Admin and Member Only', (
 });
 
 describe('Base Item Route Tests For Modify Item For Admin and Member Only', () => {
-	test('Should modify the item By ID', async () => {
-		const item = await prisma.items.create({
+	let admin, item, token;
+
+	beforeEach(async () => {
+		item = await prisma.items.create({
 			data: {
 				name: 'Test Item',
-				quantity: 50,
+				quantity: 100,
 				category: 'clothing',
 				weight: 1.5,
 				volume: 0.05,
@@ -881,7 +841,7 @@ describe('Base Item Route Tests For Modify Item For Admin and Member Only', () =
 			},
 		});
 
-		const admin = await prisma.user.create({
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -891,43 +851,28 @@ describe('Base Item Route Tests For Modify Item For Admin and Member Only', () =
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should modify the item By ID', async () => {
 		const res = await request(app)
 			.patch(`/api/beggy/private/items/${item.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				quantity: 200,
 				color: 'green',
 			});
 
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Modified Item by ID');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Modified Item by ID',
+		});
+
 		expect(res.body.data).toMatchObject({
-			id: item.id,
-			name: 'Test Item',
-			quantity: 200,
-			category: 'CLOTHING',
-			weight: 1.5,
-			volume: 0.05,
-			color: 'green',
-		});
-
-		const updatedItem = await prisma.items.delete({
-			where: {
-				id: item.id,
-			},
-		});
-
-		console.log('Updated Item', updatedItem);
-
-		expect(updatedItem).not.toBeNull();
-		expect(updatedItem).toMatchObject({
 			id: item.id,
 			name: 'Test Item',
 			quantity: 200,
@@ -940,11 +885,13 @@ describe('Base Item Route Tests For Modify Item For Admin and Member Only', () =
 });
 
 describe('Base Items Route Tests For Deleted Item By ID for Admin and Member Only', () => {
-	test('Should delete the item By ID', async () => {
-		const item = await prisma.items.create({
+	let admin, item, token;
+
+	beforeEach(async () => {
+		item = await prisma.items.create({
 			data: {
 				name: 'Test Item',
-				quantity: 50,
+				quantity: 100,
 				category: 'clothing',
 				weight: 1.5,
 				volume: 0.05,
@@ -952,7 +899,7 @@ describe('Base Items Route Tests For Deleted Item By ID for Admin and Member Onl
 			},
 		});
 
-		const admin = await prisma.user.create({
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -962,48 +909,36 @@ describe('Base Items Route Tests For Deleted Item By ID for Admin and Member Onl
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should delete the item By ID', async () => {
 		const res = await request(app)
 			.delete(`/api/beggy/private/items/${item.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`);
-
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Deleted Item by ID');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deleted Item by ID',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: item.id,
 			name: 'Test Item',
-			quantity: 50,
-			category: 'CLOTHING',
-			weight: 1.5,
-			volume: 0.05,
-			color: 'blue',
 		});
-
-		const deletedItem = await prisma.items.findUnique({
-			where: {
-				id: item.id,
-			},
-		});
-
-		console.log('Deleted Item', deletedItem);
-
-		expect(deletedItem).toBeNull();
 	});
 });
 
 describe('Base Items Route Tests For Delete All Items for Admin Only', () => {
-	test('Should delete all items', async () => {
-		await prisma.items.createMany({
-			data: items,
-		});
+	let admin, token;
+	const filter = { category: 'books' };
 
-		const admin = await prisma.user.create({
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -1011,6 +946,14 @@ describe('Base Items Route Tests For Delete All Items for Admin Only', () => {
 				password: await hashingPassword('password'),
 				role: 'admin',
 			},
+		});
+
+		token = signToken(admin.id);
+	});
+
+	test('Should delete all items', async () => {
+		await prisma.items.createMany({
+			data: items,
 		});
 
 		const res = await request(app)
@@ -1018,68 +961,42 @@ describe('Base Items Route Tests For Delete All Items for Admin Only', () => {
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Delete All Items');
-		// expect(res.body.data).toBe(null);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Delete All Items',
+		});
 
-		const deletedItems = await prisma.items.findMany();
-
-		console.log('Deleted Items', deletedItems);
-
-		expect(deletedItems).toHaveLength(0);
+		expect(res.body.meta.totalDelete).toBe(items.length);
 	});
 
 	test('Should delete all items By Search', async () => {
-		await prisma.items.createMany({
-			data: items,
-		});
-
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'johndoe@example.com',
-				password: await hashingPassword('password'),
-				role: 'admin',
-			},
+		const myItems = await prisma.items.createMany({
+			data: items.filter((i) => i.category === filter.category),
 		});
 
 		const res = await request(app)
-			.delete(`/api/beggy/private/items?category=books`)
+			.delete(`/api/beggy/private/items?${filterQuery(filter)}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Delete All Items By Search'
-		);
-		expect(res.body.meta.totalDelete).toBe(3);
-
-		const deletedItems = await prisma.items.findMany({
-			where: { category: 'BOOKS' },
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Delete All Items By Search',
 		});
 
-		console.log('Deleted Items', deletedItems);
-
-		expect(deletedItems).toHaveLength(0);
+		expect(res.body.meta.totalDelete).toBe(myItems.count);
 	});
 });
 

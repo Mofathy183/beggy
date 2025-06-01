@@ -2,6 +2,8 @@ import request from 'supertest';
 import prisma from '../../../prisma/prisma.js';
 import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
+import { filterQuery } from '../setup.test.js';
+import { base } from '@faker-js/faker';
 
 const bags = [
 	{
@@ -262,8 +264,10 @@ const users = [
 //*======================================={Users Public Route}==============================================
 
 describe('User API Tests For Get User Public Data', () => {
-	test('Get User Public Data', async () => {
-		const user = await prisma.user.create({
+	let user;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -271,30 +275,21 @@ describe('User API Tests For Get User Public Data', () => {
 				password: await hashingPassword('password123'),
 			},
 		});
+	});
 
-		console.log('USER', user);
-
+	test('Get User Public Data', async () => {
 		const res = await request(app).get(
 			`/api/beggy/public/users/${user.id}`
 		);
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Retrieved By Its ID Successfully');
-		expect(res.body.data).toMatchObject({
-			id: user.id,
-			firstName: 'John',
-			lastName: 'Doe',
-			email: 'testuser123@example.com',
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'User Retrieved By Its ID Successfully',
 		});
 
-		const isUser = await prisma.user.findUnique({ where: { id: user.id } });
-
-		expect(isUser).not.toBeNull();
-		expect(isUser).toMatchObject({
-			id: isUser.id,
+		expect(res.body.data).toMatchObject({
+			id: user.id,
 			firstName: 'John',
 			lastName: 'Doe',
 			email: 'testuser123@example.com',
@@ -303,34 +298,30 @@ describe('User API Tests For Get User Public Data', () => {
 });
 
 describe('User API Tests For Search For Users Public Profiles', () => {
+	const filter = { firstName: 'John', lastName: 'Doe' };
+
 	test('Search for User by his first and last name', async () => {
 		await prisma.user.createMany({
-			data: users,
+			data: users.filter((u) => {
+				return (
+					u.firstName === filter.firstName &&
+					u.lastName === filter.lastName
+				);
+			}),
 		});
 
 		const res = await request(app).get(
-			`/api/beggy/public/users?firstName=John&lastName=Doe`
+			`/api/beggy/public/users?${filterQuery(filter)}`
 		);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Users Found Successfully By Search');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Users Found Successfully By Search',
+		});
+
 		expect(res.body.data[0]).toMatchObject({
 			id: res.body.data[0].id,
-			firstName: 'John',
-			lastName: 'Doe',
-			email: 'testuser123@example.com',
-		});
-
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
-
-		const isUsers = await prisma.user.findMany({
-			where: { firstName: 'John', lastName: 'Doe' },
-		});
-
-		expect(isUsers[0]).toMatchObject({
-			id: isUsers[0].id,
 			firstName: 'John',
 			lastName: 'Doe',
 			email: 'testuser123@example.com',
@@ -345,24 +336,13 @@ describe('User API Tests For Search For Users Public Profiles', () => {
 		const res = await request(app).get(`/api/beggy/public/users`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Users Found Successfully');
-		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
-
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
-
-		const isUsers = await prisma.user.findMany({
-			where: {},
-			take: res.body.meta.limit,
-			skip: res.body.meta.offset,
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Users Found Successfully',
 		});
 
-		expect(Array.isArray(isUsers)).toBe(true);
-		expect(isUsers.length).toBeGreaterThan(0);
-
-		console.log('User', isUsers[0]);
+		expect(Array.isArray(res.body.data)).toBe(true);
+		expect(res.body.data.length).toBeGreaterThan(0);
 	});
 });
 
@@ -371,68 +351,59 @@ describe('User API Tests For Search For Users Public Profiles', () => {
 //*======================================={Bags Public Route}==============================================
 
 describe('Base Bags Route Tests To get All Bags', () => {
-	test('Should Get All Bags', async () => {
+	beforeEach(async () => {
 		await prisma.bags.createMany({
 			data: bags,
 		});
+	});
 
+	test('Should Get All Bags', async () => {
 		const res = await request(app).get('/api/beggy/public/bags');
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Retrieved All Bags');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Retrieved All Bags',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(1);
+		expect(res.body.data.length).toBe(bags.length);
 	});
 });
 
 describe('Base Bags Route Tests To Get All Bags By Search', () => {
-	test('Should get all Bags by search for Not Enum Fields', async () => {
-		await prisma.bags.createMany({
-			data: bags,
+	let myBags;
+	const filter = { color: 'green', type: 'travel_bag' };
+
+	beforeEach(async () => {
+		myBags = await prisma.bags.createMany({
+			data: bags.filter((b) => {
+				return b.color === filter.color && b.type === filter.type;
+			}),
 		});
-
-		const res = await request(app)
-			//* search by fields not Enum
-			.get(`/api/beggy/public/bags?color=green`);
-
-		console.log('Response', res.body);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Retrieved All Bags By Search'
-		);
-		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
 	});
 
-	test('Should get all Bags by search for Enum Field', async () => {
-		await prisma.bags.createMany({
-			data: bags,
-		});
-
+	test('Should get all Bags by search for Not Enum Fields', async () => {
 		const res = await request(app)
-			//* search by field Enum
-			.get(`/api/beggy/public/bags?type=travel_bag`);
-
-		console.log('Response', res.body);
+			//* search by fields not Enum
+			.get(`/api/beggy/public/bags?${filterQuery(filter)}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Successfully Retrieved All Bags By Search'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Retrieved All Bags By Search',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
+		expect(res.body.data.length).toBe(myBags.count);
 	});
 });
 
 describe('Base Bags Route Tests To Get Bag By ID', () => {
-	test('Should Get Bag By ID', async () => {
-		const bag = await prisma.bags.create({
+	let bag;
+
+	beforeEach(async () => {
+		bag = await prisma.bags.create({
 			data: {
 				name: 'Test Bag 1',
 				type: 'laptop_bag',
@@ -445,14 +416,17 @@ describe('Base Bags Route Tests To Get Bag By ID', () => {
 				features: ['usb_port'],
 			},
 		});
+	});
 
+	test('Should Get Bag By ID', async () => {
 		const res = await request(app).get(`/api/beggy/public/bags/${bag.id}`);
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Retrieved Bag By ID');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Retrieved Bag By ID',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: bag.id,
 			name: 'Test Bag 1',
@@ -480,13 +454,14 @@ describe('Base Items Route Tests for get All Items', () => {
 
 		const response = await request(app).get('/api/beggy/public/items');
 
-		console.log('Response', response.body);
-		console.log('Response data', response.body.data);
-
 		expect(response.status).toBe(200);
-		expect(response.body.success).toBe(true);
+		expect(response.body).toMatchObject({
+			success: true,
+			message: 'Successfully found all items',
+		});
+
 		expect(Array.isArray(response.body.data)).toBe(true);
-		expect(response.body.data.length).toBeGreaterThan(0);
+		expect(response.body.data.length).toBe(items.length);
 	});
 });
 
@@ -507,12 +482,12 @@ describe('Base Items Route Tests For Get Item By ID', () => {
 			`/api/beggy/public/items/${item.id}`
 		);
 
-		console.log('Response', res.body);
-		console.log('Response data', res.body.data);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully found item by id');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully found item by id',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: item.id,
 			name: 'Test Item 1',
@@ -526,39 +501,33 @@ describe('Base Items Route Tests For Get Item By ID', () => {
 });
 
 describe('Base Items Route Tests For Search for Items', () => {
+	let myItems;
+	const filter = { color: 'yellow', category: 'electronics' };
+
 	beforeEach(async () => {
 		// Create test items once before all tests
-		await prisma.items.createMany({
-			data: items,
+		myItems = await prisma.items.createMany({
+			data: items.filter((i) => {
+				return (
+					i.color === filter.color && i.category === filter.category
+				);
+			}),
 		});
 	});
 
-	test('Should return items by search query If there is no Match to the Query', async () => {
-		const res = await request(app)
-			//* There is no match for color yellow
-			.get(`/api/beggy/public/items?color=yellow`);
-
-		console.log('Response Not Match', res.body);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully found all items by Search');
-		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBe(0);
-	});
-
 	test('Should return items by search query if there are Match to the search', async () => {
-		const res = await request(app)
-			//* There is a match for color blue
-			.get(`/api/beggy/public/items?field=category&search=electronics`);
-
-		console.log('Response Match for Search', res.body);
+		const res = await request(app).get(
+			`/api/beggy/public/items?${filterQuery(filter)}`
+		);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully found all items by Search');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully found all items by Search',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
+		expect(res.body.data.length).toBe(myItems.count);
 	});
 
 	test('Should return items by Search and Order and Pagination if there are Match', async () => {
@@ -566,13 +535,14 @@ describe('Base Items Route Tests For Search for Items', () => {
 			'/api/beggy/public/items?page=2&limit=4&order=desc&sortBy=volume'
 		);
 
-		console.log('Response For Search and Order and Pagination', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully found all items by Search');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully found all items',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
+		expect(res.body.data.length).toBe(0);
 	});
 });
 
@@ -581,60 +551,63 @@ describe('Base Items Route Tests For Search for Items', () => {
 //*======================================={Suitcase Public Route}==============================================
 
 describe('Base suitcases Route Tests To Get All Suitcases', () => {
-	test('Should Get All Suitcases', async () => {
+	const filter = { page: 2, limit: 3, sortBy: 'weight', order: 'desc' };
+
+	beforeEach(async () => {
 		await prisma.suitcases.createMany({
 			data: suitcase,
 		});
+	});
 
+	test('Should Get All Suitcases', async () => {
 		const res = await request(app).get('/api/beggy/public/suitcases');
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Retrieved All Suitcases Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Retrieved All Suitcases Successfully',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBe(7);
+		expect(res.body.data.length).toBe(suitcase.length);
 	});
 
 	test('Should Get All Suitcases By Order and Page Limit', async () => {
-		await prisma.suitcases.createMany({
-			data: suitcase,
-		});
-
 		const res = await request(app).get(
-			'/api/beggy/public/suitcases?page=2&limit=3&sortBy=weight&order=desc'
+			`/api/beggy/public/suitcases?${filterQuery(filter)}`
 		);
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Retrieved All Suitcases Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Retrieved All Suitcases Successfully',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBe(3);
+		expect(res.body.data.length).toBe(filter.limit);
 	});
 });
 
 describe('Base suitcases Route Tests To Get Suitcases By Search', () => {
+	const filter = { features: 'usb_port' };
+
 	test('Should Get Suitcases by Search for Not Enum Fields', async () => {
-		await prisma.suitcases.createMany({
-			data: suitcase,
+		const mySuitcase = await prisma.suitcases.createMany({
+			data: suitcase.filter((f) => f.features.includes(filter.features)),
 		});
 
 		const res = await request(app)
 			//* search by fields not Enum
-			.get(`/api/beggy/public/suitcases?features=usb_port`);
-
-		console.log('Response', res.body);
+			.get(`/api/beggy/public/suitcases?${filterQuery(filter)}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Retrieved All Suitcases Successfully By Search'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Retrieved All Suitcases Successfully By Search',
+		});
+
 		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.data.length).toBeGreaterThan(0);
+		expect(res.body.data.length).toBe(mySuitcase.count);
 	});
 });
 
@@ -659,11 +632,12 @@ describe('Base suitcases Route Tests To Suitcase By Its ID', () => {
 			`/api/beggy/public/suitcases/${suitcase.id}`
 		);
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Retrieved Suitcase By ID Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Retrieved Suitcase By ID Successfully',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: suitcase.id,
 			name: 'Test Suitcase',

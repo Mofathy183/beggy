@@ -474,10 +474,10 @@ export const removeBagUserHasById = async (userId, bagId) => {
 	try {
 		const deletedBag = await prisma.bags.delete({
 			where: { userId: userId, id: bagId },
-            select: {
-                id: true,
-                name: true,
-            }
+			select: {
+				id: true,
+				name: true,
+			},
 		});
 
 		if (!deletedBag)
