@@ -426,6 +426,10 @@ export const removeSuitcaseUserHasById = async (userId, suitcaseId) => {
 	try {
 		const deletedSuitcase = await prisma.suitcases.delete({
 			where: { userId: userId, id: suitcaseId },
+			select: {
+				id: true,
+				name: true,
+			},
 		});
 
 		if (!deletedSuitcase)

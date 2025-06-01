@@ -382,7 +382,7 @@ export const deleteAllSuitcasesBelongsToUser = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				"Successfully Delete All User's Suitcases",
+				`Successfully Delete All User's Suitcases${searchFilter ? ' By Search' : ''}`,
 				deletedSuitcases,
 				meta
 			)

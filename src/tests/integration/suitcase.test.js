@@ -1,9 +1,9 @@
 import request from 'supertest';
 import prisma from '../../../prisma/prisma.js';
-import cookieParser from 'cookie-parser';
 import app from '../../../app.js';
 import { hashingPassword } from '../../utils/hash.js';
 import { signToken } from '../../utils/jwt.js';
+import { filterQuery } from '../setup.test.js';
 
 let csrfToken;
 let csrfSecret;
@@ -113,8 +113,11 @@ test('Should return a CSRF token', async () => {
 });
 
 describe("Suitcases Route For User For Get User's Suitcases", () => {
-	test("Should Get User's Suitcases", async () => {
-		const user = await prisma.user.create({
+	let user, mySuitcase, token;
+	const filter = { features: 'scratch_resistant' };
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -124,74 +127,70 @@ describe("Suitcases Route For User For Get User's Suitcases", () => {
 			},
 		});
 
-		const mySuitcase = suitcase.map((s) => {
+		mySuitcase = suitcase.map((s) => {
 			return {
 				...s,
 				userId: user.id,
 			};
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Get User's Suitcases", async () => {
 		await prisma.suitcases.createMany({
 			data: mySuitcase,
 		});
 
 		const res = await request(app)
 			.get(`/api/beggy/suitcases/`)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response', res.body);
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Retrieved Suitcases Belonging To User Successfully'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Retrieved Suitcases Belonging To User Successfully',
+		});
+
 		expect(res.body.data).toHaveLength(suitcase.length);
+
+		for (const s of res.body.data) {
+			expect(s.userId).toBe(user.id);
+		}
 	});
 
 	test("Should Get User's Suitcases By Search", async () => {
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'john@example.com',
-				password: await hashingPassword('password'),
-				role: 'USER',
-			},
-		});
-
-		const mySuitcase = suitcase.map((s) => {
-			return {
-				...s,
-				userId: user.id,
-			};
-		});
-
-		await prisma.suitcases.createMany({
-			data: mySuitcase,
+		const count = await prisma.suitcases.createMany({
+			data: mySuitcase.filter((f) =>
+				f.features.includes(filter.features)
+			),
 		});
 
 		const res = await request(app)
-			.get(`/api/beggy/suitcases?features=scratch_resistant`)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response', res.body);
-		console.log('Response', res.body.meta.searchFilter.AND[0].features);
+			.get(`/api/beggy/suitcases?${filterQuery(filter)}`)
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Retrieved Suitcases Belonging To User Successfully By Search'
-		);
-		expect(res.body.data[0]).toMatchObject({
-			features: ['SCRATCH_RESISTANT'],
+		expect(res.body).toMatchObject({
+			success: true,
+			message:
+				'Retrieved Suitcases Belonging To User Successfully By Search',
 		});
+
+		expect(res.body.data.length).toBe(count.count);
+
+		for (const s of res.body.data) {
+			expect(s.userId).toBe(user.id);
+			expect(s.features).toContain(filter.features.toUpperCase());
+		}
 	});
 });
 
 describe('Suitcases Route For User For Get Suitcase Belong To User', () => {
-	test('Should Get Suitcase Belong To User', async () => {
-		const user = await prisma.user.create({
+	let user, suitcase, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -201,7 +200,7 @@ describe('Suitcases Route For User For Get Suitcase Belong To User', () => {
 			},
 		});
 
-		const suitcase = await prisma.suitcases.create({
+		suitcase = await prisma.suitcases.create({
 			data: {
 				name: 'Test Suitcase',
 				type: 'carry_on',
@@ -217,17 +216,21 @@ describe('Suitcases Route For User For Get Suitcase Belong To User', () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test('Should Get Suitcase Belong To User', async () => {
 		const res = await request(app)
 			.get(`/api/beggy/suitcases/${suitcase.id}`)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response', res.body);
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'Retrieved Suitcase Belonging To User By Its ID Successfully'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message:
+				'Retrieved Suitcase Belonging To User By Its ID Successfully',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: suitcase.id,
 			name: 'Test Suitcase',
@@ -245,8 +248,10 @@ describe('Suitcases Route For User For Get Suitcase Belong To User', () => {
 });
 
 describe('Suitcases Route For User For Creating Suitcase For User', () => {
-	test('Should Create Suitcase For User', async () => {
-		const user = await prisma.user.create({
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -256,12 +261,16 @@ describe('Suitcases Route For User For Creating Suitcase For User', () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test('Should Create Suitcase For User', async () => {
 		const res = await request(app)
 			.post(`/api/beggy/suitcases/`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				name: 'Test Suitcase',
 				type: 'carry_on',
@@ -275,11 +284,12 @@ describe('Suitcases Route For User For Creating Suitcase For User', () => {
 				wheels: 'spinner',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(201);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Created Suitcase For User Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Created Suitcase For User Successfully',
+		});
+
 		expect(res.body.data).toMatchObject({
 			name: 'Test Suitcase',
 			type: 'CARRY_ON',
@@ -296,8 +306,10 @@ describe('Suitcases Route For User For Creating Suitcase For User', () => {
 });
 
 describe("Suitcases Route For User For Replace User's Suitcase", () => {
-	test("Should Replace User's Suitcase", async () => {
-		const user = await prisma.user.create({
+	let user, suitcase, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -307,15 +319,15 @@ describe("Suitcases Route For User For Replace User's Suitcase", () => {
 			},
 		});
 
-		const suitcase = await prisma.suitcases.create({
+		suitcase = await prisma.suitcases.create({
 			data: {
-				name: 'Test Suitcase 1',
+				name: 'Test Suitcase',
 				type: 'carry_on',
 				color: 'green',
 				size: 'small',
 				capacity: 11.2,
 				maxWeight: 12.55,
-				weight: 2.5,
+				weight: 1.5,
 				material: 'nylon',
 				features: ['usb_port'],
 				wheels: 'spinner',
@@ -323,12 +335,16 @@ describe("Suitcases Route For User For Replace User's Suitcase", () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Replace User's Suitcase", async () => {
 		const res = await request(app)
 			.put(`/api/beggy/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				name: 'Test Suitcase 2',
 				type: 'carry_on',
@@ -342,13 +358,12 @@ describe("Suitcases Route For User For Replace User's Suitcase", () => {
 				wheels: 'none',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			"Successfully Replaced User's Suitcase By Its ID"
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "Successfully Replaced User's Suitcase By Its ID",
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: suitcase.id,
 			name: 'Test Suitcase 2',
@@ -367,8 +382,10 @@ describe("Suitcases Route For User For Replace User's Suitcase", () => {
 });
 
 describe("Suitcases Route For User For Modify User's Suitcase", () => {
-	test("Should Modify User's Suitcase", async () => {
-		const user = await prisma.user.create({
+	let user, suitcase, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -378,7 +395,7 @@ describe("Suitcases Route For User For Modify User's Suitcase", () => {
 			},
 		});
 
-		const suitcase = await prisma.suitcases.create({
+		suitcase = await prisma.suitcases.create({
 			data: {
 				name: 'Test Suitcase 1',
 				type: 'carry_on',
@@ -394,12 +411,16 @@ describe("Suitcases Route For User For Modify User's Suitcase", () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Modify User's Suitcase", async () => {
 		const res = await request(app)
 			.patch(`/api/beggy/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				material: 'leather',
 				features: ['waterproof', 'tsa_lock'],
@@ -407,13 +428,12 @@ describe("Suitcases Route For User For Modify User's Suitcase", () => {
 				wheels: 'none',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			"Successfully Modified User's Suitcase By Its ID"
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "Successfully Modified User's Suitcase By Its ID",
+		});
+
 		expect(res.body.data).toMatchObject({
 			material: 'LEATHER',
 			features: ['WATERPROOF', 'TSA_LOCK', 'EXPANDABLE'],
@@ -424,8 +444,10 @@ describe("Suitcases Route For User For Modify User's Suitcase", () => {
 });
 
 describe("Suitcases Route For User For Delete User's Suitcase By Its ID", () => {
-	test("Should Delete User's Suitcase", async () => {
-		const user = await prisma.user.create({
+	let user, suitcase, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -435,7 +457,7 @@ describe("Suitcases Route For User For Delete User's Suitcase By Its ID", () => 
 			},
 		});
 
-		const suitcase = await prisma.suitcases.create({
+		suitcase = await prisma.suitcases.create({
 			data: {
 				name: 'Test Suitcase 1',
 				type: 'carry_on',
@@ -451,27 +473,37 @@ describe("Suitcases Route For User For Delete User's Suitcase By Its ID", () => 
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test("Should Delete User's Suitcase", async () => {
 		const res = await request(app)
 			.delete(`/api/beggy/suitcases/${suitcase.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`);
-
-		console.log('Response', res.body);
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			"Successfully Deleted User's Suitcase By Its ID"
-		);
-		expect(res.body.meta.totalDelete).toBe(1);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "Successfully Deleted User's Suitcase By Its ID",
+		});
+
+		expect(res.body.data).toMatchObject({
+			id: suitcase.id,
+			name: suitcase.name,
+		});
 	});
 });
 
-describe("Suitcases Route For User For Delete All User's Suitcases", () => {
-	test("Should Delete All User's Suitcases", async () => {
-		const user = await prisma.user.create({
+describe('Suitcases Route - User Delete All Suitcases', () => {
+	let user, token;
+	let userSuitcases;
+	const filter = { features: 'scratch_resistant', material: 'leather' };
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -481,37 +513,57 @@ describe("Suitcases Route For User For Delete All User's Suitcases", () => {
 			},
 		});
 
-		await prisma.suitcases.createMany({
-			data: Array.from({ length: 5 }, (_, index) => ({
-				name: `Test Suitcase ${index + 1}`,
-				type: 'carry_on',
-				color: 'green',
-				size: 'small',
-				capacity: 11.2,
-				maxWeight: 12.55,
-				weight: 2.5,
-				material: 'nylon',
-				features: ['usb_port', 'expandable'],
-				wheels: 'spinner',
-				userId: user.id,
-			})),
-		});
+		userSuitcases = suitcase.map((s) => ({
+			...s,
+			userId: user.id,
+		}));
+
+		token = signToken(user.id);
+	});
+
+	test("should delete all user's suitcases", async () => {
+		await prisma.suitcases.createMany({ data: userSuitcases });
 
 		const res = await request(app)
 			.delete(`/api/beggy/suitcases/`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(user.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({ confirmDelete: true });
 
-		console.log('Response', res.body);
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "Successfully Delete All User's Suitcases",
+		});
+
+		expect(res.body.meta.totalDelete).toBe(userSuitcases.length);
+	});
+
+	test("should delete user's suitcases by filter", async () => {
+		const filteredSuitcases = userSuitcases.filter(
+			(s) =>
+				s.features?.includes(filter.features) &&
+				s.material === filter.material
+		);
+
+		await prisma.suitcases.createMany({ data: filteredSuitcases });
+
+		const res = await request(app)
+			.delete(`/api/beggy/suitcases?${filterQuery(filter)}`)
+			.set('Cookie', cookies)
+			.set('X-CSRF-Secret', csrfSecret)
+			.set('x-csrf-token', csrfToken)
+			.set('Authorization', `Bearer ${token}`)
+			.send({ confirmDelete: true });
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			"Successfully Delete All User's Suitcases"
-		);
-		expect(res.body.meta.totalDelete).toBe(5);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "Successfully Delete All User's Suitcases By Search",
+		});
+
+		expect(res.body.meta.totalDelete).toBe(filteredSuitcases.length);
 	});
 });
