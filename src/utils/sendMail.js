@@ -67,11 +67,8 @@ export const sendEmail = async (
 	subjectKey,
 	type
 ) => {
-	/**
-	 * Try to send the email. If an error occurs, return an ErrorHandler.
-	 */
 	try {
-		// Read the email template from file
+		// Read and compile the email template
 		const templatePath = join(
 			__dirname,
 			'..',
@@ -80,48 +77,45 @@ export const sendEmail = async (
 			`${templateName}.mjml`
 		);
 		const templateContent = await readFile(templatePath, 'utf-8');
-
-		// Compile the email template
 		const compileTemplate = Handlebars.compile(templateContent);
 
-		// Replace placeholders in the email template with real values
 		const mjmlData = compileTemplate({
 			url,
 			userName,
 			currentYear: new Date().getFullYear(),
 		});
 
-		// Get the subject from the config
 		const subject = resendConfig[subjectKey];
-
 		if (!subject) {
-			return new Error('Subject key not found in the config');
+			throw new Error('Subject key not found in the config');
 		}
 
-		// Convert the MJML to HTML
 		const { html } = mjml2html(mjmlData);
-
-		// Initialize Resend API
 		const resend = new Resend(resendConfig.apiKey);
 
-		// Send the email
 		const sended = await resend.emails.send({
 			from: resendConfig.testDomain,
 			to: userEmail,
-			subject: subject,
-			html: html,
+			subject,
+			html,
 		});
 
-		// If sending fails, handle the error (e.g., delete reset token)
 		if (sended.error) {
-			console.log('S', sended);
+			// Delete token if Resend API returns an error
 			await deleteResetTokenAndExpiration(userEmail, type);
-			return new Error('Failed to send email, reset token deleted.');
+			throw new Error('Failed to send email, reset token deleted.');
 		}
 
 		return sended;
 	} catch (error) {
-		//* If an error occurs, return an ErrorHandler
+		// Delete token if any error occurs
+		try {
+			await deleteResetTokenAndExpiration(userEmail, type);
+		} catch (deleteErr) {
+			console.error('Failed to delete token in catch:', deleteErr);
+		}
+
+		// Return wrapped error
 		return new ErrorHandler(
 			'catch error',
 			error,

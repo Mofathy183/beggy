@@ -1,7 +1,7 @@
 import request from 'supertest';
 import prisma from '../../../prisma/prisma.js';
 import app from '../../../app.js';
-import { hashingPassword } from '../../utils/hash.js';
+import { hashingPassword, verifyPassword } from '../../utils/hash.js';
 import { generateCryptoHashToken } from '../../utils/jwt.js';
 import { setExpiredAt } from '../../utils/userHelper.js';
 import { signToken } from '../../utils/jwt.js';
@@ -27,35 +27,36 @@ test('Should return a CSRF token', async () => {
 });
 
 describe('Auth API Tests For Reset Password', () => {
-	test("Should reset a user's password", async () => {
-		//* Generate a random password by crypto
-		const { token, hashToken } = generateCryptoHashToken();
-		const expiredAt = setExpiredAt();
+	let user, token, expiredAt, userToken;
 
-		// ✅ First, register a new user before sending a password reset link
-		const user = await prisma.user.create({
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testuser44@test.com',
+				email: 'testuser22@test.com',
 				password: await hashingPassword('testing123'),
 			},
 		});
 
-		const userToken1 = await prisma.userToken.create({
+		//* Generate a random password by crypto
+		token = generateCryptoHashToken();
+		expiredAt = setExpiredAt();
+
+		userToken = await prisma.userToken.create({
 			data: {
 				userId: user.id,
 				type: 'PASSWORD_RESET',
-				hashToken: hashToken,
+				hashToken: token.hashToken,
 				expiresAt: expiredAt,
 			},
 		});
+	});
 
-		console.log('Before Reset Password', user.password);
-
+	test("Should reset a user's password", async () => {
 		//* Send a password reset link
 		const res = await request(app)
-			.patch(`/api/beggy/auth/reset-password/${token}`)
+			.patch(`/api/beggy/auth/reset-password/${token.token}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -64,35 +65,39 @@ describe('Auth API Tests For Reset Password', () => {
 				confirmPassword: 'testing12377@',
 			});
 
-		console.log('RESPONSE: ', res.body);
-		console.log(
-			'After Reset Password',
-			await prisma.user.findUnique({
-				where: { id: user.id },
-				select: { password: true },
-			})
-		);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			"You've successfully changed your password"
-		);
-		expect(res.body.data).toBe("You've Change Password Successfully");
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "You've successfully changed your password",
+			data: "You've Change Password Successfully",
+		});
 
 		const userToken2 = await prisma.userToken.findUnique({
 			where: {
-				id: userToken1.id,
+				id: userToken.id,
 			},
 		});
 
 		expect(userToken2).toBeNull();
+
+		const updatedUser = await prisma.user.findUnique({
+			where: { id: user.id },
+			select: { password: true },
+		});
+
+		const isMatch = await verifyPassword(
+			'testing12377@',
+			updatedUser.password
+		);
+		expect(isMatch).toBe(true); // ✅ Password was updated successfully
 	});
 });
 
 describe('Auth API Tests For Update User Password', () => {
-	test("Should update a user's password", async () => {
-		const user = await prisma.user.create({
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -101,11 +106,13 @@ describe('Auth API Tests For Update User Password', () => {
 			},
 		});
 
-		console.log('Before Update Password', user.password);
+		token = signToken(user.id);
+	});
 
+	test("Should update a user's password", async () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/update-password')
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
@@ -114,41 +121,46 @@ describe('Auth API Tests For Update User Password', () => {
 				confirmPassword: 'testing123456',
 			});
 
-		console.log(
-			'After Update Password',
-			await prisma.user.findUnique({
-				where: { id: user.id },
-				select: { password: true },
-			})
-		);
-
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			"You've successfully changed your password"
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "You've successfully changed your password",
+			data: "You've Updated Password Successfully",
+		});
+
+		const updatedUser = await prisma.user.findUnique({
+			where: { id: user.id },
+			select: { password: true },
+		});
+
+		const isMatch = await verifyPassword(
+			'testing123456',
+			updatedUser.password
 		);
-		expect(res.body.data).toBe("You've Updated Password Successfully");
+		expect(isMatch).toBe(true); // ✅ Password was updated successfully
 	});
 });
 
 describe('Auth API Tests For Update User Data', () => {
-	test("Should update a user's data", async () => {
-		const user = await prisma.user.create({
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testuser66@test.com',
+				email: 'testuser55@test.com',
 				password: await hashingPassword('testing123'),
 			},
 		});
 
-		console.log('Before Update User Data', user);
+		token = signToken(user.id);
+	});
 
+	test("Should update a user's data", async () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/update-user-data')
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
@@ -157,17 +169,16 @@ describe('Auth API Tests For Update User Data', () => {
 				gender: 'male',
 			});
 
-		console.log('After Update User Data');
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Updated Your Profile',
+			data: "You've Updated Your Profile Successfully",
+		});
+
 		const updatedUser = await prisma.user.findUnique({
 			where: { id: user.id },
 		});
-
-		console.log('RESPONSE BODY', res.body);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Updated Your Profile');
-		expect(res.body.data).toBe("You've Updated Your Profile Successfully");
 
 		expect(updatedUser).toMatchObject({
 			id: user.id,
@@ -179,33 +190,43 @@ describe('Auth API Tests For Update User Data', () => {
 });
 
 describe('Auth API Tests For Change Email', () => {
-	test.skip("Should change a user's email", async () => {
-		const user = await prisma.user.create({
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testuser77@test.com',
+				email: 'testuser55@test.com',
 				password: await hashingPassword('testing123'),
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test.skip("Should change a user's email", async () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/change-email')
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				email: 'mofathy1833@gmail.com',
 			});
 
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Updated Your Email');
-		expect(res.body.data).toBe(
-			'Check your email inbox to verify your email'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Updated Your Email',
+			data: 'Check your email inbox to verify your email',
+		});
+
+		const userToken = await prisma.userToken.findUnique({
+			where: { userId: user.id },
+		});
+
+		expect(userToken.type).toBe('CHANGE_EMAIL');
 
 		const userEmail = await prisma.user.findUnique({
 			where: { id: user.id },
@@ -216,11 +237,13 @@ describe('Auth API Tests For Change Email', () => {
 	});
 });
 
-////* Forgot Password tests Will send and email so it takes a while to complete
+//* Forgot Password tests Will send and email so it takes a while to complete
 describe('Auth API Tests For Forgot Password', () => {
-	test.skip('Should send a password reset link', async () => {
-		// ✅ First, register a new user before sending a password reset link
-		await prisma.user.create({
+	let user;
+
+	beforeEach(async () => {
+		//* ✅ First, register a new user before sending a password reset link
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -228,7 +251,9 @@ describe('Auth API Tests For Forgot Password', () => {
 				password: await hashingPassword('testing123'),
 			},
 		});
+	});
 
+	test.skip('Should send a password reset link', async () => {
 		const res = await request(app)
 			.patch('/api/beggy/auth/forgot-password')
 			.set('Cookie', cookies)
@@ -238,13 +263,17 @@ describe('Auth API Tests For Forgot Password', () => {
 				email: 'mofathy1833@gmail.com',
 			});
 
-		console.log('RESPONSE', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Reset password email send Successfully');
-		expect(res.body.data).toBe(
-			'Check your email inbox to reset your password'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Reset password email send Successfully',
+			data: 'Check your email inbox to reset your password',
+		});
+
+		const userToken = await prisma.userToken.findUnique({
+			where: { userId: user.id },
+		});
+
+		expect(userToken.type).toBe('PASSWORD_RESET');
 	});
 });

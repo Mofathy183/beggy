@@ -39,12 +39,12 @@ describe('Auth API Tests For SignUp', () => {
 				confirmPassword: 'testing123',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(201);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("You've Signed Up Successfully");
-		expect(res.body.data).toBe('Will send email to verify your account');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "You've Signed Up Successfully",
+			data: 'Will send email to verify your account',
+		});
 
 		//*✅ Verify user in DB
 		const user = await prisma.user.findUnique({
@@ -66,7 +66,7 @@ describe('Auth API Tests For SignUp', () => {
 });
 
 describe('Auth API Tests For Login', () => {
-	test('Should login a user', async () => {
+	beforeEach(async () => {
 		// ✅ First, register a new user before login
 		await prisma.user.create({
 			data: {
@@ -76,7 +76,9 @@ describe('Auth API Tests For Login', () => {
 				password: await hashingPassword('testing123'),
 			},
 		});
+	});
 
+	test('Should login a user', async () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/login')
 			.set('Cookie', cookies)
@@ -87,27 +89,32 @@ describe('Auth API Tests For Login', () => {
 				password: 'testing123',
 			});
 
-		console.log('Response: ', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("You've logged In Successfully");
-		expect(res.body.data).toBe('Will send email to verify your account');
-
-		// ✅ Ensure user exists in DB
-		const user = await prisma.user.findUnique({
-			where: { email: 'testuser22@test.com' },
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "You've logged In Successfully",
+			data: 'Will send email to verify your account',
 		});
 
-		expect(user).not.toBeNull();
-		expect(user).toMatchObject({
-			email: 'testuser22@test.com',
-		});
+		const authCookies = res.headers['set-cookie'];
+
+		expect(authCookies).toBeDefined();
+		const accessTokenCookie = authCookies.find((c) =>
+			c.startsWith('accessToken=')
+		);
+		const refreshTokenCookie = authCookies.find((c) =>
+			c.startsWith('refreshToken=')
+		);
+
+		expect(accessTokenCookie).toMatch(/HttpOnly/);
+		expect(refreshTokenCookie).toMatch(/HttpOnly/);
 	});
 });
 
 describe('Auth API Tests For Get Access Token', () => {
-	test('Should get an access token', async () => {
+	let refreshToken;
+
+	beforeEach(async () => {
 		const user = await prisma.user.create({
 			data: {
 				firstName: 'John',
@@ -117,24 +124,22 @@ describe('Auth API Tests For Get Access Token', () => {
 			},
 		});
 
+		refreshToken = signRefreshToken(user.id);
+	});
+
+	test('Should get an access token', async () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/refresh-token')
-			.set('Cookie', [
-				...cookies,
-				`refreshToken=${signRefreshToken(user.id)}`,
-			])
+			.set('Cookie', [...cookies, `refreshToken=${refreshToken}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken);
 
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Access token sent via cookie');
-		expect(res.body.data).toBe(
-			'New access token has been successfully generated'
-		);
-		expect(res.headers['set-cookie']).toBeDefined();
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Access token sent via cookie',
+			data: 'New access token has been successfully generated',
+		});
 
 		// Extract the cookie
 		const cookie = res.headers['set-cookie'][0].split(';')[0].split('='); // Get "access_token=..." part
@@ -157,8 +162,10 @@ describe('Auth API Tests For Get Access Token', () => {
 });
 
 describe('Auth API Tests For Logout', () => {
-	test('Should logout a user', async () => {
-		const user = await prisma.user.create({
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -167,34 +174,50 @@ describe('Auth API Tests For Logout', () => {
 			},
 		});
 
-		console.log('Before Logout User isActive', user.isActive);
+		token = signToken(user.id);
+	});
+
+	test('Should logout a user', async () => {
+		expect(user.isActive).toBe(true);
 
 		const res = await request(app)
 			.post('/api/beggy/auth/logout')
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken);
 
-		console.log(
-			'After Logout User',
-			await prisma.user.findUnique({
-				where: { id: user.id },
-				select: { isActive: true },
-			})
-		);
+		const logoutUser = await prisma.user.findUnique({
+			where: { id: user.id },
+			select: { isActive: true },
+		});
 
-		console.log('RESPONSE BODY', res.body);
+		expect(logoutUser.isActive).toBe(false);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("You're Logged Out Successfully");
-		expect(res.body.data).toBe("You're Out Now");
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "You're Logged Out Successfully",
+			data: "You're Out Now",
+		});
+
+		const authCookies = res.headers['set-cookie'];
+
+		// Check that all relevant cookies are cleared
+		expect(authCookies).toEqual(
+			expect.arrayContaining([
+				expect.stringMatching(/accessToken=;/),
+				expect.stringMatching(/refreshToken=;/),
+				expect.stringMatching(/Expires=/), // ensures it's expired
+			])
+		);
 	});
 });
 
 describe('Auth API Tests For send Verification Email', () => {
-	test.skip('Should send a verification email', async () => {
-		const user = await prisma.user.create({
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -203,22 +226,30 @@ describe('Auth API Tests For send Verification Email', () => {
 			},
 		});
 
+		token = signToken(user.id);
+	});
+
+	test.skip('Should send a verification email', async () => {
 		const res = await request(app)
 			.post('/api/beggy/auth/send-verification-email')
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
 			.send({
 				email: 'mofathy1833@gmail.com',
 			});
 
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Verification email send Successfully');
-		expect(res.body.data).toBe(
-			'Check your email inbox to verify your email'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Verification email send Successfully',
+			data: 'Check your email inbox to verify your email',
+		});
+
+		const userToken = await prisma.userToken.findUnique({
+			where: { userId: user.id },
+		});
+
+		expect(userToken.type).toBe('EMAIL_VERIFICATION');
 	});
 });

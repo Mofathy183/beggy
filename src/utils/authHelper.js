@@ -15,8 +15,8 @@ export const sendCookies = (userId, res) => {
 
 	const refreshToken = signRefreshToken(userId);
 
-	res.cookie('jwt-access-token', token, cookieOptions);
-	res.cookie('jwt-refresh-token', refreshToken, cookieRefreshOptions);
+	res.cookie('accessToken', token, cookieOptions);
+	res.cookie('refreshToken', refreshToken, cookieRefreshOptions);
 
 	return;
 };
@@ -47,14 +47,7 @@ export const sendProvideCookies = (accessToken, userId, provider, res) => {
  * @returns {undefined}
  */
 export const clearCookies = (res) => {
-	const cookiesToClear = [
-		'jwt-access-token',
-		'jwt-refresh-token',
-		'google-access-token',
-		'google-refresh-token',
-		'facebook-access-token',
-		'facebook-refresh-token',
-	];
+	const cookiesToClear = ['accessToken', 'refreshToken'];
 
 	cookiesToClear.forEach((cookie) => res.clearCookie(cookie));
 };

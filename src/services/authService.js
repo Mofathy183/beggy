@@ -212,6 +212,7 @@ export const authUser = async (userId) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
+				role: true,
 			},
 		});
 

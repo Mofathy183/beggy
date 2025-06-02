@@ -25,8 +25,10 @@ test('Should return a CSRF token', async () => {
 });
 
 describe('Auth API Tests For Deactivate', () => {
-	test('Should deactivate a user', async () => {
-		const user = await prisma.user.create({
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -35,27 +37,30 @@ describe('Auth API Tests For Deactivate', () => {
 			},
 		});
 
-		console.log('Before Deactivate User', user.isActive);
+		token = signToken(user.id);
+	});
+
+	test('Should deactivate a user', async () => {
+		expect(user.isActive).toBe(true);
 
 		const res = await request(app)
 			.delete('/api/beggy/auth/deactivate')
-			.set('Cookie', [...cookies, `accessToken=${signToken(user.id)}`])
+			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken);
 
-		console.log(
-			'After Deactivate User',
-			await prisma.user.findUnique({
-				where: { id: user.id },
-				select: { isActive: true },
-			})
-		);
-
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Deactivated User Account');
-		expect(res.body.data).toBe('Your Account Deactivated Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Deactivated User Account',
+			data: 'Your Account Deactivated Successfully',
+		});
+
+		const deactivateUser = await prisma.user.findUnique({
+			where: { id: user.id },
+			select: { isActive: true },
+		});
+
+		expect(deactivateUser.isActive).toBe(false);
 	});
 });

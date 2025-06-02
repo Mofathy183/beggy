@@ -29,7 +29,80 @@ test('Should return a CSRF token', async () => {
 });
 
 describe('Auth API Tests For Authentic User For Frontend', () => {
+	let user, token;
+
+	beforeEach(async () => {
+		user = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser22@test.com',
+				password: await hashingPassword('testing123'),
+				birth: birthOfDate('2005-12-12'),
+			},
+		});
+
+		token = signToken(user.id);
+	});
+
 	test('Should Authentic User Successfully', async () => {
+		const res = await request(app)
+			.get('/api/beggy/auth/me')
+			.set('Cookie', [`accessToken=${token}`]);
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: "You've Authenticated Successfully",
+		});
+
+		expect(res.body.data).toMatchObject({
+			id: user.id,
+			firstName: 'John',
+			lastName: 'Doe',
+			email: 'testuser22@test.com',
+			isActive: true,
+			isEmailVerified: false,
+		});
+	});
+
+	test('Should Return Error 401 Unauthorized Because User ID i not Valid', async () => {
+		const res = await request(app)
+			.get('/api/beggy/auth/me')
+			.set('Cookie', [
+				`accessToken=${signToken(user.id + 'fdf6sd5f6s5df')}`,
+			]);
+
+		expect(res.status).toBe(401);
+		expect(res.body).toMatchObject({
+			success: false,
+			status: 'Unauthorized',
+			message: 'User not found in the database. Please login again.',
+		});
+	});
+
+	test('Should Return Error 401 Unauthorized Because JWT Token is Expired', async () => {
+		const expiredToken = jwt.sign(
+			{ id: user.id }, // your payload
+			JWTConfig.secret, // use the same secret as in your app
+			{ expiresIn: -10 } // token expired 10 seconds ago
+		);
+
+		const res = await request(app)
+			.get('/api/beggy/auth/me')
+			.set('Cookie', [`accessToken=${expiredToken}`]);
+
+		expect(res.status).toBe(401);
+		expect(res.body).toMatchObject({
+			success: false,
+			status: 'Unauthorized',
+			message: 'Access token is expired or invalid. Please login again.',
+		});
+	});
+});
+
+describe('Auth API Tests For get permissions by role', () => {
+	test('Should get user permissions', async () => {
 		const user = await prisma.user.create({
 			data: {
 				firstName: 'John',
@@ -41,184 +114,98 @@ describe('Auth API Tests For Authentic User For Frontend', () => {
 		});
 
 		const res = await request(app)
-			.get('/api/beggy/auth/me')
-			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
-
-		console.log('Response: ', res.body);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe("You've Authenticated Successfully");
-		expect(res.body.data).toMatchObject({
-			firstName: 'John',
-			lastName: 'Doe',
-			email: 'testuser22@test.com',
-			isActive: true,
-			isEmailVerified: false,
-			role: 'USER',
-		});
-	});
-
-	test('Should Return Error 401 Unauthorized Because User ID i not Valid', async () => {
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'testuser22@test.com',
-				password: await hashingPassword('testing123'),
-			},
-		});
-
-		const res = await request(app)
-			.get('/api/beggy/auth/me')
-			.set('Cookie', [
-				`accessToken=${signToken(user.id + 'fdf6sd5f6s5df')}`,
-			]);
-
-		console.log('Response: ', res.body);
-
-		expect(res.status).toBe(401);
-		expect(res.body.status).toBe('Unauthorized');
-	});
-
-	test('Should Return Error 401 Unauthorized Because JWT Token is Expired', async () => {
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'testuser22@test.com',
-				password: await hashingPassword('testing123'),
-			},
-		});
-
-		const expiredToken = jwt.sign(
-			{ id: user.id }, // your payload
-			JWTConfig.secret, // use the same secret as in your app
-			{ expiresIn: -10 } // token expired 10 seconds ago
-		);
-
-		const res = await request(app)
-			.get('/api/beggy/auth/me')
-			.set('Cookie', [`accessToken=${expiredToken}`]);
-
-		console.log('Response: ', res.body);
-
-		expect(res.status).toBe(401);
-		expect(res.body.status).toBe('Unauthorized');
-	});
-});
-
-describe('Auth API Tests For get permissions by role', () => {
-	test('Should get user permissions', async () => {
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'mofathy1833@gmail.com',
-				password: await hashingPassword('testing123'),
-			},
-		});
-
-		const res = await request(app)
 			.get('/api/beggy/auth/permissions')
 			.set('Cookie', [`accessToken=${signToken(user.id)}`]);
 
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Get User Permissions');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Get User Permissions',
+		});
+
 		expect(res.body.data).toBeDefined();
 		expect(Array.isArray(res.body.data)).toBe(true);
 	});
 });
 
 describe('Auth API Tests For Verify Email', () => {
-	test('Should verify email for first time', async () => {
-		//* Generate a random password by crypto
-		const { token, hashToken } = generateCryptoHashToken();
-		const expiredAt = setExpiredAt();
+	let user, token, expiredAt;
 
-		// ✅ First, register a new user before sending a password reset link
-		const user = await prisma.user.create({
+	beforeEach(async () => {
+		user = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testuser44@test.com',
+				email: 'testuser22@test.com',
 				password: await hashingPassword('testing123'),
+				birth: birthOfDate('2005-12-12'),
 			},
 		});
 
+		//* Generate a random password by crypto
+		token = generateCryptoHashToken();
+		expiredAt = setExpiredAt();
+	});
+
+	test('Should verify email for first time', async () => {
 		expect(user.isEmailVerified).toBe(false);
 
-		const userToken1 = await prisma.userToken.create({
+		const userToken = await prisma.userToken.create({
 			data: {
 				userId: user.id,
 				type: 'EMAIL_VERIFICATION',
-				hashToken: hashToken,
+				hashToken: token.hashToken,
 				expiresAt: expiredAt,
 			},
 		});
 
 		const res = await request(app).get(
-			`/api/beggy/auth/verify-email?token=${token}&type=email_verification`
+			`/api/beggy/auth/verify-email?token=${token.token}&type=email_verification`
 		);
 
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Verified User Email');
-		expect(res.body.data.isEmailVerified).toBe(true);
-
-		const userToken2 = await prisma.userToken.findUnique({
-			where: { id: userToken1.id },
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Verified User Email',
 		});
 
-		expect(userToken2).toBeNull();
+		expect(res.body.data.isEmailVerified).toBe(true);
+
+		const deletedUserToken = await prisma.userToken.findUnique({
+			where: { id: userToken.id },
+		});
+
+		expect(deletedUserToken).toBeNull();
 	});
 
 	test('Should verify email for Change Email', async () => {
-		//* Generate a random password by crypto
-		const { token, hashToken } = generateCryptoHashToken();
-		const expiredAt = setExpiredAt();
-
-		// ✅ First, register a new user before sending a password reset link
-		const user = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'testuser44@test.com',
-				password: await hashingPassword('testing123'),
-			},
-		});
-
 		expect(user.isEmailVerified).toBe(false);
 
-		const userToken1 = await prisma.userToken.create({
+		const userToken = await prisma.userToken.create({
 			data: {
 				userId: user.id,
 				type: 'CHANGE_EMAIL',
-				hashToken: hashToken,
+				hashToken: token.hashToken,
 				expiresAt: expiredAt,
 			},
 		});
 
 		const res = await request(app).get(
-			`/api/beggy/auth/verify-email?token=${token}&type=change_email`
+			`/api/beggy/auth/verify-email?token=${token.token}&type=change_email`
 		);
 
-		console.log('RESPONSE BODY', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Successfully Verified User Email');
-		expect(res.body.data.isEmailVerified).toBe(true);
-
-		const userToken2 = await prisma.userToken.findUnique({
-			where: { id: userToken1.id },
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Successfully Verified User Email',
 		});
 
-		expect(userToken2).toBeNull();
+		expect(res.body.data.isEmailVerified).toBe(true);
+
+		const deletedUserToken = await prisma.userToken.findUnique({
+			where: { id: userToken.id },
+		});
+
+		expect(deletedUserToken).toBeNull();
 	});
 });
