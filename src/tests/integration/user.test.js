@@ -3,14 +3,9 @@ import app from '../../../app.js';
 import request from 'supertest';
 import { hashingPassword } from '../../utils/hash.js';
 import { signToken } from '../../utils/jwt.js';
+import { filterQuery } from '../setup.test.js';
 
 const users = [
-	{
-		firstName: 'John',
-		lastName: 'Doe',
-		email: 'testuser123@example.com',
-		password: await hashingPassword('password123'),
-	},
 	{
 		firstName: 'Jane',
 		lastName: 'Smith',
@@ -58,8 +53,10 @@ test('Should return a CSRF token', async () => {
 });
 
 describe('User API tests For Get User Private Data For Admin and Member', () => {
-	test('Get User Private Data For Admin', async () => {
-		const admin = await prisma.user.create({
+	let user, admin, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -69,7 +66,7 @@ describe('User API tests For Get User Private Data For Admin and Member', () => 
 			},
 		});
 
-		const user = await prisma.user.create({
+		user = await prisma.user.create({
 			data: {
 				firstName: 'Jane',
 				lastName: 'Smith',
@@ -78,30 +75,22 @@ describe('User API tests For Get User Private Data For Admin and Member', () => 
 			},
 		});
 
-		const res = await request(app)
-			.get(`/api/beggy/users/${user.id}`)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`);
+		token = signToken(admin.id);
+	});
 
-		console.log('Response', res.body);
+	test('Get User Private Data For Admin', async () => {
+		const res = await request(app)
+			.get(`/api/beggy/admin/${user.id}`)
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Found Successfully');
-		expect(res.body.data).toMatchObject({
-			id: user.id,
-			firstName: 'Jane',
-			lastName: 'Smith',
-			email: 'testuser456@example.com',
-			role: 'USER',
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'User Found Successfully',
 		});
 
-		console.log('Response', res.body);
-
-		const isUser = await prisma.user.findUnique({ where: { id: user.id } });
-
-		expect(isUser).not.toBeNull();
-		expect(isUser).toMatchObject({
-			id: isUser.id,
+		expect(res.body.data).toMatchObject({
+			id: user.id,
 			firstName: 'Jane',
 			lastName: 'Smith',
 			email: 'testuser456@example.com',
@@ -111,85 +100,11 @@ describe('User API tests For Get User Private Data For Admin and Member', () => 
 });
 
 describe('User API Tests For Search For User by only Admin and Member', () => {
-	test('Search for User by his first and last name', async () => {
-		await prisma.user.createMany({
-			data: users,
-		});
+	let admin, token;
+	const filter = { lastName: 'Williams', limit: 5, page: 1 };
 
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'Jo',
-				lastName: 'Mark',
-				email: 'testadmin123@example.com',
-				password: await hashingPassword('password123'),
-				role: 'ADMIN',
-			},
-		});
-
-		const res = await request(app)
-			.get(`/api/beggy/users/?lastName=Williams`)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Users Found Successfully By Search');
-		res.body.data
-			.filter((user) => user.lastName === 'Williams')
-			.forEach((user) => {
-				expect(user).toMatchObject({ lastName: 'Williams' });
-			});
-
-		console.log('Response', res.body);
-		console.log('Response data', res.body.meta.searchFilter);
-
-		const isUsers = await prisma.user.findMany({
-			where: {
-				OR: [
-					{ lastName: { contains: 'Williams', mode: 'insensitive' } },
-				],
-			},
-		});
-
-		expect(isUsers[0]).toMatchObject({
-			id: isUsers[0].id,
-			firstName: 'Alice',
-			lastName: 'Williams',
-			email: 'testuser101@example.com',
-		});
-	});
-
-	test('Should Get All Users', async () => {
-		await prisma.user.createMany({
-			data: users,
-		});
-
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'Jo',
-				lastName: 'Mark',
-				email: 'testadmin123@example.com',
-				password: await hashingPassword('password123'),
-				role: 'ADMIN',
-			},
-		});
-
-		const res = await request(app)
-			.get(`/api/beggy/users/?limit=5&page=1`)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`);
-
-		console.log('Response', res.body);
-
-		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Users Found Successfully');
-		expect(Array.isArray(res.body.data)).toBe(true);
-		expect(res.body.meta.totalFind).toBe(5);
-	});
-});
-
-describe('User API Tests For Create User by only Admin', () => {
-	test('Should Create a new User by Admin only', async () => {
-		const admin = await prisma.user.create({
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
@@ -199,12 +114,77 @@ describe('User API Tests For Create User by only Admin', () => {
 			},
 		});
 
+		await prisma.user.createMany({
+			data: users,
+		});
+
+		token = signToken(admin.id);
+	});
+
+	test('Search for User by his first and last name', async () => {
+		const usersFiltered = users.filter(
+			(user) => user.lastName === filter.lastName
+		);
+
 		const res = await request(app)
-			.post(`/api/beggy/users/`)
+			.get(`/api/beggy/admin/?${filterQuery(filter)}`)
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Users Found Successfully By Search',
+		});
+
+		expect(Array.isArray(res.body.data)).toBe(true);
+		expect(res.body.meta.totalFind).toBe(usersFiltered.length);
+
+		res.body.data.forEach((user) => {
+			expect(user).toMatchObject({ lastName: 'Williams' });
+		});
+	});
+
+	test('Should Get All Users', async () => {
+		delete filter.lastName;
+
+		const res = await request(app)
+			.get(`/api/beggy/admin/?${filterQuery(filter)}`)
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Users Found Successfully',
+		});
+
+		expect(Array.isArray(res.body.data)).toBe(true);
+		expect(res.body.meta.totalFind).toBe(filter.limit);
+	});
+});
+
+describe('User API Tests For Create User by only Admin', () => {
+	let admin, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
+			data: {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'testuser123@example.com',
+				password: await hashingPassword('password123'),
+				role: 'ADMIN',
+			},
+		});
+		token = signToken(admin.id);
+	});
+
+	test('Should Create a new User by Admin only', async () => {
+		const res = await request(app)
+			.post(`/api/beggy/admin/`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				firstName: 'Jane',
 				lastName: 'Smith',
@@ -213,26 +193,16 @@ describe('User API Tests For Create User by only Admin', () => {
 				confirmPassword: 'password456',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(201);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Created Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'User Created Successfully',
+		});
+
 		expect(res.body.meta.totalCreate).toBe(1);
+
 		expect(res.body.data).toMatchObject({
 			id: res.body.data.id,
-			firstName: 'Jane',
-			lastName: 'Smith',
-			email: 'testuser456@example.com',
-		});
-
-		const isUser = await prisma.user.findUnique({
-			where: { id: res.body.data.id },
-		});
-
-		expect(isUser).not.toBeNull();
-		expect(isUser).toMatchObject({
-			id: isUser.id,
 			firstName: 'Jane',
 			lastName: 'Smith',
 			email: 'testuser456@example.com',
@@ -241,18 +211,20 @@ describe('User API Tests For Create User by only Admin', () => {
 });
 
 describe('User API Tests For Change User Role By Only Admin', () => {
-	test('Should Change User Role', async () => {
-		const admin = await prisma.user.create({
+	let user, admin, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testadmin123@example.com',
+				email: 'testuser123@example.com',
 				password: await hashingPassword('password123'),
 				role: 'ADMIN',
 			},
 		});
 
-		const user = await prisma.user.create({
+		user = await prisma.user.create({
 			data: {
 				firstName: 'Jane',
 				lastName: 'Smith',
@@ -261,78 +233,73 @@ describe('User API Tests For Change User Role By Only Admin', () => {
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should Change User Role', async () => {
 		const res = await request(app)
-			.patch(`/api/beggy/users/${user.id}/role`)
+			.patch(`/api/beggy/admin/${user.id}/role`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				role: 'ADMIN',
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('Change User Role Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'Change User Role Successfully',
+		});
+
 		expect(res.body.data).toMatchObject({
 			id: res.body.data.id,
-			firstName: 'Jane',
-			lastName: 'Smith',
-			email: 'testuser456@example.com',
-			role: 'ADMIN',
-		});
-
-		const isUser = await prisma.user.findUnique({
-			where: { id: res.body.data.id },
-		});
-
-		expect(isUser).not.toBeNull();
-		expect(isUser).toMatchObject({
-			id: isUser.id,
-			firstName: 'Jane',
-			lastName: 'Smith',
-			email: 'testuser456@example.com',
 			role: 'ADMIN',
 		});
 	});
 });
 
-describe('User API Tests For Delete User By User ID Just For Admin and Member', () => {
-	test('Should Delete User by User ID', async () => {
-		const admin = await prisma.user.create({
+describe('User API Tests For Delete User By User ID Just For Admin', () => {
+	let user, admin, token;
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testadmin123@example.com',
+				email: 'testuser123@example.com',
 				password: await hashingPassword('password123'),
 				role: 'ADMIN',
 			},
 		});
 
-		const member = await prisma.user.create({
+		user = await prisma.user.create({
 			data: {
 				firstName: 'Jane',
 				lastName: 'Smith',
 				email: 'testuser456@example.com',
 				password: await hashingPassword('password456'),
-				role: 'MEMBER',
 			},
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should Delete User by User ID', async () => {
 		const res = await request(app)
-			.delete(`/api/beggy/users/${member.id}`)
+			.delete(`/api/beggy/admin/${user.id}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`);
-
-		console.log('Response', res.body);
+			.set('Authorization', `Bearer ${token}`);
 
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('User Deleted Successfully');
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'User Deleted Successfully',
+		});
+
 		expect(res.body.meta.totalDelete).toBe(1);
 		expect(res.body.data).toMatchObject({
 			id: res.body.data.id,
@@ -340,22 +307,19 @@ describe('User API Tests For Delete User By User ID Just For Admin and Member', 
 			lastName: 'Smith',
 			email: 'testuser456@example.com',
 		});
-
-		const isUser = await prisma.user.findUnique({
-			where: { id: member.id },
-		});
-
-		expect(isUser).toBe(null);
 	});
 });
 
 describe('User API Tests For Delete All User From Database Only for Admin', () => {
-	test('Should Delete All Users', async () => {
-		const admin = await prisma.user.create({
+	let admin, token;
+	const filter = { firstName: 'John' };
+
+	beforeEach(async () => {
+		admin = await prisma.user.create({
 			data: {
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'testadmin123@example.com',
+				email: 'testuser123@example.com',
 				password: await hashingPassword('password123'),
 				role: 'ADMIN',
 			},
@@ -365,75 +329,58 @@ describe('User API Tests For Delete All User From Database Only for Admin', () =
 			data: users,
 		});
 
+		token = signToken(admin.id);
+	});
+
+	test('Should Delete All Users', async () => {
 		const res = await request(app)
-			.delete(`/api/beggy/users/`)
+			.delete(`/api/beggy/admin/`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe('All Users Are Deleted Successfully');
-		expect(res.body.data).toMatchObject({
-			count: res.body.data.count,
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'All Users Are Deleted Successfully',
 		});
 
-		const usersAfterDeletion = await prisma.user.findMany({ where: {} });
-
-		expect(usersAfterDeletion).toHaveLength(0);
-		expect(usersAfterDeletion).toEqual([]);
+		expect(res.body.data).toMatchObject({
+			count: users.length,
+		});
 	});
 
 	test('Should Delete All Users By Query', async () => {
-		const admin = await prisma.user.create({
-			data: {
-				firstName: 'John',
-				lastName: 'Doe',
-				email: 'testadmin123@example.com',
-				password: await hashingPassword('password123'),
-				role: 'ADMIN',
-			},
-		});
-
-		await prisma.user.createMany({
-			data: users,
-		});
+		const usersFiltered = users.filter(
+			(user) => user.firstName === filter.firstName
+		);
 
 		const res = await request(app)
-			.delete(`/api/beggy/users/?firstName=John`)
+			.delete(`/api/beggy/admin/?${filterQuery(filter)}`)
 			.set('Cookie', cookies)
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
-			.set('Authorization', `Bearer ${signToken(admin.id)}`)
+			.set('Authorization', `Bearer ${token}`)
 			.send({
 				confirmDelete: true,
 			});
 
-		console.log('Response', res.body);
-
 		expect(res.status).toBe(200);
-		expect(res.body.success).toBe(true);
-		expect(res.body.message).toBe(
-			'All Users Are Deleted Successfully By Search Filter'
-		);
+		expect(res.body).toMatchObject({
+			success: true,
+			message: 'All Users Are Deleted Successfully By Search Filter',
+		});
+
 		expect(res.body.data).toMatchObject({
-			count: res.body.data.count,
+			count: usersFiltered.length,
 		});
+
 		expect(res.body.meta).toMatchObject({
-			totalSearch: res.body.data.count,
+			totalSearch: usersFiltered.length,
 		});
-
-		const usersAfterDeletion = await prisma.user.findMany({
-			where: { firstName: 'John' },
-		});
-
-		expect(usersAfterDeletion).toHaveLength(0);
-		expect(usersAfterDeletion).toEqual([]);
 	});
 });

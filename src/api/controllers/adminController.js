@@ -5,7 +5,7 @@ import {
 	changeUserRole,
 	removeUser,
 	removeAllUsers,
-} from '../../services/userService.js';
+} from '../../services/adminService.js';
 import { statusCode } from '../../config/status.js';
 import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import { storeSession, sendCookies } from '../../utils/authHelper.js';
@@ -328,7 +328,7 @@ export const deleteAllUsers = async (req, res, next) => {
 
 		const { userRole, userId } = req.session;
 
-		const removeUsers = await removeAllUsers(searchFilter);
+		const removeUsers = await removeAllUsers(searchFilter, userId);
 
 		if (sendServiceResponse(next, removeUsers)) return;
 

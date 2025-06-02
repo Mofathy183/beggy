@@ -6,7 +6,7 @@ import {
 	changeUserRoleById,
 	deleteUserById,
 	deleteAllUsers,
-} from '../controllers/userController.js';
+} from '../controllers/adminController.js';
 import {
 	VReqToUUID,
 	VReqToCreateUser,
@@ -26,15 +26,15 @@ import {
 	searchForUsersMiddleware,
 } from '../../middlewares/middlewares.js';
 
-const userRoute = express.Router();
+const adminRoute = express.Router();
 
 //* to check if the id in params is valid and exists
-userRoute.param('id', (req, res, next, id) =>
+adminRoute.param('id', (req, res, next, id) =>
 	VReqToUUID(req, res, next, id, 'id')
 );
 
 //* route for get all users => GET (Only Admin)
-userRoute.get(
+adminRoute.get(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
@@ -47,7 +47,7 @@ userRoute.get(
 );
 
 //* route for get user private profile by id => GET param (id)
-userRoute.get(
+adminRoute.get(
 	'/:id',
 	VReqToHeaderToken,
 	headersMiddleware,
@@ -57,7 +57,7 @@ userRoute.get(
 );
 
 //* route for create user => POST (only Admin)
-userRoute.post(
+adminRoute.post(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
@@ -68,7 +68,7 @@ userRoute.post(
 );
 
 //* route for change user role => PATCH (Admin and Member only)
-userRoute.patch(
+adminRoute.patch(
 	'/:id/role',
 	VReqToHeaderToken,
 	headersMiddleware,
@@ -79,7 +79,7 @@ userRoute.patch(
 );
 
 //* route for delete all users => DELETE  //delete
-userRoute.delete(
+adminRoute.delete(
 	'/',
 	VReqToHeaderToken,
 	headersMiddleware,
@@ -92,7 +92,7 @@ userRoute.delete(
 );
 
 //* route for delete user by id => DELETE param(id) //delete
-userRoute.delete(
+adminRoute.delete(
 	'/:id',
 	VReqToHeaderToken,
 	headersMiddleware,
@@ -101,4 +101,4 @@ userRoute.delete(
 	deleteUserById
 );
 
-export default userRoute;
+export default adminRoute;

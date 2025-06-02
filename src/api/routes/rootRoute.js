@@ -1,6 +1,6 @@
 import express from 'express';
 import authRoute from './authRoute.js';
-import userRoute from './userRoute.js';
+import adminRoute from './adminRoute.js';
 import accountRoute from './accountRoute.js';
 import itemsRoute from './itemsRoute.js';
 import featuresRoute from './featuresRoute.js';
@@ -13,7 +13,7 @@ import privateRoute from './privateRoute.js';
 
 const rootRoute = express.Router();
 
-rootRoute.use('/users', userRoute);
+rootRoute.use('/admin', adminRoute);
 
 rootRoute.use('/auth', authRoute);
 

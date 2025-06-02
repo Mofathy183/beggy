@@ -13,8 +13,8 @@ export default {
 		// '**/src/tests/**/private.test.js',
 		// '**/src/tests/**/public.test.js',
 		// '**/src/tests/**/suitcase.test.js',
-		'**/src/tests/**/suitcaseItems.test.js',
-		// '**/src/tests/**/user.test.js',
+		// '**/src/tests/**/suitcaseItems.test.js',
+		'**/src/tests/**/user.test.js',
 	], // Ensure Jest looks inside `src/tests`
 	testPathIgnorePatterns: ['/node_modules/'],
 	forceExit: true,

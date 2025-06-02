@@ -3,6 +3,7 @@ import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { hashingPassword } from '../utils/hash.js';
 import { ErrorHandler } from '../utils/error.js';
 import { statusCode } from '../config/status.js';
+import { id } from 'date-fns/locale';
 
 /**
  * @function addUser
@@ -348,15 +349,25 @@ export const removeUser = async (userId) => {
 };
 
 /**
- * @function removeAllUsers
- * @description Deletes multiple users from the database based on filtering criteria.
- * @param {Object} searchFilter - Filtering conditions for the deletion operation.
- * @returns {Promise<Object>} Metadata of the deletion operation, including the count of deleted users, or an error if the operation fails.
+ * Remove multiple users from the database based on a filter,
+ * excluding the user with the given admin ID to prevent self-deletion.
+ *
+ * @param {Object} searchFilter - The filter criteria to select users for deletion.
+ * @param {string} adminId - The ID of the admin user performing the deletion, to exclude from deletion.
+ * @returns {Promise<Object|ErrorHandler>} Returns an object containing:
+ *   - usersDeleted: The result of the deleteMany Prisma operation (includes count).
+ *   - meta: An object containing totalCount (remaining users), totalDelete (number deleted), and totalSearch (number matched by filter).
+ *   Returns an ErrorHandler instance if an error occurs.
+ *
+ * @throws {ErrorHandler} Throws an error if deletion or counting users fails.
  */
-export const removeAllUsers = async (searchFilter) => {
+export const removeAllUsers = async (searchFilter, adminId) => {
 	try {
 		const usersDeleted = await prisma.user.deleteMany({
-			where: searchFilter,
+			where: {
+				...searchFilter,
+				NOT: { id: adminId },
+			},
 		});
 
 		if (usersDeleted.error)
