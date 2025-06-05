@@ -21,23 +21,6 @@ export const sendCookies = (userId, res) => {
 	return;
 };
 
-/**
- * Set cookies for social media providers like Google/Facebook.
- *
- * @param {string} accessToken - Access token from the social media provider.
- * @param {number} userId - User id of the user.
- * @param {string} provider - Social media provider name.
- * @param {Response} res - HTTP response object.
- */
-export const sendProvideCookies = (accessToken, userId, provider, res) => {
-	res.cookie(`${provider}-access-token`, accessToken, cookieOptions);
-
-	const refreshToken = signRefreshToken(userId);
-
-	res.cookie(`${provider}-refresh-token`, refreshToken, cookieRefreshOptions);
-	return;
-};
-
 //*=============================={Clear Cookies}==============================
 
 /**

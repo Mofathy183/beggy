@@ -1,5 +1,5 @@
 import prisma from '../../prisma/prisma.js';
-import { generateHashPassword } from '../utils/hash.js';
+import { generateOAuthPassword } from '../utils/hash.js';
 import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { ErrorHandler } from '../utils/error.js';
 import { statusCode } from '../config/status.js';
@@ -38,7 +38,7 @@ export const loginUserWithGoogle = async (profile) => {
 				lastName,
 				email,
 				isEmailVerified: verified,
-				password: generateHashPassword(),
+				password: generateOAuthPassword(),
 				profilePicture: haveProfilePicture(photo),
 				account: {
 					create: {
@@ -50,14 +50,11 @@ export const loginUserWithGoogle = async (profile) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
-				verifyToken: true,
 			},
 		});
 
 		if (!user)
-			new ErrorHandler(
+			return new ErrorHandler(
 				'user',
 				'There is no user with that email',
 				'User not found',
@@ -65,7 +62,7 @@ export const loginUserWithGoogle = async (profile) => {
 			);
 
 		if (user.error)
-			new ErrorHandler(
+			return new ErrorHandler(
 				'prisma',
 				user.error,
 				'Could not create user ' + user.error.message,
@@ -132,7 +129,7 @@ export const loginUserWithFacebook = async (profile) => {
 				lastName,
 				email,
 				isEmailVerified: true,
-				password: generateHashPassword(),
+				password: generateOAuthPassword(),
 				birth: birthOfDate(birthday),
 				gender,
 				profilePicture: haveProfilePicture(photo),
@@ -146,14 +143,11 @@ export const loginUserWithFacebook = async (profile) => {
 			omit: {
 				password: true,
 				passwordChangeAt: true,
-				passwordResetExpiredAt: true,
-				passwordResetToken: true,
-				verifyToken: true,
 			},
 		});
 
 		if (!user)
-			new ErrorHandler(
+			return new ErrorHandler(
 				'user',
 				'There is no user with that email',
 				'User not found',
@@ -161,7 +155,7 @@ export const loginUserWithFacebook = async (profile) => {
 			);
 
 		if (user.error)
-			new ErrorHandler(
+			return new ErrorHandler(
 				'prisma',
 				user.error,
 				'Could not create user ' + user.error.message,

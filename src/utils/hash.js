@@ -44,7 +44,7 @@ export const verifyPassword = async (password, hashedPassword) => {
  * Generates a random password and returns its SHA256 hash.
  * @returns {string} The hashed password
  */
-export const generateHashPassword = () => {
+export const generateOAuthPassword = () => {
 	//* the reset token will send to the user via email
 	const password = crypto.randomBytes(32).toString('hex');
 

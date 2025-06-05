@@ -1,9 +1,5 @@
 import { statusCode } from '../../config/status.js';
-import {
-	storeSession,
-	sendProvideCookies,
-	sendCookies,
-} from '../../utils/authHelper.js';
+import { storeSession, sendCookies } from '../../utils/authHelper.js';
 import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import {
 	loginUserWithGoogle,
@@ -13,7 +9,7 @@ import SuccessResponse from '../../utils/successResponse.js';
 
 export const loginWithGoogle = async (req, res, next) => {
 	try {
-		const { accessToken, profile } = req.user;
+		const { profile } = req.user;
 
 		const user = await loginUserWithGoogle(profile);
 
@@ -38,8 +34,6 @@ export const loginWithGoogle = async (req, res, next) => {
 			);
 
 		const { role, userId } = user;
-
-		sendProvideCookies(accessToken, userId, 'google', res);
 
 		sendCookies(userId, res);
 
@@ -67,7 +61,7 @@ export const loginWithGoogle = async (req, res, next) => {
 
 export const authenticateWithFacebook = async (req, res, next) => {
 	try {
-		const { profile, accessToken } = req.user;
+		const { profile } = req.user;
 
 		const user = await loginUserWithFacebook(profile);
 
@@ -92,8 +86,6 @@ export const authenticateWithFacebook = async (req, res, next) => {
 			);
 
 		const { role, userId } = user;
-
-		sendProvideCookies(accessToken, userId, 'facebook', res);
 
 		sendCookies(userId, res);
 

@@ -8,7 +8,6 @@ const googleProvider = new GoogleStrategy(
 	(accessToken, refreshToken, profile, done) => {
 		const user = {
 			profile,
-			accessToken,
 		};
 
 		return done(null, user);
@@ -20,7 +19,6 @@ const facebookProvider = new FacebookStrategy(
 	(accessToken, refreshToken, profile, done) => {
 		const user = {
 			profile,
-			accessToken,
 		};
 
 		return done(null, user);
