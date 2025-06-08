@@ -77,6 +77,11 @@ export const facebookAuthConfig = {
 	],
 };
 
+export const frontendOAuth = {
+	success: process.env.FRONTEND_OAUTH_SUCCESS_URL,
+	failed: process.env.FRONTEND_OAUTH_FAILED_URL,
+};
+
 export const AIConfig = {
 	headers: { Authorization: `Bearer ${process.env.AI_API_KEY}` },
 	url: 'https://api.together.xyz/v1/chat/completions',

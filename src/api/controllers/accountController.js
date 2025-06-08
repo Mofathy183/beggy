@@ -1,4 +1,5 @@
 import { statusCode } from '../../config/status.js';
+import { frontendOAuth } from '../../config/env.js';
 import { storeSession, sendCookies } from '../../utils/authHelper.js';
 import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import {
@@ -39,23 +40,11 @@ export const loginWithGoogle = async (req, res, next) => {
 
 		storeSession(userId, role, req);
 
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				`Successfully Logged In with Google`,
-				"You're Successfully Logged in with Google"
-			)
-		);
+		//* that will navigate to home page in frontend
+		return res.redirect(`${frontendOAuth.success}?state=success`);
 	} catch (error) {
-		return next(
-			new ErrorResponse(
-				Object.keys(error).length === 0
-					? 'Error Occur while Login with Google'
-					: error,
-				'Failed to authenticate with Google',
-				statusCode.internalServerErrorCode
-			)
-		);
+		//* that will navigate to login page in frontend
+		return res.redirect(`${frontendOAuth.failed}?state=success`);
 	}
 };
 
@@ -91,22 +80,10 @@ export const authenticateWithFacebook = async (req, res, next) => {
 
 		storeSession(userId, role, req);
 
-		return next(
-			new SuccessResponse(
-				statusCode.okCode,
-				`Successfully Logged In with Facebook`,
-				"You're Successfully Logged in with Facebook"
-			)
-		);
+		//* that will navigate to home page in frontend
+		return res.redirect(`${frontendOAuth.success}?state=success`);
 	} catch (error) {
-		return next(
-			new ErrorResponse(
-				Object.keys(error).length === 0
-					? 'Error Occur while Login with Facebook'
-					: error,
-				'Failed to authenticate with Facebook',
-				statusCode.internalServerErrorCode
-			)
-		);
+		//* that will navigate to login page in frontend
+		return res.redirect(`${frontendOAuth.failed}?state=success`);
 	}
 };
