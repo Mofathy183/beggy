@@ -167,19 +167,35 @@ export const loginUser = async (body) => {
 };
 
 /**
- * Authenticates a user by fetching them from the database using their ID.
+ * Authenticates a user by retrieving their complete profile from the database using their ID.
  *
- * - Retrieves the user from the database with sensitive fields omitted.
- * - If the user does not exist, returns a custom `ErrorHandler`.
- * - If Prisma returns an error in the response, returns an `ErrorHandler`.
- * - If an exception is thrown during the process, it catches and wraps it in an `ErrorHandler`.
+ * This function:
+ * - Fetches the user from the database with all related data (account, items, bags, suitcases).
+ * - Omits sensitive fields such as `password`, `passwordChangeAt`, and `role`.
+ * - Enriches the user's `bags` and `suitcases` with the number of items in each.
+ * - Aggregates overall statistics for the authenticated user:
+ *   - `totalItems`: Total items the user owns.
+ *   - `totalBags`: Total bags the user owns.
+ *   - `totalSuitcases`: Total suitcases the user owns.
+ *   - `totalItemsInBags`: Sum of items across all bags.
+ *   - `totalItemsInSuitcases`: Sum of items across all suitcases.
+ *
+ * If the user is not found, or if an unexpected error occurs during the Prisma query,
+ * a custom `ErrorHandler` object is returned with detailed error metadata.
  *
  * @param {string} userId - The unique ID of the user to authenticate.
- * @returns {Promise<Object|ErrorHandler>} The user object without sensitive fields, or an error handler object.
+ * @returns {Promise<{ user: object, meta: {
+ *   totalItems: number,
+ *   totalBags: number,
+ *   totalSuitcases: number,
+ *   totalItemsInBags: number,
+ *   totalItemsInSuitcases: number
+ * } } | ErrorHandler>} Returns the full user profile and aggregated metadata on success,
+ * or an error handler object on failure.
  */
 export const authUser = async (userId) => {
 	try {
-		// Attempt to retrieve the user from the database by ID, excluding sensitive fields
+		// Attempt to retrieve the user from the database
 		const user = await prisma.user.findUnique({
 			where: { id: userId },
 			include: {
@@ -191,6 +207,12 @@ export const authUser = async (userId) => {
 								item: true,
 							},
 						},
+						// Count items in each suitcase
+						_count: {
+							select: {
+								suitcaseItems: true,
+							},
+						},
 					},
 				},
 				bags: {
@@ -198,6 +220,12 @@ export const authUser = async (userId) => {
 						bagItems: {
 							include: {
 								item: true,
+							},
+						},
+						// Count items in each bag
+						_count: {
+							select: {
+								bagItems: true,
 							},
 						},
 					},
@@ -208,7 +236,16 @@ export const authUser = async (userId) => {
 						suitcaseItems: true,
 					},
 				},
+				// Global counts for metadata
+				_count: {
+					select: {
+						bags: true,
+						suitcases: true,
+						items: true,
+					},
+				},
 			},
+			// Omit sensitive fields
 			omit: {
 				password: true,
 				passwordChangeAt: true,
@@ -216,7 +253,7 @@ export const authUser = async (userId) => {
 			},
 		});
 
-		// If user is not found, return a custom error
+		// If user is not found, return custom error
 		if (!user) {
 			return new ErrorHandler(
 				'User Not Found',
@@ -226,7 +263,7 @@ export const authUser = async (userId) => {
 			);
 		}
 
-		// If Prisma returned an error (rare case), return a different custom error
+		// If Prisma returned an unexpected error structure
 		if (user.error) {
 			return new ErrorHandler(
 				'prisma',
@@ -237,10 +274,43 @@ export const authUser = async (userId) => {
 			);
 		}
 
-		// If all good, return the user object
-		return user;
+		// Map item count into each bag
+		const cleanedBags = user.bags.map((bag) => ({
+			...bag,
+			itemCount: bag._count.bagItems,
+		}));
+
+		// Map item count into each suitcase
+		const cleanedSuitcases = user.suitcases.map((suitcase) => ({
+			...suitcase,
+			itemCount: suitcase._count.suitcaseItems,
+		}));
+
+		// Replace the original collections with cleaned versions
+		user.bags = cleanedBags;
+		user.suitcases = cleanedSuitcases;
+
+		// Calculate total item counts in all bags and suitcases
+		const totalItemsInBags = cleanedBags.reduce(
+			(acc, bag) => acc + bag.itemCount,
+			0
+		);
+		const totalItemsInSuitcases = cleanedSuitcases.reduce(
+			(acc, suitcase) => acc + suitcase.itemCount,
+			0
+		);
+
+		// Return user and enriched meta
+		return {
+			user,
+			meta: {
+				totalItemsInBags,
+				totalItemsInSuitcases,
+				stuffStates: user._count,
+			},
+		};
 	} catch (error) {
-		// Catch any unexpected exceptions and return them wrapped in a custom error
+		// Catch and return unexpected runtime errors
 		return new ErrorHandler(
 			'catch',
 			Object.keys(error).length === 0

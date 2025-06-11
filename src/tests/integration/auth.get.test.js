@@ -45,7 +45,7 @@ describe('Auth API Tests For Authentic User For Frontend', () => {
 		token = signToken(user.id);
 	});
 
-	test('Should Authentic User Successfully', async () => {
+	test('Should Authenticate User Successfully and Include All Related Data', async () => {
 		const res = await request(app)
 			.get('/api/beggy/auth/me')
 			.set('Cookie', [`accessToken=${token}`]);
@@ -56,7 +56,9 @@ describe('Auth API Tests For Authentic User For Frontend', () => {
 			message: "You've Authenticated Successfully",
 		});
 
-		expect(res.body.data).toMatchObject({
+		const { data, meta } = res.body;
+
+		expect(data).toMatchObject({
 			id: user.id,
 			firstName: 'John',
 			lastName: 'Doe',
@@ -64,6 +66,20 @@ describe('Auth API Tests For Authentic User For Frontend', () => {
 			isActive: true,
 			isEmailVerified: false,
 		});
+
+		expect(meta).toMatchObject({
+			totalItemsInBags: 0,
+			totalItemsInSuitcases: 0,
+			stuffStates: {
+				bags: 0,
+				suitcases: 0,
+				items: 0,
+			},
+		});
+
+		expect(data.bags).toEqual([]);
+		expect(data.suitcases).toEqual([]);
+		expect(data.items).toEqual([]);
 	});
 
 	test('Should Return Error 401 Unauthorized Because User ID i not Valid', async () => {

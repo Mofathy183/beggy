@@ -141,9 +141,11 @@ export const authMe = async (req, res, next) => {
 		const { userId, userRole } = req.session;
 
 		// Attempt to authenticate the user by ID
-		const user = await authUser(userId);
+		const me = await authUser(userId);
 
-		if (sendServiceResponse(next, user)) return;
+		if (sendServiceResponse(next, me)) return;
+
+		const { user, meta } = me;
 
 		// If no user is returned, forward a not found error
 		if (!user) {
@@ -176,7 +178,8 @@ export const authMe = async (req, res, next) => {
 			new SuccessResponse(
 				statusCode.okCode,
 				"You've Authenticated Successfully",
-				user
+				user,
+				meta
 			)
 		);
 	} catch (error) {
