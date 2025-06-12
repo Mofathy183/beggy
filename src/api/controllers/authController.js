@@ -145,10 +145,10 @@ export const authMe = async (req, res, next) => {
 
 		if (sendServiceResponse(next, me)) return;
 
-		const { user, meta } = me;
+		const { profile, meta } = me;
 
 		// If no user is returned, forward a not found error
-		if (!user) {
+		if (!profile) {
 			return next(
 				new ErrorResponse(
 					'User Not Found',
@@ -159,10 +159,10 @@ export const authMe = async (req, res, next) => {
 		}
 
 		// If user has an embedded error (e.g., from authUser), forward a bad request error
-		if (user.error) {
+		if (profile.error) {
 			return next(
 				new ErrorResponse(
-					user.error,
+					profile.error,
 					'Error occurred while authenticating user',
 					statusCode.badRequestCode
 				)
@@ -178,7 +178,7 @@ export const authMe = async (req, res, next) => {
 			new SuccessResponse(
 				statusCode.okCode,
 				"You've Authenticated Successfully",
-				user,
+				profile,
 				meta
 			)
 		);

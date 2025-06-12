@@ -167,67 +167,58 @@ export const loginUser = async (body) => {
 };
 
 /**
- * Authenticates a user by retrieving their complete profile from the database using their ID.
+ * Authenticates and retrieves a user's profile from the database, including enriched metadata.
  *
- * This function:
- * - Fetches the user from the database with all related data (account, items, bags, suitcases).
- * - Omits sensitive fields such as `password`, `passwordChangeAt`, and `role`.
- * - Enriches the user's `bags` and `suitcases` with the number of items in each.
- * - Aggregates overall statistics for the authenticated user:
- *   - `totalItems`: Total items the user owns.
- *   - `totalBags`: Total bags the user owns.
- *   - `totalSuitcases`: Total suitcases the user owns.
- *   - `totalItemsInBags`: Sum of items across all bags.
- *   - `totalItemsInSuitcases`: Sum of items across all suitcases.
+ * This service:
+ * - Fetches the user by ID with related data: account, items, bags, and suitcases.
+ * - Excludes sensitive fields: `password`, `passwordChangeAt`, and `role`.
+ * - Adds `itemCount` to each bag and suitcase.
+ * - Aggregates overall statistics:
+ *   - `totalItemsInBags`: Total items across all bags.
+ *   - `totalItemsInSuitcases`: Total items across all suitcases.
+ *   - `stuffStates`: Global counts of items, bags, and suitcases.
  *
- * If the user is not found, or if an unexpected error occurs during the Prisma query,
- * a custom `ErrorHandler` object is returned with detailed error metadata.
+ * If the user is not found or an error occurs, returns a custom `ErrorHandler` instance.
  *
- * @param {string} userId - The unique ID of the user to authenticate.
- * @returns {Promise<{ user: object, meta: {
- *   totalItems: number,
- *   totalBags: number,
- *   totalSuitcases: number,
- *   totalItemsInBags: number,
- *   totalItemsInSuitcases: number
- * } } | ErrorHandler>} Returns the full user profile and aggregated metadata on success,
- * or an error handler object on failure.
+ * @param {string} userId - Unique identifier of the user.
+ * @returns {Promise<{
+ *   profile: {
+ *     user: object,
+ *     account: object,
+ *     suitcases: object[],
+ *     bags: object[],
+ *     items: object[],
+ *   },
+ *   meta: {
+ *     totalItemsInBags: number,
+ *     totalItemsInSuitcases: number,
+ *     stuffStates: { items: number, bags: number, suitcases: number }
+ *   }
+ * } | ErrorHandler>} - On success, returns enriched user data and stats; on failure, returns an error handler.
  */
 export const authUser = async (userId) => {
 	try {
-		// Attempt to retrieve the user from the database
-		const user = await prisma.user.findUnique({
+		// Fetch user by ID, including associated account, bags, suitcases, and items
+		const data = await prisma.user.findUnique({
 			where: { id: userId },
 			include: {
 				account: true,
 				suitcases: {
 					include: {
 						suitcaseItems: {
-							include: {
-								item: true,
-							},
+							include: { item: true },
 						},
 						// Count items in each suitcase
-						_count: {
-							select: {
-								suitcaseItems: true,
-							},
-						},
+						_count: { select: { suitcaseItems: true } },
 					},
 				},
 				bags: {
 					include: {
 						bagItems: {
-							include: {
-								item: true,
-							},
+							include: { item: true },
 						},
 						// Count items in each bag
-						_count: {
-							select: {
-								bagItems: true,
-							},
-						},
+						_count: { select: { bagItems: true } },
 					},
 				},
 				items: {
@@ -253,69 +244,74 @@ export const authUser = async (userId) => {
 			},
 		});
 
-		// If user is not found, return custom error
-		if (!user) {
+		// If no user found, return 404 error
+		if (!data) {
 			return new ErrorHandler(
 				'User Not Found',
-				"User Doesn't exist in Database",
-				'User needs to exist to be authenticated',
+				"User doesn't exist in the database",
+				'User must exist to authenticate',
 				statusCode.notFoundCode
 			);
 		}
 
-		// If Prisma returned an unexpected error structure
-		if (user.error) {
+		// Handle unexpected Prisma structure errors (just in case)
+		if (data.error) {
 			return new ErrorHandler(
-				'prisma',
-				user.error,
+				'Prisma Error',
+				data.error,
 				'Error occurred while authenticating user: ' +
-					user.error.message,
+					data.error.message,
 				statusCode.internalServerErrorCode
 			);
 		}
 
-		// Map item count into each bag
-		const cleanedBags = user.bags.map((bag) => ({
+		// Add `itemCount` to each bag
+		const cleanedBags = data.bags.map((bag) => ({
 			...bag,
 			itemCount: bag._count.bagItems,
 		}));
 
-		// Map item count into each suitcase
-		const cleanedSuitcases = user.suitcases.map((suitcase) => ({
+		// Add `itemCount` to each suitcase
+		const cleanedSuitcases = data.suitcases.map((suitcase) => ({
 			...suitcase,
 			itemCount: suitcase._count.suitcaseItems,
 		}));
 
-		// Replace the original collections with cleaned versions
-		user.bags = cleanedBags;
-		user.suitcases = cleanedSuitcases;
-
-		// Calculate total item counts in all bags and suitcases
+		// Calculate total number of items in bags
 		const totalItemsInBags = cleanedBags.reduce(
 			(acc, bag) => acc + bag.itemCount,
 			0
 		);
+
+		// Calculate total number of items in suitcases
 		const totalItemsInSuitcases = cleanedSuitcases.reduce(
 			(acc, suitcase) => acc + suitcase.itemCount,
 			0
 		);
 
-		// Return user and enriched meta
+		// Destructure sensitive/internal fields before returning
+		const { account, suitcases, bags, items, _count, ...user } = data;
+
+		// Return enriched profile and summary metadata
 		return {
-			user,
+			profile: {
+				user,
+				account,
+				suitcases: cleanedSuitcases,
+				bags: cleanedBags,
+				items,
+			},
 			meta: {
 				totalItemsInBags,
 				totalItemsInSuitcases,
-				stuffStates: user._count,
+				stuffStates: _count,
 			},
 		};
 	} catch (error) {
-		// Catch and return unexpected runtime errors
+		// Handle runtime or unexpected failures
 		return new ErrorHandler(
-			'catch',
-			Object.keys(error).length === 0
-				? 'Error Occur while Authenticating You'
-				: error,
+			'Runtime Error',
+			Object.keys(error).length === 0 ? 'Unknown error' : error,
 			'Failed to authenticate user',
 			statusCode.internalServerErrorCode
 		);

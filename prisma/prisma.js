@@ -209,8 +209,11 @@ const prisma = new PrismaClient().$extends({
 			},
 			defaultProfilePicture: {
 				compute(user) {
-					if (user.profilePicture) return null;
-					return setProfilePicture(user.firstName, user.email);
+					if (!user.profilePicture)
+						return setProfilePicture(user.firstName, user.email);
+					if (user.account || user.account?.length > 0)
+						return setProfilePicture(user.firstName, user.email);
+					return null;
 				},
 			},
 			age: {
