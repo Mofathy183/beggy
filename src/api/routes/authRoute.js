@@ -49,9 +49,10 @@ authRoute.patch('/forgot-password', VReqToEmail, forgotPassword);
 //* route for reset Password => PATCH param(token) (new password and confirm password)
 authRoute.patch('/reset-password/:token', VReqToResetPassword, resetPassword);
 
-//* route for update password for only login users => PATCH (Old Password and new password and confirm password)
+//* route for changing password (only for logged-in users) => PATCH
+//   Requires: currentPassword, newPassword, confirmPassword
 authRoute.patch(
-	'/update-password',
+	'/change-password',
 	VReqToHeaderToken,
 	headersMiddleware,
 	checkPermissionMiddleware('update:own', 'user'),
@@ -59,9 +60,9 @@ authRoute.patch(
 	updatePassword
 );
 
-//* route for update user data for only logged in users => PATCH (Not for Update user Password)
+//* route for editing profile info (excluding password) => PATCH
 authRoute.patch(
-	'/update-user-data',
+	'/edit-profile',
 	VReqToHeaderToken,
 	headersMiddleware,
 	VReqToUpdateUserData,

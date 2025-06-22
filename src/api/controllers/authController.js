@@ -370,17 +370,17 @@ export const updatePassword = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				"You've successfully changed your password",
-				"You've Updated Password Successfully"
+				'Password changed successfully',
+				'Your password has been updated.'
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
 				Object.keys(error).length === 0
-					? 'Error Occur while Update User Password'
+					? 'An error occurred while changing your password.'
 					: error,
-				'Failed to update password',
+				'Unable to change password',
 				statusCode.internalServerErrorCode
 			)
 		);
@@ -424,17 +424,17 @@ export const updateData = async (req, res, next) => {
 		return next(
 			new SuccessResponse(
 				statusCode.okCode,
-				'Successfully Updated Your Profile',
-				"You've Updated Your Profile Successfully"
+				'Profile updated successfully',
+				'Your profile information has been updated.'
 			)
 		);
 	} catch (error) {
 		return next(
 			new ErrorResponse(
 				Object.keys(error).length === 0
-					? 'Error Occur while Update Your Info'
+					? 'An error occurred while updating your profile.'
 					: error,
-				'Failed to update user data',
+				'Unable to update profile',
 				statusCode.internalServerErrorCode
 			)
 		);

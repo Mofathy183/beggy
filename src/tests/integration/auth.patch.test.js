@@ -93,7 +93,7 @@ describe('Auth API Tests For Reset Password', () => {
 	});
 });
 
-describe('Auth API Tests For Update User Password', () => {
+describe('Auth API Tests For Change Password', () => {
 	let user, token;
 
 	beforeEach(async () => {
@@ -109,9 +109,9 @@ describe('Auth API Tests For Update User Password', () => {
 		token = signToken(user.id);
 	});
 
-	test("Should update a user's password", async () => {
+	test("Should Change user's password", async () => {
 		const res = await request(app)
-			.patch('/api/beggy/auth/update-password')
+			.patch('/api/beggy/auth/change-password')
 			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -124,8 +124,8 @@ describe('Auth API Tests For Update User Password', () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toMatchObject({
 			success: true,
-			message: "You've successfully changed your password",
-			data: "You've Updated Password Successfully",
+			message: 'Password changed successfully',
+			data: 'Your password has been updated.',
 		});
 
 		const updatedUser = await prisma.user.findUnique({
@@ -141,7 +141,7 @@ describe('Auth API Tests For Update User Password', () => {
 	});
 });
 
-describe('Auth API Tests For Update User Data', () => {
+describe('Auth API Tests For Edit Profile', () => {
 	let user, token;
 
 	beforeEach(async () => {
@@ -157,9 +157,9 @@ describe('Auth API Tests For Update User Data', () => {
 		token = signToken(user.id);
 	});
 
-	test("Should update a user's data", async () => {
+	test("Should Edit a user's Profile", async () => {
 		const res = await request(app)
-			.patch('/api/beggy/auth/update-user-data')
+			.patch('/api/beggy/auth/edit-profile')
 			.set('Cookie', [...cookies, `accessToken=${token}`])
 			.set('X-CSRF-Secret', csrfSecret)
 			.set('x-csrf-token', csrfToken)
@@ -172,8 +172,8 @@ describe('Auth API Tests For Update User Data', () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toMatchObject({
 			success: true,
-			message: 'Successfully Updated Your Profile',
-			data: "You've Updated Your Profile Successfully",
+			message: 'Profile updated successfully',
+			data: 'Your profile information has been updated.',
 		});
 
 		const updatedUser = await prisma.user.findUnique({

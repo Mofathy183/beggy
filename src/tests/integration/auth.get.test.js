@@ -59,13 +59,22 @@ describe('Auth API Tests For Authentic User For Frontend', () => {
 		const { data, meta } = res.body;
 
 		expect(data).toMatchObject({
-			id: user.id,
-			firstName: 'John',
-			lastName: 'Doe',
-			email: 'testuser22@test.com',
-			isActive: true,
-			isEmailVerified: false,
+			user: {
+				id: user.id,
+				email: 'testuser22@test.com',
+				firstName: 'John',
+				lastName: 'Doe',
+				displayName: 'John Doe',
+				age: 19,
+				birth: '2005-12-12T00:00:00.000Z',
+				isActive: true,
+			},
 		});
+
+		expect(Array.isArray(data.account)).toBe(true);
+		expect(Array.isArray(data.bags)).toBe(true);
+		expect(Array.isArray(data.items)).toBe(true);
+		expect(Array.isArray(data.suitcases)).toBe(true);
 
 		expect(meta).toMatchObject({
 			totalItemsInBags: 0,
