@@ -27,22 +27,30 @@ export const haveProfilePicture = (profilePicture) => {
 };
 
 /**
- * @description to store the email token expires at data,
- * to store the password reset token expiration date
- * @param {String} type - Either 'email' or 'password'.
- * "verify" returns expires in 1 hour,
- * "change" returns expires in 15 minutes,
- * "password" returns expires in 10 minutes.
+ * @description Returns the expiration Date for different token types.
+ *
+ * Token Expiry Durations:
+ * - "verify": 24 hours
+ * - "change": 60 minutes
+ * - "password": 15 minutes
+ *
+ * Explain type names:
+ * - "verify": verify email
+ * - "change": change email
+ * - "password": reset password
+ *
+ * @param {String} type - Either 'verify', 'change', or 'password'.
  * @returns {Date}
  */
 export const setExpiredAt = (type) => {
-	//* the verify email token will expires in 1 hour
-	if (type === 'verify') return addMinutes(new Date(), 60);
-	//* the change email token will expires in 15 minutes
-	if (type === 'change') return addMinutes(new Date(), 15);
+	//* the verify email token will expire in 24 hours
+	if (type === 'verify') return addMinutes(new Date(), 60 * 24);
 
-	//* the password token will expires in 10 minutes
-	return addMinutes(new Date(), 10);
+	//* the change email token will expire in 60 minutes
+	if (type === 'change') return addMinutes(new Date(), 60);
+
+	//* the password reset token will expire in 15 minutes
+	return addMinutes(new Date(), 15);
 };
 
 //*=============================={Password Change}============================
