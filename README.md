@@ -1,10 +1,10 @@
-# Beggy Backend
+# Beggy
 
-Welcome to the **Beggy Backend**, the API powering Beggy, a web application that helps users organize items in their suitcases and bags efficiently.
+Welcome to the **Beggy**, the API powering Beggy, a web application that helps users organize items in their suitcases and bags efficiently.
 
 ## Table of Contents
 
-- [Beggy Backend](#beggy-backend)
+- [Beggy](#beggy)
     - [Table of Contents](#table-of-contents)
     - [Features](#features)
     - [Technologies Used](#technologies-used)

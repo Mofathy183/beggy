@@ -23,7 +23,7 @@ export default {
 	clearMocks: true,
 	restoreMocks: true,
 	testEnvironment: 'node',
-    extensionsToTreatAsEsm: ['.js'],
+	extensionsToTreatAsEsm: ['.js'],
 	transform: {},
 	maxWorkers: 4,
 	verbose: true,
