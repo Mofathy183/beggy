@@ -1,7 +1,7 @@
 {
-	"name": "beggy-backend",
+	"name": "@beggy/api",
 	"version": "1.0.0",
-	"description": "Backend for Web App Beggy",
+	"description": "API for Web App Beggy",
 	"main": "server.js",
 	"type": "module",
 	"scripts": {
@@ -9,7 +9,10 @@
 		"start": "node server.js",
 		"dev": "nodemon server.js",
 		"debug": "ndb server.js",
-		"prettier": "npx prettier --write .",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,mjs}\"",
+		"format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mjs}\"",
 		"prisma:push": "npx prisma db push",
 		"prisma:generate": "npx prisma generate",
 		"prisma:migrate": "npx prisma migrate dev",

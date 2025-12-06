@@ -2,7 +2,37 @@
 	"name": "beggy",
 	"version": "1.0.0",
 	"private": true,
-	"description": "Beggy - Smart Travel Packing Assistant",
+	"description": "Beggy - AI-powered smart travel packing assistant that helps travelers organize their luggage efficiently using weather data and intelligent recommendations",
+	"keywords": [
+		"monorepo",
+		"turborepo",
+		"travel",
+		"packing",
+		"ai",
+		"weather",
+		"organization",
+		"trip-planning",
+		"luggage",
+		"typescript",
+		"react",
+		"express",
+		"prisma",
+		"postgresql"
+	],
+	"author": {
+		"name": "Mohamed Fathy",
+		"email": "mofathy1833@gmail.com",
+		"url": "https://github.com/yourusername"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yourusername/beggy.git"
+	},
+	"bugs": {
+		"url": "https://github.com/yourusername/beggy/issues"
+	},
+	"homepage": "https://github.com/yourusername/beggy#readme",
+	"license": "MIT",
 	"scripts": {
 		"dev": "turbo run dev",
 		"build": "turbo run build",
@@ -15,15 +45,9 @@
 		"format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,mjs}\"",
 		"format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mjs}\""
 	},
-	"keywords": [],
-	"author": "Mohamed Fathy",
-	"license": "ISC",
-	"engines": {
-		"node": ">=18.0.0",
-		"pnpm": ">=8.0.0"
-	},
-	"packageManager": "pnpm@10.24.0",
 	"devDependencies": {
+		"@types/react": "^19.2.7",
+		"@types/react-dom": "^19.2.3",
 		"@typescript-eslint/eslint-plugin": "^8.48.1",
 		"@typescript-eslint/parser": "^8.48.1",
 		"eslint": "^9.39.1",
@@ -36,5 +60,10 @@
 		"prettier": "^3.7.3",
 		"turbo": "^2.6.1",
 		"typescript": "^5.9.3"
-	}
+	},
+	"engines": {
+		"node": ">=18.0.0",
+		"pnpm": ">=8.0.0"
+	},
+	"packageManager": "pnpm@10.24.0"
 }

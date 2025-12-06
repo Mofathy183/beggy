@@ -1,13 +1,12 @@
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import importPlugin from 'eslint-plugin-import';
-import unusedImports from 'eslint-plugin-unused-imports';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 
-export default [
+export default defineConfig([
 	// Base recommended configs
 	js.configs.recommended,
 
@@ -51,8 +50,6 @@ export default [
 		plugins: {
 			'@typescript-eslint': typescript,
 			import: importPlugin,
-			'unused-imports': unusedImports,
-			'simple-import-sort': simpleImportSort,
 			prettier: prettier,
 		},
 		rules: {
@@ -89,42 +86,8 @@ export default [
 			'import/newline-after-import': 'error',
 			'import/no-duplicates': 'error',
 
-			// Unused imports
-			'unused-imports/no-unused-imports': 'error',
-			'unused-imports/no-unused-vars': [
-				'warn',
-				{
-					vars: 'all',
-					varsIgnorePattern: '^_',
-					args: 'after-used',
-					argsIgnorePattern: '^_',
-				},
-			],
-
-			// Simple import sort
-			'simple-import-sort/imports': [
-				'error',
-				{
-					groups: [
-						// Node.js builtins
-						['^node:'],
-						// Packages (react, next, etc.)
-						['^@?\\w'],
-						// Internal packages
-						['^@beggy/'],
-						// Parent imports
-						['^\\.\\.'],
-						// Sibling imports
-						['^\\.'],
-						// Style imports
-						['^.+\\.s?css$'],
-					],
-				},
-			],
-			'simple-import-sort/exports': 'error',
-
 			// Prettier
-			'prettier/prettier': 'warn',
+			'prettier/prettier': 'off',
 
 			// General rules
 			'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -154,4 +117,4 @@ export default [
 			'no-console': 'off',
 		},
 	},
-];
+]);

@@ -1,73 +1,93 @@
-# React + TypeScript + Vite
+# 🎒 Beggy Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the **frontend** of **Beggy**, a smart travel packing assistant that helps users organize items into bags and suitcases.  
+The app is built with **React 19**, **Vite**, and styled using **Tailwind CSS v4** and **DaisyUI**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+- 🔐 Session-based authentication (integrated with backend)
+- 🧑‍💼 Role-based access control (RBAC) using CASL
+- 🧳 Create and manage bags, suitcases, and items
+- 🧲 Drag-and-drop support (planned)
+- 🔍 Filter and search by bags, users, and items
+- 🌦️ Weather widget integration using OpenWeather API
+- 📱 Fully responsive UI using Tailwind and DaisyUI
+- ⚙️ Dynamic form validation via React Hook Form + Yup
+- 🔁 Persistent Redux state with `redux-persist`
+- 🎞️ Animated transitions with GSAP
+- 🧪 Unit-tested with Vitest + React Testing Library
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+---
 
-## Expanding the ESLint configuration
+## 🧱 Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Category         | Tools & Libraries                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| Framework        | [React 19](https://reactjs.org/), [Vite](https://vitejs.dev/)                                           |
+| Styling          | [Tailwind CSS v4](https://tailwindcss.com/), [DaisyUI](https://daisyui.com/)                            |
+| State Management | [Redux Toolkit](https://redux-toolkit.js.org/), [redux-persist](https://github.com/rt2zz/redux-persist) |
+| Forms            | [React Hook Form](https://react-hook-form.com/), [Yup](https://github.com/jquense/yup)                  |
+| Routing          | [React Router v6](https://reactrouter.com/)                                                             |
+| Animation        | [GSAP](https://greensock.com/gsap/) + [`@gsap/react`](https://www.npmjs.com/package/@gsap/react)        |
+| RBAC             | [CASL](https://casl.js.org/v6/en/)                                                                      |
+| Testing          | [Vitest](https://vitest.dev/), [React Testing Library](https://testing-library.com/)                    |
+| Code Quality     | ESLint (Airbnb config), Prettier                                                                        |
 
-```js
-export default defineConfig([
-	globalIgnores(['dist']),
-	{
-		files: ['**/*.{ts,tsx}'],
-		extends: [
-			// Other configs...
+---
 
-			// Remove tseslint.configs.recommended and replace with this
-			tseslint.configs.recommendedTypeChecked,
-			// Alternatively, use this for stricter rules
-			tseslint.configs.strictTypeChecked,
-			// Optionally, add this for stylistic rules
-			tseslint.configs.stylisticTypeChecked,
+## ⚙️ Setup Instructions
 
-			// Other configs...
-		],
-		languageOptions: {
-			parserOptions: {
-				project: ['./tsconfig.node.json', './tsconfig.app.json'],
-				tsconfigRootDir: import.meta.dirname,
-			},
-			// other options...
-		},
-	},
-]);
+### 1. Clone the Repo
+
+```bash
+git clone https://github.com/Mofathy183/Beggy-Frontend.git
+cd Beggy-Frontend
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ⚙️ Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+### 📦 Install Dependencies
 
-export default defineConfig([
-	globalIgnores(['dist']),
-	{
-		files: ['**/*.{ts,tsx}'],
-		extends: [
-			// Other configs...
-			// Enable lint rules for React
-			reactX.configs['recommended-typescript'],
-			// Enable lint rules for React DOM
-			reactDom.configs.recommended,
-		],
-		languageOptions: {
-			parserOptions: {
-				project: ['./tsconfig.node.json', './tsconfig.app.json'],
-				tsconfigRootDir: import.meta.dirname,
-			},
-			// other options...
-		},
-	},
-]);
+```bash
+npm install
+```
+
+## 🔐 Add Environment Variables
+
+Create a .env file at the root:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+## ▶️ Run Development Server
+
+```bash
+npm run dev
+```
+
+## 🧪 Run all tests
+
+```bash
+npm run test
+```
+
+## 🧪 Run with test UI
+
+```bash
+npm run test:ui
+```
+
+## 🧹 Format Code with Prettier
+
+```bash
+npm run prettier
+```
+
+## 🧪 Lint Code with ESLint (Airbnb Config)
+
+```bash
+npm run lint
 ```

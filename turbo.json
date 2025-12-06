@@ -1,36 +1,100 @@
 {
-    "$schema": "https://turbo.build/schema.json",
-    "tasks": {
-        "dev": {
-        "cache": false,
-        "persistent": true
-        },
-        "build": {
-        "dependsOn": ["^build"],
-        "outputs": ["dist/**", "build/**"],
-        "cache": true
-        },
-        "lint": {
-        "outputs": []
-        },
-        "lint:fix": {
-        "dependsOn": ["lint"],
-        "outputs": []
-        },
-        "type-check": {
-        "outputs": []
-        },
-        "test": {
-        "dependsOn": ["build"],
-        "outputs": ["coverage/**"]
-        },
-        "test:coverage": {
-        "dependsOn": ["test"],
-        "outputs": ["coverage/**"]
-        },
-        "clean": {
-        "cache": false,
-        "outputs": []
-        }
-    }
+	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"outputs": ["dist/**", "build/**", ".next/**"],
+			"env": ["NODE_ENV", "DATABASE_URL", "VITE_API_URL"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true,
+			"env": [
+				"NODE_ENV",
+				"DATABASE_URL",
+				"REDIS_URL",
+				"JWT_SECRET",
+				"GOOGLE_CLIENT_ID",
+				"GOOGLE_CLIENT_SECRET",
+				"FACEBOOK_APP_ID",
+				"FACEBOOK_APP_SECRET",
+				"WEATHER_API_KEY",
+				"GROQ_API_KEY",
+				"VITE_API_URL"
+			]
+		},
+		"lint": {
+			"dependsOn": ["^lint"],
+			"inputs": [
+				"src/**/*.ts",
+				"src/**/*.tsx",
+				"src/**/*.js",
+				"src/**/*.jsx",
+				"eslint.config.mjs",
+				"tsconfig.json"
+			],
+			"outputs": []
+		},
+		"lint:fix": {
+			"dependsOn": ["^lint:fix"],
+			"cache": false,
+			"inputs": [
+				"src/**/*.ts",
+				"src/**/*.tsx",
+				"src/**/*.js",
+				"src/**/*.jsx"
+			],
+			"outputs": []
+		},
+		"type-check": {
+			"dependsOn": ["^build"],
+			"inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json"],
+			"outputs": []
+		},
+		"test": {
+			"dependsOn": ["^build"],
+			"inputs": [
+				"src/**/*.ts",
+				"src/**/*.tsx",
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/*.spec.ts",
+				"**/*.spec.tsx"
+			],
+			"outputs": ["coverage/**"],
+			"env": ["NODE_ENV", "DATABASE_URL"]
+		},
+		"test:coverage": {
+			"dependsOn": ["^build"],
+			"cache": false,
+			"outputs": ["coverage/**"]
+		},
+		"clean": {
+			"cache": false
+		},
+		"prisma:generate": {
+			"cache": false,
+			"outputs": ["node_modules/.prisma/**"]
+		},
+		"prisma:migrate": {
+			"cache": false,
+			"env": ["DATABASE_URL"]
+		},
+		"prisma:studio": {
+			"cache": false,
+			"persistent": true,
+			"env": ["DATABASE_URL"]
+		}
+	},
+	"globalEnv": ["NODE_ENV", "CI"],
+	"globalDependencies": [
+		"**/.env.*local",
+		"**/.env",
+		".eslintrc.js",
+		"eslint.config.mjs",
+		"tsconfig.json",
+		"turbo.json"
+	]
 }

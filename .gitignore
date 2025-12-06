@@ -14,6 +14,7 @@ node_modules
 generated/client
 
 # IDEs and editors
+.cursor/
 /.idea
 .project
 .classpath

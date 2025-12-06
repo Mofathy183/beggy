@@ -1,44 +1,48 @@
 {
-	// Visit https://aka.ms/tsconfig to read more about this file
+	"$schema": "https://json.schemastore.org/tsconfig",
 	"compilerOptions": {
-		// File Layout
-		// "rootDir": "./src",
-		// "outDir": "./dist",
+		// Language and Environment
+		"target": "ES2022",
+		"lib": ["ES2022"],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"jsx": "preserve",
 
-		// Environment Settings
-		// See also https://aka.ms/tsconfig/module
-		"module": "nodenext",
-		"target": "esnext",
-		"types": [],
-		// For nodejs:
-		// "lib": ["esnext"],
-		// "types": ["node"],
-		// and npm install -D @types/node
+		// Type Checking
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"allowUnusedLabels": false,
+		"allowUnreachableCode": false,
 
-		// Other Outputs
-		"sourceMap": true,
+		// Module Resolution
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"isolatedModules": true,
+
+		// Emit
 		"declaration": true,
 		"declarationMap": true,
+		"sourceMap": true,
+		"removeComments": false,
+		"importHelpers": true,
 
-		// Stricter Typechecking Options
-		"noUncheckedIndexedAccess": true,
-		"exactOptionalPropertyTypes": true,
+		// Interop Constraints
+		"allowJs": false,
+		"checkJs": false,
 
-		// Style Options
-		// "noImplicitReturns": true,
-		// "noImplicitOverride": true,
-		// "noUnusedLocals": true,
-		// "noUnusedParameters": true,
-		// "noFallthroughCasesInSwitch": true,
-		// "noPropertyAccessFromIndexSignature": true,
+		// Skip Lib Check
+		"skipLibCheck": true,
 
-		// Recommended Options
-		"strict": true,
-		"jsx": "react-jsx",
-		"verbatimModuleSyntax": true,
-		"isolatedModules": true,
-		"noUncheckedSideEffectImports": true,
-		"moduleDetection": "force",
-		"skipLibCheck": true
-	}
+		// Incremental Compilation
+		"incremental": true,
+		"composite": false
+	},
+	"exclude": ["node_modules", "dist", "build", ".turbo", "coverage"]
 }
