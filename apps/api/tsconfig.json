@@ -1,7 +1,16 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"outDir": "dist"
+		"outDir": "./dist",
+		"allowJs": true,
+		"types": ["jest", "node"],
+		"baseUrl": ".",
+		"paths": {
+			"@beggy/types": ["../../packages/types/src"],
+			"@beggy/types/*": ["../../packages/types/src/*"],
+			"@beggy/shared": ["../../packages/shared/src"],
+			"@beggy/shared/*": ["../../packages/shared/src/*"]
+		}
 	},
-	"include": ["./src"]
+	"include": ["./src", "./tests/**/*.test.ts"]
 }

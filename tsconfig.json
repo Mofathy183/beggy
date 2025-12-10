@@ -42,7 +42,16 @@
 
 		// Incremental Compilation
 		"incremental": true,
-		"composite": false
+		"composite": false,
+
+		// Path Aliases
+		"baseUrl": ".",
+		"paths": {
+			"@beggy/types": ["./packages/types/src"],
+			// "@beggy/types/*": ["./packages/types/src/*"],
+			"@beggy/shared": ["./packages/shared/src"]
+			// "@beggy/shared/*": ["./packages/shared/src/*"]
+		}
 	},
 	"exclude": ["node_modules", "dist", "build", ".turbo", "coverage"]
 }

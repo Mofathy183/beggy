@@ -1,31 +1,56 @@
 {
 	"name": "@beggy/mcp",
 	"version": "1.0.0",
-	"private": true,
 	"description": "Beggy MCP Server - Model Context Protocol tools for automated development tasks including TypeScript conversion, component scaffolding, and API testing",
 	"keywords": [
 		"mcp",
 		"model-context-protocol",
+		"claude",
+		"anthropic",
 		"developer-tools",
 		"automation",
 		"typescript",
 		"code-generation",
-		"scaffolding"
+		"scaffolding",
+		"express",
+		"prisma",
+		"postgresql",
+		"api",
+		"beggy",
+		"travel",
+		"tooling"
 	],
 	"author": {
 		"name": "Mohamed Fathy",
-		"email": "your.email@example.com"
+		"email": "mofathy1833@gmail.com",
+		"url": "https://github.com/Mofathy183"
 	},
 	"license": "MIT",
-	"type": "module",
-	"bin": {
-		"beggy-mcp": "./dist/index.js"
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Mofathy183/Beggy-backend.git",
+		"directory": "apps/mcp"
 	},
+	"bugs": {
+		"url": "https://github.com/Mofathy183/Beggy-backend/issues"
+	},
+	"homepage": "https://github.com/Mofathy183/Beggy-backend#readme",
+	"private": true,
+	"type": "module",
+	"main": "./dist/src/index.js",
+	"bin": {
+		"beggy-mcp": "./dist/src/index.js"
+	},
+	"files": [
+		"dist",
+		"README.md"
+	],
 	"scripts": {
-		"dev": "node --loader @swc-node/register/esm --watch src/index.ts",
+		"dev": "tsx watch src/index.ts",
 		"build": "swc src -d dist --config-file .swcrc",
 		"build:watch": "swc src -d dist --config-file .swcrc --watch",
-		"start": "node dist/index.js",
+		"start": "node dist/src/index.js",
+		"test:convert": "tsx src/test-tool.ts",
 		"clean": "rm -rf dist",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
@@ -44,8 +69,8 @@
 		"@swc-node/register": "^1.10.9",
 		"@swc/cli": "^0.7.9",
 		"@swc/core": "^1.10.1",
-		"@types/express": "^5.0.6",
-		"@types/node": "^22.10.2",
+		"@types/node": "^20.0.0",
+		"tsx": "^4.19.2",
 		"typescript": "^5.7.2"
 	},
 	"packageManager": "pnpm@10.24.0",

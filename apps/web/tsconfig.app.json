@@ -36,7 +36,16 @@
 		"types": ["vite/client"],
 		"noEmit": true,
 		"moduleDetection": "force",
-		"jsx": "react-jsx"
+		"jsx": "react-jsx",
+
+		/* Path Aliases */
+		"baseUrl": ".",
+		"paths": {
+			"@beggy/types": ["../../packages/types/src"],
+			"@beggy/types/*": ["../../packages/types/src/*"],
+			"@beggy/shared": ["../../packages/shared/src"],
+			"@beggy/shared/*": ["../../packages/shared/src/*"]
+		}
 	},
 	"include": ["src"]
 }

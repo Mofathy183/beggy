@@ -1,0 +1,104 @@
+//** initialize the relationships in all the models with User
+
+model User {
+    id               String    @id @default(uuid())
+    firstName        String    @map("first_name")
+    lastName         String    @map("last_name")
+    password         String
+    email            String    @unique
+    role             Role      @default(USER)
+    profilePicture   String?
+    gender           Gender?
+    birthDate        DateTime?
+    country          String?
+    city             String?
+    isActive         Boolean   @default(true) @map("is_active")
+    isEmailVerified  Boolean   @default(false) @map("is_email_verified")
+    passwordChangeAt DateTime? @map("password_change_at")
+    createdAt        DateTime  @default(now()) @map("created_at")
+    updatedAt        DateTime  @updatedAt @map("updated_at")
+
+    //* the relationships
+    userToken UserToken[]
+    account   Account
+    bags      Bags[]
+    suitcases Suitcases[]
+    items     Items[]
+
+    //* the nama of the table
+    @@map("users")
+}
+
+model UserToken {
+    id        String    @id @default(uuid())
+    type      TokenType
+    hashToken String    @unique
+    expiresAt DateTime
+    createdAt DateTime  @default(now()) @map("created_at")
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id])
+
+    @@map("user_tokens")
+}
+
+/// ------------------------------------------------------------
+/// Permission
+/// ------------------------------------------------------------
+/// Represents a **single rule** defining what actions are allowed.
+///
+/// Examples:
+/// - CREATE + OWN + BAG
+/// - READ + ANY + USER
+/// - MANAGE + ANY + PERMISSION
+///
+/// A permission belongs to many roles through RoleOnPermission.
+///
+/// Uniqueness rule:
+/// Each combination (action, scope, subject) must be unique.
+model Permission {
+    /// Primary identifier
+    id String @id @default(uuid())
+
+    /// The action (CREATE/READ/UPDATE/DELETE/MANAGE)
+    action Action
+
+    /// Whether the permission applies to OWN or ANY resource
+    scope Scope
+
+    /// The resource type this permission applies to
+    subject Subject
+
+    /// Many-to-many relation: roles that have this permission
+    rolePermissions RoleOnPermission[]
+
+    @@unique([action, scope, subject])
+    @@map("permissions")
+}
+
+/// ------------------------------------------------------------
+/// RoleOnPermission (pivot / join table)
+/// ------------------------------------------------------------
+/// Connects a Role to a Permission (many-to-many).
+///
+/// Examples:
+/// - ADMIN → many permissions
+/// - MEMBER → a limited set of permissions
+///
+/// Enforces unique combinations to prevent duplicates.
+model RoleOnPermission {
+    /// Primary identifier
+    id String @id @default(uuid())
+
+    /// The role assigned in this mapping
+    role Role
+
+    /// The linked permission
+    permission Permission @relation(fields: [permissionId], references: [id])
+
+    /// Foreign key to Permission
+    permissionId String
+
+    @@unique([role, permissionId])
+    @@map("role_on_permissions")
+}

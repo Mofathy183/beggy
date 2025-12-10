@@ -1,151 +1,58 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
-
-#############################
-# Express.js specific #
-#############################
-
-# compiled output
-dist
-tmp
-/out-tsc
-
-# dependencies
-node_modules
-generated/client
-
-# IDEs and editors
-.cursor/
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode
-.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-.env
-.env.*
-
-# System Files
-.DS_Store
-Thumbs.db
-
-.nx/cache
-
-#############################
-# React Native specific #
-#############################
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# compiled output
-dist
-dist-ssr
-tmp
-/out-tsc
-
-# dependencies
-node_modules
-*.local
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode
-.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-.env
-.env.*
-
-# System Files
-.DS_Store
-Thumbs.db
-
-.nx/cache
-
-# ============================================================
-# 📦 Node / PNPM
-# ============================================================
+############################################################
+# 📦 Core Node / PNPM
+############################################################
 node_modules/
 .pnpm-store/
-.pnp.*
 .pnpm-debug.log
+.pnp.*
 package-lock.json
 yarn.lock
 
-# ============================================================
-# ⚙️ Turborepo / Build Artifacts
-# ============================================================
+############################################################
+# ⚡ Turborepo / Build Output
+############################################################
 .turbo/
 dist/
 build/
 .cache/
+tmp/
 temp/
-.tmp/
+tmp/*
+out-tsc/
 
-# ============================================================
+############################################################
 # 🧠 TypeScript
-# ============================================================
+############################################################
 *.tsbuildinfo
 
-# ============================================================
+############################################################
+# 🧪 Testing / Coverage
+############################################################
+coverage/
+.nyc_output/
+
+############################################################
+# 🔐 Environment / Secrets
+############################################################
+# Ignore real env files
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Allow examples
+!.env.example
+!.env.*.example
+
+############################################################
+# 🤖 Cursor AI editor
+############################################################
+.cursor/
+
+############################################################
 # 🧰 Logs
-# ============================================================
+############################################################
 logs/
 *.log
 npm-debug.log*
@@ -154,48 +61,99 @@ pnpm-debug.log*
 lerna-debug.log*
 yarn-error.log*
 
-# ============================================================
-# 🔐 Environment / Secrets
-# ============================================================
-.env
-.env.*
-.env.local
-.env.development.local
-.env.production.local
-.env.test.local
+############################################################
+# 🎨 Sass / SCSS
+############################################################
+.sass-cache/
+*.css.map
 
-# ============================================================
-# 🧑‍💻 IDE / Editor Files
-# ============================================================
+############################################################
+# ⚛️ React / Redux
+############################################################
+.vite/
+.next/
+storybook-static/
+*.cache/
+.cache-loader/
+
+# CRA-specific
+build/
+
+############################################################
+# 🟩 Express.js / Node Server
+############################################################
+# Build output
+dist/
+build/
+
+# Temp upload folders
+uploads/
+uploads/tmp/
+tmp/
+
+# PM2 ecosystem / logs
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# express-session stores (if used)
+sessions/
+session-store/
+
+############################################################
+# 🔵 Prisma ORM
+############################################################
+# Generated Prisma client
+**/prisma/generated/
+**/prisma/client/
+**/prisma/migrations/dev.db-journal
+**/prisma/dev.db-journal
+
+# SQLite database files
+*.db
+*.db-journal
+
+# Prisma engines (generated)
+.prisma/
+
+############################################################
+# 🧑‍💻 IDE / Editor files
+############################################################
 .vscode/
+.vscode/*
+!/.vscode/settings.json
+!/.vscode/tasks.json
+!/.vscode/launch.json
+!/.vscode/extensions.json
+
 .idea/
 *.swp
 *.swo
-.DS_Store
-Thumbs.db
 *.bak
 *.tmp
 *.orig
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
 
-# ============================================================
-# 🧪 Tests / Coverage
-# ============================================================
-coverage/
-.nyc_output/
+############################################################
+# 🖥️ System Files
+############################################################
+.DS_Store
+Thumbs.db
 
-# ============================================================
-# 🧩 Packages (shared)
-# ============================================================
+############################################################
+# 📦 Monorepo Packages
+############################################################
 packages/*/dist/
 packages/*/build/
 packages/*/.tsbuildinfo
 
-# ============================================================
-# 📦 Node / PNPM
-# ============================================================
-node_modules/
-.pnpm-store/
-.pnp.*
-.pnpm-debug.log
-package-lock.json
-yarn.lock
+############################################################
+# 🗃️ Nx (if used anywhere)
+############################################################
+.nx/cache

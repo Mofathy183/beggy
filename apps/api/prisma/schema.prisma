@@ -5,122 +5,206 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-    provider        = "prisma-client-js"
+    provider        = "prisma-client"
+    output          = "./generated/prisma"
     previewFeatures = ["relationJoins"]
-    output          = "../generated/client"
-    seed            = "node prisma/seed.js"
-    moduleFormat    = "esm"
 }
 
 datasource db {
     provider = "postgresql"
-    url      = env("DATABASE_URL")
 }
 
+// Remove redundant @map when value is just lowercase version
+// Only use @map when DB value differs from enum name
+
 enum Material {
-    LEATHER    @map("leather")
-    SYNTHETIC  @map("synthetic")
-    FABRIC     @map("fabric")
-    POLYESTER  @map("polyester")
-    NYLON      @map("nylon")
-    CANVAS     @map("canvas")
-    HARD_SHELL @map("hard_shell")
-    METAL      @map("metal")
+    LEATHER
+    SYNTHETIC
+    FABRIC
+    POLYESTER
+    NYLON
+    CANVAS
+    HARD_SHELL
+    METAL
 }
 
 enum ItemCategory {
-    ELECTRONICS @map("electronics")
-    ACCESSORIES @map("accessories")
-    FURNITURE   @map("furniture")
-    MEDICINE    @map("medicine")
-    CLOTHING    @map("clothing")
-    BOOKS       @map("books")
-    FOOD        @map("food")
+    ELECTRONICS
+    ACCESSORIES
+    FURNITURE
+    MEDICINE
+    CLOTHING
+    BOOKS
+    FOOD
+    TOILETRIES
+    DOCUMENTS
+    SPORTS
 }
 
 enum BagType {
-    BACKPACK     @map("backpack")
-    DUFFEL       @map("duffel")
-    TOTE         @map("tote")
-    MESSENGER    @map("messenger")
-    LAPTOP_BAG   @map("laptop_bag")
-    TRAVEL_BAG   @map("travel_bag")
-    HANDBAG      @map("handbag")
-    CROSSBODY    @map("crossbody")
-    SHOULDER_BAG @map("shoulder_bag")
+    BACKPACK
+    DUFFEL
+    TOTE
+    MESSENGER
+    LAPTOP_BAG
+    TRAVEL_BAG
+    HANDBAG
+    CROSSBODY
+    SHOULDER_BAG
 }
 
 enum SuitcaseType {
-    CARRY_ON        @map("carry_on")
-    CHECKED_LUGGAGE @map("checked_luggage")
-    HARD_SHELL      @map("hard_shell")
-    SOFT_SHELL      @map("soft_shell")
-    BUSINESS        @map("business")
-    KIDS            @map("kids")
-    EXPANDABLE      @map("expandable")
+    CARRY_ON
+    CHECKED_LUGGAGE
+    HARD_SHELL
+    SOFT_SHELL
+    BUSINESS
+    KIDS
+    EXPANDABLE
 }
 
+// REMOVED "NONE" - use empty array in your model instead
 enum SuitcaseFeature {
-    NONE               @map("none")
-    TSA_LOCK           @map("tsa_lock")
-    WATERPROOF         @map("waterproof")
-    EXPANDABLE         @map("expandable")
-    USB_PORT           @map("usb_port")
-    LIGHTWEIGHT        @map("lightweight")
-    ANTI_THEFT         @map("anti_theft")
-    SCRATCH_RESISTANT  @map("scratch_resistant")
-    COMPRESSION_STRAPS @map("compression_straps")
-    TELESCOPIC_HANDLE  @map("telescopic_handle")
+    TSA_LOCK
+    WATERPROOF
+    EXPANDABLE
+    USB_PORT
+    LIGHTWEIGHT
+    ANTI_THEFT
+    SCRATCH_RESISTANT
+    COMPRESSION_STRAPS
+    TELESCOPIC_HANDLE
+    SPINNER_WHEELS
 }
 
+// REMOVED "NONE" - use empty array in your model instead
 enum BagFeature {
-    NONE                      @map("none")
-    WATERPROOF                @map("waterproof")
-    PADDED_LAPTOP_COMPARTMENT @map("padded_laptop_compartment")
-    USB_PORT                  @map("usb_port")
-    ANTI_THEFT                @map("anti_theft")
-    MULTIPLE_POCKETS          @map("multiple_pockets")
-    LIGHTWEIGHT               @map("lightweight")
-    EXPANDABLE                @map("expandable")
-    REINFORCED_STRAPS         @map("reinforced_straps")
-    TROLLEY_SLEEVE            @map("trolley_sleeve")
-    HIDDEN_POCKET             @map("hidden_pocket")
+    WATERPROOF
+    PADDED_LAPTOP_COMPARTMENT
+    USB_PORT
+    ANTI_THEFT
+    MULTIPLE_POCKETS
+    LIGHTWEIGHT
+    EXPANDABLE
+    REINFORCED_STRAPS
+    TROLLEY_SLEEVE
+    HIDDEN_POCKET
+    RFID_BLOCKING
 }
 
 enum Size {
-    SMALL       @map("small")
-    MEDIUM      @map("medium")
-    LARGE       @map("large")
-    EXTRA_LARGE @map("extra_large")
+    SMALL
+    MEDIUM
+    LARGE
+    EXTRA_LARGE
 }
 
 enum WheelType {
-    NONE       @map("none")
-    TWO_WHEEL  @map("two_wheel")
-    FOUR_WHEEL @map("four_wheel")
-    SPINNER    @map("spinner")
+    NONE
+    TWO_WHEEL
+    FOUR_WHEEL
+    SPINNER
 }
 
 enum Gender {
-    MALE   @map("male")
-    FEMALE @map("female")
-    OTHER  @map("other")
+    MALE
+    FEMALE
+    OTHER
 }
 
-enum Providers {
-    GOOGLE   @map("google")
-    FACEBOOK @map("facebook")
+// Renamed from "Providers" to be clearer
+enum AuthProvider {
+    GOOGLE
+    FACEBOOK
 }
 
+/// ------------------------------------------------------------
+/// Action (verb)
+/// ------------------------------------------------------------
+/// Represents **what** operation the user wants to perform.
+///
+/// Common RBAC pattern:
+/// - CREATE → adding a new resource
+/// - READ   → retrieving/viewing a resource
+/// - UPDATE → modifying an existing resource
+/// - DELETE → removing a resource
+/// - MANAGE → full control (create/read/update/delete)
+///
+/// MANAGE is typically reserved for admins or elevated roles.
+enum Action {
+    CREATE
+    READ
+    UPDATE
+    DELETE
+    MANAGE
+}
+
+/// ------------------------------------------------------------
+/// Scope (ownership level)
+/// ------------------------------------------------------------
+/// Defines **which resources** the user can act on:
+///
+/// - OWN → User can act only on resources they own  
+///         (e.g., "update my own bag")
+///
+/// - ANY → User can act on any resource in the system  
+///         (e.g., admin can update any user's bag)
+///
+/// This is combined with `Action` inside `Permission` to form:
+///   e.g., CREATE + OWN
+///         READ + ANY
+enum Scope {
+    OWN
+    ANY
+}
+
+/// ------------------------------------------------------------
+/// Subject (system resources)
+/// ------------------------------------------------------------
+/// The type of resource a permission applies to.
+///
+/// Example:
+/// - BAG        → packing bag
+/// - ITEM       → item within a bag
+/// - SUITCASE   → suitcase configuration
+/// - USER       → user account
+/// - ROLE       → system roles
+/// - PERMISSION → RBAC permissions
+///
+/// A permission always ties:
+///    Action + Scope + Subject
+/// For example:
+///   READ + OWN + BAG
+enum Subject {
+    BAG
+    ITEM
+    SUITCASE
+    USER
+    ROLE
+    PERMISSION
+}
+
+/// ------------------------------------------------------------
+/// Role (user groups)
+/// ------------------------------------------------------------
+/// Represents high-level access groups in the application.
+///
+/// - ADMIN      → full system access
+/// - MODERATOR  → elevated content control
+/// - MEMBER     → regular user with extended perks
+/// - USER       → base-level user
+///
+/// Roles are mapped to permissions using the RoleOnPermission table.
 enum Role {
-    ADMIN      @map("admin")
-    MEMBER     @map("member")
-    SUBSCRIBER @map("subscriber")
-    USER       @map("user")
+    ADMIN
+    MODERATOR
+    MEMBER
+    USER
 }
 
 enum TokenType {
-    EMAIL_VERIFICATION @map("email_verification")
-    PASSWORD_RESET     @map("password_reset")
-    CHANGE_EMAIL       @map("change_email")
+    EMAIL_VERIFICATION
+    PASSWORD_RESET
+    CHANGE_EMAIL
+    TWO_FACTOR
 }
