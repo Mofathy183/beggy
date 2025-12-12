@@ -1,308 +1,635 @@
+import { IBag, ISuitcase } from './../src/types/prismaTypes';
 import { PrismaClient } from './generated/prisma/client';
-import type {
-	SuitcasesModel,
-	SuitcasesInclude,
-} from './generated/prisma/models';
+// import { UserCreateInput, BagsCreateInput, SuitcasesCreateInput, ItemsCreateInput } from './generated/prisma/models';
 import {
 	//*======={User}========
 	getDisplayName,
 	getAge,
-	// setProfilePicture,
 	//*======={User}========
 	//*======={Suitcase and Bags}========
-	getCurrentWeight,
-	getIsWeightExceeded,
-	getCurrentCapacity,
-	getIsCapacityExceeded,
+	calculateCurrentCapacity,
+	calculateCurrentWeight,
+	calculateRemainingCapacity,
+	calculateRemainingWeight,
+	calculateCapacityPercentage,
+	calculateWeightPercentage,
+	checkIsFull,
+	checkIsOverCapacity,
+	checkIsOverweight,
+	getContainerStatus,
+	calculateItemCount,
 	//*======={Suitcase and Bags}========
-} from './prismaHelper';
+} from './helper';
 
 //* add extension for Prisma to get the age of the user and the display name
 const prisma = new PrismaClient({} as any)
 	.$extends({
-		name: '',
+		name: 'UserComputedFields',
 		result: {
 			user: {
 				displayName: {
 					needs: { firstName: true, lastName: true },
-					compute(data) {
-						const { firstName, lastName } = data;
+					compute(user) {
+						const { firstName, lastName } = user;
 						return getDisplayName(firstName, lastName);
+					},
+				},
+				age: {
+					needs: { birthDate: true },
+					compute(user) {
+						const { birthDate } = user;
+						return getAge(birthDate);
 					},
 				},
 			},
 		},
 	})
 	.$extends({
-		name: '',
+		name: 'BagComputedFields',
 		result: {
-			user: {
-				age: {
+			bags: {
+				currentWeight: {
 					needs: {},
-					compute(data) {},
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !Array.isArray(bag.bagItems))
+							return null;
+						// If bagItems is undefined or not an array, treat as empty array
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+						return calculateCurrentWeight(items);
+					},
+				},
+				currentCapacity: {
+					needs: {},
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+						return calculateCurrentCapacity(items);
+					},
+				},
+				remainingWeight: {
+					needs: { maxWeight: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						const currentWeight = calculateCurrentWeight(items);
+
+						return calculateRemainingWeight(
+							currentWeight,
+							bag.maxWeight
+						);
+					},
+				},
+				remainingCapacity: {
+					needs: { maxCapacity: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						const currentCapacity = calculateCurrentCapacity(items);
+
+						return calculateRemainingCapacity(
+							currentCapacity,
+							bag.maxCapacity
+						);
+					},
+				},
+				isOverweight: {
+					needs: { maxCapacity: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						const currentWeight = calculateCurrentWeight(items);
+						return checkIsOverweight(currentWeight, bag.maxWeight);
+					},
+				},
+				isOverCapacity: {
+					needs: { maxCapacity: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						const currentCapacity = calculateCurrentCapacity(items);
+
+						return checkIsOverCapacity(
+							currentCapacity,
+							bag.maxCapacity
+						);
+					},
+				},
+				isFull: {
+					needs: { maxCapacity: true, maxWeight: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						const { maxWeight, maxCapacity } = bag;
+						const currentCapacity = calculateCurrentCapacity(items);
+						const currentWeight = calculateCurrentWeight(items);
+
+						return checkIsFull(
+							currentWeight,
+							maxWeight,
+							currentCapacity,
+							maxCapacity
+						);
+					},
+				},
+				weightPercentage: {
+					needs: { maxWeight: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+						const currentWeight = calculateCurrentWeight(items);
+						return calculateWeightPercentage(
+							currentWeight,
+							bag.maxWeight
+						);
+					},
+				},
+				capacityPercentage: {
+					needs: { maxCapacity: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						const currentCapacity = calculateCurrentCapacity(items);
+
+						return calculateCapacityPercentage(
+							currentCapacity,
+							bag.maxCapacity
+						);
+					},
+				},
+				itemCount: {
+					needs: {},
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						return calculateItemCount(items);
+					},
+				},
+				status: {
+					needs: { maxCapacity: true, maxWeight: true },
+					compute(bag: IBag) {
+						if ('bagItems' in bag && !bag?.bagItems) return null;
+						const items = Array.isArray(bag.bagItems)
+							? bag.bagItems
+							: [];
+
+						const { maxWeight, maxCapacity } = bag;
+						const currentCapacity = calculateCurrentCapacity(items);
+						const currentWeight = calculateCurrentWeight(items);
+
+						const itemCount = calculateItemCount(items);
+						const isFull = checkIsFull(
+							currentWeight,
+							maxWeight,
+							currentCapacity,
+							maxCapacity
+						);
+						const isOverWeight = checkIsOverweight(
+							currentWeight,
+							bag.maxWeight
+						);
+						const isOverCapacity = checkIsOverCapacity(
+							currentCapacity,
+							bag.maxCapacity
+						);
+
+						return getContainerStatus(
+							isOverWeight,
+							isOverCapacity,
+							isFull,
+							itemCount
+						);
+					},
+				},
+			},
+		},
+	})
+	.$extends({
+		name: 'SuitcaseComputedFields',
+		result: {
+			suitcases: {
+				currentWeight: {
+					needs: {},
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+						return calculateCurrentWeight(items);
+					},
+				},
+				currentCapacity: {
+					needs: {},
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+						return calculateCurrentCapacity(items);
+					},
+				},
+				remainingWeight: {
+					needs: { maxWeight: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const currentWeight = calculateCurrentWeight(items);
+
+						return calculateRemainingWeight(
+							currentWeight,
+							suitcase.maxWeight
+						);
+					},
+				},
+				remainingCapacity: {
+					needs: { maxCapacity: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const currentCapacity = calculateCurrentCapacity(items);
+
+						return calculateRemainingCapacity(
+							currentCapacity,
+							suitcase.maxCapacity
+						);
+					},
+				},
+				isOverweight: {
+					needs: { maxCapacity: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const currentWeight = calculateCurrentWeight(items);
+						return checkIsOverweight(
+							currentWeight,
+							suitcase.maxWeight
+						);
+					},
+				},
+				isOverCapacity: {
+					needs: { maxCapacity: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const currentCapacity = calculateCurrentCapacity(items);
+
+						return checkIsOverCapacity(
+							currentCapacity,
+							suitcase.maxCapacity
+						);
+					},
+				},
+				isFull: {
+					needs: { maxCapacity: true, maxWeight: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const { maxWeight, maxCapacity } = suitcase;
+						const currentCapacity = calculateCurrentCapacity(items);
+						const currentWeight = calculateCurrentWeight(items);
+
+						return checkIsFull(
+							currentWeight,
+							maxWeight,
+							currentCapacity,
+							maxCapacity
+						);
+					},
+				},
+				weightPercentage: {
+					needs: { maxWeight: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const currentWeight = calculateCurrentWeight(items);
+
+						return calculateWeightPercentage(
+							currentWeight,
+							suitcase.maxWeight
+						);
+					},
+				},
+				capacityPercentage: {
+					needs: { maxCapacity: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const currentCapacity = calculateCurrentCapacity(items);
+
+						return calculateCapacityPercentage(
+							currentCapacity,
+							suitcase.maxCapacity
+						);
+					},
+				},
+				itemCount: {
+					needs: {},
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						return calculateItemCount(items);
+					},
+				},
+				status: {
+					needs: { maxCapacity: true, maxWeight: true },
+					compute(suitcase: ISuitcase) {
+						if (
+							'suitcaseItems' in suitcase &&
+							!suitcase?.suitcaseItems
+						)
+							return null;
+						const items = Array.isArray(suitcase.suitcaseItems)
+							? suitcase.suitcaseItems
+							: [];
+
+						const { maxWeight, maxCapacity } = suitcase;
+						const currentCapacity = calculateCurrentCapacity(items);
+						const currentWeight = calculateCurrentWeight(items);
+
+						const itemCount = calculateItemCount(items);
+						const isFull = checkIsFull(
+							currentWeight,
+							maxWeight,
+							currentCapacity,
+							maxCapacity
+						);
+						const isOverWeight = checkIsOverweight(
+							currentWeight,
+							suitcase.maxWeight
+						);
+						const isOverCapacity = checkIsOverCapacity(
+							currentCapacity,
+							suitcase.maxCapacity
+						);
+
+						return getContainerStatus(
+							isOverWeight,
+							isOverCapacity,
+							isFull,
+							itemCount
+						);
+					},
 				},
 			},
 		},
 	});
-// 	result: {
-// 		user: {
-// 			displayName: {
-// 				compute(user) {
-// 					return getDisplayName(user.firstName, user.lastName);
-// 				},
-// 			},
-// 			defaultProfilePicture: {
-// 				compute(user) {
-// 					if (!user.profilePicture)
-// 						return setProfilePicture(user.firstName, user.email);
-// 					if (user.account || user.account?.length > 0)
-// 						return setProfilePicture(user.firstName, user.email);
-// 					return null;
-// 				},
-// 			},
-// 			age: {
-// 				compute(user) {
-// 					return getAge(user.birth);
-// 				},
-// 			},
-// 		},
-// 		bags: {
-// 			currentWeight: {
-// 				compute(bag) {
-// 					return getCurrentWeight(bag.bagItems);
-// 				},
-// 			},
-// 			isWeightExceeded: {
-// 				compute(bags) {
-// 					return getIsWeightExceeded(bags.bagItems, bags.maxWeight);
-// 				},
-// 			},
-// 			currentCapacity: {
-// 				compute(bags) {
-// 					return getCurrentCapacity(bags.bagItems);
-// 				},
-// 			},
-// 			isCapacityExceeded: {
-// 				compute(bags) {
-// 					return getIsCapacityExceeded(bags.bagItems, bags.capacity);
-// 				},
-// 			},
-// 		},
-// 		suitcases: {
-// 			currentWeight: {
-// 				compute(suitcase) {
-// 					return getCurrentWeight(suitcase.suitcaseItems);
-// 				},
-// 			},
-// 			isWeightExceeded: {
-// 				compute(suitcases) {
-// 					return getIsWeightExceeded(
-// 						suitcases.suitcaseItems,
-// 						suitcases.maxWeight
-// 					);
-// 				},
-// 			},
-// 			currentCapacity: {
-// 				compute(suitcases: SuitcasesModel) {
-// 					return getCurrentCapacity(suitcases.suitcaseItems);
-// 				},
-// 			},
-// 			isCapacityExceeded: {
-// 				compute(suitcases) {
-// 					return getIsCapacityExceeded(
-// 						suitcases.suitcaseItems,
-// 						suitcases.capacity
-// 					);
-// 				},
-// 			},
-// 		},
-// 	},
-// });
 
 export default prisma;
 
-// const prisma: PrismaClient = new PrismaClient().$extends({
-// 	name: 'Make Enum Fields TO Uppercase & Make Compute Fields',
-// 	query: {
-// 		user: {
-// 			async create({ args, query }) {
-// 				// Ensure role and gender are uppercase
-// 				if (args.data.role)
-// 					args.data.role = args.data.role.toUpperCase();
-// 				if (args.data.gender)
-// 					args.data.gender = args.data.gender.toUpperCase();
-// 				return query(args);
-// 			},
-// 			async update({ args, query }) {
-// 				// Ensure role and gender are uppercase
-// 				if (args.data.role)
-// 					args.data.role = args.data.role.toUpperCase();
-// 				if (args.data.gender)
-// 					args.data.gender = args.data.gender.toUpperCase();
-// 				return query(args);
-// 			},
-// 			async upsert({ args, query }) {
-// 				// Convert provider to uppercase
-// 				if (args.create.account.create.provider)
-// 					args.create.account.create.provider =
-// 						args.create.account.create.provider.toUpperCase();
-// 				// Convert gender to uppercase
-// 				if (args.create.gender)
-// 					args.create.gender = args.create.gender.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 		},
-// 		items: {
-// 			async create({ args, query }) {
-// 				// Ensure category is uppercase
-// 				if (args.data.category)
-// 					args.data.category = args.data.category.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 			async update({ args, query }) {
-// 				// Ensure category is uppercase
-// 				if (args.data.category)
-// 					args.data.category = args.data.category.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 			async createMany({ args, query }) {
-// 				// Ensure category is uppercase
-// 				if (Array.isArray(args.data)) {
-// 					args.data = args.data.map((item) => ({
-// 						...item,
-// 						category: item.category
-// 							? item.category.toUpperCase()
-// 							: item.category,
-// 					}));
-// 				}
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 		},
-// 		account: {
-// 			async create({ args, query }) {
-// 				// Convert provider to uppercase
-// 				if (args.data.provider)
-// 					args.data.provider = args.data.provider.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 			async update({ args, query }) {
-// 				// Convert provider to uppercase
-// 				if (args.data.provider)
-// 					args.data.provider = args.data.provider.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 		},
-// 		bags: {
-// 			async create({ args, query }) {
-// 				if (args.data.type)
-// 					args.data.type = args.data.type.toUpperCase();
-// 				if (args.data.size)
-// 					args.data.size = args.data.size.toUpperCase();
-// 				if (args.data.features)
-// 					args.data.features = args.data.features.map((f) =>
-// 						f.toUpperCase()
-// 					);
-// 				if (args.data.material)
-// 					args.data.material = args.data.material.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 			async update({ args, query }) {
-// 				if (args.data.type)
-// 					args.data.type = args.data.type.toUpperCase();
-// 				if (args.data.size)
-// 					args.data.size = args.data.size.toUpperCase();
-// 				if (args.data.features)
-// 					args.data.features = args.data.features.map((f) =>
-// 						f.toUpperCase()
-// 					);
-// 				if (args.data.material)
-// 					args.data.material = args.data.material.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 			async createMany({ args, query }) {
-// 				// Ensure category is uppercase
-// 				if (Array.isArray(args.data)) {
-// 					args.data = args.data.map((bag) => ({
-// 						...bag,
-// 						type: bag.type ? bag.type.toUpperCase() : bag.type,
-// 						size: bag.size ? bag.size.toUpperCase() : bag.size,
-// 						features: bag.features
-// 							? bag.features.map((f) => f.toUpperCase())
-// 							: bag.features,
-// 						material: bag.material
-// 							? bag.material.toUpperCase()
-// 							: bag.material,
-// 					}));
-// 				}
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 		},
-// 		suitcases: {
-// 			async create({ args, query }) {
-// 				if (args.data.type)
-// 					args.data.type = args.data.type.toUpperCase();
-// 				if (args.data.size)
-// 					args.data.size = args.data.size.toUpperCase();
-// 				if (args.data.material)
-// 					args.data.material = args.data.material.toUpperCase();
-// 				if (args.data.features)
-// 					args.data.features = args.data.features.map((f) =>
-// 						f.toUpperCase()
-// 					);
-// 				if (args.data.wheels)
-// 					args.data.wheels = args.data.wheels.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 			async update({ args, query }) {
-// 				if (args.data.type)
-// 					args.data.type = args.data.type.toUpperCase();
-// 				if (args.data.size)
-// 					args.data.size = args.data.size.toUpperCase();
-// 				if (args.data.material)
-// 					args.data.material = args.data.material.toUpperCase();
-// 				if (args.data.features)
-// 					args.data.features = args.data.features.map((f) =>
-// 						f.toUpperCase()
-// 					);
-// 				if (args.data.wheels)
-// 					args.data.wheels = args.data.wheels.toUpperCase();
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 			async createMany({ args, query }) {
-// 				// Ensure category is uppercase
-// 				if (Array.isArray(args.data)) {
-// 					args.data = args.data.map((suitcase) => ({
-// 						...suitcase,
-// 						type: suitcase.type
-// 							? suitcase.type.toUpperCase()
-// 							: suitcase.type,
-// 						size: suitcase.size
-// 							? suitcase.size.toUpperCase()
-// 							: suitcase.size,
-// 						features: suitcase.features
-// 							? suitcase.features.map((f) => f.toUpperCase())
-// 							: suitcase.features,
-// 						material: suitcase.material
-// 							? suitcase.material.toUpperCase()
-// 							: suitcase.material,
-// 						wheels: suitcase.wheels
-// 							? suitcase.wheels.toUpperCase()
-// 							: suitcase.wheels,
-// 					}));
-// 				}
-// 				// Call the query with modified args
-// 				return query(args);
-// 			},
-// 		},
-// 	},
+// export const mockSuitcase: SuitcasesCreateInput= {
+//     name: "Samsonite Spinner 55",
+//     brand: "Samsonite",
+//     type: "CARRY_ON",
+//     color: "red",
+//     size: "SMALL",
+
+//     maxCapacity: 40,        // liters
+//     maxWeight: 15,          // kg
+//     suitcaseWeight: 3.0,    // empty suitcase weight
+
+//     wheels: "FOUR_WHEEL",
+//     material: "POLYESTER",
+// };
+
+// export const mockBag: BagsCreateInput = {
+//     name: "Travel Backpack",
+//     type: "BACKPACK",
+//     color: "black",
+//     size: "MEDIUM",
+
+//     maxCapacity: 25,  // liters
+//     maxWeight: 12,    // kg
+//     bagWeight: 1.2,   // empty bag weight
+
+//     material: "NYLON",
+// };
+
+// export const mockItems: ItemsCreateInput[] = [
+//     {
+//         id: "item-2",
+//         name: "Laptop",
+//         category: "ELECTRONICS",
+//         quantity: 1,
+//         weight: 2.5,
+//         weightUnit: "KILOGRAM",
+//         volume: 1.2,
+//         volumeUnit: "LITER",
+//         color: "gray",
+//         isFragile: true,
+//     },
+//     {
+//         id: "item-3",
+//         name: "Perfume Bottle",
+//         category: "TOILETRIES",
+//         quantity: 2,
+//         weight: 250, // grams
+//         weightUnit: "GRAM",
+//         volume: 100, // ml
+//         volumeUnit: "ML",
+//         color: "pink",
+//         isFragile: true,
+//     },
+//     {
+//         id: "item-1",
+//         name: "T-Shirt",
+//         category: "CLOTHING",
+//         quantity: 3,
+//         weight: 0.2,
+//         weightUnit: "KILOGRAM",
+//         volume: 0.5,
+//         volumeUnit: "LITER",
+//         color: "blue",
+//         isFragile: false,
+//     }
+// ];
+
+// export const mockUser: UserCreateInput = {
+//     firstName: "mohamed",
+//     lastName: "fathy",
+//     birthDate: new Date("2000-04-10"),
+//     email: "mohamed@example.com",
+//     password: "password",
+//     gender: "MALE",
+// };
+
+// const test = async () => {
+//     const user = await prisma.user.create({
+//         data: mockUser
+//     })
+
+//     const bag = await prisma.bags.create({
+//         data: mockBag
+//     })
+
+//     const suitcase = await prisma.suitcases.create({
+//         data: mockSuitcase,
+//     })
+
+//     await prisma.items.createMany({
+//         data: mockItems,
+//     })
+
+//     const findUser = await prisma.user.findUnique({
+//         where: { id: user.id },
+//         include: {
+//             items: {
+//                 include: {
+//                     bagItems: true,
+//                     suitcaseItems: true
+//                 }
+//             },
+//             suitcases: {
+//                 include: {
+//                     suitcaseItems: true
+//                 }
+//             },
+//             bags: {
+//                 include: {
+//                     bagItems: true,
+//                 }
+//             }
+//         }
+//     })
+//     const findBag = await prisma.bags.findUnique({
+//         where: { id: bag.id },
+//         include: {
+//             bagItems: {
+//                 include: {
+//                     bag: true,
+//                     item: true
+//                 }
+//             }
+//         }
+//     })
+//     const findSuitcase = await prisma.suitcases.findUnique({
+//         where: { id: suitcase.id },
+//         include: {
+//             suitcaseItems: {
+//                 include: {
+//                     suitcase: true,
+//                     item: true
+//                 }
+//             }
+//         }
+//     })
+//     const findItems = await prisma.items.findMany({})
+
+//     console.log(`
+//         *********************************
+//         USER: ${findUser}
+//         User Items: ${findUser?.items}
+//         User bags: ${findUser?.bags}
+//         User suitcase: ${findUser?.suitcases}
+//         *************************************
+//     `)
+
+//     console.log(`
+//         *********************************
+//         Bag: ${findBag}
+//         Bag Items: ${findBag?.bagItems}
+//         *************************************
+//     `)
+
+//     console.log(`
+//         *********************************
+//         Suitcase: ${findSuitcase}
+//         Suitcase Items: ${findSuitcase?.suitcaseItems}
+//         *************************************
+//     `)
+
+//     console.log(`
+//         *********************************
+//         Items: ${findItems}
+//         *************************************
+//     `)
+// }

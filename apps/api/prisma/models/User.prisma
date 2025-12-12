@@ -20,10 +20,11 @@ model User {
 
     //* the relationships
     userToken UserToken[]
-    account   Account
     bags      Bags[]
     suitcases Suitcases[]
     items     Items[]
+    // 1:1 relation to Account
+    account   Account?    @relation(name: "UserAccount")
 
     //* the nama of the table
     @@map("users")

@@ -1,15 +1,17 @@
 //* relationship (one to many) each user can have many Suitcases
 
 model Suitcases {
-    id        String            @id @default(uuid())
-    name      String
-    brand     String?
-    type      SuitcaseType
-    color     String?           @default("black")
-    size      Size
-    capacity  Float
-    maxWeight Float
-    weight    Float
+    id    String       @id @default(uuid())
+    name  String
+    brand String?
+    type  SuitcaseType
+    color String?      @default("black")
+    size  Size
+
+    maxCapacity    Float // L or internal volume (static)
+    maxWeight      Float // max allowed weight (static)
+    suitcaseWeight Float // weight of empty suitcase (static)
+
     material  Material?
     features  SuitcaseFeature[]
     wheels    WheelType?

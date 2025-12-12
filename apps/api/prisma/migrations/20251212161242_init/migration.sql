@@ -1,43 +1,58 @@
 -- CreateEnum
-CREATE TYPE "Material" AS ENUM ('leather', 'synthetic', 'fabric', 'polyester', 'nylon', 'canvas', 'hard_shell', 'metal');
+CREATE TYPE "Material" AS ENUM ('LEATHER', 'SYNTHETIC', 'FABRIC', 'POLYESTER', 'NYLON', 'CANVAS', 'HARD_SHELL', 'METAL');
 
 -- CreateEnum
-CREATE TYPE "ItemCategory" AS ENUM ('electronics', 'accessories', 'furniture', 'medicine', 'clothing', 'books', 'food');
+CREATE TYPE "ItemCategory" AS ENUM ('ELECTRONICS', 'ACCESSORIES', 'FURNITURE', 'MEDICINE', 'CLOTHING', 'BOOKS', 'FOOD', 'TOILETRIES', 'DOCUMENTS', 'SPORTS');
 
 -- CreateEnum
-CREATE TYPE "BagType" AS ENUM ('backpack', 'duffel', 'tote', 'messenger', 'laptop_bag', 'travel_bag', 'handbag', 'crossbody', 'shoulder_bag');
+CREATE TYPE "BagType" AS ENUM ('BACKPACK', 'DUFFEL', 'TOTE', 'MESSENGER', 'LAPTOP_BAG', 'TRAVEL_BAG', 'HANDBAG', 'CROSSBODY', 'SHOULDER_BAG');
 
 -- CreateEnum
-CREATE TYPE "SuitcaseType" AS ENUM ('carry_on', 'checked_luggage', 'hard_shell', 'soft_shell', 'business', 'kids', 'expandable');
+CREATE TYPE "SuitcaseType" AS ENUM ('CARRY_ON', 'CHECKED_LUGGAGE', 'HARD_SHELL', 'SOFT_SHELL', 'BUSINESS', 'KIDS', 'EXPANDABLE');
 
 -- CreateEnum
-CREATE TYPE "SuitcaseFeature" AS ENUM ('none', 'tsa_lock', 'waterproof', 'expandable', 'usb_port', 'lightweight', 'anti_theft', 'scratch_resistant', 'compression_straps', 'telescopic_handle');
+CREATE TYPE "SuitcaseFeature" AS ENUM ('TSA_LOCK', 'WATERPROOF', 'EXPANDABLE', 'USB_PORT', 'LIGHTWEIGHT', 'ANTI_THEFT', 'SCRATCH_RESISTANT', 'COMPRESSION_STRAPS', 'TELESCOPIC_HANDLE', 'SPINNER_WHEELS');
 
 -- CreateEnum
-CREATE TYPE "BagFeature" AS ENUM ('none', 'waterproof', 'padded_laptop_compartment', 'usb_port', 'anti_theft', 'multiple_pockets', 'lightweight', 'expandable', 'reinforced_straps', 'trolley_sleeve', 'hidden_pocket');
+CREATE TYPE "BagFeature" AS ENUM ('WATERPROOF', 'PADDED_LAPTOP_COMPARTMENT', 'USB_PORT', 'ANTI_THEFT', 'MULTIPLE_POCKETS', 'LIGHTWEIGHT', 'EXPANDABLE', 'REINFORCED_STRAPS', 'TROLLEY_SLEEVE', 'HIDDEN_POCKET', 'RFID_BLOCKING');
 
 -- CreateEnum
-CREATE TYPE "Size" AS ENUM ('small', 'medium', 'large', 'extra_large');
+CREATE TYPE "Size" AS ENUM ('SMALL', 'MEDIUM', 'LARGE', 'EXTRA_LARGE');
 
 -- CreateEnum
-CREATE TYPE "WheelType" AS ENUM ('none', 'two_wheel', 'four_wheel', 'spinner');
+CREATE TYPE "WheelType" AS ENUM ('NONE', 'TWO_WHEEL', 'FOUR_WHEEL', 'SPINNER');
 
 -- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('male', 'female', 'other');
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "Providers" AS ENUM ('google', 'facebook');
+CREATE TYPE "AuthProvider" AS ENUM ('GOOGLE', 'FACEBOOK');
 
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('admin', 'member', 'subscriber', 'user');
+CREATE TYPE "Action" AS ENUM ('CREATE', 'READ', 'UPDATE', 'DELETE', 'MANAGE');
 
 -- CreateEnum
-CREATE TYPE "TokenType" AS ENUM ('email_verification', 'password_reset', 'change_email');
+CREATE TYPE "Scope" AS ENUM ('OWN', 'ANY');
+
+-- CreateEnum
+CREATE TYPE "Subject" AS ENUM ('BAG', 'ITEM', 'SUITCASE', 'USER', 'ROLE', 'PERMISSION');
+
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'MODERATOR', 'MEMBER', 'USER');
+
+-- CreateEnum
+CREATE TYPE "TokenType" AS ENUM ('EMAIL_VERIFICATION', 'PASSWORD_RESET', 'CHANGE_EMAIL', 'TWO_FACTOR');
+
+-- CreateEnum
+CREATE TYPE "WeightUnit" AS ENUM ('GRAM', 'KILOGRAM', 'POUND', 'OUNCE');
+
+-- CreateEnum
+CREATE TYPE "VolumeUnit" AS ENUM ('ML', 'LITER', 'CU_CM', 'CU_IN');
 
 -- CreateTable
 CREATE TABLE "accounts" (
     "id" TEXT NOT NULL,
-    "provider" "Providers" NOT NULL,
+    "provider" "AuthProvider" NOT NULL,
     "provider_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -53,9 +68,9 @@ CREATE TABLE "bags" (
     "type" "BagType" NOT NULL,
     "color" TEXT DEFAULT 'black',
     "size" "Size" NOT NULL,
-    "capacity" DOUBLE PRECISION NOT NULL,
+    "maxCapacity" DOUBLE PRECISION NOT NULL,
     "maxWeight" DOUBLE PRECISION NOT NULL,
-    "weight" DOUBLE PRECISION NOT NULL,
+    "bagWeight" DOUBLE PRECISION NOT NULL,
     "material" "Material",
     "features" "BagFeature"[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -82,7 +97,9 @@ CREATE TABLE "items" (
     "category" "ItemCategory" NOT NULL,
     "quantity" INTEGER NOT NULL,
     "weight" DOUBLE PRECISION NOT NULL,
+    "weightUnit" "WeightUnit" NOT NULL DEFAULT 'KILOGRAM',
     "volume" DOUBLE PRECISION NOT NULL,
+    "volumeUnit" "VolumeUnit" NOT NULL DEFAULT 'LITER',
     "color" TEXT DEFAULT 'black',
     "is_fragile" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -100,9 +117,9 @@ CREATE TABLE "suitcases" (
     "type" "SuitcaseType" NOT NULL,
     "color" TEXT DEFAULT 'black',
     "size" "Size" NOT NULL,
-    "capacity" DOUBLE PRECISION NOT NULL,
+    "maxCapacity" DOUBLE PRECISION NOT NULL,
     "maxWeight" DOUBLE PRECISION NOT NULL,
-    "weight" DOUBLE PRECISION NOT NULL,
+    "suitcaseWeight" DOUBLE PRECISION NOT NULL,
     "material" "Material",
     "features" "SuitcaseFeature"[],
     "wheels" "WheelType",
@@ -130,10 +147,10 @@ CREATE TABLE "users" (
     "last_name" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'user',
+    "role" "Role" NOT NULL DEFAULT 'USER',
     "profilePicture" TEXT,
     "gender" "Gender",
-    "birth" TIMESTAMP(3),
+    "birthDate" TIMESTAMP(3),
     "country" TEXT,
     "city" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -160,23 +177,27 @@ CREATE TABLE "user_tokens" (
 -- CreateTable
 CREATE TABLE "permissions" (
     "id" TEXT NOT NULL,
-    "action" TEXT NOT NULL,
-    "subject" TEXT[],
+    "action" "Action" NOT NULL,
+    "scope" "Scope" NOT NULL,
+    "subject" "Subject" NOT NULL,
 
     CONSTRAINT "permissions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "role_on_permission" (
+CREATE TABLE "role_on_permissions" (
     "id" TEXT NOT NULL,
     "role" "Role" NOT NULL,
     "permissionId" TEXT NOT NULL,
 
-    CONSTRAINT "role_on_permission_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "role_on_permissions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "accounts_provider_id_key" ON "accounts"("provider_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "accounts_user_id_key" ON "accounts"("user_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
@@ -185,7 +206,10 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "user_tokens_hashToken_key" ON "user_tokens"("hashToken");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "permissions_action_subject_key" ON "permissions"("action", "subject");
+CREATE UNIQUE INDEX "permissions_action_scope_subject_key" ON "permissions"("action", "scope", "subject");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "role_on_permissions_role_permissionId_key" ON "role_on_permissions"("role", "permissionId");
 
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -215,4 +239,4 @@ ALTER TABLE "suitcase_items" ADD CONSTRAINT "suitcase_items_item_id_fkey" FOREIG
 ALTER TABLE "user_tokens" ADD CONSTRAINT "user_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_on_permission" ADD CONSTRAINT "role_on_permission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "role_on_permissions" ADD CONSTRAINT "role_on_permissions_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

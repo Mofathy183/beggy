@@ -208,3 +208,17 @@ enum TokenType {
     CHANGE_EMAIL
     TWO_FACTOR
 }
+
+enum WeightUnit {
+    GRAM
+    KILOGRAM
+    POUND
+    OUNCE
+}
+
+enum VolumeUnit {
+    ML
+    LITER
+    CU_CM // cubic centimeters
+    CU_IN // cubic inches
+}

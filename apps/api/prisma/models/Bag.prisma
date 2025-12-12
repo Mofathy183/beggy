@@ -1,14 +1,16 @@
 //*Important to make relationship between User and Bags (one to many)
 
 model Bags {
-    id        String       @id @default(uuid())
-    name      String
-    type      BagType
-    color     String?      @default("black")
-    size      Size
-    capacity  Float
-    maxWeight Float
-    weight    Float
+    id    String  @id @default(uuid())
+    name  String
+    type  BagType
+    color String? @default("black")
+    size  Size
+
+    maxCapacity Float // liters or cubic capacity (static)
+    maxWeight   Float // kg the bag can safely hold (static)
+    bagWeight   Float // the empty bag weight
+
     material  Material?
     features  BagFeature[]
     createdAt DateTime     @default(now()) @map("created_at")
