@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+//* make sure that you import everything in the {.js} to make it work as it suppose be
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -9,7 +9,8 @@ import {
 	McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import dotenv from 'dotenv';
-import { convertApiToTypeScript } from './tools/convertApiToTypeScript.js';
+import { convertApiToTypeScript } from './tools/convert-to-typeScript.js';
+import { renameFiles } from './tools/rename-files.js'; // Fixed import
 
 // Load environment variables
 dotenv.config();
@@ -40,7 +41,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 						filePath: {
 							type: 'string',
 							description:
-								'Path to the JavaScript file or directory to convert. Can be relative to workspace root or absolute path. Example: "apps/api/src/controllers/authController.js" or "apps/api/src/controllers"',
+								'Path to the JavaScript file or directory to convert. Can be relative to workspace root or absolute path. Example: "apps/api/src/controllers/auth-controller.js" or "apps/api/src/controllers"',
 						},
 						backup: {
 							type: 'boolean',
@@ -56,6 +57,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 						},
 					},
 					required: ['filePath'],
+				},
+			},
+			{
+				name: 'rename_files',
+				description:
+					'Rename JS/TS files to the dot convention based on their folder type (e.g. userController.ts in controllers → user.controller.ts, userConfig.ts in config → user.config.ts) and optionally update imports.',
+				inputSchema: {
+					type: 'object',
+					properties: {
+						directory: {
+							type: 'string',
+							description:
+								'Directory to scan (e.g. "apps/api/src/controllers")',
+						},
+						dryRun: {
+							type: 'boolean',
+							default: true,
+							description:
+								'If true, shows changes without renaming files',
+						},
+						updateImports: {
+							type: 'boolean',
+							default: true,
+							description:
+								'Automatically update import/require statements',
+						},
+					},
+					required: ['directory'],
 				},
 			},
 		],
@@ -96,6 +125,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 						{
 							type: 'text',
 							text: JSON.stringify(result, null, 2),
+						},
+					],
+				};
+			}
+
+			case 'rename_files': {
+				if (
+					!args ||
+					typeof args !== 'object' ||
+					!('directory' in args)
+				) {
+					throw new McpError(
+						ErrorCode.InvalidParams,
+						'directory is required'
+					);
+				}
+
+				const directory = args.directory as string;
+				const dryRun =
+					args.dryRun !== undefined ? (args.dryRun as boolean) : true;
+				const updateImports =
+					args.updateImports !== undefined
+						? (args.updateImports as boolean)
+						: true;
+
+				// Call the renameFiles function
+				const result = await renameFiles({
+					directory,
+					dryRun,
+					updateImports,
+				});
+
+				return {
+					content: [
+						{
+							type: 'text',
+							text: result, // This should be a string already
 						},
 					],
 				};

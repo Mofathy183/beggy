@@ -234,7 +234,7 @@ Claude: [Converts it, shows you the code, backs up original]
 You: Convert apps/api/src/services/authService.js to TypeScript
 
 4️⃣ Then controllers:
-You: Convert apps/api/src/controllers/authController.js to TypeScript
+You: Convert apps/api/src/controllers/auth-controller.js to TypeScript
 
 5️⃣ Finally routes:
 You: Convert apps/api/src/routes/authRoutes.js to TypeScript
