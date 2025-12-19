@@ -1,8 +1,8 @@
 import Joi from 'joi';
 import type { PrismaClient } from '../generated/client/index.js';
-import { passwordRegExp } from './authValidator.js';
+import { passwordRegExp } from './auth.validator.js';
 import { Gender, Role } from '@prisma/client';
-import { stringRegExp } from './authValidator.js';
+import { stringRegExp } from './auth.validator.js';
 
 export const userSchema = Joi.object({
 	firstName: Joi.string()

@@ -1,5 +1,5 @@
 import { cookieOptions, cookieRefreshOptions } from '../config/env.js';
-import { signToken, signRefreshToken } from './jwt.js';
+import { signToken, signRefreshToken } from './jwt.utils.js';
 import CSRF from 'csrf';
 
 //*=============================={SEND COOKIE}==============================

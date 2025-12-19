@@ -9,7 +9,7 @@ import { statusCode } from '../config/status.js';
 import { ErrorResponse } from '../utils/error.js';
 import SuccessResponse from '../utils/successResponse.js';
 import swaggerJSDoc from 'swagger-jsdoc';
-import swaggerOptions from '../docs/swaggerDef.js';
+import swaggerOptions from '../docs/swaggerDef.doc.js';
 
 export const swaggerSpec = swaggerJSDoc(swaggerOptions);
 

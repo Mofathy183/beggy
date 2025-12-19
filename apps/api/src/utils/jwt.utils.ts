@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { JWTConfig } from '../config/env.js';
-import { ErrorHandler } from './error.js';
+import { ErrorHandler } from './error.utils.js';
 
 /**
  * Generates a JWT token with the given id and expiration time.

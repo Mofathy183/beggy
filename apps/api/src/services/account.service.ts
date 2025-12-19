@@ -1,9 +1,8 @@
-import prisma from '../../prisma/prisma.js';
-import type { PrismaClient } from '../generated/client/index.js';
-import { generateOAuthPassword } from '../utils/hash.js';
-import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
-import { ErrorHandler } from '../utils/error.js';
-import { statusCode } from '../config/status.js';
+import prisma from '../../prisma/prisma';
+import { generateOAuthPassword } from '../utils/hash';
+import { birthOfDate, haveProfilePicture } from '../utils/userHelper';
+import { ErrorHandler } from '../utils/error';
+import { statusCode } from '../config/status';
 
 /**
  * Logs in or creates a user using Google OAuth profile data.

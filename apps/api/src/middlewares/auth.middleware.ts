@@ -6,7 +6,7 @@ import { createPrismaAbility } from '@casl/prisma';
 import { passwordChangeAfter } from '../utils/userHelper.js';
 import { storeSession } from '../utils/authHelper.js';
 import { statusCode } from '../config/status.js';
-import { VReqTo } from './validateRequest.js';
+import { VReqTo } from './validate-request.middleware.js';
 import {
 	loginSchema,
 	singUpSchema,

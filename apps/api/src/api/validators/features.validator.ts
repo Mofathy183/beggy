@@ -10,7 +10,7 @@ import {
 	Size,
 	Material,
 } from '@prisma/client';
-import { productStringRegExp } from './itemValidator.js';
+import { productStringRegExp } from './item.validator.js';
 
 export const itemAutoFillingSchema = Joi.object({
 	name: Joi.string().pattern(productStringRegExp).required(),

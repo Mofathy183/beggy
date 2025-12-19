@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import type { PrismaClient } from '../generated/client/index.js';
 import { ItemCategory } from '@prisma/client';
-import { stringRegExp } from './authValidator.js';
+import { stringRegExp } from './auth.validator.js';
 
 export const productStringRegExp = /^(?=.*[a-zA-Z])(?!^\d+$)[a-zA-Z0-9\s-_]+$/;
 

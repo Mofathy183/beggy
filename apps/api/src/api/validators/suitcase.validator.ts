@@ -1,9 +1,16 @@
 import Joi from 'joi';
 import type { PrismaClient } from '../generated/client/index.js';
-import { BagFeature, BagType, Size, Material } from '@prisma/client';
-import { productStringRegExp } from './itemValidator.js';
+import {
+	SuitcaseFeature,
+	SuitcaseType,
+	Size,
+	Material,
+	WheelType,
+} from '@prisma/client';
+import { productStringRegExp } from './item.validator.js';
+import { stringRegExp } from './auth.validator.js';
 
-export const bagSchema = Joi.object({
+export const suitcaseSchema = Joi.object({
 	name: Joi.string()
 		.pattern(productStringRegExp)
 		.message(
@@ -12,13 +19,21 @@ export const bagSchema = Joi.object({
 		.required(),
 
 	type: Joi.string()
-		.valid(...Object.values(BagType))
+		.valid(...Object.values(SuitcaseType))
 		.uppercase()
 		.required(),
 
-	color: Joi.string()
+	brand: Joi.string()
 		.pattern(productStringRegExp)
-		.message('must be a letter but not any special characters or numbers'),
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	color: Joi.string()
+		.pattern(stringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
 
 	size: Joi.string() //* for Bags and Suitcases Only
 		.valid(...Object.values(Size))
@@ -26,9 +41,7 @@ export const bagSchema = Joi.object({
 		.required(),
 
 	capacity: Joi.number().precision(2).required(),
-
 	maxWeight: Joi.number().precision(2).required(),
-
 	weight: Joi.number().precision(2).required(),
 
 	material: Joi.string() //* for Bags and Suitcases Only
@@ -37,12 +50,16 @@ export const bagSchema = Joi.object({
 
 	features: Joi.array().items(
 		Joi.string()
-			.valid(...Object.values(BagFeature))
+			.valid(...Object.values(SuitcaseFeature))
 			.uppercase()
 	),
+
+	wheels: Joi.string() //* for Suitcases Only
+		.valid(...Object.values(WheelType))
+		.uppercase(),
 });
 
-export const bagModifySchema = Joi.object({
+export const suitcaseModifySchema = Joi.object({
 	name: Joi.string()
 		.pattern(productStringRegExp)
 		.message(
@@ -50,21 +67,27 @@ export const bagModifySchema = Joi.object({
 		),
 
 	type: Joi.string()
-		.valid(...Object.values(BagType))
+		.valid(...Object.values(SuitcaseType))
 		.uppercase(),
 
-	color: Joi.string()
+	brand: Joi.string()
 		.pattern(productStringRegExp)
-		.message('must be a letter but not any special characters or numbers'),
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
+
+	color: Joi.string()
+		.pattern(stringRegExp)
+		.message(
+			'must be a letter or - but not any special characters or numbers'
+		),
 
 	size: Joi.string() //* for Bags and Suitcases Only
 		.valid(...Object.values(Size))
 		.uppercase(),
 
 	capacity: Joi.number().precision(2),
-
 	maxWeight: Joi.number().precision(2),
-
 	weight: Joi.number().precision(2),
 
 	material: Joi.string() //* for Bags and Suitcases Only
@@ -73,13 +96,17 @@ export const bagModifySchema = Joi.object({
 
 	features: Joi.array().items(
 		Joi.string()
-			.valid(...Object.values(BagFeature))
+			.valid(...Object.values(SuitcaseFeature))
 			.uppercase()
 	),
 
 	removeFeatures: Joi.array().items(
 		Joi.string()
-			.valid(...Object.values(BagFeature))
+			.valid(...Object.values(SuitcaseFeature))
 			.uppercase()
 	),
+
+	wheels: Joi.string() //* for Suitcases Only
+		.valid(...Object.values(WheelType))
+		.uppercase(),
 });
