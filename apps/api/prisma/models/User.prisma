@@ -24,8 +24,8 @@ model User {
     suitcases Suitcases[]
     items     Items[]
     // 1:1 relation to Account
-    account   Account?    @relation(name: "UserAccount")
-
+    account   Account[]
+    
     //* the nama of the table
     @@map("users")
 }
