@@ -1,38 +1,3 @@
-// export const statusCode = {
-// 	continueCode: 100,
-// 	processingCode: 102,
-// 	okCode: 200,
-// 	createdCode: 201,
-// 	noContentCode: 204,
-// 	badRequestCode: 400,
-// 	unauthorizedCode: 401,
-// 	forbiddenCode: 403,
-// 	notFoundCode: 404,
-// 	conflictCode: 409,
-// 	unprocessableEntityCode: 422,
-// 	tooManyRequestsCode: 429,
-// 	internalServerErrorCode: 500,
-// 	serviceUnavailableCode: 503,
-// 	badGatewayCode: 504,
-// };
-
-// export const statusStatement = {
-// 	100: 'Continue',
-// 	102: 'Processing',
-// 	200: 'OK',
-// 	201: 'Created',
-// 	400: 'Bad Request',
-// 	401: 'Unauthorized',
-// 	403: 'Forbidden',
-// 	404: 'Not Found',
-// 	409: 'Conflict',
-// 	422: 'Unprocessable Entity',
-// 	429: 'Too Many Requests',
-// 	500: 'Internal Server Error',
-// 	503: 'Service Unavailable',
-// 	504: 'Gateway Timeout',
-// };
-
 export const STATUS_CODE = {
 	CONTINUE: 100, // for large data uploads
 	PROCESSING: 102, //for async possesses

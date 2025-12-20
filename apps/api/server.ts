@@ -122,6 +122,11 @@ app.listen(serverConfig.port, () => {
     │   │   └── email.util.ts
     │
     │
+    ├── tests/                    # Tests (mirror src structure)
+    │   ├── unit/
+    │   ├── integration/
+    │   └── e2e/
+    │
     ├── docs/                # OpenAPI/Swagger docs
     │   ├── openapi.yaml
     │   ├── user.swagger.yaml

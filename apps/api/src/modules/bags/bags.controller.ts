@@ -12,6 +12,8 @@ import {
 	removeAllBagsUserHas,
 } from '../../services/bagsService.js';
 
+//*======================================={BAG ME Route}==============================================
+
 export const getBagsBelongsToUser = async (req, res, next) => {
 	try {
 		const { userId, userRole } = req.session;
@@ -389,3 +391,307 @@ export const deleteAllBagsBelongsToUser = async (req, res, next) => {
 		);
 	}
 };
+
+//*======================================={BAG ME Route}==============================================
+
+//*======================================={Bags Public Route}==============================================
+
+export const getAllBagsByQuery = async (req, res, next) => {
+	try {
+		const {
+			searchFilter = undefined,
+			pagination,
+			orderBy = undefined,
+		} = req;
+
+		const allBags = await findAllBagsByQuery(
+			searchFilter,
+			pagination,
+			orderBy
+		);
+
+		if (sendServiceResponse(next, allBags)) return;
+
+		const { bags, meta } = allBags;
+
+		if (bags.error)
+			return next(
+				new ErrorResponse(
+					bags.error,
+					'Failed to retrieve bags ' + bags.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				`Successfully Retrieved All Bags${searchFilter ? ' By Search' : ''}`,
+				bags,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Bags By Filter'
+					: error,
+				'Failed to retrieve bags ' + error.message,
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const getBagById = async (req, res, next) => {
+	try {
+		const { bagId } = req.params;
+
+		const bag = await findBagById(bagId);
+
+		if (sendServiceResponse(next, bag)) return;
+
+		if (!bag)
+			return next(
+				new ErrorResponse(
+					'Bag not found',
+					'Failed to retrieve bag',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (bag.error)
+			return next(
+				new ErrorResponse(
+					bag.error,
+					'Failed to retrieve bag ' + bag.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Retrieved Bag By ID',
+				bag
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Bags By Id'
+					: error,
+				'Failed to retrieve bag',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+//*======================================={Bags Public Route}==============================================
+
+
+//*======================================={Bags Private Route}==============================================
+
+export const replaceBagById = async (req, res, next) => {
+	try {
+		const { bagId } = req.params;
+		const { body } = req as Request<{}, {}, any>;
+		const { userId, userRole } = req.session;
+
+		const bagUpdate = await replaceBagResource(bagId, body);
+
+		if (sendServiceResponse(next, bagUpdate)) return;
+
+		if (!bagUpdate)
+			return next(
+				new ErrorResponse(
+					'Bag not found',
+					'Failed to replace bag',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (bagUpdate.error)
+			return next(
+				new ErrorResponse(
+					bagUpdate.error,
+					'Failed to replace bag ' + bagUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Replaced Bag By ID',
+				bagUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Replacing Bag'
+					: error,
+				'Failed to replace bag',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const modifyBagById = async (req, res, next) => {
+	try {
+		const { bagId } = req.params;
+		const { body } = req as Request<{}, {}, any>;
+		const { userId, userRole } = req.session;
+
+		const bagUpdate = await modifyBagResource(bagId, body);
+
+		if (sendServiceResponse(next, bagUpdate)) return;
+
+		if (!bagUpdate)
+			return next(
+				new ErrorResponse(
+					'Bag not found',
+					'Failed to Modify bag',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (bagUpdate.error)
+			return next(
+				new ErrorResponse(
+					bagUpdate.error,
+					'Failed to Modify bag ' + bagUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Modifying Bag By ID',
+				bagUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Modifying Bag'
+					: error,
+				'Failed to modify bag',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const deleteBagById = async (req, res, next) => {
+	try {
+		const { bagId } = req.params;
+		const { userId, userRole } = req.session;
+
+		const removeBag = await removeBagById(bagId);
+
+		if (sendServiceResponse(next, removeBag)) return;
+
+		const { bagDelete, meta } = removeBag;
+
+		if (!bagDelete)
+			return next(
+				new ErrorResponse(
+					'Bag not found',
+					'Failed to delete bag',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (bagDelete.error)
+			return next(
+				new ErrorResponse(
+					bagDelete.error,
+					'Failed to delete bag ' + bagDelete.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Deleted Bag By ID',
+				bagDelete,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Bag'
+					: error,
+				'Failed to delete bag',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const deleteAllBags = async (req, res, next) => {
+	try {
+		const { searchFilter = undefined } = req;
+		const { userId, userRole } = req.session;
+
+		const removeBags = await removeAllBags(searchFilter);
+
+		if (sendServiceResponse(next, removeBags)) return;
+
+		const { deleteCount, meta } = removeBags;
+
+		if (deleteCount.error)
+			return next(
+				new ErrorResponse(
+					deleteCount.error,
+					'Failed to delete all bags ' + deleteCount.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				`Successfully Delete All Bags${searchFilter ? ' By Search' : ''}`,
+				deleteCount,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Bags By Filter'
+					: error,
+				'Failed to delete all bags',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+//*======================================={Bags Private Route}==============================================

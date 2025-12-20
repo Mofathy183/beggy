@@ -30,6 +30,8 @@ import {
 
 const itemsRoute = express.Router();
 
+//*======================================={Items ME Route}==============================================
+
 //* Validate request parameters
 itemsRoute.param('itemId', (req, res, next, itemId) =>
 	VReqToUUID(req, res, next, itemId, 'itemId')
@@ -132,5 +134,84 @@ itemsRoute.delete(
 	checkPermissionMiddleware('delete:own', 'item'),
 	deleteItemBelongsTo
 );
+
+//*======================================={Items ME Route}==============================================
+
+//*======================================={Items Public Route}==============================================
+
+// //* route for get all items by Query or All Items => GET
+// //* GET "/items/search" → Get items by query
+// //* Get all items with optional search query
+// publicRoute.get(
+// 	'/items',
+// 	paginateMiddleware,
+// 	searchMiddleware, // Applies search filters if any
+// 	orderByMiddleware, // Applies sorting if any
+// 	getItemsByQuery
+// );
+
+// //* route for get item by id => GET (params id)
+// //* GET "items/:itemId" → Get a single item by ID
+// //* Get item by ID
+// publicRoute.get('/items/:itemId', getItemsById);
+
+//*======================================={Items Public Route}==============================================
+
+//*======================================={Items Private Route}==============================================
+
+// //* route for replace (update) item by id => PUT param(id)
+// //* PUT /items/:itemId → Replace an item (admin/member)
+// //* Replace (update) an item by ID
+// privateRoute.put(
+// 	'/items/:itemId',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	checkRoleMiddleware('admin', 'member'),
+// 	checkPermissionMiddleware('update:any', 'item'),
+// 	VReqToCreateItem,
+// 	replaceItemById
+// );
+
+// //* route for modify (update) item by id => PATCH param(id)
+// //* PATCH /items/:itemId → Modify an item (admin/member)
+// //* Modify (update) an item by ID
+// privateRoute.patch(
+// 	'/items/:itemId',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	checkRoleMiddleware('admin', 'member'),
+// 	checkPermissionMiddleware('update:any', 'item'),
+// 	VReqToModifyItem,
+// 	modifyItemById
+// );
+
+// //* route for delete All Items By Search or All => DELETE
+// //* DELETE /items → Delete all items (admin only)
+// //* Delete all items (Admin only)
+// privateRoute.delete(
+// 	'/items',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	searchMiddleware,
+// 	checkRoleMiddleware('admin'),
+// 	checkPermissionMiddleware('delete:any', 'item'),
+// 	VReqToConfirmDelete,
+// 	confirmDeleteMiddleware,
+// 	deleteAllItems
+// );
+
+// //* route for delete item by id => DELETE (params id)
+// //* DELETE /items/:itemId → Delete an item (admin/member)
+// //* Delete an item by ID
+// privateRoute.delete(
+// 	'/items/:itemId',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	checkRoleMiddleware('admin', 'member'),
+// 	checkPermissionMiddleware('delete:any', 'item'),
+// 	deleteItemById
+// );
+
+//*======================================={Items Private Route}==============================================
 
 export default itemsRoute;

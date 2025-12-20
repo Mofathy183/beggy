@@ -3,7 +3,7 @@
 	"jsc": {
 		"parser": {
 			"syntax": "typescript",
-			"tsx": false,
+			"tsx": true,  // Changed to true (you have .tsx files for emails)
 			"decorators": true,
 			"dynamicImport": true
 		},
@@ -11,13 +11,18 @@
 		"loose": false,
 		"externalHelpers": false,
 		"keepClassNames": true,
-		"baseUrl": "./src",
+		"baseUrl": ".",  // Changed from "./src" to "." (MUST match tsconfig!)
 		"paths": {
-			"@/*": ["*"]
+			// MUST match tsconfig.json paths!
+			"@/*": ["src/*"],
+			"@prisma/*": ["prisma/*"],
+			// "@tests/*": ["tests/*"],
+			// "@docs/*": ["docs/*"],
+			"@beggy/*": ["../../packages/*/src"]
 		}
 	},
 	"module": {
-		"type": "es6",
+		"type": "commonjs",  // Changed from "es6" to "commonjs" (you're using Node.js/Express)
 		"strict": true,
 		"strictMode": true,
 		"lazy": false,
@@ -27,4 +32,3 @@
 	"sourceMaps": true,
 	"inlineSourcesContent": true
 }
-

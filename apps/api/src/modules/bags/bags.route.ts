@@ -28,6 +28,8 @@ import {
 
 const bagsRoute = express.Router();
 
+//*======================================={BAG ME Route}==============================================
+
 //* Validate request parameters
 
 bagsRoute.param('bagId', (req, res, next, bagId) =>
@@ -119,5 +121,83 @@ bagsRoute.delete(
 	checkPermissionMiddleware('delete:own', 'bag'),
 	deleteBagBelongsToUserById
 );
-
 export default bagsRoute;
+//*======================================={BAG ME Route}==============================================
+
+//*======================================={Bags Private Route}==============================================
+
+// //* route for replace (update) bag by id => PUT param(id)
+// //* PUT /bags/:bagId → Replace an bag (admin/member)
+// //* Replace (update) an bag by ID
+// privateRoute.put(
+// 	'/bags/:bagId',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	checkRoleMiddleware('admin', 'member'),
+// 	checkPermissionMiddleware('update:any', 'bag'),
+// 	VReqToCreateBag,
+// 	replaceBagById
+// );
+
+// //* route for modify (update) bag by id => PATCH param(id)
+// //* PATCH /bags/:bagId → Modify an bag (admin/member)
+// //* Modify (update) an bag by ID
+// privateRoute.patch(
+// 	'/bags/:bagId',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	checkRoleMiddleware('admin', 'member'),
+// 	checkPermissionMiddleware('update:any', 'bag'),
+// 	VReqToModifyBag,
+// 	modifyBagById
+// );
+
+// //* route for delete All bags => DELETE
+// //* DELETE /bags → Delete all bags (admin only)
+// //* Delete all bags (Admin only)
+// privateRoute.delete(
+// 	'/bags',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	searchMiddleware,
+// 	checkRoleMiddleware('admin'),
+// 	checkPermissionMiddleware('delete:any', 'bag'),
+// 	VReqToConfirmDelete,
+// 	confirmDeleteMiddleware,
+// 	deleteAllBags
+// );
+
+// //* route for delete bag by id => DELETE (params id)
+// //* DELETE /bags/:bagId → Delete an bag (admin/member)
+// //* Delete an bag by ID
+// privateRoute.delete(
+// 	'/bags/:bagId',
+// 	VReqToHeaderToken,
+// 	headersMiddleware,
+// 	checkRoleMiddleware('admin', 'member'),
+// 	checkPermissionMiddleware('delete:any', 'bag'),
+// 	deleteBagById
+// );
+
+//*======================================={Bags Private Route}==============================================
+
+
+//*======================================={Bags Public Route}==============================================
+
+// //* route for get all bags by Query Or ALL BAGS => GET (query limit and pages)
+// //* GET "/search" → Get bags by query If There OR ALL Bags
+// //* Get all bags with optional search query
+// publicRoute.get(
+// 	'/bags',
+// 	searchMiddleware,
+// 	paginateMiddleware,
+// 	orderByMiddleware,
+// 	getAllBagsByQuery
+// );
+
+// //* route for get bag by id => GET (params id)
+// //* GET "/:bagId" → Get a single bag by ID
+// //* Get bag by ID
+// publicRoute.get('/bags/:bagId', getBagById);
+
+//*======================================={Bags Public Route}==============================================

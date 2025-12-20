@@ -3,6 +3,8 @@ import type { PrismaClient } from '../generated/client/index.js';
 import prisma from '../../prisma/prisma.js';
 import { statusCode } from '../config/status.js';
 
+//*======================================={BAG ME Route}==============================================
+
 /**
  * @function findBagsUserHas
  * @description Fetches the list of bags associated with a specific user, based on filters, pagination, and sorting criteria.
@@ -566,3 +568,337 @@ export const removeAllBagsUserHas = async (userId, searchFilter) => {
 		);
 	}
 };
+//*======================================={BAG ME Route}==============================================
+
+//*======================================={Bags Private Route}==============================================
+
+/**
+ * @function replaceBagResource
+ * @description Replaces the details of a bag resource identified by its ID.
+ * @param {string} bagId - The ID of the bag to be replaced.
+ * @param {Object} body - The new data for the bag, including name, type, color, size, capacity, maxWeight, weight, material, and features.
+ * @returns {Promise<Object>} The updated bag details, or an error if the operation fails.
+ */
+export const replaceBagResource = async (bagId, body) => {
+	try {
+		const {
+			name,
+			type,
+			color,
+			size,
+			capacity,
+			maxWeight,
+			weight,
+			material,
+			features,
+		} = body;
+
+		const bagUpdate = await prisma.bags.update({
+			where: { id: bagId },
+			data: {
+				name: name,
+				type: type,
+				color: color,
+				size: size,
+				capacity: capacity,
+				maxWeight: maxWeight,
+				weight: weight,
+				material: material,
+				features: features,
+			},
+		});
+
+		if (!bagUpdate)
+			return new ErrorHandler(
+				'bag not found',
+				'Failed to find bag in the database',
+				'prisma Error',
+				statusCode.notFoundCode
+			);
+
+		if (bagUpdate.error)
+			return new ErrorHandler(
+				'prisma',
+				bagUpdate.error,
+				'Failed to update bag in the database ' +
+					bagUpdate.error.message,
+				statusCode.internalServerErrorCode
+			);
+
+		return bagUpdate;
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Replacing Bag'
+				: error,
+			'Failed to replace bag resource',
+			statusCode.internalServerErrorCode
+		);
+	}
+};
+
+/**
+ * @function modifyBagResource
+ * @description Modifies specific fields of a bag resource identified by its ID.
+ * @param {string} bagId - The ID of the bag to be modified.
+ * @param {Object} body - Partial fields to update, including name, type, color, size, capacity, maxWeight, weight, material, and features.
+ * @returns {Promise<Object>} The modified bag details, or an error if the operation fails.
+ */
+export const modifyBagResource = async (bagId, body) => {
+	try {
+		const {
+			name,
+			type,
+			color,
+			size,
+			capacity,
+			maxWeight,
+			weight,
+			material,
+			features,
+		} = body;
+
+		const bagUpdate = await prisma.bags.update({
+			where: { id: bagId },
+			data: {
+				name: name || undefined,
+				type: type || undefined,
+				color: color || undefined,
+				size: size || undefined,
+				capacity: capacity || undefined,
+				maxWeight: maxWeight || undefined,
+				weight: weight || undefined,
+				material: material || undefined,
+				features: features || undefined,
+			},
+		});
+
+		if (!bagUpdate)
+			return new ErrorHandler(
+				'bag not found',
+				'Failed to find bag in the database',
+				'prisma Error',
+				statusCode.notFoundCode
+			);
+
+		if (bagUpdate.error)
+			return new ErrorHandler(
+				'prisma',
+				bagUpdate.error,
+				'Failed to update bag in the database ' +
+					bagUpdate.error.message,
+				statusCode.internalServerErrorCode
+			);
+
+		return bagUpdate;
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Modifying Bag'
+				: error,
+			'Failed to modify bag resource',
+			statusCode.internalServerErrorCode
+		);
+	}
+};
+
+/**
+ * @function removeBagById
+ * @description Deletes a specific bag resource from the database identified by its ID.
+ * @param {string} bagId - The ID of the bag to be deleted.
+ * @returns {Promise<Object>} An object containing the deleted bag details and metadata, or an error if the operation fails.
+ */
+export const removeBagById = async (bagId) => {
+	try {
+		const bagDelete = await prisma.bags.delete({
+			where: { id: bagId },
+			select: {
+				id: true,
+				name: true,
+			},
+		});
+
+		if (!bagDelete)
+			return new ErrorHandler(
+				'bag not found',
+				'Failed to find bag in the database',
+				'prisma Error',
+				statusCode.notFoundCode
+			);
+
+		if (bagDelete.error)
+			return new ErrorHandler(
+				'prisma',
+				bagDelete.error,
+				'Failed to delete bag in the database ' +
+					bagDelete.error.message,
+				statusCode.internalServerErrorCode
+			);
+
+		const totalCount = await prisma.bags.count();
+
+		const meta = {
+			totalCount: totalCount,
+			totalDelete: bagDelete ? 1 : 0,
+		};
+
+		return { bagDelete: bagDelete, meta: meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Bag'
+				: error,
+			'Failed to remove bag by id',
+			statusCode.internalServerErrorCode
+		);
+	}
+};
+
+/**
+ * @function removeAllBags
+ * @description Deletes all bag resources from the database based on provided filtering criteria.
+ * @param {Object} searchFilter - Filtering conditions for the deletion operation.
+ * @returns {Promise<Object>} Metadata of the deletion operation, including the count of deleted bags, or an error if the operation fails.
+ */
+export const removeAllBags = async (searchFilter) => {
+	try {
+		const deleteCount = await prisma.bags.deleteMany({
+			where: searchFilter,
+		});
+
+		if (deleteCount.error)
+			return new ErrorHandler(
+				'prisma',
+				deleteCount.error,
+				'Failed to delete all bags from the database',
+				statusCode.internalServerErrorCode
+			);
+
+		const meta = {
+			totalCount: deleteCount.count,
+			totalDelete: deleteCount.count,
+			searchFilter,
+		};
+
+		return { deleteCount: deleteCount, meta: meta };
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Removing Bags By Filter'
+				: error,
+			'Failed to remove all bags'
+		);
+	}
+};
+
+//*======================================={Bags Private Route}==============================================
+
+//*======================================={Bags Public Route}==============================================
+
+/**
+ * @function findAllBagsByQuery
+ * @description Fetches a list of bags based on filtering criteria, pagination, and sorting options.
+ * @param {Object} searchFilter - Filtering conditions for the bags query.
+ * @param {Object} pagination - Contains page number, limit, and offset for paginated results.
+ * @param {Object} orderBy - Criteria to sort the results.
+ * @returns {Promise<Object>} An object containing the fetched bags and metadata, or an error if the operation fails.
+ */
+export const findAllBagsByQuery = async (searchFilter, pagination, orderBy) => {
+	try {
+		const { page, limit, offset } = pagination;
+
+		const bags = await prisma.bags.findMany({
+			where: searchFilter,
+			omit: {
+				user: true,
+				userId: true,
+				bagItems: true,
+			},
+			take: limit,
+			skip: offset,
+			orderBy: orderBy,
+		});
+
+		if (bags.error)
+			return new ErrorHandler(
+				'prisma Error',
+				'Failed to find Bags in the database ' + bags.error,
+				'Failed to find Bags in the database ' + bags.error.message,
+				statusCode.internalServerErrorCode
+			);
+
+		const totalCount = await prisma.bags.count();
+
+		const meta = {
+			totalCount: totalCount,
+			totalFind: bags.length,
+			page: page,
+			limit: limit,
+			searchFilter: searchFilter,
+			orderBy: orderBy,
+		};
+
+		return { bags, meta };
+	} catch (error) {
+		new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Bags By Filter'
+				: error,
+			'Failed to get all bags',
+			statusCode.internalServerErrorCode
+		);
+	}
+};
+
+/**
+ * @function findBagById
+ * @description Retrieves a specific bag resource from the database based on its ID.
+ * @param {string} bagId - The ID of the bag to retrieve.
+ * @returns {Promise<Object>} The details of the bag, or an error if the operation fails.
+ */
+export const findBagById = async (bagId) => {
+	try {
+		const bag = await prisma.bags.findUnique({
+			where: { id: bagId },
+			omit: {
+				user: true,
+				userId: true,
+				bagItems: true,
+			},
+		});
+
+		if (!bag)
+			return new ErrorHandler(
+				'bag not found',
+				'Failed to find bag in the database',
+				'Failed To Find Bag By Id',
+				statusCode.notFoundCode
+			);
+
+		if (bag.error)
+			return new ErrorHandler(
+				'prisma',
+				'Failed to find Bag in the database ' + bag.error,
+				'Failed to find Bag in the database ' + bag.error.message,
+				statusCode.internalServerErrorCode
+			);
+
+		return bag;
+	} catch (error) {
+		return new ErrorHandler(
+			'catch',
+			Object.keys(error).length === 0
+				? 'Error Occur while Getting Bags By Id'
+				: error,
+			'Failed to get bag by id',
+			statusCode.internalServerErrorCode
+		);
+	}
+};
+
+//*======================================={Bags Public Route}==============================================

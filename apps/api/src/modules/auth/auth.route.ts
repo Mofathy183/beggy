@@ -31,6 +31,8 @@ import {
 	checkPermissionMiddleware,
 } from '../../middlewares/authMiddleware.js';
 
+//*==============================================={{ AUTH ROUTES }}=====================================================
+
 const authRoute = express.Router();
 
 authRoute.param('token', (req, res, next, token) =>
@@ -49,45 +51,6 @@ authRoute.patch('/forgot-password', VReqToEmail, forgotPassword);
 //* route for reset Password => PATCH param(token) (new password and confirm password)
 authRoute.patch('/reset-password/:token', VReqToResetPassword, resetPassword);
 
-//* route for changing password (only for logged-in users) => PATCH
-//   Requires: currentPassword, newPassword, confirmPassword
-authRoute.patch(
-	'/change-password',
-	VReqToHeaderToken,
-	headersMiddleware,
-	checkPermissionMiddleware('update:own', 'user'),
-	VReqToUpdatePassword,
-	updatePassword
-);
-
-//* route for editing profile info (excluding password) => PATCH
-authRoute.patch(
-	'/edit-profile',
-	VReqToHeaderToken,
-	headersMiddleware,
-	VReqToUpdateUserData,
-	checkPermissionMiddleware('update:own', 'user'),
-	updateData
-);
-
-//* route for change user email => PATCH (email) user must by login to change his email
-authRoute.patch(
-	'/change-email',
-	VReqToHeaderToken,
-	headersMiddleware,
-	VReqToEmail,
-	changeEmail
-);
-
-//* route for deactivate user account => DELETE  (User must be login already to be deactivated)
-authRoute.delete(
-	'/deactivate',
-	VReqToHeaderToken,
-	headersMiddleware,
-	checkPermissionMiddleware('delete:own', 'user'),
-	deActivate
-);
-
 //* route for logout => POST
 authRoute.post(
 	'/logout',
@@ -97,32 +60,12 @@ authRoute.post(
 	logout
 );
 
-//* route for frontend to check if user is authentic
-authRoute.get('/me', VReqToHeaderToken, headersMiddleware, authMe);
-
-//* route for send verification email
-//* POST {email}
-authRoute.post(
-	'/send-verification-email',
-	VReqToHeaderToken,
-	headersMiddleware,
-	VReqToEmail,
-	sendVerificationEmail
-);
 
 //* route for verify email
 //* query {token} and {type => "email_verification" or "change_email"}
 //* will be use for verify email and when the user change his email
 authRoute.get('/verify-email', verifyEmailQueryMiddleware, verifyEmail);
 
-//* for get user permissions => GET
-//* user must be login already to get his permissions
-authRoute.get(
-	'/permissions',
-	VReqToHeaderToken,
-	headersMiddleware,
-	permissions
-);
 
 //* to get csrf token to send with the request body
 authRoute.get('/csrf-token', csrfProtection);
@@ -136,3 +79,54 @@ authRoute.post(
 );
 
 export default authRoute;
+//*==============================================={{ AUTH ROUTES }}=====================================================
+
+//*==============================================={{ OAUTH ROUTES }}=====================================================
+const accountRoute = express.Router();
+
+//*: route for start OAuth Google authenticate => GET
+accountRoute.get(
+	'/google',
+	passport.authenticate('google', {
+		scope: ['profile', 'email'],
+	})
+);
+
+//*: route for callback OAuth Google authenticate => GET
+accountRoute.get(
+	'/google/callback',
+	passport.authenticate('google', {
+		failureRedirect: '/api/beggy/auth/login',
+		session: true, // If you use sessions
+	}),
+	VReqUserSocialProfile,
+	loginWithGoogle
+);
+
+//*: route for start OAuth Facebook authenticate => GET
+accountRoute.get(
+	'/facebook',
+	passport.authenticate('facebook', {
+		scope: [
+			'email',
+			'public_profile',
+			'user_gender',
+			'user_hometown',
+			'user_birthday',
+			'user_photos',
+		],
+	})
+);
+
+//*: route for callback OAuth Facebook authenticate => GET
+accountRoute.get(
+	'/facebook/callback',
+	passport.authenticate('facebook', {
+		session: true, // save user's session in the cookie
+		failureRedirect: '/api/beggy/auth/login', // if fail to authenticate, redirect to login page
+	}),
+	VReqUserSocialProfile, // to check if the user data is stored in session
+	authenticateWithFacebook
+);
+
+//*==============================================={{ OAUTH ROUTES }}=====================================================

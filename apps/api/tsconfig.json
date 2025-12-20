@@ -6,11 +6,42 @@
 		"types": ["jest", "node"],
 		"baseUrl": ".",
 		"paths": {
+			//* Global Project related Paths
 			"@beggy/types": ["../../packages/types/src"],
 			"@beggy/types/*": ["../../packages/types/src/*"],
 			"@beggy/shared": ["../../packages/shared/src"],
-			"@beggy/shared/*": ["../../packages/shared/src/*"]
+			"@beggy/shared/*": ["../../packages/shared/src/*"],
+
+			//* ========== API ROOT IMPORTS ==========
+			"@/*": ["src/*"],
+			"@prisma/*": ["prisma/*"],
+			
+			//* ========== SPECIFIC SRC PATHS ==========
+			// Direct access to commonly used folders
+			"@config": ["src/config/index.ts"],
+			"@shared": ["src/shared/index.ts"],
+			"@modules": ["src/modules/index.ts"],
+			"@emails": ["src/emails/index.ts"],
+			
+			// Deep imports with wildcards
+			"@config/*": ["src/config/*"],
+			"@shared/*": ["src/shared/*"],
+			"@modules/*": ["src/modules/*"],
+			"@emails/*": ["src/emails/*"],
+			
+			//* ========== PRISMA SPECIFIC ==========
+			"@prisma-client": ["prisma/prisma.client.ts"],
 		}
 	},
-	"include": ["./src", "./tests/**/*.test.ts"]
+    "include": [
+		"src/**/*",
+		"tests/**/*",
+		"prisma/**/*",
+		"docs/**/*",
+		"app.ts",
+		"server.ts",
+		"*.config.ts",
+		"*.config.mjs"
+	],
+	"exclude": ["node_modules", "dist"]
 }

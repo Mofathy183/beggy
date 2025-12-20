@@ -13,6 +13,304 @@ import { sendCookies, storeSession } from '../../utils/authHelper.js';
 import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
+
+
+//*======================================={Items Public Route}==============================================
+
+export const getItemsById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+
+		const item = await findItemById(itemId);
+
+		if (sendServiceResponse(next, item)) return;
+
+		if (!item)
+			return next(
+				new ErrorResponse(
+					'Item not found',
+					'Failed to find item by id',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (item.error)
+			return next(
+				new ErrorResponse(
+					'Failed to find item by id ' + item.error,
+					'Failed to find item by id ' + item.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully found item by id',
+				item
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Item By Id'
+					: error,
+				'Failed to get item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const getItemsByQuery = async (req, res, next) => {
+	try {
+		const {
+			pagination,
+			orderBy = undefined,
+			searchFilter = undefined,
+		} = req;
+
+		const allItems = await findItemsByQuery(
+			pagination,
+			searchFilter,
+			orderBy
+		);
+
+		if (sendServiceResponse(next, allItems)) return;
+
+		const { items, meta } = allItems;
+
+		if (items.error)
+			return next(
+				new ErrorResponse(
+					'Failed to find all items ' + items.error,
+					'Failed to find all items ' + items.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				`Successfully found all items${searchFilter ? ' by Search' : ''}`,
+				items,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Getting Items By Filter'
+					: error,
+				'Failed to get all items',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+//*======================================={Items Public Route}=============================================
+
+//*======================================={Items Private Route}==============================================
+
+export const replaceItemById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+		const { body } = req as Request<{}, {}, any>;
+		const { userId, userRole } = req.session;
+
+		const itemUpdate = await replaceItemResource(itemId, body);
+
+		if (sendServiceResponse(next, itemUpdate)) return;
+
+		if (!itemUpdate)
+			return next(
+				new ErrorResponse(
+					'Item not found',
+					'Failed to find item by id',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (itemUpdate.error)
+			return next(
+				new ErrorResponse(
+					itemUpdate.error,
+					'Failed to replace item by itemId ' +
+						itemUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Replaced Item by ID',
+				itemUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Replacing Item'
+					: error,
+				'Failed to replace item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const modifyItemById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+		const { body } = req as Request<{}, {}, any>;
+		const { userId, userRole } = req.session;
+
+		const itemUpdate = await modifyItemResource(itemId, body);
+
+		if (sendServiceResponse(next, itemUpdate)) return;
+
+		if (!itemUpdate)
+			return next(
+				new ErrorResponse(
+					'Item not found',
+					'Failed to find item by id',
+					statusCode.notFoundCode
+				)
+			);
+
+		if (itemUpdate.error)
+			return next(
+				new ErrorResponse(
+					itemUpdate.error,
+					'Failed to modify item by id' + itemUpdate.error.message,
+					statusCode.badRequestCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Modified Item by ID',
+				itemUpdate
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Modifying Item'
+					: error,
+				'Failed to modify item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const deleteItemById = async (req, res, next) => {
+	try {
+		const { itemId } = req.params;
+		const { userId, userRole } = req.session;
+
+		const removeItem = await removeItemById(itemId);
+
+		if (sendServiceResponse(next, removeItem)) return;
+
+		const { deletedItem, meta } = removeItem;
+
+		if (deletedItem.error)
+			return next(
+				new ErrorResponse(
+					'Failed to delete item by id ' + deletedItem.error,
+					'Failed to delete item by id ' + deletedItem.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				'Successfully Deleted Item by ID',
+				deletedItem,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Item'
+					: error,
+				'Failed to delete item by id',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+export const deleteAllItems = async (req, res, next) => {
+	try {
+		const { userId, userRole } = req.session;
+		const { searchFilter = undefined } = req;
+
+		const removeItems = await removeAllItems(searchFilter);
+
+		if (sendServiceResponse(next, removeItems)) return;
+
+		const { deleteCount, meta } = removeItems;
+
+		if (deleteCount.error)
+			return next(
+				new ErrorResponse(
+					'Failed to delete all items ' + deleteCount.error,
+					'Failed to delete all items ' + deleteCount.error.message,
+					statusCode.internalServerErrorCode
+				)
+			);
+
+		sendCookies(userId, res);
+		storeSession(userId, userRole, req);
+
+		return next(
+			new SuccessResponse(
+				statusCode.okCode,
+				`Successfully Delete All Items${searchFilter ? ' By Search' : ''}`,
+				deleteCount,
+				meta
+			)
+		);
+	} catch (error) {
+		return next(
+			new ErrorResponse(
+				Object.keys(error).length === 0
+					? 'Error Occur while Removing Items By Filter'
+					: error,
+				'Failed to delete all items',
+				statusCode.internalServerErrorCode
+			)
+		);
+	}
+};
+
+//*======================================={Items Private Route}==============================================
+
+
+//*======================================={Items ME Route}==============================================
+
 export const getItemsBelongsToUser = async (req, res, next) => {
 	try {
 		const {
@@ -440,3 +738,5 @@ export const deleteAllItemsBelongsToUser = async (req, res, next) => {
 		);
 	}
 };
+
+//*======================================={Items ME Route}==============================================
