@@ -3,9 +3,9 @@ import type {
 	ISuitcaseItem,
 	TConvertToKilogram,
 	TConvertToLiter,
-} from '../src/types/prismaTypes';
-import { ContainerStatusEnum } from '../src/types/prismaTypes';
-import { WeightUnit, VolumeUnit } from './generated/prisma/enums';
+} from '@shared/types';
+import { ContainerStatusEnum } from "@shared/types"
+import { WeightUnit, VolumeUnit } from '@prisma-generated/enums';
 
 //*==========================={User Helpers}========================
 

@@ -9,8 +9,8 @@ import {
 	ItemsModel,
 	PermissionModel,
 	RoleOnPermissionModel,
-} from '../../prisma/generated/prisma/models';
-import { WeightUnit, VolumeUnit } from '../../prisma/generated/prisma/enums';
+} from '@prisma-generated/models';
+import { WeightUnit, VolumeUnit } from '@prisma-generated/enums';
 
 export interface IItem extends ItemsModel {
 	bagItems: IBagItem[];

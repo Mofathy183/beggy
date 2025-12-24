@@ -1,6 +1,5 @@
-import { IBag, ISuitcase } from './../src/types/prismaTypes';
-import { PrismaClient } from './generated/prisma/client';
-// import { UserCreateInput, BagsCreateInput, SuitcasesCreateInput, ItemsCreateInput } from './generated/prisma/models';
+import { IBag, ISuitcase } from '@shared/types';
+import { PrismaClient } from '@prisma-generated/client';
 import {
 	//*======={User}========
 	getDisplayName,
@@ -19,7 +18,7 @@ import {
 	getContainerStatus,
 	calculateItemCount,
 	//*======={Suitcase and Bags}========
-} from './helper';
+} from '@prisma/prisma.utils';
 
 //* add extension for Prisma to get the age of the user and the display name
 const prisma = new PrismaClient({} as any)

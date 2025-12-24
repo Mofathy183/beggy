@@ -1,31 +1,34 @@
-import type { PrismaClient } from '../generated/client/index.js';
-import {
-	singUpUser,
-	loginUser,
-	authUser,
-	userForgotPassword,
-	resetUserPassword,
-	updateUserData,
-	changeUserEmail,
-	verifyUserEmail,
-	getUserPermissions,
-	updateUserPassword,
-	sendVerificationUserEmail,
-	deactivateUserAccount,
-} from '../../services/authService.js';
-import { resetPasswordUrl, verifyEmailUrl } from '../../config/env.js';
-import { sendEmail } from '../../utils/sendMail.js';
-import { generateCSRFToken } from '../../utils/authHelper.js';
-import {
-	sendCookies,
-	storeSession,
-	clearCookies,
-	deleteSession,
-} from '../../utils/authHelper.js';
-import { verifyRefreshToken } from '../../utils/jwt.js';
-import { statusCode } from '../../config/status.js';
-import SuccessResponse from '../../utils/successResponse.js';
-import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
+// import type { PrismaClient } from '../generated/client/index.js';
+// import {
+// 	singUpUser,
+// 	loginUser,
+// 	authUser,
+// 	userForgotPassword,
+// 	resetUserPassword,
+// 	updateUserData,
+// 	changeUserEmail,
+// 	verifyUserEmail,
+// 	getUserPermissions,
+// 	updateUserPassword,
+// 	sendVerificationUserEmail,
+// 	deactivateUserAccount,
+// } from '../../services/authService.js';
+// import { resetPasswordUrl, verifyEmailUrl } from '../../config/env.js';
+// import { sendEmail } from '../../utils/sendMail.js';
+// import { generateCSRFToken } from '../../utils/authHelper.js';
+// import {
+// 	sendCookies,
+// 	storeSession,
+// 	clearCookies,
+// 	deleteSession,
+// } from '../../utils/authHelper.js';
+// import { verifyRefreshToken } from '../../utils/jwt.js';
+// import { statusCode } from '../../config/status.js';
+// import SuccessResponse from '../../utils/successResponse.js';
+// import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
+import prisma from "@prisma-client";
+import type { Request, Response, NextFunction } from "express"
+
 
 export const signUp = async (req, res, next) => {
 	try {
