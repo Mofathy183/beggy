@@ -492,7 +492,6 @@ export const getBagById = async (req, res, next) => {
 
 //*======================================={Bags Public Route}==============================================
 
-
 //*======================================={Bags Private Route}==============================================
 
 export const replaceBagById = async (req, res, next) => {

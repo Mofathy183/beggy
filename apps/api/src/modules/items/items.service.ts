@@ -607,7 +607,6 @@ export const findItemsByQuery = async (pagination, searchFilter, orderBy) => {
 
 //*======================================={Items Public Route}==============================================
 
-
 //*======================================={Items Private Route}==============================================
 
 /**

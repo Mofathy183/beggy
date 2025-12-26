@@ -569,9 +569,6 @@ describe('Suitcases Route - User Delete All Suitcases', () => {
 	});
 });
 
-
-
-
 //*======================================={Suitcase Public Route}==============================================
 
 describe('Base suitcases Route Tests To Get All Suitcases', () => {

@@ -1,4 +1,3 @@
-
 /**
  * Logs in or creates a user using Google OAuth profile data.
  *
@@ -78,8 +77,6 @@ export const loginUserWithGoogle = async (profile) => {
 		);
 	}
 };
-
-
 
 export const loginWithGoogle = async (req, res, next) => {
 	try {

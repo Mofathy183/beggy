@@ -88,7 +88,6 @@ export const headersMiddleware = async (req, res, next) => {
 	}
 };
 
-
 /**
  * Checks if the `confirmDelete` flag is set to `true` in the request body.
  *

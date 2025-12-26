@@ -181,7 +181,6 @@ export default bagsRoute;
 
 //*======================================={Bags Private Route}==============================================
 
-
 //*======================================={Bags Public Route}==============================================
 
 // //* route for get all bags by Query Or ALL BAGS => GET (query limit and pages)

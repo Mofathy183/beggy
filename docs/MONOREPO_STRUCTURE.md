@@ -6,7 +6,7 @@ This document outlines the recommended structure and best practices for organizi
 
 ## Project Structure
 
-```
+```txt
 beggy/
 ├── apps/
 │   ├── api/              # Express + TypeScript + Prisma + PostgreSQL
@@ -87,7 +87,7 @@ beggy/
 
 ## Type Flow
 
-```
+```txt
 Prisma Models (apps/api/prisma)
     ↓
 API Services/Controllers (apps/api/src)

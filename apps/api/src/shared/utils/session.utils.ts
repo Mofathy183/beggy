@@ -1,6 +1,6 @@
 import { signAccessToken, signRefreshToken } from '@shared/utils';
-import { env, envConfig } from '@config'
-import type { Request, Response, CookieOptions } from "express"
+import { env, envConfig } from '@config';
+import type { Request, Response, CookieOptions } from 'express';
 import { Role } from '@prisma/generated/prisma/enums';
 
 const accessTokenName = env.JWT_ACCESS_TOKEN_NAME;
@@ -16,14 +16,14 @@ const refreshConfig: CookieOptions = envConfig.cookies.refresh;
  * @param {String} userId - User id of the user.
  */
 export const sendCookies = (res: Response, userId: string): void => {
-    const token = signAccessToken(userId);
+	const token = signAccessToken(userId);
 
-    const refreshToken = signRefreshToken(userId);
+	const refreshToken = signRefreshToken(userId);
 
-    res.cookie(accessTokenName, token, accessConfig);
-    res.cookie(refreshTokenName, refreshToken, refreshConfig);
+	res.cookie(accessTokenName, token, accessConfig);
+	res.cookie(refreshTokenName, refreshToken, refreshConfig);
 
-    return;
+	return;
 };
 
 //*=============================={Clear Cookies}==============================
@@ -33,12 +33,12 @@ export const sendCookies = (res: Response, userId: string): void => {
  * @param {Response} res - The response object used to clear cookies.
  * @returns {undefined}
  */
-export const clearCookies =  (res: Response): void => {
-    const cookiesToClear = [accessTokenName, refreshTokenName];
+export const clearCookies = (res: Response): void => {
+	const cookiesToClear = [accessTokenName, refreshTokenName];
 
-    cookiesToClear.forEach((cookie) => res.clearCookie(cookie));
+	cookiesToClear.forEach((cookie) => res.clearCookie(cookie));
 
-    return;
+	return;
 };
 
 //*=============================={STORE SESSION}==============================
@@ -50,11 +50,15 @@ export const clearCookies =  (res: Response): void => {
  * @param {Request} req - The request object.
  * @returns {undefined}
  */
-export const storeSession = (req: Request, userId: string, userRole: Role): void => {
-    req.session.userId = userId;
-    req.session.userRole = userRole;
+export const storeSession = (
+	req: Request,
+	userId: string,
+	userRole: Role
+): void => {
+	req.session.userId = userId;
+	req.session.userRole = userRole;
 
-    return;
+	return;
 };
 
 //*=============================={DELETE SESSION}==============================
@@ -65,28 +69,14 @@ export const storeSession = (req: Request, userId: string, userRole: Role): void
  * @returns {Promise<void>}
  */
 export const deleteSession = async (req: Request): void => {
-    return new Promise((resolve, reject) => {
-        req.session.destroy((error) => {
-            if (error) {
-                return reject(
-                    new ErrorHandler('session', error, 'destroy session failed')
-                );
-            }
-            resolve();
-        });
-    });
+	return new Promise((resolve, reject) => {
+		req.session.destroy((error) => {
+			if (error) {
+				return reject(
+					new ErrorHandler('session', error, 'destroy session failed')
+				);
+			}
+			resolve();
+		});
+	});
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-

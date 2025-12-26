@@ -1,1 +1,2 @@
-export * from "./models.type";
+export * from './models.types';
+export * from './api.types';

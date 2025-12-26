@@ -7,8 +7,6 @@ app.listen(serverConfig.port, () => {
 	console.log(`http://localhost:${serverConfig.port}`);
 });
 
-
-
 /**
 ── api/                          # Your main API that use PNPM & SWC
     ├── src/

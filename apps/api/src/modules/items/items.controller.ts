@@ -13,8 +13,6 @@ import { sendCookies, storeSession } from '../../utils/authHelper.js';
 import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
 import SuccessResponse from '../../utils/successResponse.js';
 
-
-
 //*======================================={Items Public Route}==============================================
 
 export const getItemsById = async (req, res, next) => {
@@ -307,7 +305,6 @@ export const deleteAllItems = async (req, res, next) => {
 };
 
 //*======================================={Items Private Route}==============================================
-
 
 //*======================================={Items ME Route}==============================================
 

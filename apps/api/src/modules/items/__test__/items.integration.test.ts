@@ -726,8 +726,6 @@ describe('Items Route For User To Delete All Items User Has', () => {
 	});
 });
 
-
-
 //*======================================={Items Public Route}==============================================
 
 describe('Base Items Route Tests for get All Items', () => {
@@ -831,8 +829,6 @@ describe('Base Items Route Tests For Search for Items', () => {
 });
 
 //*======================================={Items Public Route}==============================================
-
-
 
 //*======================================={Items Private Route}==============================================
 
@@ -1073,4 +1069,3 @@ describe('Base Items Route Tests For Delete All Items for Admin Only', () => {
 });
 
 //*======================================={Items Private Route}==============================================
-

@@ -123,7 +123,6 @@ export default suitcaseRoute;
 
 //*==================================={suitcases Route For User}===================================
 
-
 //*======================================={Suitcase Private Route}==============================================
 
 // //* route for replace (update) suitcase by id => PUT param(id)
@@ -180,7 +179,6 @@ export default suitcaseRoute;
 // );
 
 //*======================================={Suitcase Private Route}==============================================
-
 
 //*======================================={Suitcase Public Route}==============================================
 

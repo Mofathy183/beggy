@@ -1,6 +1,5 @@
 import SuccessResponse from '../utils/successResponse.js';
 
-
 /**
  * Middleware for handling both success and error responses.
  * Formats and returns the response as JSON based on whether it is an error or success response.

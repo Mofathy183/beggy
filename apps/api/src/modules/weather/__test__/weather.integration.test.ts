@@ -25,7 +25,6 @@ test('Should return a CSRF token', async () => {
 	expect(csrfSecret).toBeDefined();
 });
 
-
 describe('Features API Tests For Get User location By his IP', () => {
 	test('Should Update User City and Country, and Add them to Database', async () => {
 		const user = await prisma.user.create({

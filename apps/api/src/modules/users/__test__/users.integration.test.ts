@@ -438,7 +438,6 @@ describe('Auth API Tests For Deactivate', () => {
 	});
 });
 
-
 describe('Auth API Tests For Authentic User For Frontend', () => {
 	let user, token;
 
@@ -563,7 +562,6 @@ describe('Auth API Tests For get permissions by role', () => {
 		expect(Array.isArray(res.body.data)).toBe(true);
 	});
 });
-
 
 describe('Auth API Tests For Change Password', () => {
 	let user, token;
@@ -709,7 +707,6 @@ describe('Auth API Tests For Change Email', () => {
 	});
 });
 
-
 describe('Auth API Tests For send Verification Email', () => {
 	let user, token;
 
@@ -751,7 +748,6 @@ describe('Auth API Tests For send Verification Email', () => {
 	});
 });
 //*============================================={{USER TEST}}========================================================
-
 
 //*======================================={Users Public Route}==============================================
 
@@ -839,8 +835,3 @@ describe('User API Tests For Search For Users Public Profiles', () => {
 });
 
 //*======================================={Users Public Route}==============================================
-
-
-
-
-

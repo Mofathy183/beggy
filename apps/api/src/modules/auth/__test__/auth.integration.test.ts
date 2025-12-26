@@ -94,7 +94,6 @@ describe('Auth API Tests For Reset Password', () => {
 	});
 });
 
-
 //* Forgot Password tests Will send and email so it takes a while to complete
 describe('Auth API Tests For Forgot Password', () => {
 	let user;
@@ -135,7 +134,6 @@ describe('Auth API Tests For Forgot Password', () => {
 		expect(userToken.type).toBe('PASSWORD_RESET');
 	});
 });
-
 
 describe('Auth API Tests For Verify Email', () => {
 	let user, token, expiredAt;
@@ -218,7 +216,6 @@ describe('Auth API Tests For Verify Email', () => {
 		expect(deletedUserToken).toBeNull();
 	});
 });
-
 
 describe('Auth API Tests For SignUp', () => {
 	test('Should register a new user', async () => {

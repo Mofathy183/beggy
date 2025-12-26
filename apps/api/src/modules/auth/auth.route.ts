@@ -60,12 +60,10 @@ authRoute.post(
 	logout
 );
 
-
 //* route for verify email
 //* query {token} and {type => "email_verification" or "change_email"}
 //* will be use for verify email and when the user change his email
 authRoute.get('/verify-email', verifyEmailQueryMiddleware, verifyEmail);
-
 
 //* to get csrf token to send with the request body
 authRoute.get('/csrf-token', csrfProtection);

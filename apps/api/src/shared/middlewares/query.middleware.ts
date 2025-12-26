@@ -286,7 +286,6 @@ export const searchMiddleware = (req, res, next) => {
 	next();
 };
 
-
 /**
  * Middleware to filter users based on first name and last name query parameters.
  * Validates that the first name and last name are strings and do not contain special characters.

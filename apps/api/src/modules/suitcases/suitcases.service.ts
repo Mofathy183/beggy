@@ -526,8 +526,6 @@ export const removeAllSuitcasesUserHas = async (userId, searchFilter) => {
 
 //*==================================={suitcases Route For User}===================================
 
-
-
 //*======================================={Suitcase Private Route}==============================================
 
 /**
@@ -814,7 +812,6 @@ export const removeAllSuitcases = async (searchFilter) => {
 
 //*======================================={Suitcase Private Route}==============================================
 
-
 //*======================================={Suitcase Public Route}==============================================
 
 /**
@@ -926,4 +923,3 @@ export const findSuitcaseById = async (suitcaseId) => {
 };
 
 //*======================================={Suitcase Public Route}==============================================
-

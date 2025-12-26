@@ -383,7 +383,6 @@ export const VReqToLocationPermission = (req, res, next) => {
 };
 //* ======================={FEATURES VRequests Validation}========================
 
-
 //*====================={Request Validations}====================
 
 /**

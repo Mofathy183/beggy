@@ -1,6 +1,3 @@
-
-
-
 /**
  * Logs in or creates a user using Facebook OAuth profile data.
  *
@@ -93,8 +90,6 @@ export const loginUserWithFacebook = async (profile) => {
 		);
 	}
 };
-
-
 
 export const authenticateWithFacebook = async (req, res, next) => {
 	try {

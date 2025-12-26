@@ -26,9 +26,8 @@
 // import { statusCode } from '../../config/status.js';
 // import SuccessResponse from '../../utils/successResponse.js';
 // import { ErrorResponse, sendServiceResponse } from '../../utils/error.js';
-import prisma from "@prisma-client";
-import type { Request, Response, NextFunction } from "express"
-
+import prisma from '@prisma-client';
+import type { Request, Response, NextFunction } from 'express';
 
 export const signUp = async (req, res, next) => {
 	try {
@@ -138,7 +137,6 @@ export const login = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const forgotPassword = async (req, res, next) => {
 	try {
@@ -276,7 +274,6 @@ export const resetPassword = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const verifyEmail = async (req, res, next) => {
 	try {

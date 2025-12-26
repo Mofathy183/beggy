@@ -167,7 +167,6 @@ export const loginUser = async (body) => {
 	}
 };
 
-
 /**
  * Initiates the process for a user to reset their password.
  *

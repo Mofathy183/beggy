@@ -15,26 +15,26 @@
 			//* ========== API ROOT IMPORTS ==========
 			"@/*": ["src/*"],
 			"@prisma/*": ["prisma/*"],
-			
+
 			//* ========== SPECIFIC SRC PATHS ==========
 			// Direct access to commonly used folders
 			"@config": ["src/config/index.ts"],
 			"@shared": ["src/shared/index.ts"],
 			"@modules": ["src/modules/index.ts"],
 			"@emails": ["src/emails/index.ts"],
-			
+
 			// Deep imports with wildcards
 			"@config/*": ["src/config/*"],
 			"@shared/*": ["src/shared/*"],
 			"@modules/*": ["src/modules/*"],
 			"@emails/*": ["src/emails/*"],
-			
+
 			//* ========== PRISMA SPECIFIC ==========
 			"@prisma-client": ["prisma/prisma.client.ts"],
-			"@prisma-generated/*": ["prisma/generated/prisma/*"],
+			"@prisma-generated/*": ["prisma/generated/prisma/*"]
 		}
 	},
-    "include": [
+	"include": [
 		"src/**/*",
 		"tests/**/*",
 		"prisma/**/*",

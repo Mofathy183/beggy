@@ -15,7 +15,6 @@
 //* router.get('/admin/users', requireAuth, requireAdmin, usersController.getAllUsers);
 //* // ... other admin endpoints
 
-
 //*==============================================={{ USER ME ROUTES }}=====================================================
 
 // //* for get user permissions => GET
@@ -26,7 +25,6 @@
 // 	headersMiddleware,
 // 	permissions
 // );
-
 
 // //* route for frontend to check if user is authentic
 // authRoute.get('/me', VReqToHeaderToken, headersMiddleware, authMe);
@@ -81,8 +79,6 @@
 // );
 
 //*==============================================={{ USER ME ROUTES }}=====================================================
-
-
 
 //*==============================================={{ ADMIN ROUTES }}=====================================================
 // const adminRoute = express.Router();
@@ -161,9 +157,6 @@
 // );
 
 //*==============================================={{ ADMIN ROUTES }}=====================================================
-
-
-
 
 //*======================================={Users Public Route}==============================================
 

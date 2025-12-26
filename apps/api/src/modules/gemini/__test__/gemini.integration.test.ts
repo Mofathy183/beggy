@@ -25,8 +25,6 @@ test('Should return a CSRF token', async () => {
 	expect(csrfSecret).toBeDefined();
 });
 
-
-
 describe('Features API Tests For Auto Filling Fields When Creating Items', () => {
 	test('Should Auto Filling volume and weight Fields of item', async () => {
 		const user = await prisma.user.create({

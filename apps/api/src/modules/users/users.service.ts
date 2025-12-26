@@ -402,7 +402,6 @@ export const removeAllUsers = async (searchFilter, adminId) => {
 };
 //*====================================================={ ADMIN }================================================================//
 
-
 //*======================================={Users Public Route}==============================================
 
 /**
@@ -543,7 +542,6 @@ export const findUserPublicProfile = async (userId) => {
 
 //*======================================={Users Public Route}==============================================
 
-
 //*======================================={Users ME Route}==============================================
 
 /**
@@ -562,142 +560,141 @@ export const findUserPublicProfile = async (userId) => {
  *
  * @param {string} userId - Unique identifier of the user.
  * @returns {Promise<{
-*   profile: {
-*     user: object,
-*     account: object,
-*     suitcases: object[],
-*     bags: object[],
-*     items: object[],
-*   },
-*   meta: {
-*     totalItemsInBags: number,
-*     totalItemsInSuitcases: number,
-*     stuffStates: { items: number, bags: number, suitcases: number }
-*   }
-* } | ErrorHandler>} - On success, returns enriched user data and stats; on failure, returns an error handler.
-*/
+ *   profile: {
+ *     user: object,
+ *     account: object,
+ *     suitcases: object[],
+ *     bags: object[],
+ *     items: object[],
+ *   },
+ *   meta: {
+ *     totalItemsInBags: number,
+ *     totalItemsInSuitcases: number,
+ *     stuffStates: { items: number, bags: number, suitcases: number }
+ *   }
+ * } | ErrorHandler>} - On success, returns enriched user data and stats; on failure, returns an error handler.
+ */
 export const authUser = async (userId) => {
-   try {
-       // Fetch user by ID, including associated account, bags, suitcases, and items
-       const data = await prisma.user.findUnique({
-           where: { id: userId },
-           include: {
-               account: true,
-               suitcases: {
-                   include: {
-                       suitcaseItems: {
-                           include: { item: true },
-                       },
-                       // Count items in each suitcase
-                       _count: { select: { suitcaseItems: true } },
-                   },
-               },
-               bags: {
-                   include: {
-                       bagItems: {
-                           include: { item: true },
-                       },
-                       // Count items in each bag
-                       _count: { select: { bagItems: true } },
-                   },
-               },
-               items: {
-                   include: {
-                       bagItems: true,
-                       suitcaseItems: true,
-                   },
-               },
-               // Global counts for metadata
-               _count: {
-                   select: {
-                       bags: true,
-                       suitcases: true,
-                       items: true,
-                   },
-               },
-           },
-           // Omit sensitive fields
-           omit: {
-               password: true,
-               passwordChangeAt: true,
-               role: true,
-           },
-       });
+	try {
+		// Fetch user by ID, including associated account, bags, suitcases, and items
+		const data = await prisma.user.findUnique({
+			where: { id: userId },
+			include: {
+				account: true,
+				suitcases: {
+					include: {
+						suitcaseItems: {
+							include: { item: true },
+						},
+						// Count items in each suitcase
+						_count: { select: { suitcaseItems: true } },
+					},
+				},
+				bags: {
+					include: {
+						bagItems: {
+							include: { item: true },
+						},
+						// Count items in each bag
+						_count: { select: { bagItems: true } },
+					},
+				},
+				items: {
+					include: {
+						bagItems: true,
+						suitcaseItems: true,
+					},
+				},
+				// Global counts for metadata
+				_count: {
+					select: {
+						bags: true,
+						suitcases: true,
+						items: true,
+					},
+				},
+			},
+			// Omit sensitive fields
+			omit: {
+				password: true,
+				passwordChangeAt: true,
+				role: true,
+			},
+		});
 
-       // If no user found, return 404 error
-       if (!data) {
-           return new ErrorHandler(
-               'User Not Found',
-               "User doesn't exist in the database",
-               'User must exist to authenticate',
-               statusCode.notFoundCode
-           );
-       }
+		// If no user found, return 404 error
+		if (!data) {
+			return new ErrorHandler(
+				'User Not Found',
+				"User doesn't exist in the database",
+				'User must exist to authenticate',
+				statusCode.notFoundCode
+			);
+		}
 
-       // Handle unexpected Prisma structure errors (just in case)
-       if (data.error) {
-           return new ErrorHandler(
-               'Prisma Error',
-               data.error,
-               'Error occurred while authenticating user: ' +
-                   data.error.message,
-               statusCode.internalServerErrorCode
-           );
-       }
+		// Handle unexpected Prisma structure errors (just in case)
+		if (data.error) {
+			return new ErrorHandler(
+				'Prisma Error',
+				data.error,
+				'Error occurred while authenticating user: ' +
+					data.error.message,
+				statusCode.internalServerErrorCode
+			);
+		}
 
-       // Add `itemCount` to each bag
-       const cleanedBags = data.bags.map((bag) => ({
-           ...bag,
-           itemCount: bag._count.bagItems,
-       }));
+		// Add `itemCount` to each bag
+		const cleanedBags = data.bags.map((bag) => ({
+			...bag,
+			itemCount: bag._count.bagItems,
+		}));
 
-       // Add `itemCount` to each suitcase
-       const cleanedSuitcases = data.suitcases.map((suitcase) => ({
-           ...suitcase,
-           itemCount: suitcase._count.suitcaseItems,
-       }));
+		// Add `itemCount` to each suitcase
+		const cleanedSuitcases = data.suitcases.map((suitcase) => ({
+			...suitcase,
+			itemCount: suitcase._count.suitcaseItems,
+		}));
 
-       // Calculate total number of items in bags
-       const totalItemsInBags = cleanedBags.reduce(
-           (acc, bag) => acc + bag.itemCount,
-           0
-       );
+		// Calculate total number of items in bags
+		const totalItemsInBags = cleanedBags.reduce(
+			(acc, bag) => acc + bag.itemCount,
+			0
+		);
 
-       // Calculate total number of items in suitcases
-       const totalItemsInSuitcases = cleanedSuitcases.reduce(
-           (acc, suitcase) => acc + suitcase.itemCount,
-           0
-       );
+		// Calculate total number of items in suitcases
+		const totalItemsInSuitcases = cleanedSuitcases.reduce(
+			(acc, suitcase) => acc + suitcase.itemCount,
+			0
+		);
 
-       // Destructure sensitive/internal fields before returning
-       const { account, suitcases, bags, items, _count, ...user } = data;
+		// Destructure sensitive/internal fields before returning
+		const { account, suitcases, bags, items, _count, ...user } = data;
 
-       // Return enriched profile and summary metadata
-       return {
-           profile: {
-               user,
-               account,
-               suitcases: cleanedSuitcases,
-               bags: cleanedBags,
-               items,
-           },
-           meta: {
-               totalItemsInBags,
-               totalItemsInSuitcases,
-               stuffStates: _count,
-           },
-       };
-   } catch (error) {
-       // Handle runtime or unexpected failures
-       return new ErrorHandler(
-           'Runtime Error',
-           Object.keys(error).length === 0 ? 'Unknown error' : error,
-           'Failed to authenticate user',
-           statusCode.internalServerErrorCode
-       );
-   }
+		// Return enriched profile and summary metadata
+		return {
+			profile: {
+				user,
+				account,
+				suitcases: cleanedSuitcases,
+				bags: cleanedBags,
+				items,
+			},
+			meta: {
+				totalItemsInBags,
+				totalItemsInSuitcases,
+				stuffStates: _count,
+			},
+		};
+	} catch (error) {
+		// Handle runtime or unexpected failures
+		return new ErrorHandler(
+			'Runtime Error',
+			Object.keys(error).length === 0 ? 'Unknown error' : error,
+			'Failed to authenticate user',
+			statusCode.internalServerErrorCode
+		);
+	}
 };
-
 
 /**
  * Updates the user's password.
@@ -1048,7 +1045,6 @@ export const sendVerificationUserEmail = async (email) => {
 	}
 };
 
-
 /**
  * Retrieves the permissions associated with a user role.
  *
@@ -1159,5 +1155,3 @@ export const deactivateUserAccount = async (userId) => {
 };
 
 //*======================================={Users ME Route}==============================================
-
-

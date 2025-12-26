@@ -369,8 +369,6 @@ export const deleteAllUsers = async (req, res, next) => {
 };
 //*====================================================={ ADMIN }================================================================//
 
-
-
 //*======================================={Users Public Route}==============================================
 
 export const getAllUsers = async (req, res, next) => {
@@ -465,7 +463,6 @@ export const getUserPublicProfile = async (req, res, next) => {
 
 //*======================================={Users Public Route}==============================================
 
-
 //*======================================={Users ME Route}==============================================
 
 export const authMe = async (req, res, next) => {
@@ -528,7 +525,6 @@ export const authMe = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const updatePassword = async (req, res, next) => {
 	try {
@@ -723,7 +719,6 @@ export const changeEmail = async (req, res, next) => {
 	}
 };
 
-
 export const sendVerificationEmail = async (req, res, next) => {
 	try {
 		const { email } = req.body;
@@ -790,7 +785,6 @@ export const sendVerificationEmail = async (req, res, next) => {
 		);
 	}
 };
-
 
 export const permissions = async (req, res, next) => {
 	try {
@@ -893,6 +887,3 @@ export const deActivate = async (req, res, next) => {
 };
 
 //*======================================={Users ME Route}==============================================
-
-
-
