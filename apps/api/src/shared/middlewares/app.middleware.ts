@@ -5,12 +5,13 @@ import PinoHttp from 'pino-http';
 import pinoPretty from 'pino-pretty';
 // import { ErrorResponse } from '../utils/error.js';
 import swaggerJSDoc from 'swagger-jsdoc';
-import swaggerOptions from '../../../docs/swaggerDef.doc';
+import swaggerOptions from '@doc';
 
 import type { Request, Response, NextFunction } from 'express';
 import { doubleCsrf } from 'csrf-csrf';
 import { envConfig } from '@config';
-import { STATUS_CODE, ErrorCode } from '@shared/constants';
+import { STATUS_CODE } from '@shared/constants';
+import { ErrorCode } from "@beggy/shared/constants"
 import { apiResponseMap } from '@shared/utils';
 
 const { csrf, core: coreConfig } = envConfig;

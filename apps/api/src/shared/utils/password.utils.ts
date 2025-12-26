@@ -1,7 +1,7 @@
 import { hash, compare, genSalt } from 'bcrypt';
 import crypto from 'crypto';
-import { bcryptConfig } from '../config/env.js';
-import { ErrorHandler } from './error.utils.js';
+import { envConfig } from "@config"
+const { security: { bcrypt } } = envConfig;
 
 /**
  * @async
@@ -10,15 +10,19 @@ import { ErrorHandler } from './error.utils.js';
  * @returns {Promise<string>} - The hashed password
  * @throws {Error} - If there is an error while hashing the password
  */
-export const hashingPassword = async (password) => {
+export const hashPassword = async (password: string): Promise<string> => {
+    if (!password || typeof password !== 'string') {
+        throw new Error('Password is required');
+    }
+    
 	try {
-		const saltRound = await genSalt(bcryptConfig.saltRounds);
+		const saltRound = await genSalt(bcrypt.saltRounds);
 
 		const hashedPassword = await hash(password, saltRound);
 
 		return hashedPassword;
 	} catch (error) {
-		return ErrorHandler('catch', error, 'Failed to hash password');
+		throw new Error('Failed to hash password');
 	}
 };
 
@@ -27,14 +31,18 @@ export const hashingPassword = async (password) => {
  * @description This function is to verify the password against the hashed password from the database
  * @param {string} password - The password to verify
  * @param {string} hashedPassword - The hashed password from the database
- * @returns {boolean} - If the password is correct or not
+ * @returns {Promise<boolean>} - If the password is correct or not
  */
-export const verifyPassword = async (password, hashedPassword) => {
+export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+    if (!hashedPassword || typeof hashedPassword !== 'string') {
+        throw new Error('Invalid hash provided');
+    }
+    
 	try {
 		const match = await compare(password, hashedPassword);
 		return match;
-	} catch (error) {
-		new ErrorHandler('catch', error, 'Failed to verify password');
+	} catch (error: unknown) {
+		console.error('Password verify error: ', error);
 		return false;
 	}
 };
@@ -44,7 +52,7 @@ export const verifyPassword = async (password, hashedPassword) => {
  * Generates a random password and returns its SHA256 hash.
  * @returns {string} The hashed password
  */
-export const generateOAuthPassword = () => {
+export const generateSecureTokenHash = (): string => {
 	//* the reset token will send to the user via email
 	const password = crypto.randomBytes(32).toString('hex');
 

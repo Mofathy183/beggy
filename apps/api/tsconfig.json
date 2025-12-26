@@ -7,14 +7,14 @@
 		"baseUrl": ".",
 		"paths": {
 			//* Global Project related Paths
-			"@beggy/types": ["../../packages/types/src"],
-			"@beggy/types/*": ["../../packages/types/src/*"],
 			"@beggy/shared": ["../../packages/shared/src"],
 			"@beggy/shared/*": ["../../packages/shared/src/*"],
 
 			//* ========== API ROOT IMPORTS ==========
 			"@/*": ["src/*"],
 			"@prisma/*": ["prisma/*"],
+            "@route": ["app.route.ts"],
+            "@doc": ["docs/swaggerDef.doc"],
 
 			//* ========== SPECIFIC SRC PATHS ==========
 			// Direct access to commonly used folders

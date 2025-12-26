@@ -1,4 +1,5 @@
-import { STATUS_CODE, ErrorCode } from '@shared/constants';
+import { STATUS_CODE } from '@shared/constants';
+import { ErrorCode } from "@beggy/shared/constants"
 
 /**
  * HTTP Status Code type derived from STATUS_CODE constants.
@@ -215,4 +216,11 @@ export interface PaginationParams {
 	sortOrder?: 'asc' | 'desc';
 	search?: string;
 	filters?: Record<string, any>;
+}
+
+
+
+export interface SecureTokenPair  {
+	token: string;  // Send to user
+	hash: string;   // Store in DB
 }

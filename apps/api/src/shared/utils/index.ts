@@ -1,5 +1,5 @@
 export * from './session.utils';
-export * from './jwt.util';
-export * from './hash.util';
+export * from './token.util';
+export * from './password.utils';
 export * from './api-response.util';
 export * from './app-error.util';

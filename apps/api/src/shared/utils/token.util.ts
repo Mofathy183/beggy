@@ -1,17 +1,10 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { ErrorHandler } from './error.utils.js';
 import type { Secret, SignOptions, JwtPayload } from 'jsonwebtoken';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { SecureTokenPair } from "@shared/types"
 import { envConfig } from '@config';
-
-export interface CryptoTokenPair {
-	plainToken: string;
-	hashedToken: string;
-}
-
-export interface AppJwtPayload extends JwtPayload {
-	userId: string;
-}
+import { validate as validateUUID } from "uuid"
 
 const accessTokenSecret: Secret = envConfig.security.jwt.access.secret;
 const refreshTokenSecret: Secret = envConfig.security.jwt.refresh.secret;
@@ -24,30 +17,15 @@ const refreshConfig: SignOptions = envConfig.security.jwt.refresh.config;
  * @returns {string} A JWT token containing the id.
  */
 export const signAccessToken = (id: string): string => {
-	const token = jwt.sign({ id: id }, accessTokenSecret, accessConfig);
+    if (validateUUID(id)) {
+        throw new Error("Invalid user ID format")
+    }
+    const payload: JwtPayload = { sub: id }
+	const token = jwt.sign(payload, accessTokenSecret, accessConfig); 
 
 	return token;
 };
 
-/**
- * Verifies a JWT token.
- * @param {string} token - The JWT token to verify.
- * @returns {object|false} The decoded token if verification is successful, or false
- * if the token is invalid.
- */
-export const verifyAccessToken = (token: string): AppJwtPayload | boolean => {
-	try {
-		const verified = jwt.verify(token, accessTokenSecret) as AppJwtPayload;
-		return verified;
-	} catch (error) {
-		new ErrorHandler(
-			'Invalid token Catch',
-			error,
-			'Failed to Verify token'
-		);
-		return false;
-	}
-};
 
 /**
  * Generates a JWT refresh token with the given id and expiration time.
@@ -55,8 +33,14 @@ export const verifyAccessToken = (token: string): AppJwtPayload | boolean => {
  * @returns {string} A JWT refresh token containing the id.
  */
 export const signRefreshToken = (id: string): string => {
+    if (validateUUID(id)) {
+        throw new Error("Invalid user ID format")
+    }
+
+    const payload: JwtPayload = { sub: id }
+    
 	const refreshToken = jwt.sign(
-		{ id: id },
+		payload,
 		refreshTokenSecret,
 		refreshConfig
 	);
@@ -64,30 +48,32 @@ export const signRefreshToken = (id: string): string => {
 	return refreshToken;
 };
 
-/**
- * Verifies a JWT refresh token.
- * @param {string} refreshToken - The JWT refresh token to verify.
- * @returns {object|false} The decoded token if verification is successful, or false
- * if the token is invalid.
- */
-export const verifyRefreshToken = (
-	refreshToken: string
-): AppJwtPayload | boolean => {
-	try {
-		const verified = jwt.verify(
-			refreshToken,
-			refreshTokenSecret
-		) as AppJwtPayload;
-		return verified;
-	} catch (error) {
-		new ErrorHandler(
-			'Invalid Refresh token Catch',
-			error,
-			'Failed to Verify refresh token'
-		);
-		return false;
-	}
-};
+
+export const verifyToken = (token: string, type: 'access' | 'refresh'): JwtPayload => {
+    if (!token || typeof token !== 'string') {
+        throw new Error("Invalid token");
+    }
+
+    const secret: Secret = type === "access" ? accessTokenSecret : refreshTokenSecret;
+    try {
+        const payload = jwt.verify(token, secret) as JwtPayload
+
+        if (!payload.sub) {
+            throw new Error('Invalid token: missing user ID');
+        }
+        return payload
+    }
+
+    catch (error: unknown){
+        if (error instanceof TokenExpiredError) {
+            throw new Error("Invalid token");
+        }
+        if (error instanceof JsonWebTokenError) {
+            throw new Error('Invalid token');
+        }
+        throw error; // Re-throw unknown errors
+    }
+}
 
 /**
  * to generate Crypto Token for.
@@ -98,6 +84,9 @@ export const verifyRefreshToken = (
  * @returns {string} The SHA256 hash of the token as a hexadecimal string.
  */
 export const generatePasswordResetToken = (token: string): string => {
+    if (!token) {
+        throw new Error('Token is required');
+    }
 	return crypto.createHash('sha256').update(token).digest('hex');
 };
 
@@ -105,14 +94,14 @@ export const generatePasswordResetToken = (token: string): string => {
  * Generates a SHA256 hash of a randomly generated token, and returns the
  * original token and the hash as an object with the properties `token` and
  * `hashToken`.
- * @returns {CryptoTokenPair}
+ * @returns {SecureTokenPair}
  */
-export const generateEmailVerificationToken = (): CryptoTokenPair => {
+export const generateEmailVerificationToken = (): SecureTokenPair => {
 	//* the reset token will send to the user via email
 	const token = crypto.randomBytes(32).toString('hex');
 
 	//* this hash token will add to the database
-	const hashToken = crypto.createHash('sha256').update(token).digest('hex');
+	const hash = crypto.createHash('sha256').update(token).digest('hex');
 
-	return { plainToken: token, hashedToken: hashToken };
+	return { token, hash };
 };

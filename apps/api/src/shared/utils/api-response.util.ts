@@ -1,10 +1,10 @@
-import {
-	STATUS_CODE,
-	ErrorCode,
+import { STATUS_CODE } from '@shared/constants';
+import {  
+    ErrorCode,
 	SuccessMessages,
 	ErrorMessages,
 	ErrorSuggestions,
-} from '@shared/constants';
+} from "@beggy/shared/constants"
 import type {
 	StatusCode,
 	SuccessResponse,
@@ -104,11 +104,11 @@ export const createResponse = {
 		options?: ErrorResponseOptions
 	): ErrorResponse => ({
 		success: false,
-		message: options?.customMessage || ErrorMessages[code],
+		message: options?.customMessage || ErrorMessages[code] as string,
 		status,
 		error,
 		code,
-		suggestion: options?.customSuggestion || ErrorSuggestions[code],
+		suggestion: options?.customSuggestion || ErrorSuggestions[code] as string,
 		timestamp: new Date().toISOString(),
 	}),
 };

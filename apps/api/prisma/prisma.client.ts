@@ -5,20 +5,22 @@ import {
 	getDisplayName,
 	getAge,
 	//*======={User}========
-	//*======={Suitcase and Bags}========
-	calculateCurrentCapacity,
-	calculateCurrentWeight,
-	calculateRemainingCapacity,
-	calculateRemainingWeight,
-	calculateCapacityPercentage,
-	calculateWeightPercentage,
-	checkIsFull,
-	checkIsOverCapacity,
-	checkIsOverweight,
-	getContainerStatus,
-	calculateItemCount,
-	//*======={Suitcase and Bags}========
 } from '@prisma/prisma.utils';
+import { 
+    //*======={Suitcase and Bags}========
+    calculateCurrentCapacity,
+    calculateCurrentWeight,
+    calculateRemainingCapacity,
+    calculateRemainingWeight,
+    calculateCapacityPercentage,
+    calculateWeightPercentage,
+    checkIsFull,
+    checkIsOverCapacity,
+    checkIsOverweight,
+    getContainerStatus,
+    calculateItemCount,
+    //*======={Suitcase and Bags}========
+} from "@beggy/shared/lib"
 
 //* add extension for Prisma to get the age of the user and the display name
 const prisma = new PrismaClient({} as any)

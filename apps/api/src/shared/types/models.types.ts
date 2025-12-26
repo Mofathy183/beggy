@@ -10,7 +10,6 @@ import {
 	PermissionModel,
 	RoleOnPermissionModel,
 } from '@prisma-generated/models';
-import { WeightUnit, VolumeUnit } from '@prisma-generated/enums';
 
 export interface IItem extends ItemsModel {
 	bagItems: IBagItem[];
@@ -46,15 +45,4 @@ export interface IUser extends UserModel {
 
 export interface IPermissions extends PermissionModel {
 	rolePermissions: RoleOnPermissionModel[];
-}
-
-export type TConvertToKilogram = Record<WeightUnit, number>;
-export type TConvertToLiter = Record<VolumeUnit, number>;
-
-export enum ContainerStatusEnum {
-	OK = 'ok',
-	FULL = 'full',
-	EMPTY = 'empty',
-	OVERWEIGHT = 'overweight',
-	OVER_CAPACITY = 'over_capacity',
 }
