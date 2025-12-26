@@ -2,6 +2,8 @@
  * API Response Types for Bags
  */
 
+import { Item, User } from '@/types';
+
 export type BagType =
 	| 'BACKPACK'
 	| 'DUFFEL'
@@ -38,7 +40,7 @@ export type BagFeature =
 	| 'TROLLEY_SLEEVE'
 	| 'HIDDEN_POCKET';
 
-export interface BagResponse {
+export interface Bag {
 	id: string;
 	name: string;
 	type: BagType;
@@ -54,14 +56,16 @@ export interface BagResponse {
 	updatedAt: string;
 }
 
-export interface BagWithItemsResponse extends BagResponse {
-	bagItems?: BagItemResponse[];
-}
-
-export interface BagItemResponse {
+export interface BagItems {
 	bagId: string;
 	itemId: string;
-	item?: import('./item.types').ItemResponse;
-	createdAt: string;
-	updatedAt: string;
+	item: Item;
+	bag: Bag;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export interface BagWithRelations extends Bag {
+	bagItems?: BagItems[];
+	user: User;
 }

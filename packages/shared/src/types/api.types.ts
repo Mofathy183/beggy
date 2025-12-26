@@ -1,19 +1,4 @@
-import { STATUS_CODE, ErrorCode } from '@shared/constants';
-
-/**
- * HTTP Status Code type derived from STATUS_CODE constants.
- *
- * @remarks
- * This ensures type safety when working with HTTP status codes throughout the application.
- * Use this type instead of `number` for better intellisense and validation.
- *
- * @example
- * ```typescript
- * const status: StatusCode = 200; // OK
- * const notFound: StatusCode = 404;
- * ```
- */
-export type StatusCode = (typeof STATUS_CODE)[keyof typeof STATUS_CODE];
+import { ErrorCode } from '@/constants';
 
 /**
  * Pagination metadata for collection responses.
@@ -64,18 +49,16 @@ export interface Meta {
  *
  * @example
  * ```typescript
- * const response: ApiResponse = {
+ * const response: BaseResponse = {
  *   success: true,
  *   message: 'Operation completed successfully',
- *   status: 200,
  *   timestamp: '2024-01-15T10:30:00.000Z'
  * };
  * ```
  */
-export interface ApiResponse {
+export interface BaseResponse {
 	success: boolean;
 	message: string;
-	status: StatusCode;
 	timestamp: string; // ISO string format
 }
 
@@ -85,7 +68,7 @@ export interface ApiResponse {
  * @template T - Type of the data payload returned in the response
  *
  * @remarks
- * Extends ApiResponse with a `success: true` literal type for TypeScript narrowing.
+ * Extends BaseResponse with a `success: true` literal type for TypeScript narrowing.
  * Includes optional metadata for paginated responses.
  *
  * @property success - Always `true` for success responses
@@ -97,7 +80,6 @@ export interface ApiResponse {
  * const successResponse: SuccessResponse<User> = {
  *   success: true,
  *   message: 'User profile retrieved',
- *   status: 200,
  *   timestamp: '2024-01-15T10:30:00.000Z',
  *   data: { id: 1, name: 'John Doe', email: 'john@example.com' }
  * };
@@ -106,14 +88,13 @@ export interface ApiResponse {
  * const paginatedResponse: SuccessResponse<User[]> = {
  *   success: true,
  *   message: 'Users retrieved successfully',
- *   status: 200,
  *   timestamp: '2024-01-15T10:30:00.000Z',
  *   data: usersArray,
  *   meta: { total: 100, count: 10, totalFiltered: 100, page: 1, limit: 10, pages: 10 }
  * };
  * ```
  */
-export interface SuccessResponse<T> extends ApiResponse {
+export interface SuccessResponse<T> extends BaseResponse {
 	success: true; // TypeScript will narrow this to literal true
 	data: T;
 	meta?: Meta;
@@ -123,7 +104,7 @@ export interface SuccessResponse<T> extends ApiResponse {
  * Error response interface for failed API operations.
  *
  * @remarks
- * Extends ApiResponse with a `success: false` literal type for TypeScript narrowing.
+ * Extends BaseResponse with a `success: false` literal type for TypeScript narrowing.
  * Includes machine-readable error codes and user-friendly suggestions.
  *
  * @property success - Always `false` for error responses
@@ -136,7 +117,6 @@ export interface SuccessResponse<T> extends ApiResponse {
  * const errorResponse: ErrorResponse = {
  *   success: false,
  *   message: 'The requested resource was not found',
- *   status: 404,
  *   timestamp: '2024-01-15T10:30:00.000Z',
  *   code: ErrorCode.NOT_FOUND,
  *   suggestion: 'Check the resource ID and try again'
@@ -146,7 +126,6 @@ export interface SuccessResponse<T> extends ApiResponse {
  * const detailedError: ErrorResponse = {
  *   success: false,
  *   message: 'Validation failed',
- *   status: 400,
  *   timestamp: '2024-01-15T10:30:00.000Z',
  *   error: { field: 'email', reason: 'Invalid format' },
  *   code: ErrorCode.VALIDATION_ERROR,
@@ -154,7 +133,7 @@ export interface SuccessResponse<T> extends ApiResponse {
  * };
  * ```
  */
-export interface ErrorResponse extends ApiResponse {
+export interface ErrorResponse extends BaseResponse {
 	success: false; // TypeScript will narrow this to literal false
 	error?: unknown; // Error details (optional but useful)
 	code: ErrorCode; // Required - good!

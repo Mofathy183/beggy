@@ -1,56 +1,9 @@
-import type {
-	IBagItem,
-	ISuitcaseItem,
-	TConvertToKilogram,
-	TConvertToLiter,
-} from '@shared/types';
-import { ContainerStatusEnum } from '@shared/types';
-import { WeightUnit, VolumeUnit } from '@prisma-generated/enums';
-
-// ============================================================================
-// USER STATUS & DISPLAY HELPERS
-// ============================================================================
-
-/**
- * Returns a formatted display name (capitalized first + last name)
- */
-export function getDisplayName(firstName: string, lastName: string): string {
-	if (!firstName?.trim() || !lastName?.trim()) return '';
-
-	const capitalize = (value: string) =>
-		value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-
-	return `${capitalize(firstName.trim())} ${capitalize(lastName.trim())}`;
-}
-
-/**
- * Calculates age from a birth date
- */
-export function getAge(
-	birthDate: string | Date | null | undefined
-): number | null {
-	if (!birthDate) return null;
-
-	const date = new Date(birthDate);
-	if (isNaN(date.getTime())) return null;
-
-	const today = new Date();
-	let age = today.getFullYear() - date.getFullYear();
-	const monthDiff = today.getMonth() - date.getMonth();
-	const dayDiff = today.getDate() - date.getDate();
-
-	if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-		age--;
-	}
-
-	return age;
-}
+import type { ConvertToKilogram, ConvertToLiter, ItemsType } from '@/types';
+import { WeightUnit, VolumeUnit } from '@/types';
 
 //* ============================================================================
 //* SHARED CALCULATION FUNCTIONS
 //* ============================================================================
-
-export type ItemsType = (IBagItem | ISuitcaseItem)[];
 
 /**
  * Converts any weight unit to kilograms (standard unit)
@@ -64,7 +17,7 @@ export type ItemsType = (IBagItem | ISuitcaseItem)[];
  * convertToKilogram(2.2, 'POUND'); // Returns 0.997903
  */
 export const convertToKilogram = (weight: number, unit: WeightUnit): number => {
-	const convert: TConvertToKilogram = {
+	const convert: ConvertToKilogram = {
 		KILOGRAM: weight,
 		GRAM: weight / 1000, // 1000g = 1kg,
 		POUND: weight * 0.453592, // 1 pound = 0.453592 kg
@@ -86,7 +39,7 @@ export const convertToKilogram = (weight: number, unit: WeightUnit): number => {
  * convertToLiter(1000, 'CU_CM'); // Returns 1
  */
 export const convertToLiter = (volume: number, unit: VolumeUnit): number => {
-	const convert: TConvertToLiter = {
+	const convert: ConvertToLiter = {
 		LITER: volume,
 		ML: volume / 1000, // 1000ml = 1L
 		CU_CM: volume / 1000, // 1000 cm³ = 1L
@@ -240,103 +193,6 @@ export const calculateRemainingCapacity = (
 };
 
 // ============================================================================
-// STATUS CHECK FUNCTIONS
-// ============================================================================
-
-/**
- * Checks if current weight exceeds the maximum allowed weight
- *
- * @param {number} currentWeight - Current weight of items in kg
- * @param {number} maxWeight - Maximum weight capacity in kg
- * @returns {boolean} True if overweight, false otherwise
- *
- * @example
- * checkIsOverweight(22.5, 20.0); // Returns true (exceeded by 2.5)
- * checkIsOverweight(18.0, 20.0); // Returns false (within limit)
- * checkIsOverweight(0, 20.0);    // Returns false (empty bag)
- */
-export const checkIsOverweight = (
-	currentWeight: number,
-	maxWeight: number
-): boolean => {
-	// If no max weight is set, can't be overweight
-	if (!maxWeight || maxWeight <= 0) return false;
-
-	// If current weight is 0 or negative, not overweight
-	if (!currentWeight || currentWeight <= 0) return false;
-
-	// Check if current weight exceeds maximum
-	return currentWeight > maxWeight;
-};
-
-/**
- * Checks if current capacity/volume exceeds the maximum allowed capacity
- *
- * @param {number} currentCapacity - Current volume used in liters
- * @param {number} maxCapacity - Maximum volume capacity in liters
- * @returns {boolean} True if over capacity, false otherwise
- *
- * @example
- * checkIsOverCapacity(55.0, 50.0); // Returns true (exceeded by 5.0)
- * checkIsOverCapacity(45.0, 50.0); // Returns false (within limit)
- */
-export const checkIsOverCapacity = (
-	currentCapacity: number,
-	maxCapacity: number
-): boolean => {
-	// If no max capacity is set, can't be over capacity
-	if (!maxCapacity || maxCapacity <= 0) return false;
-
-	// If current capacity is 0 or negative, not over capacity
-	if (!currentCapacity || currentCapacity <= 0) return false;
-
-	// Check if current capacity exceeds maximum
-	return currentCapacity > maxCapacity;
-};
-
-/**
- * Determines if a bag/suitcase is considered "full"
- * A container is full if EITHER weight OR capacity is at/above 95% of maximum
- *
- * @param {number} currentWeight - Current weight in kg
- * @param {number} maxWeight - Maximum weight capacity in kg
- * @param {number} currentCapacity - Current volume in liters
- * @param {number} maxCapacity - Maximum volume capacity in liters
- * @returns {boolean} True if full (>=95% on weight OR capacity), false otherwise
- *
- * @example
- * checkIsFull(19.0, 20.0, 45.0, 50.0); // Returns true (95% weight)
- * checkIsFull(15.0, 20.0, 48.0, 50.0); // Returns true (96% capacity)
- * checkIsFull(10.0, 20.0, 30.0, 50.0); // Returns false (50% weight, 60% capacity)
- */
-export const checkIsFull = (
-	currentWeight: number,
-	maxWeight: number,
-	currentCapacity: number,
-	maxCapacity: number
-): boolean => {
-	// Define threshold for "full" (95%)
-	const FULL_THRESHOLD = 0.95;
-
-	// Check weight utilization
-	let isWeightFull = false;
-	if (maxWeight && maxWeight > 0) {
-		const weightUtilization = currentWeight / maxWeight;
-		isWeightFull = weightUtilization >= FULL_THRESHOLD;
-	}
-
-	// Check capacity utilization
-	let isCapacityFull = false;
-	if (maxCapacity && maxCapacity > 0) {
-		const capacityUtilization = currentCapacity / maxCapacity;
-		isCapacityFull = capacityUtilization >= FULL_THRESHOLD;
-	}
-
-	// Container is full if EITHER weight OR capacity is at/above threshold
-	return isWeightFull || isCapacityFull;
-};
-
-// ============================================================================
 // ITEM COUNT FUNCTION
 // ============================================================================
 
@@ -425,31 +281,3 @@ export const calculateCapacityPercentage = (
 // ============================================================================
 // HELPER FUNCTION FOR DISPLAY
 // ============================================================================
-
-/**
- * Gets a human-readable status for a bag/suitcase
- *
- * @param {boolean} isOverweight - Is over weight limit
- * @param {boolean} isOverCapacity - Is over capacity limit
- * @param {boolean} isFull - Is at 95%+ capacity
- * @returns {string} Status string: 'OVERWEIGHT' | 'OVER_CAPACITY' | 'FULL' | 'OK' | 'EMPTY'
- *
- * @example
- * getContainerStatus(true, false, false); // Returns 'OVERWEIGHT'
- * getContainerStatus(false, true, false); // Returns 'OVER_CAPACITY'
- * getContainerStatus(false, false, true); // Returns 'FULL'
- * getContainerStatus(false, false, false); // Returns 'OK'
- */
-export const getContainerStatus = (
-	isOverweight: boolean,
-	isOverCapacity: boolean,
-	isFull: boolean,
-	itemCount: number = 0
-): string => {
-	// Priority order: OVERWEIGHT > OVER_CAPACITY > FULL > EMPTY > OK
-	if (isOverweight) return ContainerStatusEnum.OVERWEIGHT;
-	if (isOverCapacity) return ContainerStatusEnum.OVER_CAPACITY;
-	if (isFull) return ContainerStatusEnum.FULL;
-	if (itemCount === 0) return ContainerStatusEnum.EMPTY;
-	return ContainerStatusEnum.OK;
-};

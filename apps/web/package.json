@@ -60,7 +60,6 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@beggy/types": "workspace:*",
 		"@beggy/shared": "workspace:*",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0"

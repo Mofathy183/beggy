@@ -2,8 +2,6 @@
 
 Shared utilities and constants for the Beggy monorepo.
 
-**Note**: Types are in a separate [`@beggy/types`](../types/README.md) package. This package re-exports them for convenience.
-
 ## Structure
 
 ```text

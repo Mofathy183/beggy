@@ -171,23 +171,23 @@ export const injectCsrfToken = (
  * @param {NextFunction} next - The next middleware function in the stack.
  */
 export const routeErrorHandler = (
-    req: Request,
-    res: Response,
-    _next: NextFunction
+	req: Request,
+	res: Response,
+	_next: NextFunction
 ) => {
-    // Create error details object
-    const errorDetails = {
-        requestedPath: req.path,
-        method: req.method,
-        hint: `The route '${req.path}' doesn't seem to be on our packing map. 
-            Check the endpoint URL or refer to the API documentation.`
-    };
+	// Create error details object
+	const errorDetails = {
+		requestedPath: req.path,
+		method: req.method,
+		hint: `The route '${req.path}' doesn't seem to be on our packing map. 
+            Check the endpoint URL or refer to the API documentation.`,
+	};
 
-    // Log the 404 for monitoring (optional but recommended)
-    console.warn('404 Route Not Found:', errorDetails);
+	// Log the 404 for monitoring (optional but recommended)
+	console.warn('404 Route Not Found:', errorDetails);
 
-    // Return the error response
-    return res.status(STATUS_CODE.NOT_FOUND).json(
-        apiResponseMap.notFound(ErrorCode.ROUTE_NOT_FOUND, errorDetails)
-    );
+	// Return the error response
+	return res
+		.status(STATUS_CODE.NOT_FOUND)
+		.json(apiResponseMap.notFound(ErrorCode.ROUTE_NOT_FOUND, errorDetails));
 };

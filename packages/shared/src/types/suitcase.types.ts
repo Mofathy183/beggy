@@ -2,6 +2,8 @@
  * API Response Types for Suitcases
  */
 
+import { User, Item } from '@/types';
+
 export type SuitcaseType =
 	| 'CARRY_ON'
 	| 'CHECKED_LUGGAGE'
@@ -37,32 +39,34 @@ export type Material =
 	| 'HARD_SHELL'
 	| 'METAL';
 
-export interface SuitcaseResponse {
+export interface Suitcase {
 	id: string;
 	name: string;
-	brand?: string | null;
+	brand: string | null;
 	type: SuitcaseType;
-	color?: string | null;
+	color: string | null;
 	size: Size;
-	capacity: number;
+	maxCapacity: number;
 	maxWeight: number;
-	weight: number;
-	material?: Material | null;
+	suitcaseWeight: number;
+	material: Material | null;
 	features: SuitcaseFeature[];
-	wheels?: WheelType | null;
-	userId?: string | null;
-	createdAt: string;
-	updatedAt: string;
+	wheels: WheelType | null;
+	createdAt: Date;
+	updatedAt: Date;
+	userId: string | null;
 }
 
-export interface SuitcaseWithItemsResponse extends SuitcaseResponse {
-	suitcaseItems?: SuitcaseItemResponse[];
-}
-
-export interface SuitcaseItemResponse {
+export interface SuitcaseItems {
 	suitcaseId: string;
 	itemId: string;
-	item?: import('./item.types').ItemResponse;
-	createdAt: string;
-	updatedAt: string;
+	item: Item;
+	suitcase: Suitcase;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export interface SuitcaseWithRelations extends Suitcase {
+	suitcaseItems: SuitcaseItems[];
+	user: User;
 }
