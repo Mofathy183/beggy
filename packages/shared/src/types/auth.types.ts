@@ -1,29 +1,56 @@
-export type Role = 'ADMIN' | 'MEMBER' | 'SUBSCRIBER' | 'USER';
+import { User } from "@/types";
 
-export type AuthProvider = 'GOOGLE' | 'FACEBOOK';
+export enum Role {
+    ADMIN = 'ADMIN',
+    MEMBER = 'MEMBER',
+    MODERATOR = 'MODERATOR',
+    USER = 'USER'
+}
 
-export type TokenType =
-	| 'EMAIL_VERIFICATION'
-	| 'PASSWORD_RESET'
-	| 'CHANGE_EMAIL';
+export enum AuthProvider {
+    GOOGLE = 'GOOGLE',
+    FACEBOOK = 'FACEBOOK'
+}
 
-export type Subject =
-	| 'USER'
-	| 'BAG'
-	| 'ITEM'
-	| 'SUITCASE'
-	| 'ROLE'
-	| 'PERMISSION';
-export type Scope = 'OWN' | 'ANY';
-export type Action = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'MANAGE';
+
+export enum TokenType {
+    EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
+    PASSWORD_RESET = 'PASSWORD_RESET',
+    CHANGE_EMAIL = 'CHANGE_EMAIL'
+}
+
+export enum Subject {
+    USER = 'USER',
+    BAG = 'BAG',
+    ITEM = 'ITEM',
+    SUITCASE = 'SUITCASE',
+    ROLE = 'ROLE',
+    PERMISSION = 'PERMISSION'
+}
+
+export enum Scope {
+    OWN = 'OWN',
+    ANY = 'ANY'
+}
+
+export enum Action {
+    CREATE = 'CREATE',
+    READ = 'READ',
+    UPDATE = 'UPDATE',
+    DELETE = 'DELETE',
+    MANAGE = 'MANAGE'
+}
+
+export type Permissions = { action: Action; scope: Scope; subject: Subject }[]
 
 export interface UserToken {
-	id: string;
-	type: TokenType;
-	hashToken: string;
-	expiresAt: Date;
-	createdAt: Date;
-	userId: string;
+    id: string
+    type: TokenType
+    hashToken: string
+    expiresAt: Date
+    createdAt: Date
+    userId: string
+    user: User;
 }
 
 export interface Permission {
@@ -61,7 +88,7 @@ export interface RoleOnPermission {
 }
 
 export interface PermissionWithRelations extends Permission {
-	rolePermissions: RoleOnPermission;
+	rolePermissions: RoleOnPermission[];
 }
 
 export interface RoleOnPermissionWithRelations extends RoleOnPermission {

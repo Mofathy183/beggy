@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import type { Secret, SignOptions, JwtPayload } from 'jsonwebtoken';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
-import { SecureTokenPair } from "@shared/types"
+import { SecureTokenPair } from '@shared/types';
 import { envConfig } from '@config';
-import { validate as validateUUID } from "uuid"
+import { validate as validateUUID } from 'uuid';
 
 const accessTokenSecret: Secret = envConfig.security.jwt.access.secret;
 const refreshTokenSecret: Secret = envConfig.security.jwt.refresh.secret;
@@ -17,15 +17,14 @@ const refreshConfig: SignOptions = envConfig.security.jwt.refresh.config;
  * @returns {string} A JWT token containing the id.
  */
 export const signAccessToken = (id: string): string => {
-    if (validateUUID(id)) {
-        throw new Error("Invalid user ID format")
-    }
-    const payload: JwtPayload = { sub: id }
-	const token = jwt.sign(payload, accessTokenSecret, accessConfig); 
+	if (validateUUID(id)) {
+		throw new Error('Invalid user ID format');
+	}
+	const payload: JwtPayload = { sub: id };
+	const token = jwt.sign(payload, accessTokenSecret, accessConfig);
 
 	return token;
 };
-
 
 /**
  * Generates a JWT refresh token with the given id and expiration time.
@@ -33,47 +32,44 @@ export const signAccessToken = (id: string): string => {
  * @returns {string} A JWT refresh token containing the id.
  */
 export const signRefreshToken = (id: string): string => {
-    if (validateUUID(id)) {
-        throw new Error("Invalid user ID format")
-    }
+	if (validateUUID(id)) {
+		throw new Error('Invalid user ID format');
+	}
 
-    const payload: JwtPayload = { sub: id }
-    
-	const refreshToken = jwt.sign(
-		payload,
-		refreshTokenSecret,
-		refreshConfig
-	);
+	const payload: JwtPayload = { sub: id };
+
+	const refreshToken = jwt.sign(payload, refreshTokenSecret, refreshConfig);
 
 	return refreshToken;
 };
 
+export const verifyToken = (
+	token: string,
+	type: 'access' | 'refresh'
+): JwtPayload => {
+	if (!token || typeof token !== 'string') {
+		throw new Error('Invalid token');
+	}
 
-export const verifyToken = (token: string, type: 'access' | 'refresh'): JwtPayload => {
-    if (!token || typeof token !== 'string') {
-        throw new Error("Invalid token");
-    }
+	const secret: Secret =
+		type === 'access' ? accessTokenSecret : refreshTokenSecret;
+	try {
+		const payload = jwt.verify(token, secret) as JwtPayload;
 
-    const secret: Secret = type === "access" ? accessTokenSecret : refreshTokenSecret;
-    try {
-        const payload = jwt.verify(token, secret) as JwtPayload
-
-        if (!payload.sub) {
-            throw new Error('Invalid token: missing user ID');
-        }
-        return payload
-    }
-
-    catch (error: unknown){
-        if (error instanceof TokenExpiredError) {
-            throw new Error("Invalid token");
-        }
-        if (error instanceof JsonWebTokenError) {
-            throw new Error('Invalid token');
-        }
-        throw error; // Re-throw unknown errors
-    }
-}
+		if (!payload.sub) {
+			throw new Error('Invalid token: missing user ID');
+		}
+		return payload;
+	} catch (error: unknown) {
+		if (error instanceof TokenExpiredError) {
+			throw new Error('Invalid token');
+		}
+		if (error instanceof JsonWebTokenError) {
+			throw new Error('Invalid token');
+		}
+		throw error; // Re-throw unknown errors
+	}
+};
 
 /**
  * to generate Crypto Token for.
@@ -84,9 +80,9 @@ export const verifyToken = (token: string, type: 'access' | 'refresh'): JwtPaylo
  * @returns {string} The SHA256 hash of the token as a hexadecimal string.
  */
 export const generatePasswordResetToken = (token: string): string => {
-    if (!token) {
-        throw new Error('Token is required');
-    }
+	if (!token) {
+		throw new Error('Token is required');
+	}
 	return crypto.createHash('sha256').update(token).digest('hex');
 };
 

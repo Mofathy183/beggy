@@ -1,7 +1,9 @@
 import { hash, compare, genSalt } from 'bcrypt';
 import crypto from 'crypto';
-import { envConfig } from "@config"
-const { security: { bcrypt } } = envConfig;
+import { envConfig } from '@config';
+const {
+	security: { bcrypt },
+} = envConfig;
 
 /**
  * @async
@@ -11,10 +13,10 @@ const { security: { bcrypt } } = envConfig;
  * @throws {Error} - If there is an error while hashing the password
  */
 export const hashPassword = async (password: string): Promise<string> => {
-    if (!password || typeof password !== 'string') {
-        throw new Error('Password is required');
-    }
-    
+	if (!password || typeof password !== 'string') {
+		throw new Error('Password is required');
+	}
+
 	try {
 		const saltRound = await genSalt(bcrypt.saltRounds);
 
@@ -33,11 +35,14 @@ export const hashPassword = async (password: string): Promise<string> => {
  * @param {string} hashedPassword - The hashed password from the database
  * @returns {Promise<boolean>} - If the password is correct or not
  */
-export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
-    if (!hashedPassword || typeof hashedPassword !== 'string') {
-        throw new Error('Invalid hash provided');
-    }
-    
+export const verifyPassword = async (
+	password: string,
+	hashedPassword: string
+): Promise<boolean> => {
+	if (!hashedPassword || typeof hashedPassword !== 'string') {
+		throw new Error('Invalid hash provided');
+	}
+
 	try {
 		const match = await compare(password, hashedPassword);
 		return match;

@@ -13,8 +13,9 @@
 			//* ========== API ROOT IMPORTS ==========
 			"@/*": ["src/*"],
 			"@prisma/*": ["prisma/*"],
-            "@route": ["app.route.ts"],
-            "@doc": ["docs/swaggerDef.doc"],
+			"@prisma": ["prisma"],
+			"@route": ["app.route.ts"],
+			"@doc": ["docs/swaggerDef.doc"],
 
 			//* ========== SPECIFIC SRC PATHS ==========
 			// Direct access to commonly used folders
@@ -30,7 +31,6 @@
 			"@emails/*": ["src/emails/*"],
 
 			//* ========== PRISMA SPECIFIC ==========
-			"@prisma-client": ["prisma/prisma.client.ts"],
 			"@prisma-generated/*": ["prisma/generated/prisma/*"]
 		}
 	},

@@ -11,7 +11,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { doubleCsrf } from 'csrf-csrf';
 import { envConfig } from '@config';
 import { STATUS_CODE } from '@shared/constants';
-import { ErrorCode } from "@beggy/shared/constants"
+import { ErrorCode } from '@beggy/shared/constants';
 import { apiResponseMap } from '@shared/utils';
 
 const { csrf, core: coreConfig } = envConfig;

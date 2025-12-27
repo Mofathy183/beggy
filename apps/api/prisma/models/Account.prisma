@@ -10,7 +10,7 @@ model Account {
     //* User make relationship between User and Account
     // 1:1 relation
     userId String @unique @map("user_id")
-    user   User   @relation(name: "UserAccount", fields: [userId], references: [id])
+    user   User   @relation(fields: [userId], references: [id])
 
     //* table name
     @@map("accounts")

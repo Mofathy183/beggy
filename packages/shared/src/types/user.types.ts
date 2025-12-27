@@ -13,34 +13,38 @@ import type {
 	Item,
 } from '@/types';
 
-export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
+export enum Gender {
+    MALE = 'MALE',
+    FEMALE = 'FEMALE',
+    OTHER = 'OTHER'
+}
 
 export interface Account {
-	id: string;
-	provider: AuthProvider;
-	providerId: string;
-	createdAt: Date;
-	updatedAt: Date;
-	userId: string;
+    id: string
+    provider: AuthProvider
+    providerId: string
+    createdAt: Date
+    updatedAt: Date
+    userId: string
 }
 
 export interface User {
-	id: string;
-	firstName: string;
-	lastName: string;
-	password: string;
-	email: string;
-	role: Role;
-	profilePicture: string | null;
-	gender: Gender | null;
-	birthDate: Date | null;
-	country: string | null;
-	city: string | null;
-	isActive: boolean;
-	isEmailVerified: boolean;
-	passwordChangeAt: Date | null;
-	createdAt: Date;
-	updatedAt: Date;
+    id: string
+    firstName: string
+    lastName: string
+    password: string
+    email: string
+    role: Role
+    profilePicture?: string | null
+    gender?: Gender | null
+    birthDate?: Date | null
+    country?: string | null
+    city?: string | null
+    isActive: boolean
+    isEmailVerified: boolean
+    passwordChangeAt?: Date | null
+    createdAt: Date
+    updatedAt: Date
 }
 
 export interface UserWithRelations extends User {
@@ -48,5 +52,5 @@ export interface UserWithRelations extends User {
 	bags: Bag[];
 	suitcases: Suitcase[];
 	items: Item[];
-	account: Account | null;
+	account: Account[];
 }

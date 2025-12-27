@@ -1,18 +1,4 @@
-import type { BagItems, SuitcaseItems } from '@/types';
-
-export enum WeightUnit {
-	GRAM = 'GRAM',
-	KILOGRAM = 'KILOGRAM',
-	POUND = 'POUND',
-	OUNCE = 'OUNCE',
-}
-
-export enum VolumeUnit {
-	ML = 'ML',
-	LITER = 'LITER',
-	CU_CM = 'CU_CM', // cubic centimeters
-	CU_IN = 'CU_IN', // cubic inches
-}
+import type { BagItems, SuitcaseItems, WeightUnit, VolumeUnit } from '@/types';
 
 export type ConvertToKilogram = Record<WeightUnit, number>;
 export type ConvertToLiter = Record<VolumeUnit, number>;
