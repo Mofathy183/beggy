@@ -1,155 +1,107 @@
-// import { statusStatement } from '../config/status.js';
-// import type { PrismaClient } from '../generated/client/index.js';
-// import { logger } from '../middlewares/appMiddleware.js';
+import { ErrorCode, ErrorMessages } from '@beggy/shared/constants';
+import { STATUS_CODE } from '@shared/constants';
+import type { StatusCode, ErrorResponseOptions } from '@shared/types';
 
-// /**
-//  * Create an error object with the given error, path, and message.
-//  *
-//  * @param {Error} error - The error object.
-//  * @param {string} path - The path of the error.
-//  * @param {string} [message='error'] - The message of the error.
-//  * @returns {Object} - An object containing the error.
-//  */
-// const errorHandler = (error, path, message = 'error') => {
-// 	return {
-// 		message: message || error.message,
-// 		error,
-// 		path,
-// 	};
-// };
+/**
+ * AppError
+ * ----------
+ * Central application error used across services and controllers.
+ *
+ * This error is:
+ * - Thrown from the service layer
+ * - Passed through controllers using `next(error)`
+ * - Interpreted in the error-handling middleware
+ */
+export class AppError extends Error {
+	/**
+	 * @param code        Domain-level error code (used for messages & frontend logic)
+	 * @param status      HTTP status code for the response
+	 * @param cause       Optional underlying error (preserved for debugging/logging)
+	 * @param options     Optional overrides for message and suggestion
+	 */
+	constructor(
+		public readonly code: ErrorCode, //* Stable, machine-readable error identifier
+		public readonly status: StatusCode, //* HTTP status code to be used by the error handler
+		override cause?: unknown,
+		public readonly options?: ErrorResponseOptions
+	) {
+		/**
+		 * Resolve the final error message.
+		 * Priority:
+		 * 1. Custom message (if provided)
+		 * 2. Predefined message from ErrorMessages
+		 */
+		const message = options?.customMessage ?? ErrorMessages[code];
 
-// /**
-//  * Custom ErrorHandler class to represent structured errors
-//  * and route them through the appropriate internal handler.
-//  *
-//  * This class extends the native Error object and adds:
-//  * - A name to identify the error source (e.g., 'prisma', 'custom')
-//  * - The original error object
-//  * - An optional HTTP status code
-//  * - Internal logging using Pino
-//  */
-// class ErrorHandler extends Error {
-// 	/**
-// 	 * Constructs a new ErrorHandler instance.
-// 	 *
-// 	 * @param {string} name - A short name to identify the error handler source (e.g., 'prisma', 'validation').
-// 	 * @param {Object} error - The original error object to be handled.
-// 	 * @param {string} message - A human-readable error message.
-// 	 * @param {number} [status] - Optional HTTP status code to be returned (e.g., 400, 500).
-// 	 */
-// 	constructor(name, error, message, status = undefined) {
-// 		super(message);
-// 		this.name = name;
-// 		this.error = error;
-// 		this.status = status;
+		/**
+		 * Call the base Error constructor.
+		 * If a cause is provided and is an Error, preserve it using
+		 * the standard `cause` property.
+		 */
+		super(message, cause instanceof Error ? { cause } : undefined);
 
-// 		// Capture the stack trace for debugging
-// 		Error.captureStackTrace(this, this.constructor);
+		this.name = 'AppError';
 
-// 		// Handle and log the error immediately
-// 		this.handle();
-// 	}
+		/**
+		 * Errors should be immutable after creation to avoid
+		 * accidental mutation across layers.
+		 */
+		Object.freeze(this);
+	}
+}
 
-// 	/**
-// 	 * Handles the error internally using the generic error handler.
-// 	 * Automatically logs the error using Pino.
-// 	 *
-// 	 * @private
-// 	 * @returns {Object} An object containing structured error information.
-// 	 */
-// 	handle() {
-// 		// Pass error to the centralized error handler
-// 		const errObj = errorHandler(this.error, this.stack, this.message);
+/**
+ * appErrorMap
+ * ------------
+ * Small factory helpers for creating AppError instances
+ * with predefined HTTP status codes and response strategies.
+ *
+ * This keeps services expressive and avoids repeating
+ * status codes and apiResKey values.
+ */
+export const appErrorMap = {
+	/**
+	 * Resource was not found.
+	 */
+	notFound: (
+		code: ErrorCode,
+		cause?: unknown,
+		options?: ErrorResponseOptions
+	) => new AppError(code, STATUS_CODE.NOT_FOUND, cause, options),
 
-// 		// Create a log entry
-// 		const logDetails = {
-// 			message: errObj.message || 'An unknown error occurred',
-// 			error: errObj.error || this.error,
-// 			stack: this.stack || 'No stack available',
-// 		};
+	/**
+	 * Client sent invalid or malformed data.
+	 */
+	badRequest: (
+		code: ErrorCode,
+		cause?: unknown,
+		options?: ErrorResponseOptions
+	) => new AppError(code, STATUS_CODE.BAD_REQUEST, cause, options),
 
-// 		// Log the error using Pino
-// 		logger.error(
-// 			logDetails,
-// 			`Error handled by: ${this.name} error handler`
-// 		);
+	/**
+	 * Authentication is required or failed.
+	 */
+	unauthorized: (
+		code: ErrorCode,
+		cause?: unknown,
+		options?: ErrorResponseOptions
+	) => new AppError(code, STATUS_CODE.UNAUTHORIZED, cause, options),
 
-// 		// Return error object in case it's used by future extensions
-// 		return errObj;
-// 	}
-// }
+	/**
+	 * User is authenticated but not allowed to perform this action.
+	 */
+	forbidden: (
+		code: ErrorCode,
+		cause?: unknown,
+		options?: ErrorResponseOptions
+	) => new AppError(code, STATUS_CODE.FORBIDDEN, cause, options),
 
-// /**
-//  * Custom error class used to send structured error responses
-//  * from Express middleware to the client.
-//  *
-//  * This class is typically used with `next()` to format errors
-//  * consistently across the app.
-//  */
-// class ErrorResponse extends Error {
-// 	/**
-// 	 * Constructs a new ErrorResponse instance.
-// 	 *
-// 	 * @param {Object} error - The raw error object (e.g., validation error, Prisma error).
-// 	 * @param {string} message - A human-readable message to display in the response.
-// 	 * @param {number} status - The HTTP status code to send (e.g., 400, 500).
-// 	 */
-// 	constructor(error, message, status) {
-// 		super(message);
-
-// 		/**
-// 		 * The raw error object passed in for context.
-// 		 * @type {Object}
-// 		 */
-// 		this.error = error;
-
-// 		/**
-// 		 * The human-readable message to be shown in the response.
-// 		 * @type {string}
-// 		 */
-// 		this.message = message;
-
-// 		/**
-// 		 * The HTTP status code to send in the response.
-// 		 * @type {number}
-// 		 */
-// 		this.statusCode = status;
-
-// 		/**
-// 		 * The textual HTTP status description (e.g., "Bad Request").
-// 		 * Pulled from a status statement utility object.
-// 		 * @type {string}
-// 		 */
-// 		this.statement = statusStatement[this.statusCode] || 'Unknown Status';
-
-// 		// Capture the stack trace specific to this class for debugging
-// 		Error.captureStackTrace(this, this.constructor);
-// 	}
-// }
-
-// /**
-//  * Sends a standardized error response using Express's `next()` middleware
-//  * if the provided object is an instance of ErrorHandler.
-//  *
-//  * @param {Function} next - Express `next()` function to pass errors to global error handler.
-//  * @param {*} error - The result returned from a service. Can be an ErrorHandler or any other type.
-//  * @returns {null} Returns null if an ErrorHandler is handled, allowing caller to return early.
-//  */
-// export const sendServiceResponse = (next, error) => {
-// 	// Check if the response from service is an instance of ErrorHandler
-// 	if (error instanceof ErrorHandler) {
-// 		// Wrap it in ErrorResponse and pass to Express error middleware
-// 		return next(
-// 			new ErrorResponse(
-// 				error.error, // Short code or type of the error
-// 				error.message, // Human-readable message
-// 				error.status // HTTP status code
-// 			)
-// 		);
-// 	}
-
-// 	// No error, let the controller continue
-// 	return null;
-// };
-
-// export { ErrorResponse, ErrorHandler };
+	/**
+	 * Unhandled or unexpected server error.
+	 */
+	serverError: (
+		code: ErrorCode,
+		cause?: unknown,
+		options?: ErrorResponseOptions
+	) => new AppError(code, STATUS_CODE.INTERNAL_ERROR, cause, options),
+};

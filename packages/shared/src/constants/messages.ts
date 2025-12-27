@@ -187,7 +187,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 	// 404 Not Found
 	[ErrorCode.NOT_FOUND]:
 		'Hmm, can’t seem to find what you’re looking for. Maybe it’s hidden in the bottom of the bag?',
-	[ErrorCode.RESOURCE_NOT_FOUND]:
+	[ErrorCode.RESOURCE_NOT_FOUND_WEB]:
 		'That item seems to have wandered off. Happens during long trips!',
 	[ErrorCode.USER_NOT_FOUND]:
 		'Couldn’t find a traveler with those details. Maybe try a different email?',
@@ -206,6 +206,38 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 		'Looks like we’ve wandered off the map — this page doesn’t seem to exist.',
 	[ErrorCode.ROUTE_NOT_FOUND]:
 		'Hmm, that route isn’t on my itinerary. Maybe it’s been moved or renamed?',
+
+	// ============================================================================
+	// VALIDATION & DATABASE LEVEL
+	// ============================================================================
+
+	// INVALID_REQUEST_DATA (ZodError only)
+	[ErrorCode.INVALID_REQUEST_DATA]:
+		'Some of the info didn’t match what I expected — nothing major, just a few details to tidy up.',
+
+	// RESOURCE_ALREADY_EXISTS (P2002)
+	[ErrorCode.RESOURCE_ALREADY_EXISTS]:
+		'Looks like that resource’s already here — no need to pack it twice!',
+
+	// RESOURCE_NOT_FOUND (P2001, P2025)
+	[ErrorCode.RESOURCE_NOT_FOUND]:
+		'Hmm, I can’t seem to find that one — maybe it’s already been unpacked?',
+
+	// INVALID_RELATION_REFERENCE (P2003)
+	[ErrorCode.INVALID_RELATION_REFERENCE]:
+		'That reference doesn’t connect properly — kind of like a missing travel companion.',
+
+	// DATABASE_CONNECTION_FAILED
+	[ErrorCode.DATABASE_CONNECTION_FAILED]:
+		'My link to the database took a little detour — probably just a temporary connection issue.',
+
+	// DATABASE_ERROR
+	[ErrorCode.DATABASE_ERROR]:
+		'Something unexpected happened with the database — even seasoned systems need a breather sometimes.',
+
+	// INTERNAL_SERVER_ERROR
+	[ErrorCode.INTERNAL_SERVER_ERROR]:
+		'That’s on me — something behind the scenes didn’t go as planned. I’ll get us back on track soon.',
 
 	// 409 Conflict
 	[ErrorCode.CONFLICT]:
@@ -259,7 +291,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 
 	[ErrorCode.INTERNAL_ERROR]:
 		'Something unexpected happened on my end. Don’t worry — your data’s safe.',
-	[ErrorCode.DATABASE_ERROR]:
+	[ErrorCode.DATABASE_ERROR_WEB]:
 		'My packing database is taking a quick nap. We’ll get it back up soon.',
 	[ErrorCode.UNKNOWN_ERROR]:
 		'That one’s a mystery — even for me. Let’s try refreshing the page.',
@@ -404,7 +436,7 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 	// 404 Not Found
 	[ErrorCode.NOT_FOUND]:
 		'Let’s double-check your details or refresh the page — it might just be hiding.',
-	[ErrorCode.RESOURCE_NOT_FOUND]:
+	[ErrorCode.RESOURCE_NOT_FOUND_WEB]:
 		'Make sure the info’s correct, then give it another try.',
 	[ErrorCode.USER_NOT_FOUND]:
 		'Try a different email — or if you’re new here, go ahead and sign up!',
@@ -423,6 +455,38 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 		'Head back to the homepage — I’ll help you find your way again.',
 	[ErrorCode.ROUTE_NOT_FOUND]:
 		'Double-check the link or try refreshing. If it’s still missing, we’ll chart a new path together.',
+
+	// ============================================================================
+	// VALIDATION & DATABASE LEVEL
+	// ============================================================================
+
+	// INVALID_REQUEST_DATA (ZodError only)
+	[ErrorCode.INVALID_REQUEST_DATA]:
+		'Double-check your inputs — a missing field or mismatched type is usually the culprit. Once fixed, we’ll be cruising again.',
+
+	// RESOURCE_ALREADY_EXISTS (P2002)
+	[ErrorCode.RESOURCE_ALREADY_EXISTS]:
+		'Try a different name or value — like giving your suitcase a fresh tag so nothing gets mixed up.',
+
+	// RESOURCE_NOT_FOUND (P2001, P2025)
+	[ErrorCode.RESOURCE_NOT_FOUND]:
+		'Make sure the item or record exists before updating or deleting. If it’s gone, you can always create a new one!',
+
+	// INVALID_RELATION_REFERENCE (P2003)
+	[ErrorCode.INVALID_RELATION_REFERENCE]:
+		'Double-check that the related record exists — think of it like confirming a booking before adding a traveler.',
+
+	// DATABASE_CONNECTION_FAILED
+	[ErrorCode.DATABASE_CONNECTION_FAILED]:
+		'Give it a moment and try again — if it keeps happening, your database might be offline or unreachable.',
+
+	// DATABASE_ERROR
+	[ErrorCode.DATABASE_ERROR]:
+		'Try again after a short pause. If it repeats, let’s peek at the logs — could be a minor backend hiccup.',
+
+	// INTERNAL_SERVER_ERROR
+	[ErrorCode.INTERNAL_SERVER_ERROR]:
+		'Refresh and try again. If it keeps popping up, flag it — I’ll make sure the crew looks into it.',
 
 	// 409 Conflict
 	[ErrorCode.CONFLICT]:
@@ -476,7 +540,7 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 
 	[ErrorCode.INTERNAL_ERROR]:
 		'Try again in a bit — these things happen, even on the smoothest journeys.',
-	[ErrorCode.DATABASE_ERROR]:
+	[ErrorCode.DATABASE_ERROR_WEB]:
 		'Give it a moment — your packing data’s safe and sound.',
 	[ErrorCode.UNKNOWN_ERROR]:
 		'Refresh and try again. If it keeps happening, I’ll help you report it.',

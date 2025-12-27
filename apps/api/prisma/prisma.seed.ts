@@ -125,10 +125,7 @@ import { RolePermissions } from '@beggy/shared/constants';
 // 		await prisma.$disconnect();
 // 	});
 
-async function seedPermissions(
-	role: Role,
-	permissions: Permissions
-) {
+async function seedPermissions(role: Role, permissions: Permissions) {
 	console.log(`🌱 Seeding ${role} permissions...`);
 
 	// Fix 1: createMany instead of createManyAndReturn (which doesn't exist)

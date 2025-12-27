@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Express } from 'express';
 import session from 'express-session';
 import flash from 'express-flash';
 import cookieParser from 'cookie-parser';
@@ -19,64 +19,88 @@ import {
 } from './src/middlewares/appMiddleware.js';
 import rootRoute from './src/api/routes/rootRoute.js';
 import passport from './src/config/passport.js';
-import type { Express } from 'express';
 
 const app: Express = express();
 
-app.use(express.json({ limit: '10kb' }));
+// ============================================
+//* SECURITY MIDDLEWARE (FIRST - PROTECT IMMEDIATELY)
+// ============================================
 
-// Body parser for express to read data from body into req.body
-app.use(express.urlencoded({ extended: true }));
-
-// Required to parse CSRF token from cookies
-app.use(cookieParser());
-
-// Middleware
-
-// security middle
+// 1. Helmet - Set security HTTP headers FIRST
 app.use(helmet());
 
-// XSS Protection
+// 2. XSS Protection - Clean user input from XSS attacks
 app.use(xss());
 
-// Logger middleware (morgan) to log requests to the console.
-app.use(morgan('dev'));
-
-// Use pino-http middleware to automatically log incoming requests
-app.use(pinoHttpLogger);
-
-// Log the request method, URL, and IP address to the logger.
-app.use(loggerMiddleware);
-
-// CORS middleware (Cross-Origin Resource Sharing) to allow requests from different origins.
-app.use(corsMiddleware);
-
-// Rate limiting middleware (express-rate-limit) to limit the number of requests from the same IP address.
+// 3. Rate limiting - Protect against brute force/DDoS (apply early)
 app.use(limiter);
 
-// Session middleware
+// 4. CORS - Control which origins can access your API
+app.use(corsMiddleware);
+
+// ============================================
+//* REQUEST PARSING MIDDLEWARE
+// ============================================
+
+// 5. JSON body parser with size limit (10kb)
+app.use(express.json({ limit: '10kb' }));
+
+// 6. URL-encoded body parser for form data
+app.use(express.urlencoded({ extended: true }));
+
+// 7. Cookie parser - Required for sessions, CSRF, auth tokens
+app.use(cookieParser());
+
+// ============================================
+//* AUTHENTICATION & SESSION MIDDLEWARE
+// ============================================
+
+// 8. Session configuration (must come before Passport)
 app.use(session(sessionConfig));
 
-// Flash middleware
+// 9. Flash messages (depends on sessions)
 app.use(flash());
 
-// Passport middleware
+// 10. Passport authentication initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
-// CSRF Error middleware
+// 11. CSRF protection (requires sessions to be set up)
 app.use(csrfMiddleware);
 
-// Routes
+// ============================================
+//* LOGGING & MONITORING MIDDLEWARE
+// ============================================
+
+// 12. Morgan HTTP request logger (development friendly)
+app.use(morgan('dev'));
+
+// 13. Pino HTTP logger (structured JSON logging for production)
+app.use(pinoHttpLogger);
+
+// 14. Custom request logger middleware
+app.use(loggerMiddleware);
+
+// ============================================
+//* APPLICATION ROUTES
+// ============================================
+
+// 15. Main API routes
 app.use('/api/beggy', rootRoute);
 
-// Swagger API Documentation
+// 16. API Documentation (Swagger UI)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Handler undefined Routes
-app.all('/{*splat}', routeErrorHandler);
+// ============================================
+//* ERROR HANDLING MIDDLEWARE (SPECIFIC ORDER!)
+// ============================================
 
-//* Handle Response from classes ErrorResponse and SuccessResponse
-app.use(AppResponse);
+// 17. 404 Handler - MUST be AFTER all routes, BEFORE errorHandler
+// Catches any undefined routes and converts to proper error
+app.all('/{*splat}', RouteNotFoundHandler);
+
+// 18. Global Error Handler - MUST BE ABSOLUTELY LAST
+// Catches ALL errors from previous middleware and routes
+app.use(errorHandler);
 
 export default app;

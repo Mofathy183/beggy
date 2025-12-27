@@ -30,7 +30,7 @@ export enum ErrorCode {
 
 	// 404 Not Found - Resource doesn't exist
 	NOT_FOUND = 'NOT_FOUND',
-	RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
+	RESOURCE_NOT_FOUND_WEB = 'RESOURCE_NOT_FOUND_WEB',
 	USER_NOT_FOUND = 'USER_NOT_FOUND',
 	BAG_NOT_FOUND = 'BAG_NOT_FOUND',
 	SUITCASE_NOT_FOUND = 'SUITCASE_NOT_FOUND',
@@ -71,12 +71,37 @@ export enum ErrorCode {
 	ROUTE_NOT_FOUND = 'ROUTE_NOT_FOUND', // For API endpoint 404 (more specific)
 
 	// ============================================================================
+	// VALIDATION & DATABASE LEVEL
+	// ============================================================================
+
+	// INVALID_REQUEST_DATA (ZodError only)
+	INVALID_REQUEST_DATA = 'INVALID_REQUEST_DATA',
+
+	// RESOURCE_ALREADY_EXISTS (P2002)
+	RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS',
+
+	// RESOURCE_NOT_FOUND (P2001, P2025)
+	RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
+
+	// INVALID_RELATION_REFERENCE (P2003)
+	INVALID_RELATION_REFERENCE = 'INVALID_RELATION_REFERENCE',
+
+	// DATABASE_CONNECTION_FAILED
+	DATABASE_CONNECTION_FAILED = 'DATABASE_CONNECTION_FAILED',
+
+	// DATABASE_ERROR
+	DATABASE_ERROR = 'DATABASE_ERROR',
+
+	// INTERNAL_SERVER_ERROR
+	INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+
+	// ============================================================================
 	// SERVER ERRORS (5xx) - Internal/External failures
 	// ============================================================================
 
 	// 500 Internal Server Error
 	INTERNAL_ERROR = 'INTERNAL_ERROR',
-	DATABASE_ERROR = 'DATABASE_ERROR',
+	DATABASE_ERROR_WEB = 'DATABASE_ERROR_WEB',
 	UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 	OPERATION_FAILED = 'OPERATION_FAILED',
 
