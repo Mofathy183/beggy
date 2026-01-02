@@ -1,5 +1,4 @@
-import prisma from '../../prisma/prisma.js';
-import type { PrismaClient } from '../generated/client/index.js';
+import { prisma, type ExtendedPrismaClient } from '@prisma';
 import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
 import { hashingPassword } from '../utils/hash.js';
 import { ErrorHandler } from '../utils/error.js';
@@ -56,7 +55,7 @@ export const addUser = async (body) => {
 				email,
 				password: hashPassword,
 				gender: gender,
-				birth: birthOfDate(birth),
+				birthDate: birthOfDate(birth),
 				country,
 				city,
 				profilePicture: haveProfilePicture(profilePicture),

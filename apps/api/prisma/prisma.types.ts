@@ -1,4 +1,8 @@
 import { BagsGetPayload, SuitcasesGetPayload } from '@prisma-generated/models';
+import { prisma } from '@prisma';
+
+// Export the TYPE of the extended client
+export type ExtendedPrismaClient = typeof prisma;
 
 export type PrismaBagModel = BagsGetPayload<{
 	include: {
