@@ -1,6 +1,11 @@
 import { REGEX } from '@/constants';
 import * as z from 'zod';
-import { createNameField, createNumberField, safeTrim } from '@/utils';
+import {
+	createArrayField,
+	createNameField,
+	createNumberField,
+	safeTrim,
+} from '@/utils';
 import type { NameFieldType, NumericEntity, NumericMetric } from '@/types';
 
 /**
@@ -217,4 +222,7 @@ export const FieldsSchema = {
 		metric: NumericMetric<M>,
 		isRequired: boolean = true
 	) => createNumberField(type, metric, isRequired),
+
+	array: (elementSchema: z.ZodTypeAny, isRequired: boolean = true) =>
+		createArrayField(elementSchema, isRequired),
 };

@@ -1,4 +1,6 @@
 import { User } from '@/types';
+import { AuthSchema } from '@/schemas';
+import * as z from 'zod';
 
 export enum Role {
 	ADMIN = 'ADMIN',
@@ -93,3 +95,50 @@ export interface PermissionWithRelations extends Permission {
 export interface RoleOnPermissionWithRelations extends RoleOnPermission {
 	permission: Permission;
 }
+
+// ─────────────────────────────────────────────
+// Schemas with identical input & output
+// (No transforms → input === payload)
+//
+// Frontend uses Input types only
+// Services only accept Payload types
+// ─────────────────────────────────────────────
+
+// ==================================================
+// AUTH SCHEMA
+// ==================================================
+// These types belong to authentication & access flows
+// Used by both frontend forms and auth services
+
+export type LoginInput = z.infer<typeof AuthSchema.login>;
+export type ForgotPasswordInput = z.infer<typeof AuthSchema.forgotPassword>;
+
+// ─────────────────────────────────────────────
+// Schemas with transformations
+// (Input ≠ Payload due to `.transform()`)
+// ─────────────────────────────────────────────
+// What the client submits (Frontend / form layer)
+// Includes fields like `confirmPassword`
+
+// ==================================================
+// AUTH SCHEMA — INPUT
+// ==================================================
+// Raw user-submitted data from auth-related forms
+// May include confirmation or helper fields
+
+export type SignUpInput = z.input<typeof AuthSchema.signUp>;
+export type ResetPasswordInput = z.input<typeof AuthSchema.resetPassword>;
+
+// ==================================================
+// What the API / service layer receives
+// Safe, validated, and stripped of sensitive fields
+// ==================================================
+
+// ==================================================
+// AUTH SCHEMA — PAYLOAD
+// ==================================================
+// Fully validated, normalized auth data
+// Ready for services, hashing, persistence
+
+export type SignUpPayload = z.output<typeof AuthSchema.signUp>;
+export type ResetPasswordPayload = z.output<typeof AuthSchema.resetPassword>;

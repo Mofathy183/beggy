@@ -1,4 +1,6 @@
 import { ErrorCode } from '@/constants';
+import { OrderByQuerySchemas, QuerySchema, ParamsSchema } from '@/schemas';
+import * as z from 'zod';
 
 /**
  * Pagination metadata for collection responses.
@@ -195,3 +197,124 @@ export interface PaginationParams {
 	search?: string;
 	filters?: Record<string, any>;
 }
+
+/**
+ * Ordering direction for sortable queries.
+ *
+ * @remarks
+ * - Lowercase values align with URL query standards
+ * - Shared between frontend and backend to prevent drift
+ */
+export enum OrderDirection {
+	ASC = 'asc',
+	DESC = 'desc',
+}
+
+// ─────────────────────────────────────────────
+// Schemas with identical input & output
+// (No transforms → input === payload)
+//
+// Frontend uses Input types only
+// Services only accept Payload types
+// ─────────────────────────────────────────────
+
+// ==================================================
+// API SCHEMA
+// ==================================================
+// Zod-inferred input types for bag-related self-service actions.
+// These types represent the exact payload shape accepted by the API
+
+// ==================================================
+// FILTER QUERY
+// ==================================================
+
+/**
+ * User filtering query input.
+ *
+ * @remarks
+ * - Derived directly from Zod schema
+ * - Used for validating and typing user list filters
+ */
+export type UserFilterInput = z.infer<typeof QuerySchema.userFilter>;
+
+/**
+ * Bag filtering query input.
+ *
+ * @remarks
+ * - Includes capacity, weight, and metadata filters
+ * - Input shape matches API payload exactly
+ */
+export type BagFilterInput = z.infer<typeof QuerySchema.bagFilter>;
+
+/**
+ * Suitcase filtering query input.
+ *
+ * @remarks
+ * - Supports dimensional and attribute-based filtering
+ * - Safe to reuse across web and API layers
+ */
+export type SuitcaseFilterInput = z.infer<typeof QuerySchema.suitcaseFilter>;
+
+/**
+ * Item filtering query input.
+ *
+ * @remarks
+ * - Includes boolean, enum, and numeric range filters
+ * - No transformations applied (input === output)
+ */
+export type ItemFilterInput = z.infer<typeof QuerySchema.itemFilter>;
+
+// ==================================================
+// ORDERBY QUERY
+// ==================================================
+
+/**
+ * User "order by" query input.
+ *
+ * @remarks
+ * - Restricts ordering to allowed, indexed fields
+ * - Direction defaults are handled at schema level
+ */
+export type UserOrderByInput = z.infer<typeof OrderByQuerySchemas.userOrderBy>;
+
+/**
+ * Bag "order by" query input.
+ *
+ * @remarks
+ * - Prevents ordering by non-exposed columns
+ * - Ensures predictable sorting behavior
+ */
+export type BagOrderByInput = z.infer<typeof OrderByQuerySchemas.bagOrderBy>;
+
+/**
+ * Suitcase "order by" query input.
+ *
+ * @remarks
+ * - Shared contract between frontend and API
+ * - Eliminates manual sort validation
+ */
+export type SuitcaseOrderByInput = z.infer<
+	typeof OrderByQuerySchemas.suitcaseOrderBy
+>;
+
+/**
+ * Item "order by" query input.
+ *
+ * @remarks
+ * - Typed strictly from schema
+ * - Guards against unsafe ordering fields
+ */
+export type ItemOrderByInput = z.infer<typeof OrderByQuerySchemas.itemOrderBy>;
+
+// ==================================================
+// PARAMS
+// ==================================================
+
+/**
+ * Route parameter input.
+ *
+ * @remarks
+ * - Represents validated path parameters (e.g. :id)
+ * - Ensures only valid UUIDs reach the service layer
+ */
+export type ParamsInput = z.infer<typeof ParamsSchema.uuid>;

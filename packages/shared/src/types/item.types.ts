@@ -2,6 +2,8 @@
  * API Response Types for Items
  */
 import { User, SuitcaseItems, BagItems } from '@/types';
+import { ItemSchema } from '@/schemas';
+import * as z from 'zod';
 
 export enum ItemCategory {
 	ELECTRONICS = 'ELECTRONICS',
@@ -48,3 +50,36 @@ export interface ItemWithRelations extends Item {
 	suitcaseItems: SuitcaseItems[];
 	user?: User | null;
 }
+
+/**
+ * Allowed "order by" fields for Item queries.
+ *
+ * @remarks
+ * - Ensures items can only be sorted by explicitly approved fields
+ * - Prevents accidental sorting on unindexed or sensitive columns
+ */
+export enum ItemOrderByField {
+	CREATED_AT = 'createdAt',
+	UPDATED_AT = 'updatedAt',
+	NAME = 'name',
+	WEIGHT = 'weight',
+	VOLUME = 'volume',
+}
+
+// ─────────────────────────────────────────────
+// Schemas with identical input & output
+// (No transforms → input === payload)
+//
+// Frontend uses Input types only
+// Services only accept Payload types
+// ─────────────────────────────────────────────
+
+// ==================================================
+// ITEM SCHEMA
+// ==================================================
+// Zod-inferred input types for item-related self-service actions.
+// These inputs follow PATCH semantics for updates and are shared
+// between frontend forms, API routes, and service-layer logic.
+
+export type CreateItemInput = z.infer<typeof ItemSchema.create>;
+export type UpdateItemInput = z.infer<typeof ItemSchema.update>;

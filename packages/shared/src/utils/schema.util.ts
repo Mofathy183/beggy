@@ -185,6 +185,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 			lte: 150,
 			decimals: 1,
 			messages: {
+				number: 'That doesn’t seem like a valid number — double-check your units before we lift off.',
 				positive:
 					'Let’s keep bag capacity above zero — can’t pack air, after all.',
 				gte: 'That bag’s capacity seems a bit small — you’ll need room for souvenirs too.',
@@ -196,6 +197,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 			lte: 50,
 			decimals: 2,
 			messages: {
+				number: 'That doesn’t seem like a valid number — double-check your units before we lift off.',
 				positive:
 					'Bag weight must be more than zero — even an empty bag weighs something!',
 				gte: 'That seems a bit too light — double-check your weight units just in case.',
@@ -213,6 +215,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 			lte: 200,
 			decimals: 1,
 			messages: {
+				number: 'That doesn’t look like a valid number — let’s pop in something measurable for suitcase capacity.',
 				positive:
 					'A suitcase needs at least a bit of space to be useful — let’s keep it positive.',
 				gte: 'That suitcase seems too small to be practical — even carry-ons need a little room.',
@@ -224,6 +227,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 			lte: 70,
 			decimals: 2,
 			messages: {
+				number: 'Hmm, that weight doesn’t read as a number — try entering it as digits, not words.',
 				positive:
 					'Suitcase weight should start above zero — even empty luggage has some heft.',
 				gte: 'That suitcase weight looks unusually light — check your units, just in case.',
@@ -241,6 +245,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 			lte: 1_000,
 			decimals: 3,
 			messages: {
+				number: 'That volume doesn’t look numeric — maybe check for commas or letters that snuck in?',
 				positive:
 					'Item volume needs to be positive — even the smallest souvenirs take up space.',
 				gte: 'That item’s volume seems tiny — maybe double-check the decimal point?',
@@ -252,6 +257,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 			lte: 100,
 			decimals: 3,
 			messages: {
+				number: 'That doesn’t seem like a valid weight — use digits so we can measure it properly.',
 				positive:
 					'Item weight must be positive — nothing weighs *nothing!*',
 				gte: 'That seems very light — even a postcard has some weight to it.',
@@ -263,6 +269,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 			lte: 10_000,
 			decimals: 0,
 			messages: {
+				number: 'That doesn’t look like a valid quantity — numbers only, so we can count what’s packed.',
 				positive:
 					'Quantity must be a positive number — at least one to pack!',
 				gte: 'You’ll need at least one of that item — can’t pack zero of something!',
@@ -292,7 +299,7 @@ export const createNumberField = <M extends NumericEntity>(
 	const { gte, lte, decimals, messages } = NUMBER_CONFIG[type][metric];
 
 	const baseSchema = z
-		.number({ error: '' })
+		.number({ error: messages.number })
 		.positive({ error: messages.positive });
 
 	return isRequired
@@ -301,4 +308,65 @@ export const createNumberField = <M extends NumericEntity>(
 				.lte(lte, { error: messages.lte }) // alias for .max()
 				.transform((val) => safeRound(val, decimals))
 		: baseSchema.nullish().transform((val) => safeRound(val, decimals));
+};
+
+/**
+ * Creates a reusable array field validator with consistent constraints and UX-friendly messages.
+ *
+ * @remarks
+ * - Designed for shared usage across web forms and API payloads
+ * - Enforces upper bounds to protect performance and data integrity
+ * - Uses friendly, human-centered error messages for better UX
+ *
+ * @param elementSchema - Zod schema describing a single array element
+ * @param isRequired - Whether at least one element must be provided (default: true)
+ *
+ * @returns A Zod array schema with appropriate validation rules applied
+ */
+export const createArrayField = (
+	elementSchema: z.ZodTypeAny,
+	isRequired: boolean = true
+) => {
+	/**
+	 * Base array schema.
+	 *
+	 * @remarks
+	 * - No defaults are applied to avoid implicit data creation
+	 * - Element validation is delegated entirely to elementSchema
+	 */
+	const baseSchema = z.array(elementSchema);
+
+	return isRequired
+		? baseSchema
+				/**
+				 * Required array validation.
+				 *
+				 * @remarks
+				 * - Ensures the array contains at least one element
+				 * - Prevents empty submissions when data is mandatory
+				 */
+				.min(1, {
+					error: 'Looks like your list is a bit light — let’s make sure there’s at least one item packed before we go.',
+				})
+				/**
+				 * Maximum size constraint.
+				 *
+				 * @remarks
+				 * - Protects against excessively large payloads
+				 * - Helps maintain predictable UX and backend performance
+				 */
+				.max(5, {
+					error: 'That’s quite a list! Try trimming it down a little — traveling lighter keeps things smoother.',
+				})
+		: baseSchema
+				/**
+				 * Optional array validation.
+				 *
+				 * @remarks
+				 * - Allows empty or undefined arrays
+				 * - Still enforces an upper limit when values are provided
+				 */
+				.max(5, {
+					error: 'You’ve got quite a few items there — maybe pare it back to essentials for an easier trip.',
+				});
 };

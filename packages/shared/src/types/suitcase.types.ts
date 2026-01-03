@@ -3,6 +3,8 @@
  */
 
 import { User, Item, Size, Material } from '@/types';
+import { SuitcaseSchema } from '@/schemas';
+import * as z from 'zod';
 
 export enum SuitcaseType {
 	CARRY_ON = 'CARRY_ON',
@@ -64,3 +66,36 @@ export interface SuitcaseWithRelations extends Suitcase {
 	suitcaseItems: SuitcaseItems[];
 	user: User;
 }
+
+/**
+ * Allowed "order by" fields for Suitcase queries.
+ *
+ * @remarks
+ * - Mirrors bag ordering fields where applicable
+ * - Keeps sorting rules consistent across container-like entities
+ */
+export enum SuitcaseOrderByField {
+	CREATED_AT = 'createdAt',
+	UPDATED_AT = 'updatedAt',
+	NAME = 'name',
+	MAX_WEIGHT = 'maxWeight',
+	MAX_CAPACITY = 'maxCapacity',
+}
+
+// ─────────────────────────────────────────────
+// Schemas with identical input & output
+// (No transforms → input === payload)
+//
+// Frontend uses Input types only
+// Services only accept Payload types
+// ─────────────────────────────────────────────
+
+// ==================================================
+// SUITCASE SCHEMA
+// ==================================================
+// Zod-inferred input types for suitcase-related self-service actions.
+// Used by both web forms and API handlers to ensure
+// consistent validation and type safety across the stack.
+
+export type CreateSuitcaseInput = z.infer<typeof SuitcaseSchema.create>;
+export type UpdateSuitcaseInput = z.infer<typeof SuitcaseSchema.update>;
