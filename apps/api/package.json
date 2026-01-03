@@ -128,7 +128,8 @@
 		"resend": "^4.2.0",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1",
-		"uuid": "^13.0.0"
+		"uuid": "^13.0.0",
+		"zod": "^4.1.13"
 	},
 	"engines": {
 		"node": ">=18.0.0"

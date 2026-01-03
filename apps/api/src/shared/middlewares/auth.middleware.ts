@@ -1,18 +1,3 @@
-import prisma from '../../prisma/prisma.js';
-import { passwordChangeAfter } from '../utils/userHelper.js';
-import { storeSession } from '../utils/authHelper.js';
-import { statusCode } from '../config/status.js';
-import {
-	loginSchema,
-	singUpSchema,
-	emailScheme,
-	resetPasswordScheme,
-	updatePasswordScheme,
-	updateUserDataSchema,
-	confirmDeleteSchema,
-} from '../api/validators/authValidator.js';
-import { ErrorResponse } from '../utils/error.js';
-
 /**
  * Middleware to authenticate a user from the verified JWT payload in `req.auth`.
  *

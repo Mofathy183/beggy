@@ -1,5 +1,6 @@
 import { STATUS_CODE } from '@shared/constants';
 import { ErrorCode } from '@beggy/shared/constants';
+import { Role } from '@beggy/shared/types';
 
 /**
  * HTTP Status Code type derived from STATUS_CODE constants.
@@ -222,3 +223,12 @@ export interface SecureTokenPair {
 	token: string; // Send to user
 	hash: string; // Store in DB
 }
+
+export type VerifiedAccessToken = {
+	id: string;
+	role: Role;
+};
+
+export type VerifiedRefreshToken = {
+	id: string;
+};

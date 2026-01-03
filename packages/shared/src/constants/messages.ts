@@ -383,6 +383,15 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 		'Something about this setup doesn’t align. Let’s fine-tune it together.',
 	[ErrorCode.INVALID_PACKING_ORDER]:
 		'From experience, heavier items work best at the bottom — try moving those shoes down a bit.',
+
+	// API ONLY
+	[ErrorCode.SESSION_DESTROY_FAILED]:
+		'I tried ending your session, but it seems the system’s still holding on. Let’s give it another go in a moment.',
+
+	[ErrorCode.PASSWORD_VERIFY_FAILED]:
+		'Hmm, that password doesn’t match what I have on file. Happens to the best of us — double-check and give it another go.',
+	[ErrorCode.PASSWORD_HASH_FAILED]:
+		'I tried securing your password, but something glitched along the way. Don’t worry, your data’s still safe — let’s try that again.',
 };
 
 /**
@@ -625,4 +634,12 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 		'Review your setup — a quick tweak can make everything fit beautifully.',
 	[ErrorCode.INVALID_PACKING_ORDER]:
 		'From experience, heavier items work best at the bottom — let’s repack smart.',
+
+	// API ONLY
+	[ErrorCode.SESSION_DESTROY_FAILED]:
+		'Try the request again, traveler. If the issue lingers, the session store might just need a quick check-in — it happens to the best of us.',
+	[ErrorCode.PASSWORD_VERIFY_FAILED]:
+		'Make sure your caps lock isn’t on, and re-enter your password slowly — I’ve done the same dance more than once.',
+	[ErrorCode.PASSWORD_HASH_FAILED]:
+		'Try saving or signing up again in a moment. If it keeps happening, it might be a temporary system hiccup — no need to stress.',
 };

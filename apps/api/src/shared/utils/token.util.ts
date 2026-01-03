@@ -1,10 +1,16 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import type { Secret, SignOptions, JwtPayload } from 'jsonwebtoken';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
-import { SecureTokenPair } from '@shared/types';
+import {
+	SecureTokenPair,
+	VerifiedRefreshToken,
+	VerifiedAccessToken,
+} from '@shared/types';
 import { envConfig } from '@config';
-import { validate as validateUUID } from 'uuid';
+import { Role } from '@beggy/shared/types';
+import { ErrorCode } from '@beggy/shared/constants';
+import { FieldsSchema, ParamsSchema } from '@beggy/shared/schemas';
+import { appErrorMap } from '@shared/utils';
 
 const accessTokenSecret: Secret = envConfig.security.jwt.access.secret;
 const refreshTokenSecret: Secret = envConfig.security.jwt.refresh.secret;
@@ -12,62 +18,102 @@ const accessConfig: SignOptions = envConfig.security.jwt.access.config;
 const refreshConfig: SignOptions = envConfig.security.jwt.refresh.config;
 
 /**
- * Generates a JWT token with the given id and expiration time.
- * @param {string} id - The id to be included in the token.
- * @returns {string} A JWT token containing the id.
+ * Signs a short-lived access token.
+ *
+ * Access tokens are used for authenticating API requests
+ * and may contain authorization-related claims such as user role.
+ *
+ * @param id - User UUID
+ * @param role - User role used for authorization
+ * @returns Signed JWT access token
  */
-export const signAccessToken = (id: string): string => {
-	if (validateUUID(id)) {
-		throw new Error('Invalid user ID format');
-	}
-	const payload: JwtPayload = { sub: id };
-	const token = jwt.sign(payload, accessTokenSecret, accessConfig);
+export const signAccessToken = (id: string, role: Role): string => {
+	const payload: JwtPayload = {
+		sub: id,
+		role,
+	};
 
-	return token;
+	return jwt.sign(payload, accessTokenSecret, accessConfig);
 };
 
 /**
- * Generates a JWT refresh token with the given id and expiration time.
- * @param {string} id - The id to be included in the token.
- * @returns {string} A JWT refresh token containing the id.
+ * Signs a long-lived refresh token.
+ *
+ * Refresh tokens are used only to obtain new access tokens
+ * and should contain the minimum amount of information.
+ *
+ * @param id - User UUID
+ * @returns Signed JWT refresh token
  */
 export const signRefreshToken = (id: string): string => {
-	if (validateUUID(id)) {
-		throw new Error('Invalid user ID format');
-	}
+	const payload: JwtPayload = {
+		sub: id,
+	};
 
-	const payload: JwtPayload = { sub: id };
-
-	const refreshToken = jwt.sign(payload, refreshTokenSecret, refreshConfig);
-
-	return refreshToken;
+	return jwt.sign(payload, refreshTokenSecret, refreshConfig);
 };
 
-export const verifyToken = (
-	token: string,
-	type: 'access' | 'refresh'
-): JwtPayload => {
-	if (!token || typeof token !== 'string') {
-		throw new Error('Invalid token');
-	}
-
-	const secret: Secret =
-		type === 'access' ? accessTokenSecret : refreshTokenSecret;
+/**
+ * Verifies an access token and extracts trusted user data.
+ *
+ * This function:
+ * - Verifies the token signature & expiration
+ * - Validates payload shape and domain values
+ * - Returns normalized application-level data
+ *
+ * @param token - JWT access token
+ * @returns Verified user identity and role
+ * @throws Unauthorized or validation errors
+ */
+export const verifyAccessToken = (token: string): VerifiedAccessToken => {
 	try {
-		const payload = jwt.verify(token, secret) as JwtPayload;
+		const payload = jwt.verify(token, accessTokenSecret) as JwtPayload;
 
-		if (!payload.sub) {
-			throw new Error('Invalid token: missing user ID');
+		const userId = ParamsSchema.uuid.safeParse(payload.sub);
+		if (!userId.success) {
+			throw appErrorMap.badRequest(
+				ErrorCode.INVALID_FORMAT,
+				userId.error
+			);
 		}
-		return payload;
+		const role = FieldsSchema.enum<typeof Role>(Role).safeParse(
+			payload.role
+		);
+		if (!role.success) {
+			throw appErrorMap.badRequest(ErrorCode.INVALID_INPUT, role.error);
+		}
+
+		return { id: userId.data, role: role.data as Role };
 	} catch (error: unknown) {
-		if (error instanceof TokenExpiredError) {
-			throw new Error('Invalid token');
+		throw appErrorMap.unauthorized(ErrorCode.TOKEN_INVALID, error);
+	}
+};
+
+/**
+ * Verifies a refresh token and extracts the user identity.
+ *
+ * Refresh tokens are intentionally minimal and are only used
+ * for issuing new access tokens.
+ *
+ * @param token - JWT refresh token
+ * @returns Verified user identity
+ * @throws Unauthorized or validation errors
+ */
+export const verifyRefreshToken = (token: string): VerifiedRefreshToken => {
+	try {
+		const payload = jwt.verify(token, refreshTokenSecret) as JwtPayload;
+
+		const userId = ParamsSchema.uuid.safeParse(payload.sub);
+		if (!userId.success) {
+			throw appErrorMap.badRequest(
+				ErrorCode.INVALID_FORMAT,
+				userId.error
+			);
 		}
-		if (error instanceof JsonWebTokenError) {
-			throw new Error('Invalid token');
-		}
-		throw error; // Re-throw unknown errors
+
+		return { id: userId.data };
+	} catch (error: unknown) {
+		throw appErrorMap.unauthorized(ErrorCode.TOKEN_INVALID, error);
 	}
 };
 
@@ -81,7 +127,7 @@ export const verifyToken = (
  */
 export const generatePasswordResetToken = (token: string): string => {
 	if (!token) {
-		throw new Error('Token is required');
+		throw appErrorMap.badRequest(ErrorCode.TOKEN_MISSING);
 	}
 	return crypto.createHash('sha256').update(token).digest('hex');
 };

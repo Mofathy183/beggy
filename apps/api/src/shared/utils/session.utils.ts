@@ -1,54 +1,66 @@
-import { signAccessToken, signRefreshToken } from '@shared/utils';
+import {
+	apiResponseMap,
+	signAccessToken,
+	signRefreshToken,
+} from '@shared/utils';
 import { env, envConfig } from '@config';
 import type { Request, Response, CookieOptions } from 'express';
-import { Role } from '@prisma/generated/prisma/enums';
-
+import { Role } from '@beggy/shared/types';
+import { ErrorCode } from '@beggy/shared/constants';
 const accessTokenName = env.JWT_ACCESS_TOKEN_NAME;
 const refreshTokenName = env.JWT_REFRESH_TOKEN_NAME;
+
 const accessConfig: CookieOptions = envConfig.cookies.access;
 const refreshConfig: CookieOptions = envConfig.cookies.refresh;
 
-//*=============================={SEND COOKIE}==============================
-/**
- * Set cookies for access token and refresh token.
- *
- * @param {Response} res - HTTP response object.
- * @param {String} userId - User id of the user.
- */
-export const sendCookies = (res: Response, userId: string): void => {
-	const token = signAccessToken(userId);
+//* ============================== AUTH COOKIES ============================== */
 
+/**
+ * Sets authentication cookies (access & refresh tokens).
+ *
+ * Tokens are stored as HttpOnly cookies and used for
+ * authenticating subsequent API requests.
+ *
+ * @param res - Express response object
+ * @param userId - Authenticated user UUID
+ * @param userRole - User role for authorization
+ */
+export const setAuthCookies = (
+	res: Response,
+	userId: string,
+	userRole: Role
+): void => {
+	const accessToken = signAccessToken(userId, userRole);
 	const refreshToken = signRefreshToken(userId);
 
-	res.cookie(accessTokenName, token, accessConfig);
+	res.cookie(accessTokenName, accessToken, accessConfig);
 	res.cookie(refreshTokenName, refreshToken, refreshConfig);
-
-	return;
 };
 
-//*=============================={Clear Cookies}==============================
 /**
- * Clears authentication and provider-specific cookies from the response.
- * @function clearCookies
- * @param {Response} res - The response object used to clear cookies.
- * @returns {undefined}
+ * Clears authentication cookies from the response.
+ *
+ * This should be called during logout or session invalidation.
+ *
+ * @param res - Express response object
  */
-export const clearCookies = (res: Response): void => {
-	const cookiesToClear = [accessTokenName, refreshTokenName];
-
-	cookiesToClear.forEach((cookie) => res.clearCookie(cookie));
-
-	return;
+export const clearAuthCookies = (res: Response): void => {
+	res.clearCookie(accessTokenName, accessConfig);
+	res.clearCookie(refreshTokenName, refreshConfig);
 };
 
-//*=============================={STORE SESSION}==============================
+//* ============================== SESSION ============================== */
+
 /**
- * Stores the user ID and user role in the session.
- * @function storeSession
- * @param {string} userId - The user's ID.
- * @param {string} userRole - The user's role.
- * @param {Request} req - The request object.
- * @returns {undefined}
+ * Stores minimal user data in the session.
+ *
+ * Sessions are typically used for:
+ * - OAuth flows
+ * - Temporary server-side state
+ *
+ * @param req - Express request object
+ * @param userId - User UUID
+ * @param userRole - User role
  */
 export const storeSession = (
 	req: Request,
@@ -57,25 +69,33 @@ export const storeSession = (
 ): void => {
 	req.session.userId = userId;
 	req.session.userRole = userRole;
-
-	return;
 };
 
-//*=============================={DELETE SESSION}==============================
 /**
- * Destroys the session, rejecting the promise if there is an error.
- * @function deleteSession
- * @param {Request} req - The request object.
- * @returns {Promise<void>}
+ * Destroys the current user's session.
+ *
+ * This invalidates server-side session data
+ * and should be called during logout.
+ *
+ * @param req - Express request object
+ * @throws SESSION_DESTROY_FAILED
  */
-export const deleteSession = async (req: Request): void => {
+export const destroySession = async (req: Request): Promise<void> => {
 	return new Promise((resolve, reject) => {
+		if (!req.session) {
+			return resolve();
+		}
+
 		req.session.destroy((error) => {
 			if (error) {
 				return reject(
-					new ErrorHandler('session', error, 'destroy session failed')
+					apiResponseMap.serverError(
+						ErrorCode.SESSION_DESTROY_FAILED,
+						error
+					)
 				);
 			}
+
 			resolve();
 		});
 	});
