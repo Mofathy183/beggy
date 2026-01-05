@@ -19,7 +19,7 @@ export const NAME_CONFIG: Record<NameFieldType, NameFieldConfig> = {
 	person: {
 		regex: REGEX.PERSON_NAME,
 		defaultMaxLength: 50,
-		defaultMinLength: 1,
+		defaultMinLength: 2,
 		messages: {
 			maxLength(firstName) {
 				return `“${firstName}” feels a bit long for a name. From experience, shorter names fit better on tickets and tags.`;
@@ -95,41 +95,71 @@ export const NAME_CONFIG: Record<NameFieldType, NameFieldConfig> = {
 };
 
 /**
- * Safely trims a string value.
+ * Normalizes a string value by trimming surrounding whitespace.
  *
- * - Preserves `null` and `undefined`
- * - Trims whitespace when value exists
+ * - Trims the string when a value exists
+ * - Preserves `null` and `undefined` exactly
  *
- * Used to normalize optional string inputs
- * before persistence or response.
- * @param val - The string to trim
- * @returns Trimmed string or null or undefined if the string empty
+ * Intended for normalizing optional string inputs in shared
+ * frontend and backend schemas (e.g. with Zod `.transform()`).
+ *
+ * @param val - The string value to trim, or a nullish value
+ * @returns The trimmed string, or the original nullish value
  */
-export const safeTrim = (
+export const normalizeTrim = (
 	val: string | null | undefined
 ): string | null | undefined => {
-	return val === null ? null : val === undefined ? undefined : val.trim();
+	// Preserve null and undefined for optional fields
+	if (val == null) return val;
+
+	return val.trim();
 };
 
 /**
- * Safely rounds a numeric value.
+ * Normalizes a numeric value by rounding it to a fixed number of decimals.
  *
- * - Accepts nullish values (for optional fields)
- * - Normalizes undefined → undefined
- * - Normalizes null → null
+ * - Rounds the number when a value exists
+ * - Preserves `null` and `undefined` exactly
  *
- * @param val - Number to round
- * @param decimals - Number of decimal places
+ * Useful for normalizing optional numeric inputs before
+ * persistence or response serialization.
+ *
+ * @param val - The numeric value to round, or a nullish value
+ * @param decimals - Number of decimal places to round to
+ * @returns The rounded number, or the original nullish value
  */
-export const safeRound = (
+export const normalizeRound = (
 	val: number | null | undefined,
 	decimals: number
 ): number | null | undefined => {
-	return val === null
-		? null
-		: val === undefined
-			? undefined
-			: Number(val.toFixed(decimals));
+	// Preserve null and undefined for optional fields
+	if (val == null) return val;
+
+	return Number(val.toFixed(decimals));
+};
+
+/**
+ * Normalizes an ISO date string into a JavaScript Date instance.
+ *
+ * - Converts valid ISO date strings (`YYYY-MM-DD`) to `Date`
+ * - Preserves `null` and `undefined` values exactly
+ *
+ * This function is intended for use with Zod `.transform()` when:
+ * - Schemas are shared between frontend and backend
+ * - Date values arrive as strings from forms or APIs
+ * - Optional fields must retain their nullish semantics
+ *
+ * @param val - ISO date string, or nullish value
+ * @returns A Date instance, or the original nullish value
+ */
+export const normalizeIsoDate = (
+	val: string | null | undefined
+): Date | null | undefined => {
+	// Preserve null and undefined for optional fields
+	if (val == null) return val;
+
+	// Convert ISO date string to JavaScript Date
+	return new Date(val);
 };
 
 /**
@@ -156,12 +186,12 @@ export const createNameField = (
 			.min(defaultMinLength, { error: messages.minLength(fieldName) }) // ✅ Required has .min(defaultMinLength)
 			.max(defaultMaxLength, { error: messages.maxLength(fieldName) })
 			.regex(regex, { error: messages.regex(fieldName) })
-			.transform(safeTrim);
+			.transform(normalizeTrim);
 
 	return baseSchema
 		.max(defaultMaxLength, { error: messages.maxLength(fieldName) })
 		.nullish()
-		.transform(safeTrim);
+		.transform(normalizeTrim);
 };
 
 /**
@@ -306,8 +336,10 @@ export const createNumberField = <M extends NumericEntity>(
 		? baseSchema
 				.gte(gte, { error: messages.gte }) // alias for .min()
 				.lte(lte, { error: messages.lte }) // alias for .max()
-				.transform((val) => safeRound(val, decimals))
-		: baseSchema.nullish().transform((val) => safeRound(val, decimals));
+				.transform((val) => normalizeRound(val, decimals))
+		: baseSchema
+				.nullish()
+				.transform((val) => normalizeRound(val, decimals));
 };
 
 /**

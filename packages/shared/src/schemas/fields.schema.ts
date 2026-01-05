@@ -4,7 +4,8 @@ import {
 	createArrayField,
 	createNameField,
 	createNumberField,
-	safeTrim,
+	normalizeTrim,
+	normalizeIsoDate,
 } from '@/utils';
 import type { NameFieldType, NumericEntity, NumericMetric } from '@/types';
 
@@ -70,14 +71,14 @@ export const FieldsSchema = {
 				.max(255, {
 					error: 'That email’s a bit long — let’s keep it under 255 characters so systems don’t get confused.',
 				})
-				.transform((val) => safeTrim(val)?.toLowerCase());
+				.transform((val) => normalizeTrim(val)?.toLowerCase());
 
 		return baseSchema
 			.max(255, {
 				error: 'That email’s looking a bit long — shorter is smoother for logins.',
 			})
 			.nullish()
-			.transform((val) => safeTrim(val)?.toLowerCase());
+			.transform((val) => normalizeTrim(val)?.toLowerCase());
 	},
 
 	/**
@@ -122,14 +123,14 @@ export const FieldsSchema = {
 				.regex(REGEX.PASSWORD_ALLOWED_CHARS, {
 					error: 'Stick to standard letters, numbers, and symbols — nothing too exotic here.',
 				})
-				.transform(safeTrim);
+				.transform(normalizeTrim);
 		}
 		return baseSchema
 			.max(64, {
 				error: 'That password looks long — anything under 64 characters keeps systems happy.',
 			})
 			.nullish()
-			.transform(safeTrim);
+			.transform(normalizeTrim);
 	},
 
 	/**
@@ -160,20 +161,23 @@ export const FieldsSchema = {
 	 * @param isRequired - Whether date is required
 	 */
 	date: (isRequired: boolean = true) => {
+		const MIN_DATE = new Date('1900-01-01').getTime();
+		const MAX_DATE = Date.now();
+
 		const baseSchema = z.iso.date({
 			error: 'That doesn’t look like a valid date — let’s try something like 2025-12-26.',
 		});
 
 		return isRequired
 			? baseSchema
-					.min(new Date('1900-01-01').getTime(), {
+					.min(MIN_DATE, {
 						error: 'That date’s a bit too far back in time — let’s stay within the modern travel era.',
 					})
-					.max(new Date().getTime(), {
+					.max(MAX_DATE, {
 						error: 'That date’s ahead of schedule — future trips aren’t bookable just yet!',
 					})
-					.transform(safeTrim)
-			: baseSchema.nullish().transform(safeTrim);
+					.transform(normalizeIsoDate)
+			: baseSchema.nullish().transform(normalizeIsoDate);
 	},
 
 	/**
@@ -203,8 +207,8 @@ export const FieldsSchema = {
 					.regex(REGEX.URL_SAFE, {
 						error: 'That URL includes some characters that don’t pack well — stick to standard ones like letters, numbers, and slashes.',
 					})
-					.transform(safeTrim)
-			: baseSchema.nullish().transform(safeTrim);
+					.transform(normalizeTrim)
+			: baseSchema.nullish().transform(normalizeTrim);
 	},
 
 	/**
