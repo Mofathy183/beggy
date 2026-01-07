@@ -218,17 +218,3 @@ export interface PaginationParams {
 	search?: string;
 	filters?: Record<string, any>;
 }
-
-export interface SecureTokenPair {
-	token: string; // Send to user
-	hash: string; // Store in DB
-}
-
-export type VerifiedAccessToken = {
-	id: string;
-	role: Role;
-};
-
-export type VerifiedRefreshToken = {
-	id: string;
-};

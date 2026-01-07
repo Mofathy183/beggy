@@ -13,7 +13,7 @@ import {
 	NumericEntity,
 	NumericMetric,
 } from '@/types';
-import { NUMBER_CONFIG, safeRound } from '@/utils';
+import { NUMBER_CONFIG, normalizeRound } from '@/utils';
 import * as z from 'zod';
 import { FieldsSchema } from '@/schemas';
 
@@ -38,7 +38,7 @@ export const buildOrderBySchema = <E extends Record<string, string>>(
 		 * - Must be one of the explicitly allowed enum values
 		 * - Prevents ordering by sensitive or non-indexed columns
 		 */
-		field: FieldsSchema.enum(enumValues, false),
+		orderBy: FieldsSchema.enum(enumValues, false),
 
 		/**
 		 * Ordering direction.
@@ -126,7 +126,7 @@ export const numberRangeSchema = <M extends NumericEntity>(
 				min: baseSchema
 					.gte(gte, { error: messages.gte })
 					.optional()
-					.transform((val) => safeRound(val, decimals)),
+					.transform((val) => normalizeRound(val, decimals)),
 
 				/**
 				 * Maximum value (inclusive).
@@ -134,7 +134,7 @@ export const numberRangeSchema = <M extends NumericEntity>(
 				max: baseSchema
 					.lte(lte, { error: messages.lte })
 					.optional()
-					.transform((val) => safeRound(val, decimals)),
+					.transform((val) => normalizeRound(val, decimals)),
 			})
 			/**
 			 * Cross-field validation.
@@ -197,8 +197,8 @@ export const QuerySchema = {
 		category: FieldsSchema.enum(ItemCategory, false),
 		color: z.string().optional(),
 		isFragile: z.boolean().optional(),
-		weight: numberRangeSchema('item', 'weight'),
-		volume: numberRangeSchema('item', 'volume'),
+		weight: numberRangeSchema('item', 'weight').optional(),
+		volume: numberRangeSchema('item', 'volume').optional(),
 		createdAt: dateRangeSchema.optional(),
 	}),
 
@@ -214,8 +214,8 @@ export const QuerySchema = {
 		size: FieldsSchema.enum(Size, false),
 		material: FieldsSchema.enum(Material, false),
 		color: z.string().optional(),
-		maxCapacity: numberRangeSchema('bag', 'capacity'),
-		maxWeight: numberRangeSchema('bag', 'weight'),
+		maxCapacity: numberRangeSchema('bag', 'capacity').optional(),
+		maxWeight: numberRangeSchema('bag', 'weight').optional(),
 		createdAt: dateRangeSchema.optional(),
 	}),
 
@@ -232,8 +232,8 @@ export const QuerySchema = {
 		material: FieldsSchema.enum(Material, false),
 		wheels: FieldsSchema.enum(WheelType, false),
 		color: z.string().optional(),
-		maxCapacity: numberRangeSchema('suitcase', 'capacity'),
-		maxWeight: numberRangeSchema('suitcase', 'weight'),
+		maxCapacity: numberRangeSchema('suitcase', 'capacity').optional(),
+		maxWeight: numberRangeSchema('suitcase', 'weight').optional(),
 		createdAt: dateRangeSchema.optional(),
 	}),
 };
@@ -267,7 +267,76 @@ export const ParamsSchema = {
 	 * - Validates UUID format only (existence is checked later)
 	 * - Prevents invalid DB lookups and noisy errors
 	 */
-	uuid: z.uuidv4({
-		error: 'That ID doesn’t look quite right — it should be a proper unique identifier, like a travel tag that helps us find the right record.',
+	uuid: z.strictObject({
+		id: z.uuidv4({
+			error: 'That ID doesn’t look quite right — it should be a proper unique identifier, like a travel tag that helps us find the right record.',
+		}),
+	}),
+};
+
+/**
+ * Pagination query schema.
+ *
+ * @remarks
+ * - Used to validate pagination parameters in list endpoints
+ * - Enforces safe boundaries to protect the database
+ * - Defaults are applied at schema level to simplify controller logic
+ *
+ * @example
+ * ```ts
+ * const pagination = PaginationSchema.pagination.parse(req.query);
+ * // → { page: 1, limit: 10 }
+ * ```
+ */
+export const PaginationSchema = {
+	/**
+	 * Pagination parameters object.
+	 *
+	 * @remarks
+	 * - Strict object prevents unexpected query keys
+	 * - Intended for offset-based pagination (page + limit)
+	 */
+	pagination: z.strictObject({
+		/**
+		 * Page number (1-based).
+		 *
+		 * @remarks
+		 * - Must be a positive integer
+		 * - Defaults to `1` when omitted
+		 * - Upper bound limits excessive page jumps
+		 */
+		page: z
+			.number({
+				error: 'That page number doesn’t look quite right — let’s make sure it’s a real number before setting off.',
+			})
+			.int()
+			.gte(1, {
+				error: 'Pages start at 1, traveler — think of it as boarding from the first gate, not the tarmac.',
+			})
+			.lte(100, {
+				error: 'That’s quite a leap! Let’s keep it under page 100 to stay on track.',
+			})
+			.default(1),
+
+		/**
+		 * Maximum number of items per page.
+		 *
+		 * @remarks
+		 * - Must be a positive integer
+		 * - Defaults to `10` for predictable API behavior
+		 * - Hard cap prevents abuse and heavy queries
+		 */
+		limit: z
+			.number({
+				error: 'That limit needs to be a number — like knowing how many bags you’re allowed to check in.',
+			})
+			.int()
+			.gte(1, {
+				error: 'You’ll want at least one item per page — no point opening an empty suitcase.',
+			})
+			.lte(100, {
+				error: 'That’s a heavy load! Let’s keep it under 100 per page so things run smoothly.',
+			})
+			.default(10),
 	}),
 };

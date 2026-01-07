@@ -14,11 +14,17 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { ZodError, treeifyError } from 'zod';
+import { Prisma } from '@prisma-generated/client';
 import { ErrorCode } from '@beggy/shared/constants';
 import { STATUS_CODE } from '@shared/constants';
-import { AppError, createResponse, appErrorMap } from '@shared/utils';
-import { Prisma } from '@prisma-generated/client';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import {
+	AppError,
+	createResponse,
+	appErrorMap,
+	formatValidationError,
+} from '@shared/utils';
 
 /**
  * prismaErrorMap
@@ -134,6 +140,39 @@ const jwtErrorMap = (err: unknown): AppError | null => {
 };
 
 /**
+ * Maps a raw Zod validation error into a normalized AppError.
+ *
+ * @remarks
+ * - This function is intentionally narrow in scope.
+ * - It ONLY handles Zod validation errors.
+ * - All formatting logic is delegated to `formatValidationError`.
+ *
+ * This keeps validation concerns isolated from the main error handler.
+ *
+ * @param err - Unknown error thrown during request lifecycle
+ * @returns An AppError if the error is a ZodError, otherwise null
+ */
+const zodErrorMap = (err: unknown): AppError | null => {
+	if (err instanceof ZodError) {
+		/**
+		 * Convert ZodError into a structured, field-based error tree
+		 * suitable for API responses.
+		 */
+		const formattedError = formatValidationError(treeifyError(err));
+
+		/**
+		 * Wrap the formatted validation error in a standardized AppError.
+		 */
+		return appErrorMap.badRequest(
+			ErrorCode.VALIDATION_ERROR,
+			formattedError
+		);
+	}
+
+	return null;
+};
+
+/**
  * errorHandler
  * ------------
  * Final Express error-handling middleware.
@@ -141,9 +180,10 @@ const jwtErrorMap = (err: unknown): AppError | null => {
  * @remarks
  * Error handling priority:
  * 1. AppError (already normalized)
- * 2. JWT errors
- * 3. Prisma errors
- * 4. Fallback internal server error
+ * 2. Zod validation errors
+ * 3. JWT authentication errors
+ * 4. Prisma database errors
+ * 5. Fallback internal server error
  *
  * This middleware must be registered LAST in the middleware chain.
  */
@@ -154,7 +194,10 @@ export const errorHandler = (
 	_next: NextFunction
 ) => {
 	/**
-	 ** Already normalized application error
+	 ** Already-normalized application errors
+	 *
+	 * These errors are trusted and should be returned immediately
+	 * without further inspection.
 	 */
 	if (err instanceof AppError) {
 		const response = createResponse.error(
@@ -163,11 +206,30 @@ export const errorHandler = (
 			err.cause,
 			err.options
 		);
-		res.status(err.status).json(response);
+		return res.status(err.status).json(response);
 	}
 
 	/**
-	 ** JWT authentication errors
+	 ** Zod validation errors (input/schema errors)
+	 *
+	 * These represent client-side mistakes and should return 400-level responses.
+	 */
+	const zodError = zodErrorMap(err);
+	if (zodError) {
+		return res
+			.status(zodError.status)
+			.json(
+				createResponse.error(
+					zodError.code,
+					zodError.status,
+					zodError.cause,
+					zodError.options
+				)
+			);
+	}
+
+	/**
+	 ** JWT authentication & authorization errors
 	 */
 	const jwtError = jwtErrorMap(err);
 	if (jwtError) {
@@ -185,6 +247,8 @@ export const errorHandler = (
 
 	/**
 	 ** Prisma database errors
+	 *
+	 * These usually indicate constraint violations or missing records.
 	 */
 	const prismaError = prismaErrorMap(err);
 	if (prismaError) {
@@ -199,7 +263,10 @@ export const errorHandler = (
 	}
 
 	/**
-	 ** Fallback — truly unknown or unhandled error
+	 ** Fallback — truly unknown or unhandled errors
+	 *
+	 * At this point, the error is unexpected and should be treated
+	 * as an internal server error.
 	 */
 	const fallback = new AppError(
 		ErrorCode.INTERNAL_SERVER_ERROR,

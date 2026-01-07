@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import type { Secret, SignOptions, JwtPayload } from 'jsonwebtoken';
 import {
-	SecureTokenPair,
 	VerifiedRefreshToken,
 	VerifiedAccessToken,
+	SecureTokenPair,
 } from '@shared/types';
 import { envConfig } from '@config';
 import { Role } from '@beggy/shared/types';
@@ -69,7 +69,7 @@ export const verifyAccessToken = (token: string): VerifiedAccessToken => {
 	try {
 		const payload = jwt.verify(token, accessTokenSecret) as JwtPayload;
 
-		const userId = ParamsSchema.uuid.safeParse(payload.sub);
+		const userId = ParamsSchema.uuid.safeParse({ id: payload.sub });
 		if (!userId.success) {
 			throw appErrorMap.badRequest(
 				ErrorCode.INVALID_FORMAT,
@@ -83,7 +83,7 @@ export const verifyAccessToken = (token: string): VerifiedAccessToken => {
 			throw appErrorMap.badRequest(ErrorCode.INVALID_INPUT, role.error);
 		}
 
-		return { id: userId.data, role: role.data as Role };
+		return { id: userId.data.id, role: role.data as Role };
 	} catch (error: unknown) {
 		throw appErrorMap.unauthorized(ErrorCode.TOKEN_INVALID, error);
 	}
@@ -103,7 +103,7 @@ export const verifyRefreshToken = (token: string): VerifiedRefreshToken => {
 	try {
 		const payload = jwt.verify(token, refreshTokenSecret) as JwtPayload;
 
-		const userId = ParamsSchema.uuid.safeParse(payload.sub);
+		const userId = ParamsSchema.uuid.safeParse({ id: payload.sub });
 		if (!userId.success) {
 			throw appErrorMap.badRequest(
 				ErrorCode.INVALID_FORMAT,
@@ -111,7 +111,7 @@ export const verifyRefreshToken = (token: string): VerifiedRefreshToken => {
 			);
 		}
 
-		return { id: userId.data };
+		return { id: userId.data.id };
 	} catch (error: unknown) {
 		throw appErrorMap.unauthorized(ErrorCode.TOKEN_INVALID, error);
 	}

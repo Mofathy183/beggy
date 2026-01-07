@@ -1,40 +1,55 @@
 import { ErrorCode } from '@/constants';
-import { OrderByQuerySchemas, QuerySchema, ParamsSchema } from '@/schemas';
+import {
+	OrderByQuerySchemas,
+	QuerySchema,
+	ParamsSchema,
+	PaginationSchema,
+} from '@/schemas';
 import * as z from 'zod';
 
 /**
  * Pagination metadata for collection responses.
  *
  * @remarks
- * Used to provide context about paginated results including totals, counts, and page information.
- * Follows RESTful pagination best practices.
- *
- * @property total - Total number of records without any filters applied
- * @property count - Number of items in the current page response
- * @property totalFiltered - Total number of records matching current filters
- * @property page - Current page number (1-indexed)
- * @property limit - Maximum items per page
- * @property pages - Total number of pages available
- *
- * @example
- * ```typescript
- * const meta: Meta = {
- *   total: 100,
- *   count: 10,
- *   totalFiltered: 50,
- *   page: 1,
- *   limit: 10,
- *   pages: 5
- * };
- * ```
+ * - Output-only structure (never accepted from clients)
+ * - Designed for REST and GraphQL compatibility
+ * - Enables frontend pagination UI without extra calculations
  */
-export interface Meta {
-	total: number; // All records without filters
-	count: number; // Current page items count
-	totalFiltered: number; // All records matching filters
+export interface PaginationMeta {
+	/**
+	 * Total number of records matching the current filters.
+	 */
+	totalItems: number;
+
+	/**
+	 * Number of items returned in the current page.
+	 */
+	count: number;
+
+	/**
+	 * Current page number (1-based).
+	 */
 	page: number;
+
+	/**
+	 * Maximum number of items per page.
+	 */
 	limit: number;
-	pages: number;
+
+	/**
+	 * Total number of pages available.
+	 */
+	totalPages: number;
+
+	/**
+	 * Indicates whether a next page exists.
+	 */
+	hasNextPage: boolean;
+
+	/**
+	 * Indicates whether a previous page exists.
+	 */
+	hasPreviousPage: boolean;
 }
 
 /**
@@ -99,7 +114,7 @@ export interface BaseResponse {
 export interface SuccessResponse<T> extends BaseResponse {
 	success: true; // TypeScript will narrow this to literal true
 	data: T;
-	meta?: Meta;
+	meta?: PaginationMeta;
 }
 
 /**
@@ -166,37 +181,25 @@ export interface ErrorResponseOptions {
 }
 
 /**
- * Configuration for paginated API requests.
+ * Pagination request parameters.
  *
  * @remarks
- * Use this interface for request parameters when implementing paginated endpoints.
+ * - Inferred directly from {@link PaginationSchema}
+ * - Represents validated pagination input passed to service layer
+ * - Always contains resolved defaults (`page` and `limit`)
  *
- * @property page - Requested page number (default: 1)
- * @property limit - Items per page (default: 20, max: 100)
- * @property sortBy - Field to sort by
- * @property sortOrder - Sort direction ('asc' or 'desc')
- * @property search - Search query string
- * @property filters - Additional filter criteria
+ * @property page - Current page number (1-based)
+ * @property limit - Number of items per page
  *
  * @example
- * ```typescript
+ * ```ts
  * const params: PaginationParams = {
  *   page: 2,
  *   limit: 25,
- *   sortBy: 'createdAt',
- *   sortOrder: 'desc',
- *   search: 'weekend'
  * };
  * ```
  */
-export interface PaginationParams {
-	page?: number;
-	limit?: number;
-	sortBy?: string;
-	sortOrder?: 'asc' | 'desc';
-	search?: string;
-	filters?: Record<string, any>;
-}
+export type PaginationParams = z.infer<typeof PaginationSchema.pagination>;
 
 /**
  * Ordering direction for sortable queries.
