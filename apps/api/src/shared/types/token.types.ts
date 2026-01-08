@@ -23,28 +23,58 @@ export interface SecureTokenPair {
 /**
  * Payload extracted from a verified access token.
  *
- * Used after successful JWT verification to authorize requests.
+ * @remarks
+ * This represents the **trusted, application-level identity**
+ * derived from a valid access JWT.
+ *
+ * - Contains only the minimum data required for authorization
+ * - Does NOT expose raw JWT internals
+ * - Safe to attach to request context
  */
 export type VerifiedAccessToken = {
 	/**
-	 * Subject identifier (usually user or account ID).
+	 * Subject identifier.
+	 *
+	 * Typically the user or account ID (`sub` claim).
 	 */
 	id: string;
 
 	/**
 	 * Role associated with the authenticated subject.
+	 *
+	 * Used for role-based authorization checks.
 	 */
 	role: Role;
+
+	/**
+	 * Token issuance timestamp.
+	 *
+	 * Unix timestamp (seconds) derived from the `iat` claim.
+	 * Used for session freshness checks (e.g. password change invalidation).
+	 */
+	issuedAt: number;
 };
 
 /**
  * Payload extracted from a verified refresh token.
  *
- * Refresh tokens should contain minimal data to reduce risk.
+ * @remarks
+ * Refresh tokens are intentionally minimal to reduce security risk.
+ * They should never be used to authorize requests directly.
  */
 export type VerifiedRefreshToken = {
 	/**
-	 * Subject identifier (usually user or account ID).
+	 * Subject identifier.
+	 *
+	 * Typically the user or account ID (`sub` claim).
 	 */
 	id: string;
+
+	/**
+	 * Token issuance timestamp.
+	 *
+	 * Unix timestamp (seconds) derived from the `iat` claim.
+	 * Useful for refresh-token rotation and session lifecycle checks.
+	 */
+	issuedAt: number;
 };

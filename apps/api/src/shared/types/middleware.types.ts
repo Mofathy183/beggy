@@ -1,5 +1,12 @@
 import { ZodType } from 'zod';
-import { OrderDirection, PaginationParams } from '@beggy/shared/types';
+import type {
+	Action,
+	OrderDirection,
+	PaginationParams,
+	Role,
+	Subject,
+} from '@beggy/shared/types';
+import { PureAbility } from '@casl/ability';
 
 /**
  * Normalized order-by instruction produced by query middleware.
@@ -58,6 +65,57 @@ export interface NormalizedPagination extends PaginationParams {
 	 */
 	offset: number;
 }
+
+/**
+ * Authentication token pair used for session management.
+ *
+ * @remarks
+ * - Access token is short-lived and used for request authentication
+ * - Refresh token is long-lived and used to obtain new access tokens
+ * - Token storage strategy (cookies/headers) is handled elsewhere
+ */
+export interface AuthTokens {
+	accessToken: string;
+	refreshToken: string;
+}
+
+/**
+ * Minimal authenticated user payload derived from a verified access token.
+ *
+ * @remarks
+ * - Trusted data source: signed JWT
+ * - Not a full user entity
+ * - Safe to attach to the request lifecycle
+ */
+export interface AuthUser {
+	/**
+	 * Unique identifier of the authenticated user.
+	 */
+	id: string;
+
+	/**
+	 * Role assigned to the user, used for authorization decisions.
+	 */
+	role: Role;
+
+	/**
+	 * Token issuance timestamp (epoch seconds).
+	 *
+	 * @remarks
+	 * Used for token freshness checks or session invalidation logic.
+	 */
+	issuedAt: number;
+}
+
+/**
+ * Application-wide CASL ability type.
+ *
+ * @remarks
+ * - Restricts abilities to known {@link Action} and {@link Subject} unions
+ * - Shared across middleware, services, and guards
+ * - Prevents invalid authorization checks at compile time
+ */
+export type AppAbility = PureAbility<[Action, Subject]>;
 
 /**
  * Configuration options for the `prepareListQuery` middleware.

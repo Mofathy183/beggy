@@ -1,121 +1,85 @@
-import prisma from '../../prisma/prisma.js';
-import { AbilityBuilder } from '@casl/ability';
-import { createPrismaAbility } from '@casl/prisma';
-import { statusCode } from '../config/status.js';
-import { ErrorResponse } from '../utils/error.js';
+import type { Request, Response, NextFunction } from 'express';
+import { AbilityClass, PureAbility, AbilityBuilder } from '@casl/ability';
+import { RolePermissions, ErrorCode } from '@beggy/shared/constants';
+import { Role, Permissions, Action, Subject } from '@beggy/shared/types';
+import type { AppAbility } from '@shared/types';
+import { appErrorMap } from '@shared/utils';
 
 /**
- * Middleware to check if the user has the required permission for the given action and subject.
+ * CASL Ability class bound to the application's ability type.
  *
- * @async
- * @function checkPermissionMiddleware
- * @param {string} action - The action to check (e.g. 'read', 'create', 'update', 'delete').
- * @param {string} subject - The subject to check (e.g. 'user', 'bag', 'item').
- * @returns {Promise<void>} Returns nothing but passes control to the next middleware or throws an error.
+ * @remarks
+ * - Uses CASL `PureAbility` as the base engine
+ * - Typed with {@link AppAbility} to enforce valid actions and subjects
+ * - Passed to {@link AbilityBuilder} when defining abilities
  *
- * @throws {ErrorResponse} - If the user does not have the required permission.
- * @throws {ErrorResponse} - If an error occurs while checking user permissions.
+ * This indirection allows strong typing without leaking CASL internals
+ * throughout the codebase.
  */
-export const checkPermissionMiddleware =
-	(action, subject) => async (req, res, next) => {
-		try {
-			// Get the user's role from the session
-			const { userRole } = req.session;
-
-			// Define the abilities for the user's role
-			// Ability builder
-			const { can, build } = new AbilityBuilder(createPrismaAbility);
-
-			// Get the permissions for the role from the database
-			const permissions = await prisma.roleOnPermission.findMany({
-				where: { role: userRole },
-				include: { permission: true },
-			});
-
-			// Add the permissions to the ability builder
-			permissions.forEach((perm) => {
-				let { action: permAction, subject: permSubject } =
-					perm.permission;
-				can(permAction, permSubject);
-			});
-
-			// Build the ability
-			const ability = await defineAbilitiesFor(userRole);
-
-			// Check if the user has the required permission
-			const hasPermission = ability.can(action, subject);
-
-			if (!hasPermission) {
-				// Return an error response with a 403 status code
-				return next(
-					new ErrorResponse(
-						`You do not have permission to ${action.split(':').join(' ')} on ${subject}`,
-						'Forbidden permission',
-						statusCode.forbiddenCode
-					)
-				);
-			}
-
-			// Call the next middleware in the stack
-			next();
-		} catch (error) {
-			// Return an error response with a 500 status code
-			return next(
-				new ErrorResponse(
-					error,
-					'Failed to check user permissions',
-					statusCode.internalServerErrorCode
-				)
-			);
-		}
-	};
+export const AppAbilityClass = PureAbility as AbilityClass<AppAbility>;
 
 /**
- * Checks if the user has the required role to do that action.
+ * Builds a CASL ability instance for a given user role.
  *
- * @param {...string} roles - The roles to check.
- * @returns {Function} The middleware function.
+ * @remarks
+ * - Translates role-based permissions into CASL rules
+ * - Does NOT handle ownership (OWN vs ANY); ownership is enforced
+ *   explicitly in the service layer
+ * - Intended to be called once per request (typically in `requireAuth`)
+ *
+ * @param role - Authenticated user's role
+ * @returns A fully constructed {@link AppAbility} instance
  */
-export const checkRoleMiddleware = (...roles) => {
-	/**
-	 * The middleware function.
-	 *
-	 * @param {Request} req - The request object.
-	 * @param {Response} res - The response object.
-	 * @param {NextFunction} next - The next middleware function.
-	 * @returns {void}
-	 */
-	return (req, res, next) => {
-		try {
-			// Get the user's role from the session
-			const { userRole } = req.session;
+export const defineAbilityFor = (role: Role): AppAbility => {
+	const { can, build } = new AbilityBuilder(AppAbilityClass);
 
-			// Check if the user has any of the roles
-			const hasRole = roles.some(
-				(role) => userRole === role.toUpperCase()
-			);
+	// Resolve permissions for the given role (fallback to empty set)
+	const permissions: Permissions = RolePermissions[role] ?? [];
 
-			// If the user does not have the required role, return an error response with a 403 status code
-			if (!hasRole)
-				return next(
-					new ErrorResponse(
-						'User does not have the required role',
-						'User does not have the required role',
-						statusCode.forbiddenCode
-					)
-				);
+	// Register each permission as a CASL rule
+	for (const permission of permissions) {
+		can(permission.action, permission.subject);
+	}
 
-			// Call the next middleware in the stack
-			next();
-		} catch (error) {
-			// Return an error response with a 500 status code
-			return next(
-				new ErrorResponse(
-					error,
-					'Failed to check if user has the required role',
-					'Failed to check user role'
-				)
-			);
-		}
-	};
+	return build();
 };
+
+/**
+ * Authorization guard middleware that enforces a specific permission using CASL.
+ *
+ *! IMPORTANT
+ * This middleware MUST be preceded by `requireAuth`.
+ *
+ * If `req.ability` is missing, this indicates a developer
+ * wiring/configuration error and will result in a server error.
+ *
+ * @remarks
+ * - Requires `req.ability` to be initialized beforehand
+ *   (typically by `requireAuth`)
+ * - Throws a server error if ability is missing, indicating
+ *   a middleware wiring/configuration issue
+ * - Throws a forbidden error if the user lacks the required permission
+ *
+ * @param action - Action being performed (e.g. CREATE, UPDATE)
+ * @param subject - Target subject/resource (e.g. BAG, ITEM)
+ */
+export const requirePermission =
+	(action: Action, subject: Subject) =>
+	async (req: Request, _res: Response, next: NextFunction) => {
+		/**
+		 * Ability must exist if authentication middleware
+		 * ran correctly.
+		 */
+		if (!req.ability) {
+			throw appErrorMap.serverError(ErrorCode.ABILITY_NOT_INITIALIZED);
+		}
+
+		/**
+		 * Enforce authorization using CASL rules.
+		 */
+		if (req.ability.cannot(action, subject)) {
+			throw appErrorMap.forbidden(ErrorCode.INSUFFICIENT_PERMISSIONS);
+		}
+
+		next();
+	};

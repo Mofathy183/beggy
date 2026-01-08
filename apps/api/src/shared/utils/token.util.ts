@@ -54,21 +54,41 @@ export const signRefreshToken = (id: string): string => {
 };
 
 /**
- * Verifies an access token and extracts trusted user data.
+ * Verifies an access token and extracts trusted identity data.
  *
+ * @remarks
  * This function:
- * - Verifies the token signature & expiration
- * - Validates payload shape and domain values
- * - Returns normalized application-level data
+ * - Verifies the JWT signature and expiration
+ * - Validates required claims and domain constraints
+ * - Normalizes token data into application-safe types
+ *
+ * Access tokens are used on every protected request and therefore
+ * must be strictly validated.
  *
  * @param token - JWT access token
- * @returns Verified user identity and role
- * @throws Unauthorized or validation errors
+ * @returns Verified access token payload
+ * @throws Unauthorized or validation errors if verification fails
  */
 export const verifyAccessToken = (token: string): VerifiedAccessToken => {
 	try {
+		/**
+		 * Verify JWT signature and standard claims (exp, nbf, etc).
+		 *
+		 * @remarks
+		 * `jwt.verify` ensures:
+		 * - Token integrity
+		 * - Token is not expired
+		 * - Token was signed using the expected secret
+		 */
 		const payload = jwt.verify(token, accessTokenSecret) as JwtPayload;
 
+		/**
+		 * Validate subject (`sub`) claim.
+		 *
+		 * @remarks
+		 * - `sub` represents the authenticated user identifier
+		 * - Must conform to the application's UUID format
+		 */
 		const userId = ParamsSchema.uuid.safeParse({ id: payload.sub });
 		if (!userId.success) {
 			throw appErrorMap.badRequest(
@@ -76,6 +96,14 @@ export const verifyAccessToken = (token: string): VerifiedAccessToken => {
 				userId.error
 			);
 		}
+
+		/**
+		 * Validate role claim.
+		 *
+		 * @remarks
+		 * - Role determines authorization boundaries
+		 * - Must match one of the allowed domain roles
+		 */
 		const role = FieldsSchema.enum<typeof Role>(Role).safeParse(
 			payload.role
 		);
@@ -83,26 +111,76 @@ export const verifyAccessToken = (token: string): VerifiedAccessToken => {
 			throw appErrorMap.badRequest(ErrorCode.INVALID_INPUT, role.error);
 		}
 
-		return { id: userId.data.id, role: role.data as Role };
+		/**
+		 * Validate `iat` (Issued At) claim.
+		 *
+		 * @remarks
+		 * - Indicates when the token was issued
+		 * - Used for advanced security checks such as:
+		 *   - Token invalidation after password change
+		 *   - Forced logout / session revocation
+		 * - Must be a numeric UNIX timestamp per JWT spec
+		 */
+		if (typeof payload.iat !== 'number') {
+			throw appErrorMap.badRequest(ErrorCode.INVALID_FORMAT);
+		}
+
+		/**
+		 * Normalize verified JWT payload into application-safe data.
+		 *
+		 * @remarks
+		 * - Only validated and trusted fields are exposed
+		 * - Raw JWT payload is never leaked into the app
+		 * - Returned object becomes the single source of truth
+		 *   for authenticated identity
+		 */
+		return {
+			id: userId.data.id,
+			role: role.data as Role,
+			issuedAt: payload.iat,
+		};
 	} catch (error: unknown) {
+		/**
+		 * Catch any verification or validation failure
+		 * and convert it into a unified unauthorized error.
+		 */
 		throw appErrorMap.unauthorized(ErrorCode.TOKEN_INVALID, error);
 	}
 };
 
 /**
- * Verifies a refresh token and extracts the user identity.
+ * Verifies a refresh token and extracts the subject identity.
  *
- * Refresh tokens are intentionally minimal and are only used
- * for issuing new access tokens.
+ * @remarks
+ * Refresh tokens:
+ * - Are long-lived
+ * - Must contain minimal data
+ * - Are used exclusively to issue new access tokens
+ *
+ * They must NEVER grant direct access to protected resources.
  *
  * @param token - JWT refresh token
- * @returns Verified user identity
- * @throws Unauthorized or validation errors
+ * @returns Verified refresh token payload
+ * @throws Unauthorized or validation errors if verification fails
  */
 export const verifyRefreshToken = (token: string): VerifiedRefreshToken => {
 	try {
+		/**
+		 * Verify JWT signature and expiration.
+		 *
+		 * @remarks
+		 * Uses a dedicated secret separate from access tokens
+		 * to reduce blast radius in case of compromise.
+		 */
 		const payload = jwt.verify(token, refreshTokenSecret) as JwtPayload;
 
+		/**
+		 * Validate subject (`sub`) claim.
+		 *
+		 * @remarks
+		 * - Identifies the account requesting token refresh
+		 * - Must be a valid UUID
+		 */
 		const userId = ParamsSchema.uuid.safeParse({ id: payload.sub });
 		if (!userId.success) {
 			throw appErrorMap.badRequest(
@@ -111,8 +189,33 @@ export const verifyRefreshToken = (token: string): VerifiedRefreshToken => {
 			);
 		}
 
-		return { id: userId.data.id };
+		/**
+		 * Validate `iat` (Issued At) claim.
+		 *
+		 * @remarks
+		 * - Required to support refresh token rotation
+		 * - Enables revocation strategies (e.g. password change)
+		 */
+		if (typeof payload.iat !== 'number') {
+			throw appErrorMap.badRequest(ErrorCode.INVALID_FORMAT);
+		}
+
+		/**
+		 * Normalize refresh token payload.
+		 *
+		 * @remarks
+		 * Only the minimal identity data required to issue
+		 * a new access token is returned.
+		 */
+		return {
+			id: userId.data.id,
+			issuedAt: payload.iat,
+		};
 	} catch (error: unknown) {
+		/**
+		 * Any refresh token failure is treated as unauthorized
+		 * to prevent token probing or abuse.
+		 */
 		throw appErrorMap.unauthorized(ErrorCode.TOKEN_INVALID, error);
 	}
 };
