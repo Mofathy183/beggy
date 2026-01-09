@@ -13,6 +13,7 @@ import type {
 	Bag,
 	Suitcase,
 	Item,
+	Profile,
 } from '@/types';
 
 /**
@@ -30,47 +31,116 @@ export enum Gender {
 }
 
 /**
- * External authentication account linked to a user.
+ * Authentication account linked to a user.
  *
  * @remarks
- * - Represents OAuth / social login providers
- * - A single user may have multiple linked accounts
- * - `providerId` must be unique per provider
+ * - Represents a single authentication method (LOCAL or OAuth)
+ * - A user may have multiple accounts linked to different providers
+ * - Security-sensitive fields must never be exposed to clients
  */
 export interface Account {
+	/**
+	 * Primary identifier for the account.
+	 */
 	id: string;
-	// TODO: change provider to authProvider
-	provider: AuthProvider;
-	providerId: string;
-	// TODO: move the password to the Account
+
+	/**
+	 * Authentication provider used by this account.
+	 */
+	authProvider: AuthProvider;
+
+	/**
+	 * External provider identifier.
+	 *
+	 * @remarks
+	 * - Used only for OAuth-based authentication
+	 * - Must be unique per provider
+	 * - Always null for LOCAL authentication
+	 */
+	providerId: string | null;
+
+	/**
+	 * Hashed password for LOCAL authentication.
+	 *
+	 * @remarks
+	 * - Never store or expose plain-text passwords
+	 * - Always null for OAuth-based accounts
+	 */
+	hashedPassword?: string | null;
+
+	/**
+	 * Timestamp of the last password change.
+	 *
+	 * @remarks
+	 * - Used for security enforcement (e.g. token invalidation)
+	 * - Null if the account has never set a password
+	 */
+	passwordChangeAt?: Date | null;
+
+	/**
+	 * Identifier of the owning user.
+	 *
+	 * @remarks
+	 * Nullable during account provisioning or migration flows.
+	 */
+	userId?: string | null;
+
+	/**
+	 * Account creation timestamp.
+	 */
 	createdAt: Date;
+
+	/**
+	 * Account last update timestamp.
+	 */
 	updatedAt: Date;
-	userId: string;
 }
 
 /**
  * Core user domain model.
  *
  * @remarks
- * - Represents an authenticated identity
- * - Security-critical fields must never be exposed to clients
+ * - Represents an authenticated identity within the system
+ * - Contains only security-critical and system-level fields
+ * - Public or user-editable data must live outside this model
  */
 export interface User {
+	/**
+	 * Primary user identifier.
+	 */
 	id: string;
-	firstName: string;
-	lastName: string;
-	password: string;
+
+	/**
+	 * Unique email address used for authentication and communication.
+	 */
 	email: string;
+
+	/**
+	 * User role within the system.
+	 */
 	role: Role;
-	profilePicture?: string | null;
-	gender?: Gender | null;
-	birthDate?: Date | null;
-	country?: string | null;
-	city?: string | null;
+
+	/**
+	 * Indicates whether the user account is active.
+	 *
+	 * @remarks
+	 * Inactive users should be denied authentication and access.
+	 */
 	isActive: boolean;
+
+	/**
+	 * Indicates whether the user's email address has been verified.
+	 */
 	isEmailVerified: boolean;
-	passwordChangeAt?: Date | null;
+
+	/**
+	 * User creation timestamp.
+	 */
 	createdAt: Date;
+
+	/**
+	 * User last update timestamp.
+	 */
 	updatedAt: Date;
 }
 
@@ -78,17 +148,39 @@ export interface User {
  * User model with resolved relations.
  *
  * @remarks
- * - Intended for internal or admin use
- * - Should never be returned directly to public clients
+ * - Intended for internal, service-level, or admin usage
+ * - Aggregates identity, authentication, and domain ownership
+ * - Must never be returned directly to public or client-facing APIs
  */
 export interface UserWithRelations extends User {
+	/**
+	 * Linked authentication accounts.
+	 *
+	 * @remarks
+	 * Includes LOCAL and OAuth-based providers.
+	 */
+	account: Account[];
+
+	/**
+	 * User profile containing public and user-editable information.
+	 */
+	profile?: Profile | null;
+
+	/**
+	 * Authentication tokens associated with the user.
+	 */
 	userToken: UserToken[];
+
+	/**
+	 * Domain-owned resources.
+	 *
+	 * @remarks
+	 * Ownership is enforced at the user level.
+	 */
 	bags: Bag[];
 	suitcases: Suitcase[];
 	items: Item[];
-	account: Account[];
 }
-
 /**
  * Allowed "order by" fields for User queries.
  *

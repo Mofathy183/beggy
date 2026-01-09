@@ -21,13 +21,26 @@ export enum Role {
  * Supported authentication providers.
  *
  * @remarks
- * - Used for login, account linking, and audit logs
- * - Extendable without breaking existing users
+ * - Defines how a user authenticates with the system
+ * - Used for login flows, account linking, and security auditing
+ * - Designed to be safely extendable (e.g. APPLE, GITHUB) without
+ *   breaking existing users or accounts
  */
 export enum AuthProvider {
+	/**
+	 * Google OAuth provider.
+	 */
 	GOOGLE = 'GOOGLE',
+
+	/**
+	 * Facebook OAuth provider.
+	 */
 	FACEBOOK = 'FACEBOOK',
-	// TODO: add LOCAL auth provider
+
+	/**
+	 * Native email/password authentication.
+	 */
+	LOCAL = 'LOCAL',
 }
 
 /**

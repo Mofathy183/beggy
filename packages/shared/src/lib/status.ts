@@ -116,7 +116,7 @@ export const getContainerStatus = (
 	isOverCapacity: boolean,
 	isFull: boolean,
 	itemCount: number = 0
-): string => {
+): ContainerStatus => {
 	// Priority order: OVERWEIGHT > OVER_CAPACITY > FULL > EMPTY > OK
 	if (isOverweight) return ContainerStatus.OVERWEIGHT;
 	if (isOverCapacity) return ContainerStatus.OVER_CAPACITY;

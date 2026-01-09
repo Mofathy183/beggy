@@ -2,7 +2,7 @@
  * API Response Types for Bags
  */
 
-import { Item, User } from '@/types';
+import { Item, User, ContainerStatus } from '@/types';
 import { BagSchema } from '@/schemas';
 import * as z from 'zod';
 
@@ -82,42 +82,132 @@ export enum BagFeature {
  * Core Bag domain model.
  *
  * @remarks
- * - Represents a container owned by a user
- * - Capacity and weight limits are enforced at business-logic level
+ * - Represents a physical container owned by a user
+ * - Capacity and weight constraints are enforced at the business-logic level
+ * - Acts as an aggregate root for contained items
  */
 export interface Bag {
-	id: string;
-	name: string;
-	type: BagType;
-	color?: string | null;
-	size: Size;
 	/**
-	 * Maximum supported volume/capacity
+	 * Primary bag identifier.
+	 */
+	id: string;
+
+	/**
+	 * Human-readable bag name.
+	 */
+	name: string;
+
+	/**
+	 * Bag category/type (e.g. backpack, suitcase).
+	 */
+	type: BagType;
+
+	/**
+	 * Optional bag color.
+	 */
+	color?: string | null;
+
+	/**
+	 * Physical size classification.
+	 */
+	size: Size;
+
+	/**
+	 * Maximum supported volume/capacity.
 	 *
 	 * @remarks
-	 * Unit should be consistent across the system (e.g. liters)
+	 * - Unit must be consistent across the system (e.g. liters)
+	 * - Enforced when adding or updating items
 	 */
 	maxCapacity: number;
 
 	/**
-	 * Maximum supported weight
+	 * Maximum supported weight.
 	 *
 	 * @remarks
-	 * Unit should be consistent (e.g. kilograms)
+	 * - Unit must be consistent (e.g. kilograms)
+	 * - Enforced at runtime via business rules
 	 */
 	maxWeight: number;
 
 	/**
-	 * Empty bag weight
+	 * Empty bag weight.
 	 *
 	 * @remarks
-	 * Used to calculate remaining capacity
+	 * - Represents the bag's own weight without contents
+	 * - Used when calculating total and remaining capacity
 	 */
 	bagWeight: number;
+
+	/**
+	 * Computed bag metrics.
+	 *
+	 * @remarks
+	 * - Derived from contained items and bag constraints
+	 * - Never persisted directly in the database
+	 */
+	currentWeight?: number | null;
+	currentCapacity?: number | null;
+	remainingWeight?: number | null;
+	remainingCapacity?: number | null;
+
+	/**
+	 * Constraint state flags.
+	 *
+	 * @remarks
+	 * - Provide quick insight into constraint violations
+	 * - Useful for UI indicators and validation feedback
+	 */
+	isOverweight?: boolean | null;
+	isOverCapacity?: boolean | null;
+	isFull?: boolean | null;
+
+	/**
+	 * Utilization percentages.
+	 *
+	 * @remarks
+	 * - Values range from 0 to 100
+	 * - Used for progress indicators and summaries
+	 */
+	weightPercentage?: number | null;
+	capacityPercentage?: number | null;
+
+	/**
+	 * Number of items currently contained in the bag.
+	 */
+	itemCount?: number | null;
+
+	/**
+	 * Derived bag status.
+	 *
+	 * @remarks
+	 * Computed from capacity and weight constraints.
+	 */
+	status?: ContainerStatus | null;
+
+	/**
+	 * Bag material.
+	 */
 	material?: Material | null;
+
+	/**
+	 * Supported bag features.
+	 */
 	features: BagFeature[];
+
+	/**
+	 * Bag creation timestamp.
+	 */
 	createdAt: Date;
+
+	/**
+	 * Bag last update timestamp.
+	 */
 	updatedAt: Date;
+
+	/**
+	 * Identifier of the owning user.
+	 */
 	userId?: string | null;
 }
 

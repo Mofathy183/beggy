@@ -13,7 +13,8 @@ import {
 	NumericEntity,
 	NumericMetric,
 } from '@/types';
-import { NUMBER_CONFIG, normalizeRound } from '@/utils';
+import { normalizeRound } from '@/utils';
+import { NUMBER_CONFIG } from '@/constants';
 import * as z from 'zod';
 import { FieldsSchema } from '@/schemas';
 
