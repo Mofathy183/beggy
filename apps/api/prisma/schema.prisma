@@ -14,108 +14,33 @@ datasource db {
     provider = "postgresql"
 }
 
-// Remove redundant @map when value is just lowercase version
-// Only use @map when DB value differs from enum name
+/// ============================================================
+/// Authentication & Authorization
+/// ============================================================
 
-enum Material {
-    LEATHER
-    SYNTHETIC
-    FABRIC
-    POLYESTER
-    NYLON
-    CANVAS
-    HARD_SHELL
-    METAL
-}
-
-enum ItemCategory {
-    ELECTRONICS
-    ACCESSORIES
-    FURNITURE
-    MEDICINE
-    CLOTHING
-    BOOKS
-    FOOD
-    TOILETRIES
-    DOCUMENTS
-    SPORTS
-}
-
-enum BagType {
-    BACKPACK
-    DUFFEL
-    TOTE
-    MESSENGER
-    LAPTOP_BAG
-    TRAVEL_BAG
-    HANDBAG
-    CROSSBODY
-    SHOULDER_BAG
-}
-
-enum SuitcaseType {
-    CARRY_ON
-    CHECKED_LUGGAGE
-    HARD_SHELL
-    SOFT_SHELL
-    BUSINESS
-    KIDS
-    EXPANDABLE
-}
-
-// REMOVED "NONE" - use empty array in your model instead
-enum SuitcaseFeature {
-    TSA_LOCK
-    WATERPROOF
-    EXPANDABLE
-    USB_PORT
-    LIGHTWEIGHT
-    ANTI_THEFT
-    SCRATCH_RESISTANT
-    COMPRESSION_STRAPS
-    TELESCOPIC_HANDLE
-    SPINNER_WHEELS
-}
-
-// REMOVED "NONE" - use empty array in your model instead
-enum BagFeature {
-    WATERPROOF
-    PADDED_LAPTOP_COMPARTMENT
-    USB_PORT
-    ANTI_THEFT
-    MULTIPLE_POCKETS
-    LIGHTWEIGHT
-    EXPANDABLE
-    REINFORCED_STRAPS
-    TROLLEY_SLEEVE
-    HIDDEN_POCKET
-    RFID_BLOCKING
-}
-
-enum Size {
-    SMALL
-    MEDIUM
-    LARGE
-    EXTRA_LARGE
-}
-
-enum WheelType {
-    NONE
-    TWO_WHEEL
-    FOUR_WHEEL
-    SPINNER
-}
-
-enum Gender {
-    MALE
-    FEMALE
-    OTHER
-}
-
-// Renamed from "Providers" to be clearer
+/// Authentication providers supported by the system.
 enum AuthProvider {
     GOOGLE
     FACEBOOK
+    LOCAL
+}
+
+/// ------------------------------------------------------------
+/// Role (user groups)
+/// ------------------------------------------------------------
+/// Represents high-level access groups in the application.
+///
+/// - ADMIN      → full system access
+/// - MODERATOR  → elevated content control
+/// - MEMBER     → regular user with extended perks
+/// - USER       → base-level user
+///
+/// Roles are mapped to permissions using the RoleOnPermission table.
+enum Role {
+    ADMIN
+    MODERATOR
+    MEMBER
+    USER
 }
 
 /// ------------------------------------------------------------
@@ -184,24 +109,7 @@ enum Subject {
     PERMISSION
 }
 
-/// ------------------------------------------------------------
-/// Role (user groups)
-/// ------------------------------------------------------------
-/// Represents high-level access groups in the application.
-///
-/// - ADMIN      → full system access
-/// - MODERATOR  → elevated content control
-/// - MEMBER     → regular user with extended perks
-/// - USER       → base-level user
-///
-/// Roles are mapped to permissions using the RoleOnPermission table.
-enum Role {
-    ADMIN
-    MODERATOR
-    MEMBER
-    USER
-}
-
+/// Types of system-issued tokens.
 enum TokenType {
     EMAIL_VERIFICATION
     PASSWORD_RESET
@@ -209,6 +117,129 @@ enum TokenType {
     TWO_FACTOR
 }
 
+/// ============================================================
+
+/// ============================================================
+/// Domain Enums
+/// ============================================================
+
+/// Materials used in bags, suitcases, or items.
+enum Material {
+    LEATHER
+    SYNTHETIC
+    FABRIC
+    POLYESTER
+    NYLON
+    CANVAS
+    HARD_SHELL
+    METAL
+}
+
+/// Categories used to classify items stored in bags or suitcases.
+enum ItemCategory {
+    ELECTRONICS
+    ACCESSORIES
+    FURNITURE
+    MEDICINE
+    CLOTHING
+    BOOKS
+    FOOD
+    TOILETRIES
+    DOCUMENTS
+    SPORTS
+}
+
+/// Types of bags supported by the system.
+enum BagType {
+    BACKPACK
+    DUFFEL
+    TOTE
+    MESSENGER
+    LAPTOP_BAG
+    TRAVEL_BAG
+    HANDBAG
+    CROSSBODY
+    SHOULDER_BAG
+}
+
+/// Types of suitcases based on usage and construction.
+enum SuitcaseType {
+    CARRY_ON
+    CHECKED_LUGGAGE
+    HARD_SHELL
+    SOFT_SHELL
+    BUSINESS
+    KIDS
+    EXPANDABLE
+}
+
+/// Optional features available for suitcases.
+///
+/// Note:
+/// Absence of features should be represented
+/// by an empty array in the model.
+enum SuitcaseFeature {
+    TSA_LOCK
+    WATERPROOF
+    EXPANDABLE
+    USB_PORT
+    LIGHTWEIGHT
+    ANTI_THEFT
+    SCRATCH_RESISTANT
+    COMPRESSION_STRAPS
+    TELESCOPIC_HANDLE
+    SPINNER_WHEELS
+}
+
+/// Optional features available for bags.
+///
+/// Note:
+/// Absence of features should be represented
+/// by an empty array in the model.
+enum BagFeature {
+    WATERPROOF
+    PADDED_LAPTOP_COMPARTMENT
+    USB_PORT
+    ANTI_THEFT
+    MULTIPLE_POCKETS
+    LIGHTWEIGHT
+    EXPANDABLE
+    REINFORCED_STRAPS
+    TROLLEY_SLEEVE
+    HIDDEN_POCKET
+    RFID_BLOCKING
+}
+
+/// General size classification used across bags and suitcases.
+enum Size {
+    SMALL
+    MEDIUM
+    LARGE
+    EXTRA_LARGE
+}
+
+/// Wheel configurations for suitcases.
+enum WheelType {
+    NONE
+    TWO_WHEEL
+    FOUR_WHEEL
+    SPINNER
+}
+
+/// Gender information used in user profiles.
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
+}
+
+/// ============================================================
+
+/// ============================================================
+/// Measurement Enums
+/// ============================================================
+
+/// Units used for measuring item or bag weight.
 enum WeightUnit {
     GRAM
     KILOGRAM
@@ -216,9 +247,12 @@ enum WeightUnit {
     OUNCE
 }
 
+/// Units used for measuring volume or capacity.v
 enum VolumeUnit {
     ML
     LITER
     CU_CM // cubic centimeters
     CU_IN // cubic inches
 }
+
+/// ============================================================

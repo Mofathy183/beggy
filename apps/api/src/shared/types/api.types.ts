@@ -1,6 +1,5 @@
 import { STATUS_CODE } from '@shared/constants';
-import { ErrorCode } from '@beggy/shared/constants';
-import { Role } from '@beggy/shared/types';
+import { SuccessResponse, ErrorResponse } from '@beggy/shared/types';
 
 /**
  * HTTP Status Code type derived from STATUS_CODE constants.
@@ -18,203 +17,90 @@ import { Role } from '@beggy/shared/types';
 export type StatusCode = (typeof STATUS_CODE)[keyof typeof STATUS_CODE];
 
 /**
- * Pagination metadata for collection responses.
+ * HTTP-specific success response wrapper.
  *
  * @remarks
- * Used to provide context about paginated results including totals, counts, and page information.
- * Follows RESTful pagination best practices.
+ * This interface extends the shared {@link SuccessResponse} contract by
+ * adding an explicit HTTP status code.
  *
- * @property total - Total number of records without any filters applied
- * @property count - Number of items in the current page response
- * @property totalFiltered - Total number of records matching current filters
- * @property page - Current page number (1-indexed)
- * @property limit - Maximum items per page
- * @property pages - Total number of pages available
+ * It exists **only** in the API layer and should never be shared with
+ * frontend or domain packages.
  *
- * @example
- * ```typescript
- * const meta: Meta = {
- *   total: 100,
- *   count: 10,
- *   totalFiltered: 50,
- *   page: 1,
- *   limit: 10,
- *   pages: 5
- * };
- * ```
- */
-export interface Meta {
-	total: number; // All records without filters
-	count: number; // Current page items count
-	totalFiltered: number; // All records matching filters
-	page: number;
-	limit: number;
-	pages: number;
-}
-
-/**
- * Base interface for all API responses.
+ * Purpose:
+ * - Bridges the gap between transport-level HTTP concerns
+ *   and shared API response contracts
+ * - Keeps HTTP semantics (status codes) out of `@beggy/shared`
+ * - Allows consistent typing for Express/Fastify responses
  *
- * @remarks
- * All API responses extend this interface to ensure consistency across the application.
- * Includes essential fields for HTTP communication and debugging.
+ * Architectural rule:
+ * - Use {@link SuccessResponse} in shared logic and services
+ * - Use {@link HttpSuccessResponse} only at the controller boundary
  *
- * @property success - Boolean indicating if the request was successful
- * @property message - Human-readable message (Beggy-style for this application)
- * @property status - HTTP status code
- * @property timestamp - ISO 8601 timestamp of when the response was created
+ * @template T - Type of the successful response payload
  *
  * @example
- * ```typescript
- * const response: ApiResponse = {
+ * ```ts
+ * const response: HttpSuccessResponse<UserDto> = {
  *   success: true,
- *   message: 'Operation completed successfully',
+ *   message: 'User retrieved successfully',
  *   status: 200,
- *   timestamp: '2024-01-15T10:30:00.000Z'
+ *   timestamp: new Date().toISOString(),
+ *   data: user,
  * };
  * ```
  */
-export interface ApiResponse {
-	success: boolean;
-	message: string;
+export interface HttpSuccessResponse<T> extends SuccessResponse<T> {
+	/**
+	 * HTTP status code associated with the response.
+	 *
+	 * @remarks
+	 * This value represents the actual HTTP status sent to the client
+	 * (e.g. 200, 201, 204).
+	 *
+	 * Status codes are intentionally excluded from shared response
+	 * contracts to avoid coupling non-HTTP consumers (e.g. frontend,
+	 * GraphQL, or future transports).
+	 */
 	status: StatusCode;
-	timestamp: string; // ISO string format
 }
 
 /**
- * Success response interface for successful API operations.
- *
- * @template T - Type of the data payload returned in the response
+ * HTTP-specific error response wrapper.
  *
  * @remarks
- * Extends ApiResponse with a `success: true` literal type for TypeScript narrowing.
- * Includes optional metadata for paginated responses.
+ * Extends the shared {@link ErrorResponse} by attaching an HTTP status code.
  *
- * @property success - Always `true` for success responses
- * @property data - The primary response payload
- * @property meta - Optional pagination or additional metadata
+ * This interface represents the final error shape sent over HTTP
+ * and should only be constructed at the controller or middleware level.
  *
- * @example
- * ```typescript
- * const successResponse: SuccessResponse<User> = {
- *   success: true,
- *   message: 'User profile retrieved',
- *   status: 200,
- *   timestamp: '2024-01-15T10:30:00.000Z',
- *   data: { id: 1, name: 'John Doe', email: 'john@example.com' }
- * };
+ * Purpose:
+ * - Keeps error semantics consistent across the API
+ * - Allows centralized HTTP error handling
+ * - Prevents leaking transport concerns into shared or domain layers
  *
- * // With pagination
- * const paginatedResponse: SuccessResponse<User[]> = {
- *   success: true,
- *   message: 'Users retrieved successfully',
- *   status: 200,
- *   timestamp: '2024-01-15T10:30:00.000Z',
- *   data: usersArray,
- *   meta: { total: 100, count: 10, totalFiltered: 100, page: 1, limit: 10, pages: 10 }
- * };
- * ```
- */
-export interface SuccessResponse<T> extends ApiResponse {
-	success: true; // TypeScript will narrow this to literal true
-	data: T;
-	meta?: Meta;
-}
-
-/**
- * Error response interface for failed API operations.
- *
- * @remarks
- * Extends ApiResponse with a `success: false` literal type for TypeScript narrowing.
- * Includes machine-readable error codes and user-friendly suggestions.
- *
- * @property success - Always `false` for error responses
- * @property error - Optional error details for debugging (should be filtered in production)
- * @property code - Machine-readable error code for programmatic handling
- * @property suggestion - User-friendly suggestion for resolving the issue
+ * Architectural rule:
+ * - Shared layers should return {@link ErrorResponse}
+ * - Controllers adapt it into {@link HttpErrorResponse}
  *
  * @example
- * ```typescript
- * const errorResponse: ErrorResponse = {
+ * ```ts
+ * const error: HttpErrorResponse = {
  *   success: false,
- *   message: 'The requested resource was not found',
- *   status: 404,
- *   timestamp: '2024-01-15T10:30:00.000Z',
- *   code: ErrorCode.NOT_FOUND,
- *   suggestion: 'Check the resource ID and try again'
- * };
- *
- * // With error details for debugging
- * const detailedError: ErrorResponse = {
- *   success: false,
- *   message: 'Validation failed',
- *   status: 400,
- *   timestamp: '2024-01-15T10:30:00.000Z',
- *   error: { field: 'email', reason: 'Invalid format' },
- *   code: ErrorCode.VALIDATION_ERROR,
- *   suggestion: 'Please check all required fields are correctly filled'
+ *   message: 'Unauthorized access',
+ *   status: 401,
+ *   timestamp: new Date().toISOString(),
+ *   code: ErrorCode.UNAUTHORIZED,
+ *   suggestion: 'Please log in and try again',
  * };
  * ```
  */
-export interface ErrorResponse extends ApiResponse {
-	success: false; // TypeScript will narrow this to literal false
-	error?: unknown; // Error details (optional but useful)
-	code: ErrorCode; // Required - good!
-	suggestion: string; // Required - good!
-}
-
-/**
- * Options for customizing error responses.
- *
- * @remarks
- * Allows overriding default error messages and suggestions while maintaining
- * the core error structure. Use sparingly - prefer the default Beggy-style messages.
- *
- * @property customMessage - Override the default error message
- * @property customSuggestion - Override the default error suggestion
- *
- * @example
- * ```typescript
- * const options: ErrorResponseOptions = {
- *   customMessage: 'Your bag exceeded the weight limit by 5kg',
- *   customSuggestion: 'Try removing some items or redistribute weight between bags'
- * };
- * ```
- */
-export interface ErrorResponseOptions {
-	customMessage?: string;
-	customSuggestion?: string;
-}
-
-/**
- * Configuration for paginated API requests.
- *
- * @remarks
- * Use this interface for request parameters when implementing paginated endpoints.
- *
- * @property page - Requested page number (default: 1)
- * @property limit - Items per page (default: 20, max: 100)
- * @property sortBy - Field to sort by
- * @property sortOrder - Sort direction ('asc' or 'desc')
- * @property search - Search query string
- * @property filters - Additional filter criteria
- *
- * @example
- * ```typescript
- * const params: PaginationParams = {
- *   page: 2,
- *   limit: 25,
- *   sortBy: 'createdAt',
- *   sortOrder: 'desc',
- *   search: 'weekend'
- * };
- * ```
- */
-export interface PaginationParams {
-	page?: number;
-	limit?: number;
-	sortBy?: string;
-	sortOrder?: 'asc' | 'desc';
-	search?: string;
-	filters?: Record<string, any>;
+export interface HttpErrorResponse extends ErrorResponse {
+	/**
+	 * HTTP status code associated with the error response.
+	 *
+	 * @remarks
+	 * Used by the HTTP server to set the correct response status
+	 * while keeping error details standardized across the system.
+	 */
+	status: StatusCode;
 }

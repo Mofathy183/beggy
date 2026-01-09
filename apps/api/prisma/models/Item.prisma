@@ -1,25 +1,59 @@
-//* relationship (one to many) the user can have many item and bags and suitcases can have many item 
-
+/// Represents an item that can be packed into bags or suitcases.
+///
+/// Stores physical characteristics used for capacity and
+/// weight calculations, as well as classification metadata.
 model Items {
-    id         String       @id @default(uuid())
-    name       String
-    category   ItemCategory
-    quantity   Int
-    weight     Float
-    weightUnit WeightUnit   @default(KILOGRAM)
+    /// Primary identifier for the item.
+    id String @id @default(uuid())
 
-    volume     Float
+    /// Display name of the item.
+    name String
+
+    /// Category used to classify the item.
+    category ItemCategory
+
+    /// Quantity of this item.
+    /// Represents how many identical units exist.
+    quantity Int
+
+    /// Weight value of a single item unit.
+    weight Float
+
+    /// Unit used for the item's weight.
+    weightUnit WeightUnit @default(KILOGRAM)
+
+    /// Volume value of a single item unit.
+    volume Float
+
+    /// Unit used for the item's volume.
     volumeUnit VolumeUnit @default(LITER)
-    color      String?    @default("black")
-    isFragile  Boolean    @default(false) @map("is_fragile")
-    createdAt  DateTime   @default(now()) @map("created_at")
-    updatedAt  DateTime   @updatedAt @map("updated_at")
 
+    /// Optional color of the item.
+    /// Defaults to black if not specified.
+    color String? @default("black")
+
+    /// Indicates whether the item is fragile.
+    isFragile Boolean @default(false) @map("is_fragile")
+
+    /// Item creation timestamp.
+    createdAt DateTime @default(now()) @map("created_at")
+
+    /// Item update timestamp.
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    /// Identifier of the owning user.
+    /// Nullable to allow shared or system-defined items.
     userId String? @map("user_id")
-    user   User?   @relation(fields: [userId], references: [id])
 
-    bagItems      BagItems[]
+    /// Relation to the owning user.
+    user User? @relation(fields: [userId], references: [id])
+
+    /// Bag associations for this item.
+    bagItems BagItems[]
+
+    /// Suitcase associations for this item.
     suitcaseItems SuitcaseItems[]
 
+    /// Database table name.
     @@map("items")
 }

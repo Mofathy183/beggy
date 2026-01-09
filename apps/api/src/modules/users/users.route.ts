@@ -173,3 +173,51 @@
 // publicRoute.get('/users/:id', getUserPublicProfile);
 
 //*======================================={Users Public Route}==============================================
+/**
+ * 👥 USERS — Administrative / System Resource
+ *
+ * The Users domain represents user accounts as system-managed entities.
+ * These endpoints are intended for administrative and internal use.
+ *
+ * Users are:
+ * - Managed by the system
+ * - Controlled via roles and permissions
+ * - Not responsible for authentication logic
+ *
+ * ------------------------------------------------------------------
+ * Administrative Endpoints (Protected)
+ * ------------------------------------------------------------------
+ *
+ * GET /users
+ * - Returns a paginated list of users
+ * - Supports:
+ *   - Pagination (page, limit)
+ *   - Ordering (orderBy, direction)
+ *   - Searching and filtering
+ *
+ * GET /users/:id
+ * - Returns a private user record by ID
+ * - Intended for admin or privileged roles only
+ *
+ * POST /users
+ * - Creates a new user account
+ * - Typically used by admins
+ *
+ * PATCH /users/:id/role
+ * - Updates the role assigned to a user
+ * - Role changes are restricted to authorized administrators
+ *
+ * DELETE /users
+ * - Bulk delete users (admin-only)
+ * - Typically used with search and filtering criteria
+ *
+ * DELETE /users/:id
+ * - Deletes a single user by ID
+ *
+ * Access control:
+ * - No /admin prefix is required
+ * - Authorization is enforced via roles and permissions
+ *
+ * Pagination and ordering are supported on list endpoints
+ * to ensure scalability and predictable data access.
+ */

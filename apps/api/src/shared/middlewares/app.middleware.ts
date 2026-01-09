@@ -1,99 +1,147 @@
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import pino from 'pino';
-import PinoHttp from 'pino-http';
+import pinoHttp from 'pino-http';
 import pinoPretty from 'pino-pretty';
-// import { ErrorResponse } from '../utils/error.js';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerOptions from '@doc';
 
 import type { Request, Response, NextFunction } from 'express';
 import { doubleCsrf } from 'csrf-csrf';
-import { envConfig } from '@config';
+import { envConfig, env } from '@config';
 import { STATUS_CODE } from '@shared/constants';
 import { ErrorCode } from '@beggy/shared/constants';
-import { apiResponseMap } from '@shared/utils';
+import { apiResponseMap, createResponse } from '@shared/utils';
 
 const { csrf, core: coreConfig } = envConfig;
 
 export const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
+/**
+ * CORS middleware configuration.
+ *
+ * @remarks
+ * Enables cross-origin requests from trusted origins and
+ * allows cookie-based authentication to work correctly.
+ *
+ * CORS is handled at the transport level and intentionally
+ * does not follow the API response contract, as blocked
+ * requests never reach the application layer.
+ */
 export const corsMiddleware = cors({
 	origin: coreConfig.origin,
-	credentials: true, // ✅ This line is required for cookies
+	credentials: true, // Required for cookies / session-based auth
 	methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
 });
 
-//* Apply middleware rate limit for all requests
+/**
+ * Global rate-limiting middleware.
+ *
+ * @remarks
+ * Protects the API from abuse by limiting the number of
+ * requests per IP within a fixed time window.
+ *
+ * When the limit is exceeded, the response is normalized
+ * to match the API's standard HTTP error response shape.
+ */
 export const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // limit each IP to 100 requests per windowMs
-	message: 'Too many requests from this IP, please try again later.',
+	windowMs: 15 * 60 * 1000, // 15-minute rolling window
+	max: 100, // Max requests per IP per window
+	standardHeaders: true, // Send rate-limit info via standard headers
+	handler: (_req: Request, res: Response) => {
+		const response = createResponse.error(
+			ErrorCode.RATE_LIMITED,
+			STATUS_CODE.TOO_MANY_REQUESTS
+		);
+
+		return res.status(STATUS_CODE.TOO_MANY_REQUESTS).json(response);
+	},
 });
 
-// Create the pretty stream for human-readable logs
-const prettyStream = pinoPretty({
-	translateTime: 'yyyy-mm-dd HH:MM:ss.l o',
-	colorize: true,
-	levelFirst: true,
-	ignore: 'pid,hostname,req.headers,req.remotePort,req.remoteAddress,res.headers',
-	messageFormat: '{msg}',
-});
-
-// Configure pino logger with the pretty stream to print logs to the console
+/**
+ * Application logger.
+ *
+ * @remarks
+ * - Uses structured JSON logs in production
+ * - Uses pretty, human-readable logs in development
+ * - Logging level is environment-aware
+ *
+ * This logger is intended for:
+ * - Application events
+ * - Errors
+ * - Business logic diagnostics
+ *
+ * HTTP request logging is handled separately by {@link pinoHttpLogger}.
+ */
 export const logger = pino(
 	{
-		level: 'info',
-		serializers: {
-			req: (req) => ({
-				method: req.method,
-				url: req.url,
-			}),
-			res: (res) => ({
-				statusCode: res.statusCode,
-			}),
-		},
+		level: env.NODE_ENV === 'production' ? 'info' : 'debug',
 	},
-	prettyStream // Using pino-pretty as a transport to output to the console
+	env.NODE_ENV !== 'production'
+		? pinoPretty({
+				translateTime: 'yyyy-mm-dd HH:MM:ss.l o',
+				colorize: true,
+				levelFirst: true,
+				ignore: 'pid,hostname',
+			})
+		: undefined
 );
 
-// Attach the logger to HTTP requests automatically using pino-http
-export const pinoHttpLogger: (
-	req: Request,
-	res: Response,
-	next: NextFunction
-) => void = PinoHttp({
-	logger, // Now correctly passed as part of the options object
-	customLogLevel: (_req: Request, res: Response, err) => {
-		if (res.statusCode >= 500 || err) {
-			return 'error';
-		} else if (res.statusCode >= 400) {
-			return 'warn';
-		} else if (res.statusCode >= 300) {
-			return 'silent'; // Usually don't log redirects unless needed
-		}
+/**
+ * HTTP request/response logger middleware.
+ *
+ * @remarks
+ * - Automatically logs incoming HTTP requests and responses
+ * - Log level is derived from response status code
+ * - Payload is intentionally minimal to avoid sensitive data leakage
+ *
+ * Intended usage:
+ * ```ts
+ * app.use(pinoHttpLogger);
+ * ```
+ */
+export const pinoHttpLogger = pinoHttp({
+	logger,
+
+	/**
+	 * Determines log level based on response status.
+	 */
+	customLogLevel: (_req, res, err) => {
+		if (res.statusCode >= 500 || err) return 'error';
+		if (res.statusCode >= 400) return 'warn';
+		if (res.statusCode >= 300) return 'silent';
 		return 'info';
 	},
-	customSuccessMessage: (req: Request, res: Response, responseTime) => {
-		return `${req.method} ${req.url} completed with ${res.statusCode} in ${responseTime}ms`;
-	},
-	customErrorMessage: (req: Request, res: Response, _err) => {
-		return `${req.method} ${req.url} failed with ${res.statusCode}`;
-	},
-	// Remove customLevels - it's not a valid option for pino-http
-	// Instead use customAttributesKeys to customize logged fields if needed
+
+	/**
+	 * Message logged for successful requests.
+	 */
+	customSuccessMessage: (req, res, responseTime) =>
+		`${req.method} ${req.url} ${res.statusCode} ${responseTime}ms`,
+
+	/**
+	 * Message logged for failed requests.
+	 */
+	customErrorMessage: (req, res) =>
+		`${req.method} ${req.url} ${res.statusCode}`,
+
+	/**
+	 * Custom attribute names for structured logs.
+	 */
 	customAttributeKeys: {
 		req: 'request',
 		res: 'response',
 		err: 'error',
 		responseTime: 'timeTaken',
 	},
-	// Add serializers for request/response objects
+
+	/**
+	 * Serializers limit logged data to essential fields only.
+	 */
 	serializers: {
 		req: (req) => ({
 			method: req.method,
 			url: req.url,
-			headers: req.headers,
 		}),
 		res: (res) => ({
 			statusCode: res.statusCode,
@@ -101,28 +149,6 @@ export const pinoHttpLogger: (
 		err: pino.stdSerializers.err,
 	},
 });
-
-/**
- * Middleware to log the request method, URL, and status code
- * Logs the request method, URL, and status code for each request.
- * @function loggerMiddleware
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function in the stack.
- */
-export const loggerMiddleware = (
-	req: Request,
-	res: Response,
-	next: NextFunction
-) => {
-	// Log only method, URL, and status code
-	logger.info({
-		method: req.method,
-		url: req.url,
-		statusCode: res.statusCode, // Log the status code
-	});
-	next();
-};
 
 //*==========================={CSRF Middleware}=====================================
 /**

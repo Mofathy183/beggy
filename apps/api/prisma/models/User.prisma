@@ -1,32 +1,44 @@
-//** initialize the relationships in all the models with User
-
+/// Core user entity representing system identity and ownership.
+///
+/// Authentication and profile data are intentionally separated
+/// into Account and Profile models.
 model User {
-    id               String    @id @default(uuid())
-    firstName        String    @map("first_name")
-    lastName         String    @map("last_name")
-    password         String
-    email            String    @unique
-    role             Role      @default(USER)
-    profilePicture   String?
-    gender           Gender?
-    birthDate        DateTime?
-    country          String?
-    city             String?
-    isActive         Boolean   @default(true) @map("is_active")
-    isEmailVerified  Boolean   @default(false) @map("is_email_verified")
-    passwordChangeAt DateTime? @map("password_change_at")
-    createdAt        DateTime  @default(now()) @map("created_at")
-    updatedAt        DateTime  @updatedAt @map("updated_at")
+    /// Primary user identifier.
+    id String @id @default(uuid())
 
-    //* the relationships
+    /// Unique email address.
+    email String @unique
+
+    /// User role within the system.
+    role Role @default(USER)
+
+    /// Indicates whether the user is active.
+    isActive Boolean @default(true) @map("is_active")
+
+    /// Indicates whether the user's email is verified.
+    isEmailVerified Boolean @default(false) @map("is_email_verified")
+
+    /// User creation timestamp.
+    createdAt DateTime @default(now()) @map("created_at")
+
+    /// User update timestamp.
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    /// Authentication accounts (LOCAL, GOOGLE, FACEBOOK).
+    account Account[]
+
+    /// Optional user profile.
+    profile Profile?
+
+    /// User authentication tokens.
     userToken UserToken[]
+
+    /// Domain-owned resources.
     bags      Bags[]
     suitcases Suitcases[]
     items     Items[]
-    // 1:1 relation to Account
-    account   Account[]
 
-    //* the nama of the table
+    /// Database table name.
     @@map("users")
 }
 

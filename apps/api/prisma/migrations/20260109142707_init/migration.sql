@@ -1,4 +1,22 @@
 -- CreateEnum
+CREATE TYPE "AuthProvider" AS ENUM ('GOOGLE', 'FACEBOOK', 'LOCAL');
+
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'MODERATOR', 'MEMBER', 'USER');
+
+-- CreateEnum
+CREATE TYPE "Action" AS ENUM ('CREATE', 'READ', 'UPDATE', 'DELETE', 'MANAGE');
+
+-- CreateEnum
+CREATE TYPE "Scope" AS ENUM ('OWN', 'ANY');
+
+-- CreateEnum
+CREATE TYPE "Subject" AS ENUM ('BAG', 'ITEM', 'SUITCASE', 'USER', 'ROLE', 'PERMISSION');
+
+-- CreateEnum
+CREATE TYPE "TokenType" AS ENUM ('EMAIL_VERIFICATION', 'PASSWORD_RESET', 'CHANGE_EMAIL', 'TWO_FACTOR');
+
+-- CreateEnum
 CREATE TYPE "Material" AS ENUM ('LEATHER', 'SYNTHETIC', 'FABRIC', 'POLYESTER', 'NYLON', 'CANVAS', 'HARD_SHELL', 'METAL');
 
 -- CreateEnum
@@ -26,24 +44,6 @@ CREATE TYPE "WheelType" AS ENUM ('NONE', 'TWO_WHEEL', 'FOUR_WHEEL', 'SPINNER');
 CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "AuthProvider" AS ENUM ('GOOGLE', 'FACEBOOK');
-
--- CreateEnum
-CREATE TYPE "Action" AS ENUM ('CREATE', 'READ', 'UPDATE', 'DELETE', 'MANAGE');
-
--- CreateEnum
-CREATE TYPE "Scope" AS ENUM ('OWN', 'ANY');
-
--- CreateEnum
-CREATE TYPE "Subject" AS ENUM ('BAG', 'ITEM', 'SUITCASE', 'USER', 'ROLE', 'PERMISSION');
-
--- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'MODERATOR', 'MEMBER', 'USER');
-
--- CreateEnum
-CREATE TYPE "TokenType" AS ENUM ('EMAIL_VERIFICATION', 'PASSWORD_RESET', 'CHANGE_EMAIL', 'TWO_FACTOR');
-
--- CreateEnum
 CREATE TYPE "WeightUnit" AS ENUM ('GRAM', 'KILOGRAM', 'POUND', 'OUNCE');
 
 -- CreateEnum
@@ -52,11 +52,13 @@ CREATE TYPE "VolumeUnit" AS ENUM ('ML', 'LITER', 'CU_CM', 'CU_IN');
 -- CreateTable
 CREATE TABLE "accounts" (
     "id" TEXT NOT NULL,
-    "provider" "AuthProvider" NOT NULL,
+    "authProvider" "AuthProvider" NOT NULL,
     "provider_id" TEXT NOT NULL,
+    "hashedPassword" TEXT,
+    "password_change_at" TIMESTAMP(3),
+    "user_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "user_id" TEXT NOT NULL,
 
     CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
 );
@@ -110,6 +112,23 @@ CREATE TABLE "items" (
 );
 
 -- CreateTable
+CREATE TABLE "profiles" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "first_name" TEXT NOT NULL,
+    "last_name" TEXT NOT NULL,
+    "avatarUrl" TEXT,
+    "gender" "Gender",
+    "birthDate" TIMESTAMP(3),
+    "country" TEXT,
+    "city" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "profiles_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "suitcases" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -143,19 +162,10 @@ CREATE TABLE "suitcase_items" (
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
-    "first_name" TEXT NOT NULL,
-    "last_name" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'USER',
-    "profilePicture" TEXT,
-    "gender" "Gender",
-    "birthDate" TIMESTAMP(3),
-    "country" TEXT,
-    "city" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_email_verified" BOOLEAN NOT NULL DEFAULT false,
-    "password_change_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -200,6 +210,9 @@ CREATE UNIQUE INDEX "accounts_provider_id_key" ON "accounts"("provider_id");
 CREATE UNIQUE INDEX "accounts_user_id_key" ON "accounts"("user_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "profiles_user_id_key" ON "profiles"("user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
@@ -225,6 +238,9 @@ ALTER TABLE "bag_items" ADD CONSTRAINT "bag_items_item_id_fkey" FOREIGN KEY ("it
 
 -- AddForeignKey
 ALTER TABLE "items" ADD CONSTRAINT "items_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "profiles" ADD CONSTRAINT "profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "suitcases" ADD CONSTRAINT "suitcases_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

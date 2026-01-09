@@ -1,0 +1,45 @@
+/// User profile containing public and user-editable information.
+///
+/// Separated from the User model to enforce clear security
+/// and responsibility boundaries.
+model Profile {
+    /// Primary identifier for the profile.
+    id String @id @default(uuid())
+
+    /// Identifier of the associated user.
+    /// Foreign key to User (1:1)
+    userId String @unique @map("user_id")
+
+    /// Relation to the owning user.
+    user User @relation(fields: [userId], references: [id])
+
+    /// User first name.
+    firstName String @map("first_name")
+
+    /// User last name.
+    lastName String @map("last_name")
+
+    /// Public avatar image URL (managed externally).
+    avatarUrl String?
+
+    /// Optional gender information.
+    gender Gender?
+
+    /// Optional birth date.
+    birthDate DateTime?
+
+    /// Optional country.
+    country String?
+
+    /// Optional city.
+    city String?
+
+    /// Profile creation timestamp.
+    createdAt DateTime @default(now())
+
+    /// Profile update timestamp.
+    updatedAt DateTime @updatedAt
+
+    /// Database table name.
+    @@map("profiles")
+}

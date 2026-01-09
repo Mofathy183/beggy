@@ -5,12 +5,11 @@ import {
 	ErrorMessages,
 	ErrorSuggestions,
 } from '@beggy/shared/constants';
+import { PaginationMeta, ErrorResponseOptions } from '@beggy/shared/types';
 import type {
 	StatusCode,
-	SuccessResponse,
-	Meta,
-	ErrorResponse,
-	ErrorResponseOptions,
+	HttpSuccessResponse,
+	HttpErrorResponse,
 } from '@shared/types';
 
 /**
@@ -64,8 +63,8 @@ export const createResponse = {
 		data: T,
 		msgKey: keyof typeof SuccessMessages,
 		status: StatusCode,
-		meta?: Meta
-	): SuccessResponse<T> => ({
+		meta?: PaginationMeta
+	): HttpSuccessResponse<T> => ({
 		success: true,
 		status,
 		message: SuccessMessages[msgKey], // Always use constant
@@ -102,7 +101,7 @@ export const createResponse = {
 		status: StatusCode,
 		error?: unknown,
 		options?: ErrorResponseOptions
-	): ErrorResponse => ({
+	): HttpErrorResponse => ({
 		success: false,
 		message: options?.customMessage || (ErrorMessages[code] as string),
 		status,
@@ -144,8 +143,11 @@ export const apiResponseMap = {
 	 * apiResponseMap.ok(users, 'USERS_FETCHED', { page: 1, limit: 10 })
 	 * ```
 	 */
-	ok: <T>(data: T, msgKey: keyof typeof SuccessMessages, meta?: Meta) =>
-		createResponse.success(data, msgKey, STATUS_CODE.OK, meta),
+	ok: <T>(
+		data: T,
+		msgKey: keyof typeof SuccessMessages,
+		meta?: PaginationMeta
+	) => createResponse.success(data, msgKey, STATUS_CODE.OK, meta),
 
 	/**
 	 * Creates a 201 Created response.

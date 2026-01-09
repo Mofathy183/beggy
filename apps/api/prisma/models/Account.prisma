@@ -1,17 +1,42 @@
-//* Important make relationship between User and Account (one to many) 
-
+/// Authentication account associated with a user.
+///
+/// Represents a single authentication method such as:
+/// - LOCAL (email/password)
+/// - GOOGLE
+/// - FACEBOOK
+///
+/// A user may have multiple accounts, one per provider.
 model Account {
-    id         String       @id @default(uuid())
-    provider   AuthProvider
-    providerId String       @unique @map("provider_id")
-    createdAt  DateTime     @default(now()) @map("created_at")
-    updatedAt  DateTime     @updatedAt @map("updated_at")
+    /// Primary identifier for the account.
+    id String @id @default(uuid())
 
-    //* User make relationship between User and Account
-    // 1:1 relation
+    /// Authentication provider type.
+    authProvider AuthProvider
+
+    /// External provider identifier (OAuth only).
+    /// Null for LOCAL authentication.
+    providerId String @unique @map("provider_id")
+
+    /// Hashed password for LOCAL authentication.
+    /// Always null for OAuth-based accounts.
+    hashedPassword String?
+
+    /// Timestamp of the last password change.
+    /// Used for security checks and token invalidation.
+    passwordChangeAt DateTime? @map("password_change_at")
+
+    /// Identifier of the owning user.
     userId String @unique @map("user_id")
-    user   User   @relation(fields: [userId], references: [id])
 
-    //* table name
+    /// Relation to the owning user.
+    user User @relation(fields: [userId], references: [id])
+
+    /// Account creation timestamp.
+    createdAt DateTime @default(now()) @map("created_at")
+
+    /// Account update timestamp.
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    /// Database table name.
     @@map("accounts")
 }

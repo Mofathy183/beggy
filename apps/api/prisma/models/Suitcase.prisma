@@ -1,41 +1,94 @@
-//* relationship (one to many) each user can have many Suitcases
-
+/// Represents a suitcase owned by a user.
+///
+/// Stores static physical properties and configuration
+/// used for packing calculations and organization.
 model Suitcases {
-    id    String       @id @default(uuid())
-    name  String
+    /// Primary identifier for the suitcase.
+    id String @id @default(uuid())
+
+    /// Display name of the suitcase.
+    name String
+
+    /// Optional brand or manufacturer name.
     brand String?
-    type  SuitcaseType
-    color String?      @default("black")
-    size  Size
 
-    maxCapacity    Float // L or internal volume (static)
-    maxWeight      Float // max allowed weight (static)
-    suitcaseWeight Float // weight of empty suitcase (static)
+    /// Suitcase type (e.g., carry-on, checked luggage).
+    type SuitcaseType
 
-    material  Material?
-    features  SuitcaseFeature[]
-    wheels    WheelType?
-    createdAt DateTime          @default(now()) @map("created_at")
-    updatedAt DateTime          @updatedAt @map("updated_at")
+    /// Primary color of the suitcase.
+    /// Defaults to black if not specified.
+    color String? @default("black")
 
+    /// Size classification of the suitcase.
+    size Size
+
+    /// Maximum internal capacity of the suitcase.
+    /// Represents volume (e.g., liters).
+    maxCapacity Float
+
+    /// Maximum allowed weight when fully packed.
+    maxWeight Float
+
+    /// Weight of the empty suitcase.
+    suitcaseWeight Float
+
+    /// Material used to construct the suitcase.
+    material Material?
+
+    /// Optional features supported by the suitcase.
+    features SuitcaseFeature[]
+
+    /// Wheel configuration of the suitcase.
+    wheels WheelType?
+
+    /// Suitcase creation timestamp.
+    createdAt DateTime @default(now()) @map("created_at")
+
+    /// Suitcase update timestamp.
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    /// Identifier of the owning user.
+    /// Nullable to allow system-created or unassigned suitcases.
     userId String? @map("user_id")
-    user   User?   @relation(fields: [userId], references: [id])
 
+    /// Relation to the owning user.
+    user User? @relation(fields: [userId], references: [id])
+
+    /// Items packed inside this suitcase.
     suitcaseItems SuitcaseItems[]
 
+    /// Database table name.
     @@map("suitcases")
 }
 
+/// Join table representing items packed inside a suitcase.
+///
+/// Enables a many-to-many relationship between
+/// suitcases and items.
 model SuitcaseItems {
+    /// Identifier of the suitcase.
     suitcaseId String @map("suitcase_id")
-    itemId     String @map("item_id")
 
+    /// Identifier of the item.
+    itemId String @map("item_id")
+
+    /// Relation to the suitcase.
+    /// Cascades on delete to prevent orphan records.
     suitcase Suitcases @relation(fields: [suitcaseId], references: [id], onDelete: Cascade)
-    item     Items     @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
+    /// Relation to the item.
+    /// Cascades on delete to prevent orphan records.
+    item Items @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+    /// Record creation timestamp.
     createdAt DateTime @default(now()) @map("created_at")
+
+    /// Record update timestamp.
     updatedAt DateTime @updatedAt @map("updated_at")
 
-    @@id([suitcaseId, itemId]) // Composite Primary Key
-    @@map("suitcase_items") // Table name in DB
+    /// Composite primary key to ensure
+    /// each item appears only once per suitcase.
+    @@id([suitcaseId, itemId])
+    /// Database table name.
+    @@map("suitcase_items")
 }

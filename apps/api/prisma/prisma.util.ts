@@ -55,10 +55,10 @@ export function getAge(
 	return age;
 }
 
-export const userExtensions = Prisma.defineExtension({
-	name: 'UserComputedFields',
+export const profileExtensions = Prisma.defineExtension({
+	name: 'ProfileComputedFields',
 	result: {
-		user: {
+		profile: {
 			displayName: {
 				needs: { firstName: true, lastName: true },
 				compute(user) {
