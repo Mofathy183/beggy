@@ -5,6 +5,13 @@ import { User, SuitcaseItems, BagItems } from '@/types';
 import { ItemSchema } from '@/schemas';
 import * as z from 'zod';
 
+/**
+ * High-level classification for items.
+ *
+ * @remarks
+ * - Used for filtering, grouping, and UX affordance
+ * - Categories should remain stable once persisted
+ */
 export enum ItemCategory {
 	ELECTRONICS = 'ELECTRONICS',
 	ACCESSORIES = 'ACCESSORIES',
@@ -15,20 +22,71 @@ export enum ItemCategory {
 	FOOD = 'FOOD',
 }
 
+/**
+ * Supported volume measurement units.
+ *
+ * @remarks
+ * - Enables accurate capacity calculations
+ * - Conversions should happen in domain services, not models
+ */
 export enum VolumeUnit {
+	/**
+	 * Milliliters
+	 */
 	ML = 'ML',
+
+	/**
+	 * Liters
+	 */
 	LITER = 'LITER',
-	CU_CM = 'CU_CM', // cubic centimeters
-	CU_IN = 'CU_IN', // cubic inches
+
+	/**
+	 * Cubic centimeters
+	 */
+	CU_CM = 'CU_CM',
+
+	/**
+	 * Cubic inches
+	 */
+	CU_IN = 'CU_IN',
 }
 
+/**
+ * Supported weight measurement units.
+ *
+ * @remarks
+ * - Used for transport and capacity constraints
+ * - Keep units explicit to avoid implicit assumptions
+ */
 export enum WeightUnit {
+	/**
+	 * Grams
+	 */
 	GRAM = 'GRAM',
+
+	/**
+	 * Kilograms
+	 */
 	KILOGRAM = 'KILOGRAM',
+
+	/**
+	 * Pounds
+	 */
 	POUND = 'POUND',
+
+	/**
+	 * Ounces
+	 */
 	OUNCE = 'OUNCE',
 }
 
+/**
+ * Core Item domain model.
+ *
+ * @remarks
+ * - Represents a physical object that can be placed into containers
+ * - Units must always match the provided measurement values
+ */
 export interface Item {
 	id: string;
 	name: string;
@@ -45,6 +103,13 @@ export interface Item {
 	userId?: string | null;
 }
 
+/**
+ * Item model with resolved relations.
+ *
+ * @remarks
+ * - Intended for read-heavy queries and UI hydration
+ * - Avoid using for write operations
+ */
 export interface ItemWithRelations extends Item {
 	bagItems: BagItems[];
 	suitcaseItems: SuitcaseItems[];

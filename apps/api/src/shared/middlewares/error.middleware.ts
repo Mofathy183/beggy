@@ -140,31 +140,51 @@ const jwtErrorMap = (err: unknown): AppError | null => {
 };
 
 /**
- * Maps a raw Zod validation error into a normalized AppError.
+ * Maps a raw Zod schema validation failure into a normalized AppError.
  *
  * @remarks
- * - This function is intentionally narrow in scope.
- * - It ONLY handles Zod validation errors.
- * - All formatting logic is delegated to `formatValidationError`.
+ * - This mapper is intentionally narrow in responsibility.
+ * - It ONLY handles errors originating from Zod schema parsing.
+ * - Zod errors indicate malformed or untrusted request payloads
+ *   (i.e. the request failed to meet the API contract).
+ * - Business logic and domain validation errors are handled elsewhere.
  *
- * This keeps validation concerns isolated from the main error handler.
+ * All formatting and field-level extraction is delegated to
+ * `formatValidationError`, keeping this mapper focused on
+ * error classification and normalization.
  *
- * @param err - Unknown error thrown during request lifecycle
- * @returns An AppError if the error is a ZodError, otherwise null
+ * @param err - An unknown error thrown during the request lifecycle
+ * @returns
+ * - A standardized AppError with code `INVALID_REQUEST_DATA`
+ *   when the error is a ZodError
+ * - `null` when the error is not handled by this mapper
  */
 const zodErrorMap = (err: unknown): AppError | null => {
 	if (err instanceof ZodError) {
 		/**
-		 * Convert ZodError into a structured, field-based error tree
-		 * suitable for API responses.
+		 * Transform the ZodError into a structured, field-based
+		 * error tree that is safe and useful for API consumers.
+		 *
+		 * @remarks
+		 * This output is intended for:
+		 * - Field-level UI feedback
+		 * - Debugging malformed requests
+		 * - Consistent error payloads across endpoints
 		 */
 		const formattedError = formatValidationError(treeifyError(err));
 
 		/**
-		 * Wrap the formatted validation error in a standardized AppError.
+		 * Wrap the formatted validation details in a standardized AppError.
+		 *
+		 * @remarks
+		 * - Uses `INVALID_REQUEST_DATA` to explicitly signal that the
+		 *   request payload failed schema validation.
+		 * - Mapped to HTTP 400 (Bad Request).
+		 * - Indicates a transport/schema-layer failure, not a
+		 *   business-rule violation.
 		 */
 		return appErrorMap.badRequest(
-			ErrorCode.VALIDATION_ERROR,
+			ErrorCode.INVALID_REQUEST_DATA,
 			formattedError
 		);
 	}

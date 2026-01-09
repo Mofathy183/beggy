@@ -137,10 +137,12 @@ export const SuccessMessages = {
 } as const;
 
 /**
- * Beggy - Your Seasoned Travel Buddy
+ * User-facing error messages.
  *
- * ERROR MESSAGES (Beggy-style)
- * Calm under pressure • Encouraging • Lightly playful • Solution-minded
+ * @remarks
+ * - Calm, friendly, and non-blaming
+ * - Safe for direct display in UI
+ * - Must NOT leak technical details
  */
 export const ErrorMessages: Record<ErrorCode, string> = {
 	// ============================================================================
@@ -384,21 +386,29 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 	[ErrorCode.INVALID_PACKING_ORDER]:
 		'From experience, heavier items work best at the bottom — try moving those shoes down a bit.',
 
-	// API ONLY
+	// =========================================================================
+	// API-ONLY / INFRASTRUCTURE
+	// =========================================================================
+
 	[ErrorCode.SESSION_DESTROY_FAILED]:
 		'I tried ending your session, but it seems the system’s still holding on. Let’s give it another go in a moment.',
-
 	[ErrorCode.PASSWORD_VERIFY_FAILED]:
 		'Hmm, that password doesn’t match what I have on file. Happens to the best of us — double-check and give it another go.',
 	[ErrorCode.PASSWORD_HASH_FAILED]:
 		'I tried securing your password, but something glitched along the way. Don’t worry, your data’s still safe — let’s try that again.',
+
+	/** Authorization middleware executed before authentication */
+	[ErrorCode.ABILITY_NOT_INITIALIZED]:
+		'Looks like the system tried checking your travel permissions before confirming who you are. No worries — it’s a small mix-up on my end, not yours.',
 };
 
 /**
- * Beggy - Your Seasoned Travel Buddy
+ * Suggested next actions for the user.
  *
- * ERROR SUGGESTIONS (Beggy-style)
- * Encouraging • Practical • Traveler-wise • Lightly playful
+ * @remarks
+ * - Optional but highly recommended
+ * - Helps reduce frustration and support tickets
+ * - Designed to be shown alongside ErrorMessages
  */
 export const ErrorSuggestions: Record<ErrorCode, string> = {
 	// ============================================================================
@@ -635,11 +645,18 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 	[ErrorCode.INVALID_PACKING_ORDER]:
 		'From experience, heavier items work best at the bottom — let’s repack smart.',
 
-	// API ONLY
+	// =========================================================================
+	// API-ONLY / INFRASTRUCTURE
+	// =========================================================================
+
 	[ErrorCode.SESSION_DESTROY_FAILED]:
 		'Try the request again, traveler. If the issue lingers, the session store might just need a quick check-in — it happens to the best of us.',
 	[ErrorCode.PASSWORD_VERIFY_FAILED]:
 		'Make sure your caps lock isn’t on, and re-enter your password slowly — I’ve done the same dance more than once.',
 	[ErrorCode.PASSWORD_HASH_FAILED]:
 		'Try saving or signing up again in a moment. If it keeps happening, it might be a temporary system hiccup — no need to stress.',
+
+	/** Authorization middleware executed before authentication */
+	[ErrorCode.ABILITY_NOT_INITIALIZED]:
+		'Let’s check the middleware order — make sure authentication comes before authorization, like checking in before boarding. Once that’s sorted, everything should run smoothly.',
 };

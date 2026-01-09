@@ -6,6 +6,13 @@ import { Item, User } from '@/types';
 import { BagSchema } from '@/schemas';
 import * as z from 'zod';
 
+/**
+ * Supported bag categories.
+ *
+ * @remarks
+ * - Used for filtering, validation, and UX grouping
+ * - Should remain stable once persisted (enum changes are breaking)
+ */
 export enum BagType {
 	BACKPACK = 'BACKPACK',
 	DUFFEL = 'DUFFEL',
@@ -18,6 +25,13 @@ export enum BagType {
 	SHOULDER_BAG = 'SHOULDER_BAG',
 }
 
+/**
+ * Physical size classification for bags.
+ *
+ * @remarks
+ * - Abstracts away exact dimensions
+ * - Useful for UI labels and basic constraints
+ */
 export enum Size {
 	SMALL = 'SMALL',
 	MEDIUM = 'MEDIUM',
@@ -25,6 +39,13 @@ export enum Size {
 	EXTRA_LARGE = 'EXTRA_LARGE',
 }
 
+/**
+ * Primary material used in bag construction.
+ *
+ * @remarks
+ * - Used for durability, weight, and care instructions
+ * - Nullable to support legacy or unknown materials
+ */
 export enum Material {
 	LEATHER = 'LEATHER',
 	SYNTHETIC = 'SYNTHETIC',
@@ -36,6 +57,13 @@ export enum Material {
 	METAL = 'METAL',
 }
 
+/**
+ * Optional functional or structural features of a bag.
+ *
+ * @remarks
+ * - Stored as an array to allow composition
+ * - `NONE` should be treated as a UX/default state, not combined with others
+ */
 export enum BagFeature {
 	NONE = 'NONE',
 	WATERPROOF = 'WATERPROOF',
@@ -50,14 +78,41 @@ export enum BagFeature {
 	HIDDEN_POCKET = 'HIDDEN_POCKET',
 }
 
+/**
+ * Core Bag domain model.
+ *
+ * @remarks
+ * - Represents a container owned by a user
+ * - Capacity and weight limits are enforced at business-logic level
+ */
 export interface Bag {
 	id: string;
 	name: string;
 	type: BagType;
 	color?: string | null;
 	size: Size;
+	/**
+	 * Maximum supported volume/capacity
+	 *
+	 * @remarks
+	 * Unit should be consistent across the system (e.g. liters)
+	 */
 	maxCapacity: number;
+
+	/**
+	 * Maximum supported weight
+	 *
+	 * @remarks
+	 * Unit should be consistent (e.g. kilograms)
+	 */
 	maxWeight: number;
+
+	/**
+	 * Empty bag weight
+	 *
+	 * @remarks
+	 * Used to calculate remaining capacity
+	 */
 	bagWeight: number;
 	material?: Material | null;
 	features: BagFeature[];
@@ -66,6 +121,13 @@ export interface Bag {
 	userId?: string | null;
 }
 
+/**
+ * Join model linking bags to contained items.
+ *
+ * @remarks
+ * - Enables many-to-many relationships
+ * - Useful for inventory tracking and capacity calculations
+ */
 export interface BagItems {
 	bagId: string;
 	itemId: string;
@@ -75,6 +137,13 @@ export interface BagItems {
 	updatedAt: Date;
 }
 
+/**
+ * Bag model with resolved relations.
+ *
+ * @remarks
+ * - Intended for read-heavy endpoints
+ * - Avoid using for write operations
+ */
 export interface BagWithRelations extends Bag {
 	bagItems: BagItems[];
 	user: User;

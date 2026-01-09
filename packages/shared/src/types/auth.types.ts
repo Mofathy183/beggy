@@ -2,6 +2,14 @@ import { User } from '@/types';
 import { AuthSchema } from '@/schemas';
 import * as z from 'zod';
 
+/**
+ * Application-level user roles.
+ *
+ * @remarks
+ * - Roles define **permission bundles**, not behavior
+ * - Changing a role's capabilities should be done via permissions,
+ *   not conditionals in business logic
+ */
 export enum Role {
 	ADMIN = 'ADMIN',
 	MEMBER = 'MEMBER',
@@ -9,17 +17,39 @@ export enum Role {
 	USER = 'USER',
 }
 
+/**
+ * Supported authentication providers.
+ *
+ * @remarks
+ * - Used for login, account linking, and audit logs
+ * - Extendable without breaking existing users
+ */
 export enum AuthProvider {
 	GOOGLE = 'GOOGLE',
 	FACEBOOK = 'FACEBOOK',
+	// TODO: add LOCAL auth provider
 }
 
+/**
+ * Types of one-time or short-lived tokens.
+ *
+ * @remarks
+ * - Used for security-sensitive workflows
+ * - Each type usually has a different expiration policy
+ */
 export enum TokenType {
 	EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
 	PASSWORD_RESET = 'PASSWORD_RESET',
 	CHANGE_EMAIL = 'CHANGE_EMAIL',
 }
 
+/**
+ * Domain entities that can be protected by permissions.
+ *
+ * @remarks
+ * - Acts as the RBAC "resource" identifier
+ * - Should map closely to API models or bounded contexts
+ */
 export enum Subject {
 	USER = 'USER',
 	BAG = 'BAG',
@@ -29,11 +59,25 @@ export enum Subject {
 	PERMISSION = 'PERMISSION',
 }
 
+/**
+ * Scope of a permission.
+ *
+ * @remarks
+ * - OWN: resource is owned by the current user
+ * - ANY: applies globally across all resources
+ */
 export enum Scope {
 	OWN = 'OWN',
 	ANY = 'ANY',
 }
 
+/**
+ * Actions that can be performed on a subject.
+ *
+ * @remarks
+ * - MANAGE is a super-action that implies all CRUD operations
+ * - Useful for reducing permission verbosity
+ */
 export enum Action {
 	CREATE = 'CREATE',
 	READ = 'READ',
@@ -42,56 +86,113 @@ export enum Action {
 	MANAGE = 'MANAGE',
 }
 
-export type Permissions = { action: Action; scope: Scope; subject: Subject }[];
+/**
+ * A list of permissions assigned to a role or user.
+ */
+export type Permissions = {
+	action: Action;
+	scope: Scope;
+	subject: Subject;
+}[];
 
+/* -------------------------------------------------------------------------- */
+/*                               MODEL INTERFACES                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Represents a user-issued token stored in persistence.
+ *
+ * @remarks
+ * - Tokens should always be stored as **hashed values**
+ * - Never expose `hashToken` to clients
+ */
 export interface UserToken {
 	id: string;
 	type: TokenType;
 	hashToken: string;
 	expiresAt: Date;
 	createdAt: Date;
+
+	/**
+	 * Owning user identifier
+	 */
 	userId: string;
+
+	/**
+	 * Related user entity
+	 */
 	user: User;
 }
 
+/**
+ * Atomic permission definition.
+ *
+ * @remarks
+ * - This is the canonical RBAC rule
+ * - Roles are composed by grouping these permissions
+ */
 export interface Permission {
 	/**
 	 * Primary identifier
 	 */
 	id: string;
+
 	/**
-	 * The action (CREATE/READ/UPDATE/DELETE/MANAGE)
+	 * The action being allowed
 	 */
 	action: Action;
+
 	/**
 	 * Whether the permission applies to OWN or ANY resource
 	 */
 	scope: Scope;
+
 	/**
 	 * The resource type this permission applies to
 	 */
 	subject: Subject;
 }
 
+/**
+ * Join table mapping roles to permissions.
+ *
+ * @remarks
+ * - Enables many-to-many relationships
+ * - Allows dynamic permission assignment without code changes
+ */
 export interface RoleOnPermission {
 	/**
 	 * Primary identifier
 	 */
 	id: string;
+
 	/**
-	 * The role assigned in this mapping
+	 * Role assigned in this mapping
 	 */
 	role: Role;
+
 	/**
-	 * Foreign key to Permission
+	 * Foreign key reference to Permission
 	 */
 	permissionId: string;
 }
 
+/**
+ * Permission with its associated role mappings.
+ *
+ * @remarks
+ * Useful for admin panels and permission audits.
+ */
 export interface PermissionWithRelations extends Permission {
 	rolePermissions: RoleOnPermission[];
 }
 
+/**
+ * Role-permission mapping with the resolved permission entity.
+ *
+ * @remarks
+ * Commonly used when loading role capabilities at runtime.
+ */
 export interface RoleOnPermissionWithRelations extends RoleOnPermission {
 	permission: Permission;
 }

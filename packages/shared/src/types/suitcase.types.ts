@@ -6,6 +6,13 @@ import { User, Item, Size, Material } from '@/types';
 import { SuitcaseSchema } from '@/schemas';
 import * as z from 'zod';
 
+/**
+ * High-level suitcase classifications.
+ *
+ * @remarks
+ * - Used for filtering, validation, and airline-related rules
+ * - Enum values should remain stable once persisted
+ */
 export enum SuitcaseType {
 	CARRY_ON = 'CARRY_ON',
 	CHECKED_LUGGAGE = 'CHECKED_LUGGAGE',
@@ -16,6 +23,13 @@ export enum SuitcaseType {
 	EXPANDABLE = 'EXPANDABLE',
 }
 
+/**
+ * Optional functional or structural suitcase features.
+ *
+ * @remarks
+ * - Stored as an array to allow feature composition
+ * - `NONE` should be treated as a UX/default state
+ */
 export enum SuitcaseFeature {
 	NONE = 'NONE',
 	TSA_LOCK = 'TSA_LOCK',
@@ -29,12 +43,42 @@ export enum SuitcaseFeature {
 	TELESCOPIC_HANDLE = 'TELESCOPIC_HANDLE',
 }
 
+/**
+ * Wheel configuration for a suitcase.
+ *
+ * @remarks
+ * - Impacts maneuverability and weight
+ * - Nullable to support non-wheeled luggage
+ */
 export enum WheelType {
+	/**
+	 * No wheels present
+	 */
 	NONE = 'NONE',
+
+	/**
+	 * Traditional two-wheel design
+	 */
 	TWO_WHEEL = 'TWO_WHEEL',
+
+	/**
+	 * Four-wheel configuration
+	 */
 	FOUR_WHEEL = 'FOUR_WHEEL',
+
+	/**
+	 * 360-degree spinner wheels
+	 */
 	SPINNER = 'SPINNER',
 }
+
+/**
+ * Core Suitcase domain model.
+ *
+ * @remarks
+ * - Represents a travel container subject to airline constraints
+ * - Weight and capacity limits are enforced at business-logic level
+ */
 export interface Suitcase {
 	id: string;
 	name: string;
@@ -42,8 +86,28 @@ export interface Suitcase {
 	type: SuitcaseType;
 	color?: string | null;
 	size: Size;
+	/**
+	 * Maximum supported volume/capacity
+	 *
+	 * @remarks
+	 * Unit must be consistent (e.g. liters)
+	 */
 	maxCapacity: number;
+
+	/**
+	 * Maximum supported weight
+	 *
+	 * @remarks
+	 * Unit must be consistent (e.g. kilograms)
+	 */
 	maxWeight: number;
+
+	/**
+	 * Empty suitcase weight
+	 *
+	 * @remarks
+	 * Included when checking airline baggage limits
+	 */
 	suitcaseWeight: number;
 	material?: Material | null;
 	features: SuitcaseFeature[];
@@ -53,6 +117,13 @@ export interface Suitcase {
 	userId?: string | null;
 }
 
+/**
+ * Join model linking suitcases to contained items.
+ *
+ * @remarks
+ * - Enables many-to-many relationships
+ * - Used for capacity, weight, and packing validation
+ */
 export interface SuitcaseItems {
 	suitcaseId: string;
 	itemId: string;
@@ -62,6 +133,13 @@ export interface SuitcaseItems {
 	updatedAt: Date;
 }
 
+/**
+ * Suitcase model with resolved relations.
+ *
+ * @remarks
+ * - Intended for read-heavy endpoints and UI hydration
+ * - Avoid using for write operations
+ */
 export interface SuitcaseWithRelations extends Suitcase {
 	suitcaseItems: SuitcaseItems[];
 	user: User;

@@ -15,21 +15,46 @@ import type {
 	Item,
 } from '@/types';
 
+/**
+ * Gender classification for user profiles.
+ *
+ * @remarks
+ * - Optional and user-provided
+ * - Should never be required for authentication or authorization
+ * - Included strictly for profile and UX personalization
+ */
 export enum Gender {
 	MALE = 'MALE',
 	FEMALE = 'FEMALE',
 	OTHER = 'OTHER',
 }
 
+/**
+ * External authentication account linked to a user.
+ *
+ * @remarks
+ * - Represents OAuth / social login providers
+ * - A single user may have multiple linked accounts
+ * - `providerId` must be unique per provider
+ */
 export interface Account {
 	id: string;
+	// TODO: change provider to authProvider
 	provider: AuthProvider;
 	providerId: string;
+	// TODO: move the password to the Account
 	createdAt: Date;
 	updatedAt: Date;
 	userId: string;
 }
 
+/**
+ * Core user domain model.
+ *
+ * @remarks
+ * - Represents an authenticated identity
+ * - Security-critical fields must never be exposed to clients
+ */
 export interface User {
 	id: string;
 	firstName: string;
@@ -49,6 +74,13 @@ export interface User {
 	updatedAt: Date;
 }
 
+/**
+ * User model with resolved relations.
+ *
+ * @remarks
+ * - Intended for internal or admin use
+ * - Should never be returned directly to public clients
+ */
 export interface UserWithRelations extends User {
 	userToken: UserToken[];
 	bags: Bag[];
