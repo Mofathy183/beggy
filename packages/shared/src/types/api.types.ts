@@ -6,6 +6,111 @@ import {
 	PaginationSchema,
 } from '@/schemas';
 import * as z from 'zod';
+import type { AuthProvider, Permissions, Profile, User } from '@/types';
+
+/**
+ * Lightweight authenticated user identity snapshot.
+ *
+ * @remarks
+ * - Derived from the core `User` domain model
+ * - Contains only identity and authorization-relevant fields
+ * - Safe to expose to clients via `/auth/me`
+ * - Does NOT include authentication secrets or domain relations
+ */
+export interface AuthMeUser extends Pick<
+	User,
+	'id' | 'email' | 'role' | 'isActive' | 'isEmailVerified' | 'createdAt'
+> {}
+
+/**
+ * Public-facing user profile subset for authenticated sessions.
+ *
+ * @remarks
+ * - Derived from the `Profile` domain model
+ * - Contains personalization and UI-facing fields only
+ * - Excludes sensitive or rarely-used profile attributes
+ * - May be `null` for newly created or incomplete profiles
+ */
+export interface AuthMeProfile extends Pick<
+	Profile,
+	| 'firstName'
+	| 'lastName'
+	| 'avatarUrl'
+	| 'displayName'
+	| 'age'
+	| 'city'
+	| 'country'
+> {}
+
+/**
+ * Authenticated session context returned by `/auth/me`.
+ *
+ * @remarks
+ * This interface represents a complete identity snapshot for the
+ * currently authenticated user and is typically fetched on app startup.
+ *
+ * Includes:
+ * - User identity and account state
+ * - Public profile summary for UI personalization
+ * - Authorization permissions for client-side access control
+ * - Authentication method metadata for account management flows
+ *
+ * This response intentionally avoids returning domain resources
+ * (e.g. bags, items, suitcases) to preserve separation of concerns
+ * and minimize payload size.
+ */
+export interface AuthMe {
+	/**
+	 * Core authenticated user identity.
+	 */
+	user: AuthMeUser;
+
+	/**
+	 * Public profile information associated with the user.
+	 *
+	 * @remarks
+	 * - May be `null` if the profile has not been created yet
+	 * - Should not be assumed to exist on first login or OAuth sign-up
+	 */
+	profile: AuthMeProfile | null;
+
+	/**
+	 * Effective permissions granted to the user.
+	 *
+	 * @remarks
+	 * - Used by the client for feature gating and UI access control
+	 * - Must be treated as authoritative over role-based assumptions
+	 */
+	permissions: Permissions[];
+
+	/**
+	 * Authentication method metadata for the current user.
+	 *
+	 * @remarks
+	 * - Used to drive account security and settings UI
+	 * - Does not expose sensitive authentication data
+	 */
+	auth: {
+		/**
+		 * Authentication providers linked to the user account.
+		 */
+		providers: AuthProvider[];
+
+		/**
+		 * Indicates whether a LOCAL (email/password) account exists.
+		 */
+		hasLocalAccount: boolean;
+
+		/**
+		 * Indicates whether the user has a password set.
+		 *
+		 * @remarks
+		 * - May be `false` for OAuth-only accounts
+		 * - Used to prompt password setup flows
+		 */
+		hasPassword: boolean;
+	};
+}
 
 /**
  * Pagination metadata for collection responses.

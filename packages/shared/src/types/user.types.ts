@@ -3,7 +3,7 @@
  * These types represent the data structure returned from the API endpoints.
  * They are derived from Prisma models but tailored for API responses.
  */
-import { UserSchema, AdminSchema } from '@/schemas';
+import { AdminSchema, ProfileSchema } from '@/schemas';
 import * as z from 'zod';
 
 import type {
@@ -181,6 +181,7 @@ export interface UserWithRelations extends User {
 	suitcases: Suitcase[];
 	items: Item[];
 }
+
 /**
  * Allowed "order by" fields for User queries.
  *
@@ -204,16 +205,12 @@ export enum UserOrderByField {
 // ─────────────────────────────────────────────
 
 // ==================================================
-// USER SCHEMA
+// Profile SCHEMA
 // ==================================================
 // These types belong to self-service user actions
 // Authenticated user modifying their own data
 
-export type EditProfileInput = z.infer<typeof UserSchema.editProfile>;
-export type ChangeEmailInput = z.infer<typeof UserSchema.changeEmail>;
-export type SendVerificationEmailInput = z.infer<
-	typeof UserSchema.sendVerificationEmail
->;
+export type EditProfileInput = z.infer<typeof ProfileSchema.editProfile>;
 
 // ==================================================
 // ADMIN SCHEMA
@@ -231,14 +228,6 @@ export type ChangeRoleInput = z.infer<typeof AdminSchema.changeRole>;
 // Includes fields like `confirmPassword`
 
 // ==================================================
-// USER SCHEMA — INPUT
-// ==================================================
-// User-submitted data that still needs cleanup
-// (e.g. confirmPassword)
-
-export type ChangePasswordInput = z.input<typeof UserSchema.changePassword>;
-
-// ==================================================
 // ADMIN SCHEMA — INPUT
 // ==================================================
 // Admin-submitted data before transformations
@@ -250,14 +239,6 @@ export type CreateUserInput = z.input<typeof AdminSchema.createUser>;
 // What the API / service layer receives
 // Safe, validated, and stripped of sensitive fields
 // ==================================================
-
-// ==================================================
-// USER SCHEMA — PAYLOAD
-// ==================================================
-// Clean, trusted user data
-// Confirmation fields removed
-
-export type ChangePasswordPayload = z.output<typeof UserSchema.changePassword>;
 
 // ==================================================
 // ADMIN SCHEMA — PAYLOAD

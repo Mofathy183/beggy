@@ -82,6 +82,137 @@ export const AuthSchema = {
 		.transform(({ confirmPassword, ...rest }) => rest),
 
 	/**
+	 * Change-email schema.
+	 *
+	 * @remarks
+	 * - Used when a user requests to change their email address
+	 * - Minimal payload for security and clarity
+	 */
+	changeEmail: z.strictObject({
+		/** New email address */
+		email: FieldsSchema.email(),
+	}),
+
+	/**
+	 * Change-password schema.
+	 *
+	 * @remarks
+	 * - Requires the current password for security
+	 * - Uses confirmation pattern for UX consistency
+	 * - confirmPassword is validated but never persisted
+	 */
+	changePassword: z
+		.strictObject({
+			/** User’s current password (required for verification) */
+			currentPassword: FieldsSchema.password(),
+
+			/** New password value */
+			newPassword: FieldsSchema.password(),
+
+			/**
+			 * Confirmation of the new password.
+			 *
+			 * @remarks
+			 * - Plain trimmed string
+			 * - Compared against newPassword via cross-field validation
+			 */
+			confirmPassword: z.string().trim(),
+		})
+		/**
+		 * Cross-field validation.
+		 *
+		 * @remarks
+		 * - Ensures newPassword and confirmPassword match
+		 * - Error is attached to confirmPassword for correct UX
+		 */
+		.superRefine(({ confirmPassword, newPassword }, ctx) => {
+			if (newPassword !== confirmPassword) {
+				ctx.addIssue({
+					path: ['confirmPassword'], // Critical: error shown on correct field
+					code: 'custom',
+					origin: 'string',
+					message: '', // Add your error message here
+				});
+			}
+		})
+		/**
+		 * Output transformation.
+		 *
+		 * @remarks
+		 * - Removes confirmPassword before data reaches services or DB
+		 * - Guarantees sensitive fields are never persisted
+		 */
+		.transform(({ confirmPassword, ...rest }) => rest),
+
+	/**
+	 * Schema for setting a LOCAL password for OAuth-based users.
+	 *
+	 * @remarks
+	 * - Intended for users who signed up via Google, Facebook, etc.
+	 * - Enables password-based login in addition to OAuth
+	 * - Does NOT handle password changes for existing LOCAL accounts
+	 * - Safe to use in authenticated, OAuth-only flows
+	 */
+	setPassword: z
+		.strictObject({
+			/**
+			 * New password to be set for the user.
+			 *
+			 * @remarks
+			 * - Validated via shared password constraints
+			 * - Plain text (never hashed at validation layer)
+			 * - Trimmed to avoid accidental whitespace issues
+			 */
+			newPassword: FieldsSchema.password(),
+
+			/**
+			 * Confirmation of the new password.
+			 *
+			 * @remarks
+			 * - Plain trimmed string
+			 * - Compared against newPassword via cross-field validation
+			 */
+			confirmPassword: z.string().trim(),
+		})
+		/**
+		 * Cross-field validation.
+		 *
+		 * @remarks
+		 * - Ensures newPassword and confirmPassword match
+		 * - Error is attached to confirmPassword for correct UX
+		 */
+		.superRefine(({ confirmPassword, newPassword }, ctx) => {
+			if (newPassword !== confirmPassword) {
+				ctx.addIssue({
+					path: ['confirmPassword'], // Critical: error shown on correct field
+					code: 'custom',
+					origin: 'string',
+					message: '', // Add your error message here
+				});
+			}
+		})
+		/**
+		 * Output transformation.
+		 *
+		 * @remarks
+		 * - Removes confirmPassword before data reaches services or DB
+		 * - Guarantees sensitive fields are never persisted
+		 */
+		.transform(({ confirmPassword, ...rest }) => rest),
+
+	/**
+	 * Send-verification-email schema.
+	 *
+	 * @remarks
+	 * - Used to trigger email verification workflows
+	 * - Minimal surface area for security
+	 */
+	sendVerificationEmail: z.strictObject({
+		/** Target email address */
+		email: FieldsSchema.email(),
+	}),
+
+	/**
 	 * Forgot-password schema.
 	 *
 	 * @remarks

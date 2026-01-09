@@ -226,6 +226,10 @@ export interface RoleOnPermissionWithRelations extends RoleOnPermission {
 
 export type LoginInput = z.infer<typeof AuthSchema.login>;
 export type ForgotPasswordInput = z.infer<typeof AuthSchema.forgotPassword>;
+export type ChangeEmailInput = z.infer<typeof AuthSchema.changeEmail>;
+export type SendVerificationEmailInput = z.infer<
+	typeof AuthSchema.sendVerificationEmail
+>;
 
 // ─────────────────────────────────────────────
 // Schemas with transformations
@@ -242,6 +246,8 @@ export type ForgotPasswordInput = z.infer<typeof AuthSchema.forgotPassword>;
 
 export type SignUpInput = z.input<typeof AuthSchema.signUp>;
 export type ResetPasswordInput = z.input<typeof AuthSchema.resetPassword>;
+export type ChangePasswordInput = z.input<typeof AuthSchema.changePassword>;
+export type SetPasswordInput = z.input<typeof AuthSchema.setPassword>;
 
 // ==================================================
 // What the API / service layer receives
@@ -256,3 +262,5 @@ export type ResetPasswordInput = z.input<typeof AuthSchema.resetPassword>;
 
 export type SignUpPayload = z.output<typeof AuthSchema.signUp>;
 export type ResetPasswordPayload = z.output<typeof AuthSchema.resetPassword>;
+export type ChangePasswordPayload = z.output<typeof AuthSchema.changePassword>;
+export type SetPasswordPayLoad = z.output<typeof AuthSchema.setPassword>;

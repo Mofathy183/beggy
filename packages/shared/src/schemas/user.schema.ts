@@ -3,119 +3,96 @@ import { FieldsSchema } from '@/schemas';
 import { Gender, Role } from '@/types';
 
 /**
- * User-related validation schemas.
+ * User profile–related validation schemas.
  *
  * @remarks
- * - Covers authenticated self-service user actions
- * - Uses Zod strict objects to prevent mass-assignment
- * - Shared between web forms and API endpoints
- * - Sensitive fields are validated but never persisted
+ * - Covers authenticated, self-service profile operations
+ * - Designed for use with `/profile/me`–style endpoints
+ * - Uses Zod `strictObject` to prevent mass-assignment vulnerabilities
+ * - Shared between web forms and API endpoints for consistency
+ * - Validation occurs at the boundary; persistence rules are enforced separately
  */
-export const UserSchema = {
+export const ProfileSchema = {
 	/**
 	 * Edit-profile schema.
 	 *
 	 * @remarks
-	 * - Used when an authenticated user updates their profile information
-	 * - All fields are optional to support partial updates
-	 * - No defaults are applied to avoid unintended overwrites
+	 * - Used when an authenticated user updates their own profile
+	 * - All fields are optional to support partial updates (PATCH semantics)
+	 * - No default values are applied to avoid unintended data overwrites
+	 * - Fields not provided in the payload remain unchanged
 	 */
 	editProfile: z.strictObject({
-		/** Updated first name */
+		/**
+		 * User first name.
+		 *
+		 * @remarks
+		 * - Optional to allow partial updates
+		 * - Validated using shared name constraints
+		 * - Intended for personal identification and UI display
+		 */
 		firstName: FieldsSchema.name('First Name', 'person', false),
 
-		/** Updated last name */
+		/**
+		 * User last name.
+		 *
+		 * @remarks
+		 * - Optional to allow partial updates
+		 * - Uses the same validation rules as first name
+		 * - Stored and displayed as part of the public profile
+		 */
 		lastName: FieldsSchema.name('Last Name', 'person', false),
 
-		/** Optional profile picture URL */
-		profilePicture: FieldsSchema.url(false),
+		/**
+		 * Public avatar image URL.
+		 *
+		 * @remarks
+		 * - Optional profile picture reference
+		 * - Expected to point to an externally managed resource (e.g. CDN)
+		 * - Validation ensures a well-formed URL only
+		 */
+		avatarUrl: FieldsSchema.url(false),
 
-		/** Optional gender selection */
+		/**
+		 * Optional gender selection.
+		 *
+		 * @remarks
+		 * - Stored as an enum for consistency and safety
+		 * - Not required for core functionality
+		 * - Intended for personalization or future AI-driven features
+		 * - Should be handled carefully in downstream consumers
+		 */
 		gender: FieldsSchema.enum<typeof Gender>(Gender, false),
 
-		/** Optional date of birth */
+		/**
+		 * User date of birth.
+		 *
+		 * @remarks
+		 * - Optional field used for derived values (e.g. age)
+		 * - Raw date is validated but should be treated as sensitive data
+		 * - Downstream layers should avoid exposing this directly to clients
+		 */
 		birthDate: FieldsSchema.date(false),
 
-		/** Optional country name */
+		/**
+		 * User country.
+		 *
+		 * @remarks
+		 * - Optional location field
+		 * - Used for regional features (e.g. weather, localization)
+		 * - Validated as a human-readable place name
+		 */
 		country: FieldsSchema.name('Country', 'place', false),
 
-		/** Optional city name */
+		/**
+		 * User city.
+		 *
+		 * @remarks
+		 * - Optional location field
+		 * - Often paired with country for location-based features
+		 * - Free-text but constrained via shared validation rules
+		 */
 		city: FieldsSchema.name('City', 'place', false),
-	}),
-
-	/**
-	 * Change-email schema.
-	 *
-	 * @remarks
-	 * - Used when a user requests to change their email address
-	 * - Minimal payload for security and clarity
-	 */
-	changeEmail: z.strictObject({
-		/** New email address */
-		email: FieldsSchema.email(),
-	}),
-
-	/**
-	 * Change-password schema.
-	 *
-	 * @remarks
-	 * - Requires the current password for security
-	 * - Uses confirmation pattern for UX consistency
-	 * - confirmPassword is validated but never persisted
-	 */
-	changePassword: z
-		.strictObject({
-			/** User’s current password (required for verification) */
-			currentPassword: FieldsSchema.password(),
-
-			/** New password value */
-			newPassword: FieldsSchema.password(),
-
-			/**
-			 * Confirmation of the new password.
-			 *
-			 * @remarks
-			 * - Plain trimmed string
-			 * - Compared against newPassword via cross-field validation
-			 */
-			confirmPassword: z.string().trim(),
-		})
-		/**
-		 * Cross-field validation.
-		 *
-		 * @remarks
-		 * - Ensures newPassword and confirmPassword match
-		 * - Error is attached to confirmPassword for correct UX
-		 */
-		.superRefine(({ confirmPassword, newPassword }, ctx) => {
-			if (newPassword !== confirmPassword) {
-				ctx.addIssue({
-					path: ['confirmPassword'], // Critical: error shown on correct field
-					code: 'custom',
-					origin: 'string',
-					message: '', // Add your error message here
-				});
-			}
-		})
-		/**
-		 * Output transformation.
-		 *
-		 * @remarks
-		 * - Removes confirmPassword before data reaches services or DB
-		 * - Guarantees sensitive fields are never persisted
-		 */
-		.transform(({ confirmPassword, ...rest }) => rest),
-
-	/**
-	 * Send-verification-email schema.
-	 *
-	 * @remarks
-	 * - Used to trigger email verification workflows
-	 * - Minimal surface area for security
-	 */
-	sendVerificationEmail: z.strictObject({
-		/** Target email address */
-		email: FieldsSchema.email(),
 	}),
 };
 
