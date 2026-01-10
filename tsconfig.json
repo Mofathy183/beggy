@@ -51,7 +51,8 @@
 		"baseUrl": ".",
 		"paths": {
 			"@beggy/shared": ["./packages/shared/src"],
-			"@beggy/shared/*": ["./packages/shared/src/*"]
+			"@beggy/shared/*": ["./packages/shared/src/*"],
+			"@beggy/shared-factories": ["./packages/shared/tests/factories"]
 		}
 	},
 	"exclude": ["node_modules", "dist", "build", ".turbo", "coverage"]
