@@ -1,6 +1,8 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+
 	"ui": "tui",
+
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
@@ -8,6 +10,7 @@
 			"outputs": ["dist/**", "build/**", ".next/**"],
 			"env": ["NODE_ENV", "DATABASE_URL", "VITE_API_URL"]
 		},
+
 		"dev": {
 			"cache": false,
 			"persistent": true,
@@ -25,6 +28,7 @@
 				"VITE_API_URL"
 			]
 		},
+
 		"lint": {
 			"dependsOn": ["^lint"],
 			"inputs": [
@@ -37,6 +41,7 @@
 			],
 			"outputs": []
 		},
+
 		"lint:fix": {
 			"dependsOn": ["^lint:fix"],
 			"cache": false,
@@ -48,13 +53,14 @@
 			],
 			"outputs": []
 		},
+
 		"type-check": {
 			"dependsOn": ["^build"],
 			"inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json"],
 			"outputs": []
 		},
+
 		"test": {
-			"dependsOn": ["^build"],
 			"inputs": [
 				"src/**/*.ts",
 				"src/**/*.tsx",
@@ -66,29 +72,35 @@
 			"outputs": ["coverage/**"],
 			"env": ["NODE_ENV", "DATABASE_URL"]
 		},
+
 		"test:coverage": {
-			"dependsOn": ["^build"],
 			"cache": false,
 			"outputs": ["coverage/**"]
 		},
+
 		"clean": {
 			"cache": false
 		},
+
 		"prisma:generate": {
 			"cache": false,
 			"outputs": ["node_modules/.prisma/**"]
 		},
+
 		"prisma:migrate": {
 			"cache": false,
 			"env": ["DATABASE_URL"]
 		},
+
 		"prisma:studio": {
 			"cache": false,
 			"persistent": true,
 			"env": ["DATABASE_URL"]
 		}
 	},
+
 	"globalEnv": ["NODE_ENV", "CI"],
+
 	"globalDependencies": [
 		"**/.env.*local",
 		"**/.env",

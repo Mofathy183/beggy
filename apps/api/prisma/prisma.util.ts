@@ -14,7 +14,7 @@ import {
 	getContainerStatus,
 	calculateItemCount,
 	//*======={Suitcase and Bags}========
-} from '@beggy/shared/lib';
+} from '@beggy/shared/containers';
 
 // ============================================================================
 // USER STATUS & DISPLAY HELPERS

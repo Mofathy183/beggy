@@ -21,6 +21,9 @@
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"type-check": "tsc --noEmit"

@@ -26,6 +26,9 @@
 		"forceConsistentCasingInFileNames": true,
 		"isolatedModules": true,
 
+		// Testing
+		"types": ["vitest/globals"], // Enables global Vitest APIs (describe, it, expect)
+
 		// Emit
 		"declaration": true,
 		"declarationMap": true,
