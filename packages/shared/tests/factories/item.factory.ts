@@ -6,7 +6,7 @@ import {
 	VolumeUnit,
 } from '@beggy/shared/types';
 
-type ItemFactoryOverrides = Partial<
+export type ItemFactoryOverrides = Partial<
 	Pick<
 		Item,
 		| 'name'

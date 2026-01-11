@@ -47,26 +47,26 @@ export const normalizeRound = (
 };
 
 /**
- * Normalizes an ISO date string into a JavaScript Date instance.
+ * Normalizes a Date value while preserving nullish semantics.
  *
- * - Converts valid ISO date strings (`YYYY-MM-DD`) to `Date`
- * - Preserves `null` and `undefined` values exactly
+ * - Accepts a JavaScript `Date` instance
+ * - Returns a new `Date` instance to avoid accidental mutation
+ * - Preserves `null` and `undefined` exactly
  *
- * This function is intended for use with Zod `.transform()` when:
+ * Intended for use with Zod `.transform()` in shared schemas where:
+ * - Validation operates on `Date` objects
  * - Schemas are shared between frontend and backend
- * - Date values arrive as strings from forms or APIs
  * - Optional fields must retain their nullish semantics
  *
- * @param val - ISO date string, or nullish value
- * @returns A Date instance, or the original nullish value
+ * @param val - A `Date` instance, or a nullish value
+ * @returns A normalized `Date` instance, or the original nullish value
  */
-export const normalizeIsoDate = (
-	val: string | null | undefined
+export const normalizeDate = (
+	val: Date | null | undefined
 ): Date | null | undefined => {
-	// Preserve null and undefined for optional fields
 	if (val == null) return val;
 
-	// Convert ISO date string to JavaScript Date
+	// Return a new Date instance to avoid mutation side effects
 	return new Date(val);
 };
 

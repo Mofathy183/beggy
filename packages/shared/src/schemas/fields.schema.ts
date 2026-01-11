@@ -5,7 +5,7 @@ import {
 	createNameField,
 	createNumberField,
 	normalizeTrim,
-	normalizeIsoDate,
+	normalizeDate,
 } from '@/utils';
 import type { NameFieldType, NumericEntity, NumericMetric } from '@/types';
 
@@ -47,38 +47,65 @@ export const FieldsSchema = {
 	) => createNameField(type, fieldName, isRequired),
 
 	/**
-	 * Email field validator.
+	 * Creates a Zod schema for validating email input.
 	 *
-	 * - Enforces valid email format
-	 * - Normalizes casing (lowercase)
-	 * - Trims whitespace
-	 * - Returns `null` for empty optional values
+	 * Responsibilities:
+	 * - Validates email format using Zod's built-in email validator
+	 * - Trims leading and trailing whitespace
+	 * - Normalizes email casing to lowercase
+	 * - Preserves `null` and `undefined` when the field is optional
 	 *
-	 * @param isRequired - Whether the email is required
+	 * Design notes:
+	 * - Email addresses are treated as case-insensitive across the system
+	 * - Uppercase input is normalized rather than rejected for better UX
+	 * - Normalization occurs *before* validation to ensure consistent storage
+	 * - Length constraints are enforced to align with common DB limits (≤ 255 chars)
+	 *
+	 * Usage:
+	 * - Use `email()` for required email fields
+	 * - Use `email(false)` for optional email fields
+	 *
+	 * @param isRequired - Whether the email field is required (defaults to `true`)
+	 * @returns A Zod schema for validating and normalizing email input
 	 */
 	email: (isRequired: boolean = true) => {
-		const baseSchema = z
-			.email({
-				error: 'That email doesn’t quite look right — let’s make sure it’s something like traveler@example.com.',
-			})
-			.trim();
+		/**
+		 * Base email schema with preprocessing applied.
+		 *
+		 * Preprocessing runs before validation and is responsible for:
+		 * - Short-circuiting nullish values so optional semantics are preserved
+		 * - Trimming whitespace to avoid accidental user input errors
+		 * - Normalizing casing to lowercase to ensure consistent comparison/storage
+		 */
+		const baseSchema = z.preprocess(
+			(input) => {
+				// Preserve null / undefined for optional fields
+				if (input == null) return input;
 
-		if (isRequired)
-			return baseSchema
-				.min(1, {
-					error: 'I’ll need your email before we can move forward — even seasoned travelers need a boarding pass!',
+				// Normalize string input before validation
+				if (typeof input === 'string')
+					return input.trim().toLowerCase();
+
+				// Pass through all other input types untouched
+				return input;
+			},
+			z
+				.email({
+					error: 'That email doesn’t quite look right — let’s make sure it’s something like traveler@example.com.',
 				})
 				.max(255, {
-					error: 'That email’s a bit long — let’s keep it under 255 characters so systems don’t get confused.',
+					error: 'That email’s looking a bit long — shorter is smoother for logins.',
 				})
-				.transform((val) => normalizeTrim(val)?.toLowerCase());
+		);
 
-		return baseSchema
-			.max(255, {
-				error: 'That email’s looking a bit long — shorter is smoother for logins.',
-			})
-			.nullish()
-			.transform((val) => normalizeTrim(val)?.toLowerCase());
+		/**
+		 * Return required or optional variant of the schema.
+		 *
+		 * `.nullish()` allows both `null` and `undefined`, which is useful for:
+		 * - PATCH / partial update endpoints
+		 * - Optional profile fields
+		 */
+		return isRequired ? baseSchema : baseSchema.nullish();
 	},
 
 	/**
@@ -153,18 +180,19 @@ export const FieldsSchema = {
 	},
 
 	/**
-	 * ISO date field validator.
+	 * Date field validator.
 	 *
-	 * - Accepts ISO date strings
+	 * - Accepts JavaScript `Date` instances
 	 * - Enforces reasonable historical and future bounds
+	 * - Preserves nullish semantics for optional fields
 	 *
-	 * @param isRequired - Whether date is required
+	 * @param isRequired - Whether the date is required
 	 */
 	date: (isRequired: boolean = true) => {
-		const MIN_DATE = new Date('1900-01-01').getTime();
-		const MAX_DATE = Date.now();
+		const MIN_DATE = new Date('1900-01-01');
+		const MAX_DATE = new Date();
 
-		const baseSchema = z.iso.date({
+		const baseSchema = z.date({
 			error: 'That doesn’t look like a valid date — let’s try something like 2025-12-26.',
 		});
 
@@ -176,8 +204,8 @@ export const FieldsSchema = {
 					.max(MAX_DATE, {
 						error: 'That date’s ahead of schedule — future trips aren’t bookable just yet!',
 					})
-					.transform(normalizeIsoDate)
-			: baseSchema.nullish().transform(normalizeIsoDate);
+					.transform(normalizeDate)
+			: baseSchema.nullish().transform(normalizeDate);
 	},
 
 	/**

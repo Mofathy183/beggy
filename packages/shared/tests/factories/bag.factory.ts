@@ -1,5 +1,13 @@
 import { faker } from '@faker-js/faker';
-import { Bag, BagFeature, BagType, Size, Material } from '@beggy/shared/types';
+import {
+	Bag,
+	BagFeature,
+	BagType,
+	Size,
+	Material,
+	BagItems,
+} from '@beggy/shared/types';
+import { type ItemFactoryOverrides, buildItem } from '@beggy/shared-factories';
 
 type BagFactoryOverrides = Partial<
 	Pick<
@@ -46,6 +54,17 @@ type BagFactoryOptions = {
 	 * Defaults to `false` to reflect real-world usage.
 	 */
 	withDetails?: boolean;
+};
+
+type BagItemsOptions = {
+	/** Owning user identifier */
+	userId: string;
+
+	/** Existing bag identifier (optional) */
+	bagId?: string;
+
+	/** Existing item identifier (optional) */
+	itemId?: string;
 };
 
 /**
@@ -145,3 +164,56 @@ export const buildBags = (
 	userId: string,
 	overrides: BagFactoryOverrides = {}
 ): Bag[] => Array.from({ length: count }, () => buildBag(userId, overrides));
+
+/**
+ * Creates a **persisted** BagItems join entity.
+ *
+ * Use for:
+ * - weight and capacity calculations
+ * - bag aggregation tests
+ * - join-table query simulations
+ *
+ * IMPORTANT:
+ * - Always returns persisted `Bag` and `Item`
+ * - Generated entities are consistent and owned by the same user
+ */
+export const buildBagItem = (
+	options: BagItemsOptions,
+	bagOverrides: BagFactoryOverrides = {},
+	itemOverrides: ItemFactoryOverrides = {}
+): BagItems => {
+	const createdAt = faker.date.past();
+	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
+
+	const bag = buildBag(options.userId, bagOverrides);
+	const item = buildItem(options.userId, itemOverrides);
+
+	return {
+		bagId: options.bagId ?? bag.id,
+		itemId: options.itemId ?? item.id,
+
+		bag,
+		item,
+
+		createdAt,
+		updatedAt,
+	};
+};
+
+/**
+ * Creates multiple **persisted** BagItems join entities.
+ *
+ * Useful for:
+ * - testing lists
+ * - bulk calculations
+ * - pagination scenarios
+ */
+export const buildBagItems = (
+	count: number,
+	options: BagItemsOptions,
+	bagOverrides: BagFactoryOverrides = {},
+	itemOverrides: ItemFactoryOverrides = {}
+): BagItems[] =>
+	Array.from({ length: count }, () =>
+		buildBagItem(options, bagOverrides, itemOverrides)
+	);
