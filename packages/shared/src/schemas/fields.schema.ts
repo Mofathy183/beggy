@@ -255,6 +255,19 @@ export const FieldsSchema = {
 		isRequired: boolean = true
 	) => createNumberField(type, metric, isRequired),
 
+	/**
+	 * Array field validator.
+	 *
+	 * @remarks
+	 * - Delegates validation logic to `createArrayField`
+	 * - Provides a concise, consistent API for schema authors
+	 * - Keeps field definitions declarative and readable
+	 *
+	 * @param elementSchema - Zod schema describing a single array element
+	 * @param isRequired - Whether the array field is required (default: true)
+	 *
+	 * @returns A Zod schema validating an array of elements
+	 */
 	array: (elementSchema: z.ZodTypeAny, isRequired: boolean = true) =>
 		createArrayField(elementSchema, isRequired),
 };

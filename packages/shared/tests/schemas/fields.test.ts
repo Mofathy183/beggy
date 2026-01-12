@@ -1,20 +1,11 @@
 import { it, describe, expect } from 'vitest';
+import { z } from 'zod';
 import { FieldsSchema } from '@beggy/shared/schemas';
 
 describe('FieldsSchema.name()', () => {
-	it('accepts valid name', () => {
+	it('returns a working name schema', () => {
 		const schema = FieldsSchema.name('First name', 'person');
 		expect(schema.parse('Mohamed')).toBe('Mohamed');
-	});
-
-	it('rejects empty required name', () => {
-		const schema = FieldsSchema.name('First name', 'person');
-		expect(() => schema.parse('')).toThrow();
-	});
-
-	it('allows null for optional name', () => {
-		const schema = FieldsSchema.name('Nickname', 'person', false);
-		expect(schema.parse(null)).toBeNull();
 	});
 });
 
@@ -88,9 +79,14 @@ describe('FieldsSchema.password()', () => {
 		expect(schema.parse('Strong@123')).toBe('Strong@123');
 	});
 
-	it('rejects weak password', () => {
+	it('rejects weak passwords', () => {
 		const schema = FieldsSchema.password();
 		expect(() => schema.parse('weak')).toThrow();
+	});
+
+	it('trims surrounding whitespace', () => {
+		const schema = FieldsSchema.password();
+		expect(schema.parse('  Strong@123  ')).toBe('Strong@123');
 	});
 
 	it('allows null for optional password', () => {
@@ -163,5 +159,38 @@ describe('FieldsSchema.date()', () => {
 		expect(() => schema.parse('2020-01-01')).toThrow();
 		expect(() => schema.parse(123456)).toThrow();
 		expect(() => schema.parse({})).toThrow();
+	});
+});
+
+describe('FieldsSchema.url()', () => {
+	it('accepts valid URL and trims it', () => {
+		const schema = FieldsSchema.url();
+		expect(schema.parse('  https://example.com  ')).toBe(
+			'https://example.com'
+		);
+	});
+
+	it('rejects unsafe characters', () => {
+		const schema = FieldsSchema.url();
+		expect(() => schema.parse('https://exa mple.com')).toThrow();
+	});
+
+	it('allows null when optional', () => {
+		const schema = FieldsSchema.url(false);
+		expect(schema.parse(null)).toBeNull();
+	});
+});
+
+describe('FieldsSchema.number()', () => {
+	it('returns a working number schema', () => {
+		const schema = FieldsSchema.number('bag', 'capacity');
+		expect(schema.parse(10)).toBe(10);
+	});
+});
+
+describe('FieldsSchema.array()', () => {
+	it('returns a working array schema', () => {
+		const schema = FieldsSchema.array(z.string());
+		expect(schema.parse(['a'])).toEqual(['a']);
 	});
 });

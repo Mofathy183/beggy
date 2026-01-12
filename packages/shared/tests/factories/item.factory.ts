@@ -86,10 +86,11 @@ export const itemFactory = (
 		overrides.volumeUnit ??
 		faker.helpers.arrayElement(Object.values(VolumeUnit)),
 
-	isFragile: overrides.isFragile ?? faker.datatype.boolean(),
+	isFragile: overrides.isFragile ?? false,
 
 	color:
-		overrides.color ?? (options.withDetails ? faker.color.human() : null),
+		overrides.color ??
+		(options.withDetails ? faker.color.human() : 'black'),
 });
 
 /**

@@ -106,8 +106,7 @@ export const suitcaseFactory = (
 	size: overrides.size ?? faker.helpers.arrayElement(Object.values(Size)),
 
 	maxCapacity:
-		overrides.maxCapacity ??
-		faker.number.float({ min: 30, max: 120, fractionDigits: 2 }),
+		overrides.maxCapacity ?? faker.number.int({ min: 20, max: 120 }),
 
 	maxWeight:
 		overrides.maxWeight ??
@@ -118,7 +117,8 @@ export const suitcaseFactory = (
 		faker.number.float({ min: 3, max: 7, fractionDigits: 2 }),
 
 	color:
-		overrides.color ?? (options.withDetails ? faker.color.human() : null),
+		overrides.color ??
+		(options.withDetails ? faker.color.human() : 'black'),
 
 	material:
 		overrides.material ??

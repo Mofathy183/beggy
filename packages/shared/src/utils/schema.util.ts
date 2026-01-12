@@ -193,5 +193,6 @@ export const createArrayField = (
 				 */
 				.max(5, {
 					error: 'You’ve got quite a few items there — maybe pare it back to essentials for an easier trip.',
-				});
+				})
+				.nullish();
 };

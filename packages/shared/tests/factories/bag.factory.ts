@@ -92,17 +92,19 @@ export const bagFactory = (
 	size: overrides.size ?? faker.helpers.arrayElement(Object.values(Size)),
 
 	maxCapacity:
-		overrides.maxCapacity ??
-		faker.number.float({ min: 20, max: 120, fractionDigits: 2 }),
+		overrides.maxCapacity ?? faker.number.int({ min: 20, max: 120 }),
+
 	maxWeight:
 		overrides.maxWeight ??
 		faker.number.float({ min: 5, max: 40, fractionDigits: 2 }),
+
 	bagWeight:
 		overrides.bagWeight ??
 		faker.number.float({ min: 1, max: 5, fractionDigits: 2 }),
 
 	color:
-		overrides.color ?? (options.withDetails ? faker.color.human() : null),
+		overrides.color ??
+		(options.withDetails ? faker.color.human() : 'black'),
 
 	material:
 		overrides.material ??
