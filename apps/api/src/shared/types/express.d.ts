@@ -1,7 +1,7 @@
 import { Role } from '@prisma/generated/prisma/enums';
 import type {
 	AuthTokens,
-	NormalizedPagination,
+	PaginationPayload,
 	AuthUser,
 	AppAbility,
 } from '@shared/types';
@@ -30,7 +30,7 @@ declare global {
 			 * - Includes derived values such as `offset`
 			 * - Undefined when pagination is disabled for the route
 			 */
-			pagination?: NormalizedPagination;
+			pagination?: PaginationPayload;
 
 			/**
 			 * Normalized ordering parameters extracted from the query string.

@@ -54,7 +54,7 @@ export interface OrderBy {
  * }
  * ```
  */
-export interface NormalizedPagination extends PaginationParams {
+export interface PaginationPayload extends PaginationParams {
 	/**
 	 * Zero-based offset calculated from `page` and `limit`.
 	 *

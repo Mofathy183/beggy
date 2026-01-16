@@ -1,9 +1,15 @@
-import { prisma, type ExtendedPrismaClient } from '@prisma';
-import { birthOfDate, haveProfilePicture } from '../utils/userHelper.js';
-import { hashingPassword } from '../utils/hash.js';
-import { ErrorHandler } from '../utils/error.js';
-import { statusCode } from '../config/status.js';
-import { id } from 'date-fns/locale';
+import { prisma as Prisma, type ExtendedPrismaClient } from '@prisma';
+import { UserFilterInput, UserOrderByInput } from '@beggy/shared/types';
+
+export class UserService {
+	private readonly prisma!: ExtendedPrismaClient;
+	constructor() {
+		this.prisma = Prisma;
+	}
+
+	getAll(filter: UserFilterInput, orderBy: UserOrderByInput) {}
+}
+
 //*====================================================={ ADMIN }================================================================//
 /**
  * @function addUser
