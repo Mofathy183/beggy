@@ -12,13 +12,15 @@ import {
 import { ItemOrderByField, ItemCategory } from '../types/item.types.js';
 import { SuitcaseType, WheelType } from '../types/suitcase.types.js';
 import { OrderDirection } from '../types/api.types.js';
-import { ProfileOrderByField } from '../types/user.types.js';
+import { ProfileOrderByField } from '../types/profile.types.js';
 import { SuitcaseOrderByField } from '../types/suitcase.types.js';
 import type { NumericEntity, NumericMetric } from '../types/schema.types.js';
 import { normalizeRound } from '../utils/schema.util.js';
 import { NUMBER_CONFIG } from '../constants/constraints.js';
 import { FieldsSchema } from '../schemas/fields.schema.js';
 import * as z from 'zod';
+import { Role } from '../types/auth.types.js';
+import { UserOrderByField } from '../types/user.types.js';
 
 /**
  * Factory for building "order by" query schemas.
@@ -177,6 +179,62 @@ export const numberRangeSchema = <M extends NumericEntity>(
  */
 export const QuerySchema = {
 	/**
+	 * User filtering schema.
+	 *
+	 * @remarks
+	 * - Intended for administrative or privileged list queries
+	 * - All fields are optional to allow flexible combinations
+	 * - Mapped directly to Prisma `where` conditions downstream
+	 */
+	userFilter: z.strictObject({
+		/**
+		 * User email address.
+		 *
+		 * @remarks
+		 * - Optional exact-match filter
+		 * - Useful for locating a specific account
+		 * - Case-sensitivity should be handled at the DB layer if needed
+		 */
+		email: FieldsSchema.email(false),
+
+		/**
+		 * User role filter.
+		 *
+		 * @remarks
+		 * - Restricts results to a specific system role
+		 * - Enum-based validation prevents privilege escalation attempts
+		 */
+		role: FieldsSchema.enum<typeof Role>(Role, false),
+
+		/**
+		 * Account active status.
+		 *
+		 * @remarks
+		 * - Used for moderation and lifecycle management
+		 * - Commonly paired with pagination and ordering
+		 */
+		isActive: z.boolean().optional(),
+
+		/**
+		 * Email verification status.
+		 *
+		 * @remarks
+		 * - Helps identify unverified or manually verified accounts
+		 * - Useful for compliance or onboarding audits
+		 */
+		isEmailVerified: z.boolean().optional(),
+
+		/**
+		 * User creation date range.
+		 *
+		 * @remarks
+		 * - Supports filtering users created within a specific period
+		 * - Typically translated into `gte` / `lte` Prisma filters
+		 */
+		createdAt: dateRangeSchema.optional(),
+	}),
+
+	/**
 	 * Profile filter schema.
 	 *
 	 * @remarks
@@ -249,6 +307,7 @@ export const QuerySchema = {
  * - Prevents ordering by unauthorized fields
  */
 export const OrderByQuerySchemas = {
+	userOrderBy: buildOrderBySchema<typeof UserOrderByField>(UserOrderByField),
 	profileOrderBy:
 		buildOrderBySchema<typeof ProfileOrderByField>(ProfileOrderByField),
 	itemOrderBy: buildOrderBySchema<typeof ItemOrderByField>(ItemOrderByField),

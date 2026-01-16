@@ -1,101 +1,7 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema.js';
 import { Role } from '../types/auth.types.js';
-import { Gender } from '../types/user.types.js';
-
-/**
- * User profile–related validation schemas.
- *
- * @remarks
- * - Covers authenticated, self-service profile operations
- * - Designed for use with `/profile/me`–style endpoints
- * - Uses Zod `strictObject` to prevent mass-assignment vulnerabilities
- * - Shared between web forms and API endpoints for consistency
- * - Validation occurs at the boundary; persistence rules are enforced separately
- */
-export const ProfileSchema = {
-	/**
-	 * Edit-profile schema.
-	 *
-	 * @remarks
-	 * - Used when an authenticated user updates their own profile
-	 * - All fields are optional to support partial updates (PATCH semantics)
-	 * - No default values are applied to avoid unintended data overwrites
-	 * - Fields not provided in the payload remain unchanged
-	 */
-	editProfile: z.strictObject({
-		/**
-		 * User first name.
-		 *
-		 * @remarks
-		 * - Optional to allow partial updates
-		 * - Validated using shared name constraints
-		 * - Intended for personal identification and UI display
-		 */
-		firstName: FieldsSchema.name('First Name', 'person', false),
-
-		/**
-		 * User last name.
-		 *
-		 * @remarks
-		 * - Optional to allow partial updates
-		 * - Uses the same validation rules as first name
-		 * - Stored and displayed as part of the public profile
-		 */
-		lastName: FieldsSchema.name('Last Name', 'person', false),
-
-		/**
-		 * Public avatar image URL.
-		 *
-		 * @remarks
-		 * - Optional profile picture reference
-		 * - Expected to point to an externally managed resource (e.g. CDN)
-		 * - Validation ensures a well-formed URL only
-		 */
-		avatarUrl: FieldsSchema.url(false),
-
-		/**
-		 * Optional gender selection.
-		 *
-		 * @remarks
-		 * - Stored as an enum for consistency and safety
-		 * - Not required for core functionality
-		 * - Intended for personalization or future AI-driven features
-		 * - Should be handled carefully in downstream consumers
-		 */
-		gender: FieldsSchema.enum<typeof Gender>(Gender, false),
-
-		/**
-		 * User date of birth.
-		 *
-		 * @remarks
-		 * - Optional field used for derived values (e.g. age)
-		 * - Raw date is validated but should be treated as sensitive data
-		 * - Downstream layers should avoid exposing this directly to clients
-		 */
-		birthDate: FieldsSchema.date(false),
-
-		/**
-		 * User country.
-		 *
-		 * @remarks
-		 * - Optional location field
-		 * - Used for regional features (e.g. weather, localization)
-		 * - Validated as a human-readable place name
-		 */
-		country: FieldsSchema.name('Country', 'place', false),
-
-		/**
-		 * User city.
-		 *
-		 * @remarks
-		 * - Optional location field
-		 * - Often paired with country for location-based features
-		 * - Free-text but constrained via shared validation rules
-		 */
-		city: FieldsSchema.name('City', 'place', false),
-	}),
-};
+import { Gender } from '../types/profile.types.js';
 
 /**
  * Admin-related validation schemas.
@@ -137,8 +43,8 @@ export const AdminSchema = {
 			 */
 			confirmPassword: z.string().trim(),
 
-			/** Optional profile picture URL */
-			profilePicture: FieldsSchema.url(false),
+			/** Optional Avatar URL */
+			avatarUrl: FieldsSchema.url(false),
 
 			/** Optional gender selection */
 			gender: FieldsSchema.enum<typeof Gender>(Gender, false),
@@ -165,7 +71,8 @@ export const AdminSchema = {
 					path: ['confirmPassword'], // Critical: error shown on correct field
 					code: 'custom',
 					origin: 'string',
-					message: '', // Add your error message here
+					message:
+						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
 		})
@@ -189,4 +96,47 @@ export const AdminSchema = {
 		/** New role to assign to the user */
 		role: FieldsSchema.enum<typeof Role>(Role),
 	}),
+
+	/**
+	 * Update user account status schema.
+	 *
+	 * @remarks
+	 * - Used by administrators to control a user's operational and trust state
+	 * - Intended for moderation, enforcement, and manual verification workflows
+	 * - Not exposed to self-service user endpoints
+	 */
+	updateStatus: z
+		.strictObject({
+			/**
+			 * Indicates whether the user account is active.
+			 *
+			 * @remarks
+			 * - When `false`, the user should be prevented from authenticating
+			 * - Used for suspensions, bans, or temporary deactivation
+			 * - Business logic should enforce access restrictions downstream
+			 */
+			isActive: z.boolean().optional(),
+
+			/**
+			 * Indicates whether the user's email address is verified.
+			 *
+			 * @remarks
+			 * - Represents an administrative trust decision
+			 * - May be set manually in support or moderation scenarios
+			 * - Should not imply ownership of the email without verification evidence
+			 */
+			isEmailVerified: z.boolean().optional(),
+		})
+		/**
+		 * Structural validation.
+		 *
+		 * @remarks
+		 * - Prevents empty PATCH requests
+		 * - Ensures at least one status field is provided
+		 * - Avoids no-op updates that would still trigger DB writes and audit logs
+		 */
+		.refine((data) => Object.keys(data).length > 0, {
+			message:
+				'Looks like there’s nothing to update just yet — pick at least one status change before we move forward, so the system knows what’s new.',
+		}),
 };

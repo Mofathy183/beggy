@@ -5,5 +5,6 @@ export * from './auth.schema.js';
 export * from './bag.schema.js';
 export * from './item.schema.js';
 export * from './suitcase.schema.js';
+export * from './profile.schema.js';
 export * from './user.schema.js';
 // export * from './weather.schema.js';

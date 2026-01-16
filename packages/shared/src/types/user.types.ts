@@ -4,25 +4,12 @@
  * They are derived from Prisma models but tailored for API responses.
  */
 import * as z from 'zod';
-import { AdminSchema, ProfileSchema } from '../schemas/user.schema.js';
+import { AdminSchema } from '../schemas/user.schema.js';
 import type { AuthProvider, Role, UserToken } from '../types/auth.types.js';
 import type { Profile } from '../types/profile.types.js';
 import type { Bag } from '../types/bag.types.js';
 import type { Suitcase } from '../types/suitcase.types.js';
 import type { Item } from '../types/item.types.js';
-/**
- * Gender classification for user profiles.
- *
- * @remarks
- * - Optional and user-provided
- * - Should never be required for authentication or authorization
- * - Included strictly for profile and UX personalization
- */
-export enum Gender {
-	MALE = 'MALE',
-	FEMALE = 'FEMALE',
-	OTHER = 'OTHER',
-}
 
 /**
  * Authentication account linked to a user.
@@ -177,17 +164,18 @@ export interface UserWithRelations extends User {
 }
 
 /**
- * Allowed "order by" fields for Profile queries.
+ * Allowed user ordering fields.
  *
  * @remarks
- * - Exposes only non-sensitive, profile-facing fields
- * - Prevents sorting by internal or private profile attributes
+ * - Defines the whitelist of sortable fields for user list endpoints
+ * - Prevents arbitrary or unsafe ordering inputs
+ * - Designed to be consumed by a shared `orderBy` schema builder
  */
-export enum ProfileOrderByField {
+export enum UserOrderByField {
 	CREATED_AT = 'createdAt',
 	UPDATED_AT = 'updatedAt',
-	FIRST_NAME = 'firstName',
-	LAST_NAME = 'lastName',
+	EMAIL = 'email',
+	ROLE = 'role',
 }
 
 // ─────────────────────────────────────────────
@@ -199,20 +187,14 @@ export enum ProfileOrderByField {
 // ─────────────────────────────────────────────
 
 // ==================================================
-// Profile SCHEMA
-// ==================================================
-// These types belong to self-service user actions
-// Authenticated user modifying their own data
-
-export type EditProfileInput = z.infer<typeof ProfileSchema.editProfile>;
-
-// ==================================================
 // ADMIN SCHEMA
 // ==================================================
 // These types belong to privileged administrative actions
 // Require elevated permissions
 
 export type ChangeRoleInput = z.infer<typeof AdminSchema.changeRole>;
+
+export type UpdateStatusInput = z.infer<typeof AdminSchema.updateStatus>;
 
 // ─────────────────────────────────────────────
 // Schemas with transformations

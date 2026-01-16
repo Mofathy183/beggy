@@ -5,6 +5,8 @@ import type {
 	SuitcasesOrderByWithAggregationInput,
 } from '@prisma/generated/prisma/internal/prismaNamespace';
 import type {
+	UserFilterInput,
+	UserOrderByInput,
 	ProfileFilterInput,
 	ProfileOrderByInput,
 	BagFilterInput,
@@ -14,8 +16,9 @@ import type {
 	SuitcaseFilterInput,
 	SuitcaseOrderByInput,
 } from '@beggy/shared/types';
-import type { ValidationFieldErrors, ZodErrorTree } from '@shared/types';
 import {
+	UserWhereInput,
+	UserOrderByWithAggregationInput,
 	ProfileWhereInput,
 	ProfileOrderByWithAggregationInput,
 	BagsWhereInput,
@@ -23,6 +26,7 @@ import {
 	SuitcasesWhereInput,
 	ItemsWhereInput,
 } from '@prisma-generated/models';
+import type { ValidationFieldErrors, ZodErrorTree } from '@shared/types';
 
 /**
  * Recursively formats a single Zod error tree node into a ValidationFieldErrors structure.
@@ -186,6 +190,64 @@ export const buildOrderBy = <T extends string>(
 type BuildQuery<W, O> = {
 	where: W;
 	orderBy: O;
+};
+
+//*========================================================================
+//*#################### User query builder ################################
+//*========================================================================
+
+/**
+ * Applies basic user-level filters to a Prisma `where` clause.
+ *
+ * @remarks
+ * - Handles simple scalar filters only (email, role, status flags)
+ * - Mutates the provided `where` object intentionally
+ * - Complex filters (e.g. date ranges) are handled separately
+ *
+ * @param where - Mutable Prisma `UserWhereInput` object
+ * @param filter - Validated user filter input
+ */
+const applyUserBasics = (where: UserWhereInput, filter: UserFilterInput) => {
+	if (filter.email)
+		where.email = { contains: filter.email, mode: 'insensitive' };
+	if (filter.role) where.role = filter.role;
+	if (filter.isActive) where.isActive = filter.isActive;
+	if (filter.isEmailVerified) where.isEmailVerified = filter.isEmailVerified;
+};
+
+/**
+ * Builds a complete Prisma query for listing users.
+ *
+ * @remarks
+ * - Combines filtering, ordering, and date range constraints
+ * - Acts as the single source of truth for user list queries
+ * - Returns a structure directly consumable by Prisma
+ *
+ * @param filter - Validated user filter input
+ * @param orderBy - Validated user order-by input
+ *
+ * @returns Prisma-compatible `where` and `orderBy` clauses
+ */
+export const buildUserQuery = (
+	filter: UserFilterInput,
+	orderBy: UserOrderByInput
+): BuildQuery<UserWhereInput, UserOrderByWithAggregationInput> => {
+	const where: UserWhereInput = {};
+
+	applyUserBasics(where, filter);
+
+	where.createdAt = buildDateRange({
+		from: filter.createdAt?.from,
+		to: filter.createdAt?.to,
+	});
+
+	return {
+		where,
+		orderBy: buildOrderBy<keyof UserOrderByWithAggregationInput>(
+			orderBy.orderBy ?? 'createdAt',
+			orderBy.direction as SortOrder
+		),
+	};
 };
 
 //*========================================================================

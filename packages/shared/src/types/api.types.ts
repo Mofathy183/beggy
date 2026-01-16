@@ -339,6 +339,16 @@ export enum OrderDirection {
 // ==================================================
 
 /**
+ * User filtering query input.
+ *
+ * @remarks
+ * - Derived directly from Zod schema
+ * - Used for validating and typing User list filters
+ * - Supports role, status, and creation date filtering
+ */
+export type UserFilterInput = z.infer<typeof QuerySchema.userFilter>;
+
+/**
  * Profile filtering query input.
  *
  * @remarks
@@ -377,6 +387,15 @@ export type ItemFilterInput = z.infer<typeof QuerySchema.itemFilter>;
 // ==================================================
 // ORDERBY QUERY
 // ==================================================
+
+/**
+ * User "order by" query input.
+ *
+ * @remarks
+ * - Restricts ordering to allowed, indexed user fields
+ * - Prevents sorting by sensitive or internal-only columns
+ */
+export type UserOrderByInput = z.infer<typeof OrderByQuerySchemas.userOrderBy>;
 
 /**
  * Profile "order by" query input.

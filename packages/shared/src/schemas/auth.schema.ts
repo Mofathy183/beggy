@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema.js';
-import { Gender } from '../types/user.types.js';
+import { Gender } from '../types/profile.types.js';
 
 /**
  * Authentication-related validation schemas.
@@ -68,7 +68,8 @@ export const AuthSchema = {
 					path: ['confirmPassword'], // Critical: Error on correct field
 					code: 'custom',
 					origin: 'string',
-					message: '', // Add your error message here
+					message:
+						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
 		})
@@ -131,7 +132,8 @@ export const AuthSchema = {
 					path: ['confirmPassword'], // Critical: error shown on correct field
 					code: 'custom',
 					origin: 'string',
-					message: '', // Add your error message here
+					message:
+						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
 		})
@@ -187,7 +189,8 @@ export const AuthSchema = {
 					path: ['confirmPassword'], // Critical: error shown on correct field
 					code: 'custom',
 					origin: 'string',
-					message: '', // Add your error message here
+					message:
+						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
 		})
@@ -248,7 +251,8 @@ export const AuthSchema = {
 					path: ['confirmPassword'], // Critical: Error on correct field
 					code: 'custom',
 					origin: 'string',
-					message: '', // Add your error message here
+					message:
+						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
 		})

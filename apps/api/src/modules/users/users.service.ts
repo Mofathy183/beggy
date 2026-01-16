@@ -1,5 +1,6 @@
 import { prisma as Prisma, type ExtendedPrismaClient } from '@prisma';
-import { UserFilterInput, UserOrderByInput } from '@beggy/shared/types';
+import { appErrorMap, bul } from '@shared/utils';
+import { ProfileFilterInput, ProfileOrderByInput } from '@beggy/shared/types';
 
 export class UserService {
 	private readonly prisma!: ExtendedPrismaClient;
@@ -7,7 +8,9 @@ export class UserService {
 		this.prisma = Prisma;
 	}
 
-	getAll(filter: UserFilterInput, orderBy: UserOrderByInput) {}
+	getAll(filter: ProfileFilterInput, orderBy: ProfileOrderByInput) {
+		const {};
+	}
 }
 
 //*====================================================={ ADMIN }================================================================//
