@@ -1,6 +1,7 @@
 import type { User } from '../types/user.types.js';
 import { AuthSchema } from '../schemas/auth.schema.js';
 import * as z from 'zod';
+import type { Override } from './index.js';
 
 /**
  * Application-level user roles.
@@ -224,11 +225,33 @@ export interface RoleOnPermissionWithRelations extends RoleOnPermission {
 // These types belong to authentication & access flows
 // Used by both frontend forms and auth services
 
-export type LoginInput = z.infer<typeof AuthSchema.login>;
-export type ForgotPasswordInput = z.infer<typeof AuthSchema.forgotPassword>;
-export type ChangeEmailInput = z.infer<typeof AuthSchema.changeEmail>;
-export type SendVerificationEmailInput = z.infer<
-	typeof AuthSchema.sendVerificationEmail
+export type LoginInput = Override<
+	z.infer<typeof AuthSchema.login>,
+	{
+		email: string;
+		password: string;
+	}
+>;
+
+export type ForgotPasswordInput = Override<
+	z.infer<typeof AuthSchema.forgotPassword>,
+	{
+		email: string;
+	}
+>;
+
+export type ChangeEmailInput = Override<
+	z.infer<typeof AuthSchema.changeEmail>,
+	{
+		email: string;
+	}
+>;
+
+export type SendVerificationEmailInput = Override<
+	z.infer<typeof AuthSchema.sendVerificationEmail>,
+	{
+		email: string;
+	}
 >;
 
 // ─────────────────────────────────────────────
@@ -244,10 +267,40 @@ export type SendVerificationEmailInput = z.infer<
 // Raw user-submitted data from auth-related forms
 // May include confirmation or helper fields
 
-export type SignUpInput = z.input<typeof AuthSchema.signUp>;
-export type ResetPasswordInput = z.input<typeof AuthSchema.resetPassword>;
-export type ChangePasswordInput = z.input<typeof AuthSchema.changePassword>;
-export type SetPasswordInput = z.input<typeof AuthSchema.setPassword>;
+export type SignUpInput = Override<
+	z.input<typeof AuthSchema.signUp>,
+	{
+		firstName: string;
+		lastName: string;
+		email: string;
+		password: string;
+		confirmPassword: string;
+	}
+>;
+
+export type ResetPasswordInput = Override<
+	z.input<typeof AuthSchema.resetPassword>,
+	{
+		password: string;
+		confirmPassword: string;
+	}
+>;
+
+export type ChangePasswordInput = Override<
+	z.input<typeof AuthSchema.changePassword>,
+	{
+		confirmPassword: string;
+		currentPassword: string;
+		newPassword: string;
+	}
+>;
+export type SetPasswordInput = Override<
+	z.input<typeof AuthSchema.setPassword>,
+	{
+		confirmPassword: string;
+		newPassword: string;
+	}
+>;
 
 // ==================================================
 // What the API / service layer receives
@@ -260,7 +313,34 @@ export type SetPasswordInput = z.input<typeof AuthSchema.setPassword>;
 // Fully validated, normalized auth data
 // Ready for services, hashing, persistence
 
-export type SignUpPayload = z.output<typeof AuthSchema.signUp>;
-export type ResetPasswordPayload = z.output<typeof AuthSchema.resetPassword>;
-export type ChangePasswordPayload = z.output<typeof AuthSchema.changePassword>;
-export type SetPasswordPayLoad = z.output<typeof AuthSchema.setPassword>;
+export type SignUpPayload = Override<
+	z.output<typeof AuthSchema.signUp>,
+	{
+		firstName: string;
+		lastName: string;
+		email: string;
+		password: string;
+	}
+>;
+
+export type ResetPasswordPayload = Override<
+	z.output<typeof AuthSchema.resetPassword>,
+	{
+		password: string;
+	}
+>;
+
+export type ChangePasswordPayload = Override<
+	z.output<typeof AuthSchema.changePassword>,
+	{
+		currentPassword: string;
+		newPassword: string;
+	}
+>;
+
+export type SetPasswordPayLoad = Override<
+	z.output<typeof AuthSchema.setPassword>,
+	{
+		newPassword: string;
+	}
+>;

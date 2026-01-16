@@ -6,6 +6,7 @@ import type { SuitcaseItems } from '../types/suitcase.types.js';
 import type { User } from '../types/user.types.js';
 import { ItemSchema } from '../schemas/item.schema.js';
 import * as z from 'zod';
+import type { Override } from './index.js';
 
 /**
  * High-level classification for items.
@@ -148,5 +149,17 @@ export enum ItemOrderByField {
 // These inputs follow PATCH semantics for updates and are shared
 // between frontend forms, API routes, and service-layer logic.
 
-export type CreateItemInput = z.infer<typeof ItemSchema.create>;
+export type CreateItemInput = Override<
+	z.infer<typeof ItemSchema.create>,
+	{
+		name: string;
+		category: ItemCategory;
+		quantity: number;
+		weight: number;
+		weightUnit: WeightUnit;
+		volume: number;
+		volumeUnit: VolumeUnit;
+	}
+>;
+
 export type UpdateItemInput = z.infer<typeof ItemSchema.update>;

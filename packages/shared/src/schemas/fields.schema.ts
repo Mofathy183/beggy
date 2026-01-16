@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import type {} from 'zod';
 import { REGEX } from '../constants/constraints.js';
 import {
 	createArrayField,
@@ -176,7 +177,7 @@ export const FieldsSchema = {
 	enum: <E extends Record<string, string>>(
 		enumValues: E,
 		isRequired: boolean = true
-	): z.ZodType<E[keyof E] | null | undefined> => {
+	) => {
 		const baseSchema = z.enum(enumValues, {
 			error: 'That choice isn’t on the list — pick one from the dropdown so we’re on the same page.',
 		});

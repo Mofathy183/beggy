@@ -8,6 +8,7 @@ import type { Item } from '../types/item.types.js';
 import { ContainerStatus } from '../types/constraints.types.js';
 import { SuitcaseSchema } from '../schemas/suitcase.schema.js';
 import * as z from 'zod';
+import type { Override } from './index.js';
 
 /**
  * High-level suitcase classifications.
@@ -277,5 +278,15 @@ export enum SuitcaseOrderByField {
 // Used by both web forms and API handlers to ensure
 // consistent validation and type safety across the stack.
 
-export type CreateSuitcaseInput = z.infer<typeof SuitcaseSchema.create>;
+export type CreateSuitcaseInput = Override<
+	z.infer<typeof SuitcaseSchema.create>,
+	{
+		name: string;
+		type: SuitcaseType;
+		size: Size;
+		maxCapacity: number;
+		maxWeight: number;
+	}
+>;
+
 export type UpdateSuitcaseInput = z.infer<typeof SuitcaseSchema.update>;

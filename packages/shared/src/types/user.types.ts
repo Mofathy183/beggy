@@ -10,6 +10,7 @@ import type { Profile } from '../types/profile.types.js';
 import type { Bag } from '../types/bag.types.js';
 import type { Suitcase } from '../types/suitcase.types.js';
 import type { Item } from '../types/item.types.js';
+import type { Override } from './index.js';
 
 /**
  * Authentication account linked to a user.
@@ -192,7 +193,10 @@ export enum UserOrderByField {
 // These types belong to privileged administrative actions
 // Require elevated permissions
 
-export type ChangeRoleInput = z.infer<typeof AdminSchema.changeRole>;
+export type ChangeRoleInput = Override<
+	z.infer<typeof AdminSchema.changeRole>,
+	{ role: Role }
+>;
 
 export type UpdateStatusInput = z.infer<typeof AdminSchema.updateStatus>;
 
@@ -209,7 +213,16 @@ export type UpdateStatusInput = z.infer<typeof AdminSchema.updateStatus>;
 // Admin-submitted data before transformations
 // Includes confirmation fields for UX only
 
-export type CreateUserInput = z.input<typeof AdminSchema.createUser>;
+export type CreateUserInput = Override<
+	z.input<typeof AdminSchema.createUser>,
+	{
+		firstName: string;
+		lastName: string;
+		email: string;
+		password: string;
+		confirmPassword: string;
+	}
+>;
 
 // ==================================================
 // What the API / service layer receives
@@ -221,12 +234,6 @@ export type CreateUserInput = z.input<typeof AdminSchema.createUser>;
 // ==================================================
 // Privileged, sanitized admin data
 // Safe to pass directly into services / DB layer
-
-type Override<Base, Overrides extends Partial<Base>> = Omit<
-	Base,
-	keyof Overrides
-> &
-	Overrides;
 
 export type CreateUserPayload = Override<
 	z.output<typeof AdminSchema.createUser>,

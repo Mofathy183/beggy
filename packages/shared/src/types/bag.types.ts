@@ -7,6 +7,7 @@ import type { Item } from '../types/item.types.js';
 import type { User } from '../types/user.types.js';
 import { ContainerStatus } from '../types/constraints.types.js';
 import { BagSchema } from '../schemas/bag.schema.js';
+import type { Override } from './index.js';
 
 /**
  * Supported bag categories.
@@ -272,5 +273,14 @@ export enum BagOrderByField {
 // These types represent the exact payload shape accepted by the API
 // when a user creates or updates their own bags.
 
-export type CreateBagInput = z.infer<typeof BagSchema.create>;
+export type CreateBagInput = Override<
+	z.infer<typeof BagSchema.create>,
+	{
+		name: string;
+		type: BagType;
+		size: Size;
+		maxCapacity: number;
+		maxWeight: number;
+	}
+>;
 export type UpdateBagInput = z.infer<typeof BagSchema.update>;
