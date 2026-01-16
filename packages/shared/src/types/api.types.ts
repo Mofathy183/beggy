@@ -124,9 +124,9 @@ export interface AuthMe {
  */
 export interface PaginationMeta {
 	/**
-	 * Total number of records matching the current filters.
+	 * Total number of records matching the current filters (Optional).
 	 */
-	totalItems: number;
+	totalItems?: number;
 
 	/**
 	 * Number of items returned in the current page.
@@ -144,9 +144,9 @@ export interface PaginationMeta {
 	limit: number;
 
 	/**
-	 * Total number of pages available.
+	 * Total number of pages available (Optional).
 	 */
-	totalPages: number;
+	totalPages?: number;
 
 	/**
 	 * Indicates whether a next page exists.

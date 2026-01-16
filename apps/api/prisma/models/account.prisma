@@ -15,7 +15,7 @@ model Account {
 
     /// External provider identifier (OAuth only).
     /// Null for LOCAL authentication.
-    providerId String @unique @map("provider_id")
+    providerId String? @unique @map("provider_id")
 
     /// Hashed password for LOCAL authentication.
     /// Always null for OAuth-based accounts.

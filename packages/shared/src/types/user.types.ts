@@ -222,4 +222,18 @@ export type CreateUserInput = z.input<typeof AdminSchema.createUser>;
 // Privileged, sanitized admin data
 // Safe to pass directly into services / DB layer
 
-export type CreateUserPayload = z.output<typeof AdminSchema.createUser>;
+type Override<Base, Overrides extends Partial<Base>> = Omit<
+	Base,
+	keyof Overrides
+> &
+	Overrides;
+
+export type CreateUserPayload = Override<
+	z.output<typeof AdminSchema.createUser>,
+	{
+		firstName: string;
+		lastName: string;
+		email: string;
+		password: string;
+	}
+>;

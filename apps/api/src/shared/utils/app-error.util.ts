@@ -1,6 +1,7 @@
 import { ErrorCode, ErrorMessages } from '@beggy/shared/constants';
+import { ErrorResponseOptions } from '@beggy/shared/types';
 import { STATUS_CODE } from '@shared/constants';
-import type { StatusCode, ErrorResponseOptions } from '@shared/types';
+import type { StatusCode } from '@shared/types';
 
 /**
  * AppError
@@ -95,6 +96,12 @@ export const appErrorMap = {
 		cause?: unknown,
 		options?: ErrorResponseOptions
 	) => new AppError(code, STATUS_CODE.FORBIDDEN, cause, options),
+
+	conflict: (
+		code: ErrorCode,
+		cause?: unknown,
+		options?: ErrorResponseOptions
+	) => new AppError(code, STATUS_CODE.CONFLICT, cause, options),
 
 	/**
 	 * Unhandled or unexpected server error.

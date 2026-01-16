@@ -203,6 +203,20 @@
  * - Creates a new user account
  * - Typically used by admins
  *
+ * PATCH /users/:id/profile
+ * - Updates a user's profile information
+ * - Intended for administrative or moderation workflows
+ * - Allows partial updates (PATCH semantics)
+ * - Does NOT affect authentication, role, or status data
+ * - Operates strictly on the Profile domain (name, avatar, location, etc.)
+ *
+ * PATCH /users/:id/status
+ * - Updates a user's account status and trust flags
+ * - Used for moderation, enforcement, and verification workflows
+ * - Allows partial updates (PATCH semantics)
+ * - Controls operational access without deleting the account
+ * - Not exposed via self-service user endpoints
+ *
  * PATCH /users/:id/role
  * - Updates the role assigned to a user
  * - Role changes are restricted to authorized administrators

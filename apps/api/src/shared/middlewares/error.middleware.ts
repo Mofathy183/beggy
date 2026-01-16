@@ -50,11 +50,24 @@ export const prismaErrorMap = (err: unknown): AppError | null => {
 			 * Unique constraint violation
 			 * Example: duplicate email, username, etc.
 			 */
-			case 'P2002':
+			case 'P2002': {
+				const target = err.meta?.target;
+
+				// Normalize target to array
+				const fields = Array.isArray(target) ? target : [];
+
+				if (fields.includes('email')) {
+					return appErrorMap.conflict(
+						ErrorCode.EMAIL_ALREADY_EXISTS,
+						err
+					);
+				}
+
 				return appErrorMap.badRequest(
 					ErrorCode.RESOURCE_ALREADY_EXISTS,
 					err
 				);
+			}
 			/**
 			 * Record not found
 			 * - P2001: record does not exist

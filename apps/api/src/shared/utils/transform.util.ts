@@ -126,7 +126,7 @@ export const formatValidationError = (
  * @param range - Optional numeric range with min/max bounds
  * @returns Prisma range filter or undefined
  */
-export const buildNumberRange = (range?: {
+const buildNumberRange = (range?: {
 	min?: number | null;
 	max?: number | null;
 }) => {
@@ -148,10 +148,7 @@ export const buildNumberRange = (range?: {
  * @param range - Optional date range with from/to bounds
  * @returns Prisma date range filter or undefined
  */
-export const buildDateRange = (range?: {
-	from?: Date | null;
-	to?: Date | null;
-}) => {
+const buildDateRange = (range?: { from?: Date | null; to?: Date | null }) => {
 	if (!range) return undefined;
 
 	return {
@@ -172,7 +169,7 @@ export const buildDateRange = (range?: {
  * @param fallback - Fallback field when orderBy is undefined
  * @returns Prisma orderBy object
  */
-export const buildOrderBy = <T extends string>(
+const buildOrderBy = <T extends string>(
 	orderBy?: T,
 	direction: SortOrder = 'asc',
 	fallback: T = 'createdAt' as T
