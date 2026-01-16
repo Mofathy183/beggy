@@ -2,9 +2,11 @@
  * API Response Types for Bags
  */
 
-import { Item, User, ContainerStatus } from '@/types';
-import { BagSchema } from '@/schemas';
 import * as z from 'zod';
+import type { Item } from '../types/item.types.js';
+import type { User } from '../types/user.types.js';
+import { ContainerStatus } from '../types/constraints.types.js';
+import { BagSchema } from '../schemas/bag.schema.js';
 
 /**
  * Supported bag categories.

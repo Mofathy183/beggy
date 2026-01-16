@@ -1,4 +1,4 @@
-import { User, Gender } from '@/types';
+import { type User, Gender } from '../types/user.types.js';
 
 /**
  * User profile containing public and user-editable information.

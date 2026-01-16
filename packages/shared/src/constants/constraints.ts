@@ -1,4 +1,8 @@
-import type { NameFieldConfig, NameFieldType, NumberConfigMap } from '@/types';
+import type {
+	NameFieldConfig,
+	NameFieldType,
+	NumberConfigMap,
+} from '../types/schema.types.js';
 
 /**
  * Centralized regular expression constraints used across the Beggy platform.

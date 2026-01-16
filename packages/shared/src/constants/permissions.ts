@@ -1,4 +1,10 @@
-import { Role, Action, Scope, Subject, Permissions } from '@/types';
+import {
+	Role,
+	Action,
+	Scope,
+	Subject,
+	type Permissions,
+} from '../types/auth.types.js';
 
 /**
  * Default permission matrix for each application role.

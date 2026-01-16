@@ -1,22 +1,24 @@
+/**
+ * NOTE:
+ * Filters currently use implicit AND logic.
+ * TODO:* Future versions may support nested AND / OR / NOT groups.
+ */
 import {
 	BagType,
-	ItemCategory,
 	Size,
-	SuitcaseType,
-	WheelType,
 	Material,
-	OrderDirection,
-	UserOrderByField,
 	BagOrderByField,
-	SuitcaseOrderByField,
-	ItemOrderByField,
-	NumericEntity,
-	NumericMetric,
-} from '@/types';
-import { normalizeRound } from '@/utils';
-import { NUMBER_CONFIG } from '@/constants';
+} from '../types/bag.types.js';
+import { ItemOrderByField, ItemCategory } from '../types/item.types.js';
+import { SuitcaseType, WheelType } from '../types/suitcase.types.js';
+import { OrderDirection } from '../types/api.types.js';
+import { ProfileOrderByField } from '../types/user.types.js';
+import { SuitcaseOrderByField } from '../types/suitcase.types.js';
+import type { NumericEntity, NumericMetric } from '../types/schema.types.js';
+import { normalizeRound } from '../utils/schema.util.js';
+import { NUMBER_CONFIG } from '../constants/constraints.js';
+import { FieldsSchema } from '../schemas/fields.schema.js';
 import * as z from 'zod';
-import { FieldsSchema } from '@/schemas';
 
 /**
  * Factory for building "order by" query schemas.
@@ -175,13 +177,13 @@ export const numberRangeSchema = <M extends NumericEntity>(
  */
 export const QuerySchema = {
 	/**
-	 * User filter schema.
+	 * Profile filter schema.
 	 *
 	 * @remarks
 	 * - Supports location-based filtering
 	 * - Allows date range filtering on creation date
 	 */
-	userFilter: z.strictObject({
+	profileFilter: z.strictObject({
 		city: FieldsSchema.name('City Name', 'place', false),
 		country: FieldsSchema.name('Country Name', 'place', false),
 		createdAt: dateRangeSchema.optional(),
@@ -247,10 +249,12 @@ export const QuerySchema = {
  * - Prevents ordering by unauthorized fields
  */
 export const OrderByQuerySchemas = {
-	userOrderBy: buildOrderBySchema(UserOrderByField),
-	itemOrderBy: buildOrderBySchema(ItemOrderByField),
-	bagOrderBy: buildOrderBySchema(BagOrderByField),
-	suitcaseOrderBy: buildOrderBySchema(SuitcaseOrderByField),
+	profileOrderBy:
+		buildOrderBySchema<typeof ProfileOrderByField>(ProfileOrderByField),
+	itemOrderBy: buildOrderBySchema<typeof ItemOrderByField>(ItemOrderByField),
+	bagOrderBy: buildOrderBySchema<typeof BagOrderByField>(BagOrderByField),
+	suitcaseOrderBy:
+		buildOrderBySchema<typeof SuitcaseOrderByField>(SuitcaseOrderByField),
 };
 
 /**

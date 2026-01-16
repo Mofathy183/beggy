@@ -1,12 +1,14 @@
-import { ErrorCode } from '@/constants';
+import { ErrorCode } from '../constants/error.codes.js';
 import {
 	OrderByQuerySchemas,
 	QuerySchema,
 	ParamsSchema,
 	PaginationSchema,
-} from '@/schemas';
+} from '../schemas/api.schema.js';
 import * as z from 'zod';
-import type { AuthProvider, Permissions, Profile, User } from '@/types';
+import type { AuthProvider, Permissions } from '../types/auth.types.js';
+import type { User } from '../types/user.types.js';
+import type { Profile } from '../types/profile.types.js';
 
 /**
  * Lightweight authenticated user identity snapshot.
@@ -337,13 +339,13 @@ export enum OrderDirection {
 // ==================================================
 
 /**
- * User filtering query input.
+ * Profile filtering query input.
  *
  * @remarks
  * - Derived directly from Zod schema
- * - Used for validating and typing user list filters
+ * - Used for validating and typing Profile list filters
  */
-export type UserFilterInput = z.infer<typeof QuerySchema.userFilter>;
+export type ProfileFilterInput = z.infer<typeof QuerySchema.profileFilter>;
 
 /**
  * Bag filtering query input.
@@ -377,13 +379,15 @@ export type ItemFilterInput = z.infer<typeof QuerySchema.itemFilter>;
 // ==================================================
 
 /**
- * User "order by" query input.
+ * Profile "order by" query input.
  *
  * @remarks
  * - Restricts ordering to allowed, indexed fields
  * - Direction defaults are handled at schema level
  */
-export type UserOrderByInput = z.infer<typeof OrderByQuerySchemas.userOrderBy>;
+export type ProfileOrderByInput = z.infer<
+	typeof OrderByQuerySchemas.profileOrderBy
+>;
 
 /**
  * Bag "order by" query input.

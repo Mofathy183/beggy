@@ -1,6 +1,6 @@
 import * as z from 'zod';
-import { FieldsSchema } from '@/schemas';
-import { Gender } from '@/types';
+import { FieldsSchema } from '../schemas/fields.schema.js';
+import { Gender } from '../types/user.types.js';
 
 /**
  * Authentication-related validation schemas.

@@ -1,5 +1,5 @@
-import { User } from '@/types';
-import { AuthSchema } from '@/schemas';
+import type { User } from '../types/user.types.js';
+import { AuthSchema } from '../schemas/auth.schema.js';
 import * as z from 'zod';
 
 /**

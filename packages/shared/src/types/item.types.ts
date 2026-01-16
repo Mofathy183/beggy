@@ -1,8 +1,10 @@
 /**
  * API Response Types for Items
  */
-import { User, SuitcaseItems, BagItems } from '@/types';
-import { ItemSchema } from '@/schemas';
+import type { BagItems } from '../types/bag.types.js';
+import type { SuitcaseItems } from '../types/suitcase.types.js';
+import type { User } from '../types/user.types.js';
+import { ItemSchema } from '../schemas/item.schema.js';
 import * as z from 'zod';
 
 /**

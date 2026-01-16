@@ -1,4 +1,4 @@
-import { ContainerStatus } from '@/types';
+import { ContainerStatus } from '../types/constraints.types.js';
 
 // ============================================================================
 // STATUS CHECK FUNCTIONS

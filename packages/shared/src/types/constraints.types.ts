@@ -1,4 +1,6 @@
-import type { BagItems, SuitcaseItems, WeightUnit, VolumeUnit } from '@/types';
+import type { WeightUnit, VolumeUnit } from '../types/item.types.js';
+import type { BagItems } from '../types/bag.types.js';
+import type { SuitcaseItems } from '../types/suitcase.types.js';
 
 /**
  * Lookup map for converting any supported weight unit into kilograms.

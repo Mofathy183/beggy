@@ -1,6 +1,6 @@
 import * as z from 'zod';
-import { FieldsSchema } from '@/schemas';
-import { BagType, BagFeature, Size, Material } from '@/types';
+import { FieldsSchema } from '../schemas/fields.schema.js';
+import { BagType, BagFeature, Size, Material } from '../types/bag.types.js';
 
 /**
  * Bag-related validation schemas.

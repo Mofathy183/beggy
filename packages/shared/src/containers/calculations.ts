@@ -1,5 +1,9 @@
-import type { ConvertToKilogram, ConvertToLiter, ItemsType } from '@/types';
-import { WeightUnit, VolumeUnit } from '@/types';
+import type {
+	ConvertToKilogram,
+	ConvertToLiter,
+	ItemsType,
+} from '../types/constraints.types.js';
+import { WeightUnit, VolumeUnit } from '../types/item.types.js';
 
 //* ============================================================================
 //* SHARED CALCULATION FUNCTIONS
@@ -16,7 +20,10 @@ import { WeightUnit, VolumeUnit } from '@/types';
  * convertToKilogram(1000, 'GRAM'); // Returns 1
  * convertToKilogram(2.2, 'POUND'); // Returns 0.997903
  */
-export const convertToKilogram = (weight: number, unit: WeightUnit): number => {
+export const convertToKilogram = (
+	weight: number,
+	unit: WeightUnit
+): number | undefined => {
 	const convert: ConvertToKilogram = {
 		KILOGRAM: weight,
 		GRAM: weight / 1000, // 1000g = 1kg,
@@ -38,7 +45,10 @@ export const convertToKilogram = (weight: number, unit: WeightUnit): number => {
  * convertToLiter(1000, 'ML'); // Returns 1
  * convertToLiter(1000, 'CU_CM'); // Returns 1
  */
-export const convertToLiter = (volume: number, unit: VolumeUnit): number => {
+export const convertToLiter = (
+	volume: number,
+	unit: VolumeUnit
+): number | undefined => {
 	const convert: ConvertToLiter = {
 		LITER: volume,
 		ML: volume / 1000, // 1000ml = 1L
@@ -67,7 +77,9 @@ export const convertToLiter = (volume: number, unit: VolumeUnit): number => {
  * ];
  * calculateCurrentWeight(items); // Returns ~9.5
  */
-export const calculateCurrentWeight = (items: ItemsType): number => {
+export const calculateCurrentWeight = (
+	items: ItemsType
+): number | undefined => {
 	// Return 0 if no items exist
 	if (!items || items.length === 0) return 0;
 
@@ -78,7 +90,10 @@ export const calculateCurrentWeight = (items: ItemsType): number => {
 		// Convert weight to kilograms
 		const weightInKg = convertToKilogram(item.weight, item.weightUnit);
 
-		return accumulator + weightInKg * item.quantity;
+		// If conversion fails (returns undefined), treat as 0 for safe summation
+		const weight = typeof weightInKg === 'number' ? weightInKg : 0;
+
+		return accumulator + weight * item.quantity;
 	}, 0);
 
 	// Round to 2 decimal places and convert to number
@@ -102,7 +117,10 @@ export const calculateTotalWeightWithContainer = (
 	containerWeight: number
 ): number => {
 	const itemsWeight = calculateCurrentWeight(items);
-	const totalWeight = itemsWeight + containerWeight;
+
+	// If itemsWeight is undefined, treat it as 0 for total calculation
+	const safeItemsWeight = typeof itemsWeight === 'number' ? itemsWeight : 0;
+	const totalWeight = safeItemsWeight + containerWeight;
 
 	return Number(parseFloat(totalWeight.toFixed(2)));
 };
@@ -136,7 +154,13 @@ export const calculateCurrentCapacity = (items: ItemsType): number => {
 		// Convert volume to liters
 		const volumeInLiters = convertToLiter(item.volume, item.volumeUnit);
 
-		return accumulator + volumeInLiters * item.quantity;
+		// If conversion fails (undefined or null), treat volume as 0
+		const safeVolumeInLiters =
+			typeof volumeInLiters === 'number' && !isNaN(volumeInLiters)
+				? volumeInLiters
+				: 0;
+
+		return accumulator + safeVolumeInLiters * item.quantity;
 	}, 0);
 
 	// Round to 2 decimal places and convert to number

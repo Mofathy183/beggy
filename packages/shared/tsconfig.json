@@ -4,17 +4,24 @@
 	"compilerOptions": {
 		// Library mode
 		"target": "ES2022",
-		"module": "ESNext",
-		"lib": ["ES2022"],
-		"moduleResolution": "bundler",
+		"module": "NodeNext",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"moduleResolution": "NodeNext",
 
 		// Output
 		"outDir": "./dist",
 		"rootDir": "./src",
 
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+
 		// Emit for library
 		"declaration": true,
 		"declarationMap": true,
+		"emitDeclarationOnly": false,
+		"noImplicitAny": true,
+		"strict": true,
+		"skipLibCheck": true,
 		"sourceMap": true,
 		"composite": true,
 
@@ -22,11 +29,7 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noImplicitReturns": true,
-		"noFallthroughCasesInSwitch": true,
-
-		"paths": {
-			"@/*": ["./packages/shared/src/*"]
-		}
+		"noFallthroughCasesInSwitch": true
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

@@ -13,7 +13,7 @@
  * - Changes here affect both web and API consumers.
  */
 
-export * from './constraints';
-export * from './error.codes';
-export * from './messages';
-export * from './permissions';
+export * from './constraints.js';
+export * from './error.codes.js';
+export * from './messages.js';
+export * from './permissions.js';

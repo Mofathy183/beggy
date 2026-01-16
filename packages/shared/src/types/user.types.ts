@@ -3,19 +3,13 @@
  * These types represent the data structure returned from the API endpoints.
  * They are derived from Prisma models but tailored for API responses.
  */
-import { AdminSchema, ProfileSchema } from '@/schemas';
 import * as z from 'zod';
-
-import type {
-	AuthProvider,
-	Role,
-	UserToken,
-	Bag,
-	Suitcase,
-	Item,
-	Profile,
-} from '@/types';
-
+import { AdminSchema, ProfileSchema } from '../schemas/user.schema.js';
+import type { AuthProvider, Role, UserToken } from '../types/auth.types.js';
+import type { Profile } from '../types/profile.types.js';
+import type { Bag } from '../types/bag.types.js';
+import type { Suitcase } from '../types/suitcase.types.js';
+import type { Item } from '../types/item.types.js';
 /**
  * Gender classification for user profiles.
  *
@@ -183,13 +177,13 @@ export interface UserWithRelations extends User {
 }
 
 /**
- * Allowed "order by" fields for User queries.
+ * Allowed "order by" fields for Profile queries.
  *
  * @remarks
- * - Exposes only non-sensitive, user-facing fields
- * - Prevents sorting by internal or private user attributes
+ * - Exposes only non-sensitive, profile-facing fields
+ * - Prevents sorting by internal or private profile attributes
  */
-export enum UserOrderByField {
+export enum ProfileOrderByField {
 	CREATED_AT = 'createdAt',
 	UPDATED_AT = 'updatedAt',
 	FIRST_NAME = 'firstName',

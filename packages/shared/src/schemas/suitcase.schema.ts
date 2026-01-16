@@ -1,12 +1,11 @@
 import * as z from 'zod';
-import { FieldsSchema } from '@/schemas';
+import { FieldsSchema } from '../schemas/fields.schema.js';
+import { Size, Material } from '../types/bag.types.js';
 import {
-	Size,
-	Material,
 	WheelType,
 	SuitcaseFeature,
 	SuitcaseType,
-} from '@/types';
+} from '../types/suitcase.types.js';
 
 /**
  * Suitcase-related validation schemas.

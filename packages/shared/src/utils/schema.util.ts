@@ -1,6 +1,10 @@
-import type { NameFieldType, NumericEntity, NumericMetric } from '@/types';
 import * as z from 'zod';
-import { NAME_CONFIG, NUMBER_CONFIG } from '@/constants';
+import type {
+	NameFieldType,
+	NumericEntity,
+	NumericMetric,
+} from '../types/schema.types.js';
+import { NAME_CONFIG, NUMBER_CONFIG } from '../constants/constraints.js';
 
 /**
  * Normalizes a string value by trimming surrounding whitespace.

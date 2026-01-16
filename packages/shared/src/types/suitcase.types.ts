@@ -2,8 +2,11 @@
  * API Response Types for Suitcases
  */
 
-import { User, Item, Size, Material, ContainerStatus } from '@/types';
-import { SuitcaseSchema } from '@/schemas';
+import { Size, Material } from '../types/bag.types.js';
+import type { User } from '../types/user.types.js';
+import type { Item } from '../types/item.types.js';
+import { ContainerStatus } from '../types/constraints.types.js';
+import { SuitcaseSchema } from '../schemas/suitcase.schema.js';
 import * as z from 'zod';
 
 /**
