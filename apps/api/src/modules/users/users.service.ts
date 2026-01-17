@@ -1,4 +1,4 @@
-import { prisma as Prisma, type ExtendedPrismaClient } from '@prisma';
+import { type ExtendedPrismaClient } from '@prisma';
 import type { Profile, Role, User } from '@prisma/generated/prisma/client';
 import type {
 	UserFilterInput,
@@ -9,6 +9,7 @@ import type {
 	EditProfileInput,
 } from '@beggy/shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
+import { logger } from '@shared/middlewares';
 import type { PaginationPayload } from '@shared/types';
 import { appErrorMap, buildUserQuery, hashPassword } from '@shared/utils';
 import { BatchPayload as DeletePayload } from '@prisma/generated/prisma/internal/prismaNamespace';
@@ -37,11 +38,7 @@ export class UserService {
 	 * - Typed as ExtendedPrismaClient to allow future extensions
 	 * - Initialized once per service instance
 	 */
-	private readonly prisma!: ExtendedPrismaClient;
-
-	constructor() {
-		this.prisma = Prisma;
-	}
+	constructor(private readonly prisma: ExtendedPrismaClient) {}
 
 	/**
 	 * Retrieves a paginated list of users with filtering and ordering support.
@@ -117,6 +114,7 @@ export class UserService {
 		});
 
 		if (!user) {
+			logger.warn({ userId: id }, 'User not found');
 			throw appErrorMap.notFound(ErrorCode.USER_NOT_FOUND);
 		}
 
@@ -170,6 +168,11 @@ export class UserService {
 				},
 			},
 		});
+
+		logger.info(
+			{ userId: newUser.id, email: newUser.email },
+			'User account created'
+		);
 
 		return newUser;
 	}
@@ -227,6 +230,15 @@ export class UserService {
 				isEmailVerified: status.isEmailVerified,
 			},
 		});
+
+		logger.info(
+			{
+				userId: id,
+				isActive: status.isActive,
+				isEmailVerified: status.isEmailVerified,
+			},
+			'User status updated'
+		);
 
 		return updatedStatus;
 	}

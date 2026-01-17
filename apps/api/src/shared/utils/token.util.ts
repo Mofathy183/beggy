@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { addMinutes } from 'date-fns';
 import crypto from 'crypto';
 import type { Secret, SignOptions, JwtPayload } from 'jsonwebtoken';
 import {
@@ -7,7 +8,7 @@ import {
 	SecureTokenPair,
 } from '@shared/types';
 import { envConfig } from '@config';
-import { Role } from '@beggy/shared/types';
+import { Role } from '@beggy/shared/constants';
 import { ErrorCode } from '@beggy/shared/constants';
 import { FieldsSchema, ParamsSchema } from '@beggy/shared/schemas';
 import { appErrorMap } from '@shared/utils';
@@ -249,4 +250,31 @@ export const generateEmailVerificationToken = (): SecureTokenPair => {
 	const hash = crypto.createHash('sha256').update(token).digest('hex');
 
 	return { token, hash };
+};
+
+/**
+ * @description Returns the expiration Date for different token types.
+ *
+ * Token Expiry Durations:
+ * - "verify": 24 hours
+ * - "change": 60 minutes
+ * - "password": 15 minutes
+ *
+ * Explain type names:
+ * - "verify": verify email
+ * - "change": change email
+ * - "password": reset password
+ *
+ * @param {String} type - Either 'verify', 'change', or 'password'.
+ * @returns {Date}
+ */
+export const setExpiredAt = (type: string): Date => {
+	//* the verify email token will expire in 24 hours
+	if (type === 'verify') return addMinutes(new Date(), 60 * 24);
+
+	//* the change email token will expire in 60 minutes
+	if (type === 'change') return addMinutes(new Date(), 60);
+
+	//* the password reset token will expire in 15 minutes
+	return addMinutes(new Date(), 15);
 };

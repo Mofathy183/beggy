@@ -1,7 +1,7 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import passport from 'passport';
-import { googleAuthConfig, facebookAuthConfig } from './env.config.js';
+import { oauthConfig } from '@config';
 
 import type {
 	Strategy as GoogleStrategyType,
@@ -13,7 +13,7 @@ import type {
 } from 'passport-facebook';
 
 const googleProvider: GoogleStrategyType = new GoogleStrategy(
-	googleAuthConfig,
+	oauthConfig.google,
 	(
 		_accessToken: string,
 		_refreshToken: string,
@@ -30,8 +30,8 @@ const googleProvider: GoogleStrategyType = new GoogleStrategy(
 
 const facebookProvider: FacebookStrategyType = new FacebookStrategy(
 	{
-		...facebookAuthConfig,
-		callbackURL: facebookAuthConfig.callbackURL as string, // Ensure callbackURL is always string, not undefined
+		...oauthConfig.facebook,
+		callbackURL: oauthConfig.facebook.callbackURL, // Ensure callbackURL is always string, not undefined
 	},
 	(
 		_accessToken: string,
@@ -56,7 +56,7 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((user, done) => {
-	return done(null, user);
+	return done(null, user as any);
 });
 
 export default passport;

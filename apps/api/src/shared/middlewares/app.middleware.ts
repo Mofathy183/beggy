@@ -197,7 +197,7 @@ export const injectCsrfToken = (
  * @param {Response} res - The response object.
  * @param {NextFunction} next - The next middleware function in the stack.
  */
-export const RouteNotFoundHandler = (
+export const routeNotFoundHandler = (
 	req: Request,
 	res: Response,
 	_next: NextFunction
