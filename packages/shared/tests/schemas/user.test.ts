@@ -1,7 +1,8 @@
 import { it, describe, expect } from 'vitest';
-import { userFactory, profileFactory } from '@beggy/shared-factories';
-import { AdminSchema } from '@beggy/shared/schemas';
-import { Role } from '@beggy/shared/types';
+import { userFactory } from '../factories/user.factory';
+import { profileFactory } from '../factories/profile.factory';
+import { AdminSchema } from '../../src/schemas/user.schema';
+import { Role } from '../../src/constants/auth.enums';
 
 describe('AdminSchema.createUser', () => {
 	it('accepts a valid admin user payload', () => {

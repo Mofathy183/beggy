@@ -1,5 +1,5 @@
 import { it, describe, expect } from 'vitest';
-import { buildBagItem } from '@beggy/shared-factories';
+import { buildBagItem } from '../factories/bag.factory';
 import {
 	calculateCurrentCapacity,
 	calculateCurrentWeight,
@@ -11,8 +11,8 @@ import {
 	convertToKilogram,
 	convertToLiter,
 	calculateCapacityPercentage,
-} from '@beggy/shared/containers';
-import { WeightUnit, VolumeUnit } from '@beggy/shared/types';
+} from '../../src/containers/calculations';
+import { WeightUnit, VolumeUnit } from '../../src/constants/item.enums';
 
 describe('convertToKilogram()', () => {
 	it('returns the same value for kilograms', () => {

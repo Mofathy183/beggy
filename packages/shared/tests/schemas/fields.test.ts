@@ -1,6 +1,6 @@
 import { it, describe, expect } from 'vitest';
 import { z } from 'zod';
-import { FieldsSchema } from '@beggy/shared/schemas';
+import { FieldsSchema } from '../../src/schemas/fields.schema';
 
 describe('FieldsSchema.name()', () => {
 	it('returns a working name schema', () => {

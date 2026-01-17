@@ -1,12 +1,13 @@
-import { ErrorCode } from '../constants/error.codes.js';
+import { type ErrorCode } from '../constants/error.codes.js';
 import {
-	OrderByQuerySchemas,
-	QuerySchema,
-	ParamsSchema,
-	PaginationSchema,
+	type OrderByQuerySchemas,
+	type QuerySchema,
+	type ParamsSchema,
+	type PaginationSchema,
 } from '../schemas/api.schema.js';
-import * as z from 'zod';
-import type { AuthProvider, Permissions } from '../types/auth.types.js';
+import type * as z from 'zod';
+import type { Permissions } from '../types/auth.types.js';
+import type { AuthProvider } from '../constants/auth.enums.js';
 import type { User } from '../types/user.types.js';
 import type { Profile } from '../types/profile.types.js';
 
@@ -307,18 +308,6 @@ export interface ErrorResponseOptions {
  * ```
  */
 export type PaginationParams = z.infer<typeof PaginationSchema.pagination>;
-
-/**
- * Ordering direction for sortable queries.
- *
- * @remarks
- * - Lowercase values align with URL query standards
- * - Shared between frontend and backend to prevent drift
- */
-export enum OrderDirection {
-	ASC = 'asc',
-	DESC = 'desc',
-}
 
 // ─────────────────────────────────────────────
 // Schemas with identical input & output

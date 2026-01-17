@@ -4,8 +4,8 @@ import {
 	checkIsOverCapacity,
 	checkIsOverweight,
 	getContainerStatus,
-} from '@beggy/shared/containers';
-import { ContainerStatus } from '@beggy/shared/types';
+} from '../../src/containers/status';
+import { ContainerStatus } from '../../src/constants/constraints.enums';
 
 describe('checkIsOverweight()', () => {
 	it('returns false when max weight is 0', () => {

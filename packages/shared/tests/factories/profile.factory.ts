@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { Profile, Gender } from '@beggy/shared/types';
+import { type Profile } from '../../src/types/profile.types';
+import { Gender } from '../../src/constants/profile.enums';
 
 /**
  * Fields that can be overridden when creating a Profile via factories.

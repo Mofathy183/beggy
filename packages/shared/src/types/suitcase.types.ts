@@ -2,79 +2,18 @@
  * API Response Types for Suitcases
  */
 
-import { Size, Material } from '../types/bag.types.js';
+import { type Size, type Material } from '../constants/bag.enums.js';
 import type { User } from '../types/user.types.js';
 import type { Item } from '../types/item.types.js';
-import { ContainerStatus } from '../types/constraints.types.js';
-import { SuitcaseSchema } from '../schemas/suitcase.schema.js';
-import * as z from 'zod';
+import { type ContainerStatus } from '../constants/constraints.enums.js';
+import { type SuitcaseSchema } from '../schemas/suitcase.schema.js';
+import type * as z from 'zod';
 import type { Override } from './index.js';
-
-/**
- * High-level suitcase classifications.
- *
- * @remarks
- * - Used for filtering, validation, and airline-related rules
- * - Enum values should remain stable once persisted
- */
-export enum SuitcaseType {
-	CARRY_ON = 'CARRY_ON',
-	CHECKED_LUGGAGE = 'CHECKED_LUGGAGE',
-	HARD_SHELL = 'HARD_SHELL',
-	SOFT_SHELL = 'SOFT_SHELL',
-	BUSINESS = 'BUSINESS',
-	KIDS = 'KIDS',
-	EXPANDABLE = 'EXPANDABLE',
-}
-
-/**
- * Optional functional or structural suitcase features.
- *
- * @remarks
- * - Stored as an array to allow feature composition
- * - `NONE` should be treated as a UX/default state
- */
-export enum SuitcaseFeature {
-	NONE = 'NONE',
-	TSA_LOCK = 'TSA_LOCK',
-	WATERPROOF = 'WATERPROOF',
-	EXPANDABLE = 'EXPANDABLE',
-	USB_PORT = 'USB_PORT',
-	LIGHTWEIGHT = 'LIGHTWEIGHT',
-	ANTI_THEFT = 'ANTI_THEFT',
-	SCRATCH_RESISTANT = 'SCRATCH_RESISTANT',
-	COMPRESSION_STRAPS = 'COMPRESSION_STRAPS',
-	TELESCOPIC_HANDLE = 'TELESCOPIC_HANDLE',
-}
-
-/**
- * Wheel configuration for a suitcase.
- *
- * @remarks
- * - Impacts maneuverability and weight
- * - Nullable to support non-wheeled luggage
- */
-export enum WheelType {
-	/**
-	 * No wheels present
-	 */
-	NONE = 'NONE',
-
-	/**
-	 * Traditional two-wheel design
-	 */
-	TWO_WHEEL = 'TWO_WHEEL',
-
-	/**
-	 * Four-wheel configuration
-	 */
-	FOUR_WHEEL = 'FOUR_WHEEL',
-
-	/**
-	 * 360-degree spinner wheels
-	 */
-	SPINNER = 'SPINNER',
-}
+import type {
+	SuitcaseFeature,
+	SuitcaseType,
+	WheelType,
+} from '../constants/suitcase.enums.js';
 
 /**
  * Core Suitcase domain model.
@@ -246,21 +185,6 @@ export interface SuitcaseItems {
 export interface SuitcaseWithRelations extends Suitcase {
 	suitcaseItems: SuitcaseItems[];
 	user: User;
-}
-
-/**
- * Allowed "order by" fields for Suitcase queries.
- *
- * @remarks
- * - Mirrors bag ordering fields where applicable
- * - Keeps sorting rules consistent across container-like entities
- */
-export enum SuitcaseOrderByField {
-	CREATED_AT = 'createdAt',
-	UPDATED_AT = 'updatedAt',
-	NAME = 'name',
-	MAX_WEIGHT = 'maxWeight',
-	MAX_CAPACITY = 'maxCapacity',
 }
 
 // ─────────────────────────────────────────────

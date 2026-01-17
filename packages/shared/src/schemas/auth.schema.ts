@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema.js';
-import { Gender } from '../types/profile.types.js';
+import { Gender } from '../constants/profile.enums.js';
 
 /**
  * Authentication-related validation schemas.
@@ -80,7 +80,7 @@ export const AuthSchema = {
 		 * - Removes confirmPassword before data reaches services or DB
 		 * - Guarantees sensitive fields are never persisted
 		 */
-		.transform(({ confirmPassword, ...rest }) => rest),
+		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 
 	/**
 	 * Change-email schema.
@@ -144,7 +144,7 @@ export const AuthSchema = {
 		 * - Removes confirmPassword before data reaches services or DB
 		 * - Guarantees sensitive fields are never persisted
 		 */
-		.transform(({ confirmPassword, ...rest }) => rest),
+		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 
 	/**
 	 * Schema for setting a LOCAL password for OAuth-based users.
@@ -201,7 +201,7 @@ export const AuthSchema = {
 		 * - Removes confirmPassword before data reaches services or DB
 		 * - Guarantees sensitive fields are never persisted
 		 */
-		.transform(({ confirmPassword, ...rest }) => rest),
+		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 
 	/**
 	 * Send-verification-email schema.
@@ -263,5 +263,5 @@ export const AuthSchema = {
 		 * - Removes confirmPassword before data reaches services or DB
 		 * - Guarantees sensitive fields are never persisted
 		 */
-		.transform(({ confirmPassword, ...rest }) => rest),
+		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 };

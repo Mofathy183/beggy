@@ -1,36 +1,38 @@
 import { it, describe, expect } from 'vitest';
-import { suitcaseFactory } from '@beggy/shared-factories';
-import { SuitcaseSchema } from '@beggy/shared/schemas';
+import { suitcaseFactory } from '../factories/suitcase.factory';
+import { SuitcaseSchema } from '../../src/schemas/suitcase.schema';
+import { Size } from '../../src/constants/bag.enums';
 import {
-	Size,
 	SuitcaseFeature,
 	SuitcaseType,
 	WheelType,
-} from '@beggy/shared/types';
+} from '../../src/constants/suitcase.enums';
 
 describe('SuitcaseSchema.create', () => {
 	it('accepts valid input and applies defaults', () => {
-		const { userId, suitcaseWeight, ...mockSuitcase } = suitcaseFactory(
-			'user-1',
-			{
-				type: SuitcaseType.HARD_SHELL,
-				size: Size.MEDIUM,
-			}
-		);
+		const {
+			userId: _userId,
+			suitcaseWeight: _suitcaseWeight,
+			...mockSuitcase
+		} = suitcaseFactory('user-1', {
+			type: SuitcaseType.HARD_SHELL,
+			size: Size.MEDIUM,
+		});
 		const result = SuitcaseSchema.create.parse(mockSuitcase);
 
 		expect(result).toEqual(mockSuitcase);
 	});
 
 	it('accepts optional descriptive fields', () => {
-		const { userId, suitcaseWeight, ...mockSuitcase } = suitcaseFactory(
-			'user-1',
-			{
-				brand: 'Samsonite',
-				features: [SuitcaseFeature.TSA_LOCK],
-				color: 'blue',
-			}
-		);
+		const {
+			userId: _userId,
+			suitcaseWeight: _suitcaseWeight,
+			...mockSuitcase
+		} = suitcaseFactory('user-1', {
+			brand: 'Samsonite',
+			features: [SuitcaseFeature.TSA_LOCK],
+			color: 'blue',
+		});
 		const result = SuitcaseSchema.create.parse(mockSuitcase);
 
 		expect(result.brand).toBe('Samsonite');
@@ -39,8 +41,11 @@ describe('SuitcaseSchema.create', () => {
 	});
 
 	it('rejects unknown fields', () => {
-		const { userId, suitcaseWeight, ...mockSuitcase } =
-			suitcaseFactory('user-1');
+		const {
+			userId: _userId,
+			suitcaseWeight: _suitcaseWeight,
+			...mockSuitcase
+		} = suitcaseFactory('user-1');
 
 		expect(() =>
 			SuitcaseSchema.create.parse({

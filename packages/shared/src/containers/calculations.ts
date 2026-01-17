@@ -3,7 +3,7 @@ import type {
 	ConvertToLiter,
 	ItemsType,
 } from '../types/constraints.types.js';
-import { WeightUnit, VolumeUnit } from '../types/item.types.js';
+import { type WeightUnit, type VolumeUnit } from '../constants/item.enums.js';
 
 //* ============================================================================
 //* SHARED CALCULATION FUNCTIONS

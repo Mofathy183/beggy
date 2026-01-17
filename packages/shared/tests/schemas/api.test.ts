@@ -1,5 +1,6 @@
 import { it, describe, expect } from 'vitest';
-import { BagType, Material, OrderDirection, Size } from '@beggy/shared/types';
+import { BagType, Material, Size } from '../../src/constants/bag.enums';
+import { OrderDirection } from '../../src/constants/api.enums';
 import {
 	buildOrderBySchema,
 	dateRangeSchema,
@@ -7,7 +8,7 @@ import {
 	PaginationSchema,
 	ParamsSchema,
 	QuerySchema,
-} from '@beggy/shared/schemas';
+} from '../../src/schemas/api.schema';
 
 enum TestOrderBy {
 	NAME = 'name',

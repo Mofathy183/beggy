@@ -34,7 +34,6 @@ export default defineConfig([
 			parserOptions: {
 				ecmaVersion: 'latest',
 				sourceType: 'module',
-				project: true,
 			},
 			globals: {
 				console: 'readonly',

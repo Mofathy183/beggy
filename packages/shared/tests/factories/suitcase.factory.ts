@@ -1,14 +1,13 @@
 import { faker } from '@faker-js/faker';
+import { type Suitcase } from '../../src/types/suitcase.types';
 import {
-	Suitcase,
 	SuitcaseFeature,
 	SuitcaseType,
 	WheelType,
-	Size,
-	Material,
-} from '@beggy/shared/types';
-import { ItemFactoryOverrides, buildItem } from '@beggy/shared-factories';
-import { SuitcaseItems } from '@beggy/shared/types';
+} from '../../src/constants/suitcase.enums';
+import { Material, Size } from '../../src/constants/bag.enums';
+import { type ItemFactoryOverrides, buildItem } from './item.factory';
+import { type SuitcaseItems } from '../../src/types';
 
 type SuitcaseFactoryOverrides = Partial<
 	Pick<

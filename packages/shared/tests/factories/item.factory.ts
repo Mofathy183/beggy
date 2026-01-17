@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
+import type { Item } from '../../src/types/item.types';
 import {
-	Item,
 	ItemCategory,
 	WeightUnit,
 	VolumeUnit,
-} from '@beggy/shared/types';
+} from '../../src/constants/item.enums';
 
 export type ItemFactoryOverrides = Partial<
 	Pick<

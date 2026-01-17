@@ -1,4 +1,4 @@
-import { ContainerStatus } from '../types/constraints.types.js';
+import { ContainerStatus } from '../constants/constraints.enums.js';
 
 // ============================================================================
 // STATUS CHECK FUNCTIONS

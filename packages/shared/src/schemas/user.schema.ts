@@ -1,7 +1,7 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema.js';
-import { Role } from '../types/auth.types.js';
-import { Gender } from '../types/profile.types.js';
+import { Role } from '../constants/auth.enums.js';
+import { Gender } from '../constants/profile.enums.js';
 
 /**
  * Admin-related validation schemas.
@@ -83,7 +83,7 @@ export const AdminSchema = {
 		 * - Removes confirmPassword before data reaches services or DB
 		 * - Guarantees sensitive fields are never persisted
 		 */
-		.transform(({ confirmPassword, ...rest }) => rest),
+		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 
 	/**
 	 * Change-role schema.

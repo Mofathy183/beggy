@@ -1,11 +1,15 @@
 import { it, describe, expect } from 'vitest';
-import { ItemSchema } from '@beggy/shared/schemas';
-import { ItemCategory, WeightUnit, VolumeUnit } from '@beggy/shared/types';
-import { itemFactory } from '@beggy/shared-factories';
+import { ItemSchema } from '../../src/schemas/item.schema';
+import {
+	ItemCategory,
+	WeightUnit,
+	VolumeUnit,
+} from '../../src/constants/item.enums';
+import { itemFactory } from '../factories/item.factory';
 
 describe('ItemSchema.create', () => {
 	it('accepts valid input and applies defaults', () => {
-		const { userId, ...mockItem } = itemFactory('user-1', {
+		const { userId: _userId, ...mockItem } = itemFactory('user-1', {
 			category: ItemCategory.ELECTRONICS,
 			weightUnit: WeightUnit.KILOGRAM,
 			volumeUnit: VolumeUnit.ML,
@@ -16,7 +20,7 @@ describe('ItemSchema.create', () => {
 	});
 
 	it('accepts optional fields when provided', () => {
-		const { userId, ...mockItem } = itemFactory('user-1', {
+		const { userId: _userId, ...mockItem } = itemFactory('user-1', {
 			color: 'clear',
 			isFragile: true,
 		});
@@ -27,7 +31,7 @@ describe('ItemSchema.create', () => {
 	});
 
 	it('rejects unknown fields', () => {
-		const { userId, ...mockItem } = itemFactory('user-1');
+		const { userId: _userId, ...mockItem } = itemFactory('user-1');
 		expect(() =>
 			ItemSchema.create.parse({
 				...mockItem,

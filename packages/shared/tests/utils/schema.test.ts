@@ -4,7 +4,7 @@ import {
 	createArrayField,
 	createNameField,
 	createNumberField,
-} from '@beggy/shared/utils';
+} from '../../src/utils/schema.util';
 
 describe('createNumberField()', () => {
 	it('accepts a valid number and rounds correctly', () => {

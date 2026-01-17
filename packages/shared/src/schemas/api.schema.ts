@@ -8,19 +8,22 @@ import {
 	Size,
 	Material,
 	BagOrderByField,
-} from '../types/bag.types.js';
-import { ItemOrderByField, ItemCategory } from '../types/item.types.js';
-import { SuitcaseType, WheelType } from '../types/suitcase.types.js';
-import { OrderDirection } from '../types/api.types.js';
-import { ProfileOrderByField } from '../types/profile.types.js';
-import { SuitcaseOrderByField } from '../types/suitcase.types.js';
+} from '../constants/bag.enums.js';
+import { ItemOrderByField, ItemCategory } from '../constants/item.enums.js';
+import {
+	SuitcaseType,
+	WheelType,
+	SuitcaseOrderByField,
+} from '../constants/suitcase.enums.js';
+import { OrderDirection } from '../constants/api.enums.js';
+import { ProfileOrderByField } from '../constants/profile.enums.js';
 import type { NumericEntity, NumericMetric } from '../types/schema.types.js';
 import { normalizeRound } from '../utils/schema.util.js';
 import { NUMBER_CONFIG } from '../constants/constraints.js';
 import { FieldsSchema } from '../schemas/fields.schema.js';
 import * as z from 'zod';
-import { Role } from '../types/auth.types.js';
-import { UserOrderByField } from '../types/user.types.js';
+import { Role } from '../constants/auth.enums.js';
+import { UserOrderByField } from '../constants/user.enums.js';
 
 /**
  * Factory for building "order by" query schemas.

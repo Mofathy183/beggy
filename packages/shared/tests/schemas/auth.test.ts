@@ -1,5 +1,5 @@
 import { it, describe, expect } from 'vitest';
-import { AuthSchema } from '@beggy/shared/schemas';
+import { AuthSchema } from '../../src/schemas/auth.schema';
 
 describe('AuthSchema.login', () => {
 	it('accepts valid credentials and defaults rememberMe to false', () => {

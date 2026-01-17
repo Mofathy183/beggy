@@ -1,7 +1,8 @@
 import { it, describe, expect } from 'vitest';
-import { profileFactory } from '@beggy/shared-factories';
-import { ProfileSchema } from '@beggy/shared/schemas';
-import { Gender, Role } from '@beggy/shared/types';
+import { profileFactory } from '../factories/profile.factory';
+import { ProfileSchema } from '../../src/schemas/profile.schema';
+import { Gender } from '../../src/constants/profile.enums';
+import { Role } from '../../src/constants/auth.enums';
 
 describe('ProfileSchema.editProfile', () => {
 	it('accepts an empty object for partial updates', () => {
@@ -19,7 +20,7 @@ describe('ProfileSchema.editProfile', () => {
 	});
 
 	it('accepts multiple profile fields together', () => {
-		const { userId, ...mockProfile } = profileFactory(
+		const { userId: _userId, ...mockProfile } = profileFactory(
 			'user-1',
 			{},
 			{ withDetails: true }

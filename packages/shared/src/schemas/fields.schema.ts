@@ -1,5 +1,4 @@
 import * as z from 'zod';
-import type {} from 'zod';
 import { REGEX } from '../constants/constraints.js';
 import {
 	createArrayField,

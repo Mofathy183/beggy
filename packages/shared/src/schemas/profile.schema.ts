@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema.js';
-import { Gender } from '../types/profile.types.js';
+import { Gender } from '../constants/profile.enums.js';
 
 /**
  * User profile–related validation schemas.

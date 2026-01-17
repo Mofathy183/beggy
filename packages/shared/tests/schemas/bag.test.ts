@@ -1,18 +1,26 @@
 import { it, describe, expect } from 'vitest';
-import { BagSchema } from '@beggy/shared/schemas';
-import { BagFeature } from '@beggy/shared/types';
-import { bagFactory } from '@beggy/shared-factories';
+import { BagSchema } from '../../src/schemas/bag.schema';
+import { BagFeature } from '../../src/constants/bag.enums';
+import { bagFactory } from '../factories/bag.factory';
 
 describe('BagSchema.create', () => {
 	it('accepts valid input and applies defaults', () => {
-		const { userId, bagWeight, ...mockBag } = bagFactory('user-1');
+		const {
+			userId: _userId,
+			bagWeight: _bagWeight,
+			...mockBag
+		} = bagFactory('user-1');
 		const result = BagSchema.create.parse(mockBag);
 
 		expect(result).toEqual(mockBag);
 	});
 
 	it('accepts optional fields when provided', () => {
-		const { userId, bagWeight, ...mockBag } = bagFactory('user-1', {
+		const {
+			userId: _userId,
+			bagWeight: _bagWeight,
+			...mockBag
+		} = bagFactory('user-1', {
 			color: 'red',
 			features: [BagFeature.WATERPROOF],
 		});
@@ -23,7 +31,11 @@ describe('BagSchema.create', () => {
 	});
 
 	it('rejects unknown fields', () => {
-		const { userId, bagWeight, ...mockBag } = bagFactory('user-1');
+		const {
+			userId: _userId,
+			bagWeight: _bagWeight,
+			...mockBag
+		} = bagFactory('user-1');
 
 		expect(() =>
 			BagSchema.create.parse({

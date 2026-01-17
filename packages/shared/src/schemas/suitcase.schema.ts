@@ -1,11 +1,11 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema.js';
-import { Size, Material } from '../types/bag.types.js';
+import { Size, Material } from '../constants/bag.enums.js';
 import {
 	WheelType,
 	SuitcaseFeature,
 	SuitcaseType,
-} from '../types/suitcase.types.js';
+} from '../constants/suitcase.enums.js';
 
 /**
  * Suitcase-related validation schemas.

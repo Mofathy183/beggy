@@ -1,13 +1,12 @@
 import { faker } from '@faker-js/faker';
 import {
-	Bag,
 	BagFeature,
 	BagType,
 	Size,
 	Material,
-	BagItems,
-} from '@beggy/shared/types';
-import { type ItemFactoryOverrides, buildItem } from '@beggy/shared-factories';
+} from '../../src/constants/bag.enums';
+import { type Bag, type BagItems } from '../../src/types/bag.types';
+import { type ItemFactoryOverrides, buildItem } from './item.factory';
 
 type BagFactoryOverrides = Partial<
 	Pick<

@@ -1,6 +1,10 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema.js';
-import { ItemCategory, WeightUnit, VolumeUnit } from '../types/item.types.js';
+import {
+	ItemCategory,
+	WeightUnit,
+	VolumeUnit,
+} from '../constants/item.enums.js';
 
 /**
  * Item-related validation schemas.

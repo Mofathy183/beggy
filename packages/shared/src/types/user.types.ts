@@ -3,9 +3,10 @@
  * These types represent the data structure returned from the API endpoints.
  * They are derived from Prisma models but tailored for API responses.
  */
-import * as z from 'zod';
-import { AdminSchema } from '../schemas/user.schema.js';
-import type { AuthProvider, Role, UserToken } from '../types/auth.types.js';
+import type * as z from 'zod';
+import { type AdminSchema } from '../schemas/user.schema.js';
+import type { UserToken } from '../types/auth.types.js';
+import type { AuthProvider, Role } from '../constants/auth.enums.js';
 import type { Profile } from '../types/profile.types.js';
 import type { Bag } from '../types/bag.types.js';
 import type { Suitcase } from '../types/suitcase.types.js';
@@ -162,21 +163,6 @@ export interface UserWithRelations extends User {
 	bags: Bag[];
 	suitcases: Suitcase[];
 	items: Item[];
-}
-
-/**
- * Allowed user ordering fields.
- *
- * @remarks
- * - Defines the whitelist of sortable fields for user list endpoints
- * - Prevents arbitrary or unsafe ordering inputs
- * - Designed to be consumed by a shared `orderBy` schema builder
- */
-export enum UserOrderByField {
-	CREATED_AT = 'createdAt',
-	UPDATED_AT = 'updatedAt',
-	EMAIL = 'email',
-	ROLE = 'role',
 }
 
 // ─────────────────────────────────────────────
