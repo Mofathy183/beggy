@@ -5,7 +5,7 @@ import {
 	WeightUnit,
 	VolumeUnit,
 } from '../../src/constants/item.enums';
-import { itemFactory } from '../factories/item.factory';
+import { itemFactory } from '../../src/testing/factories/item.factory';
 
 describe('ItemSchema.create', () => {
 	it('accepts valid input and applies defaults', () => {

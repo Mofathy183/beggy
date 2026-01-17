@@ -1,5 +1,5 @@
 import { it, describe, expect } from 'vitest';
-import { profileFactory } from '../factories/profile.factory';
+import { profileFactory } from '../../src/testing/factories/profile.factory';
 import { ProfileSchema } from '../../src/schemas/profile.schema';
 import { Gender } from '../../src/constants/profile.enums';
 import { Role } from '../../src/constants/auth.enums';

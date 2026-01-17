@@ -4,9 +4,9 @@ import {
 	BagType,
 	Size,
 	Material,
-} from '../../src/constants/bag.enums';
-import { type Bag, type BagItems } from '../../src/types/bag.types';
-import { type ItemFactoryOverrides, buildItem } from './item.factory';
+} from '../../constants/bag.enums.js';
+import { type Bag, type BagItems } from '../../types/bag.types.js';
+import { type ItemFactoryOverrides, buildItem } from './item.factory.js';
 
 type BagFactoryOverrides = Partial<
 	Pick<

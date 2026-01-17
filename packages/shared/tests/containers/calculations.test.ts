@@ -1,5 +1,5 @@
 import { it, describe, expect } from 'vitest';
-import { buildBagItem } from '../factories/bag.factory';
+import { buildBagItem } from '../../src/testing/factories/bag.factory';
 import {
 	calculateCurrentCapacity,
 	calculateCurrentWeight,
