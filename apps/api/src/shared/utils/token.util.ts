@@ -8,7 +8,7 @@ import {
 	SecureTokenPair,
 } from '@shared/types';
 import { envConfig } from '@config';
-import { Role } from '@beggy/shared/constants';
+import { Role, TokenType } from '@beggy/shared/constants';
 import { ErrorCode } from '@beggy/shared/constants';
 import { FieldsSchema, ParamsSchema } from '@beggy/shared/schemas';
 import { appErrorMap } from '@shared/utils';
@@ -256,24 +256,25 @@ export const generateEmailVerificationToken = (): SecureTokenPair => {
  * @description Returns the expiration Date for different token types.
  *
  * Token Expiry Durations:
- * - "verify": 24 hours
- * - "change": 60 minutes
- * - "password": 15 minutes
+ * - "EMAIL_VERIFICATION": 24 hours
+ * - "CHANGE_EMAIL": 60 minutes
+ * - "PASSWORD_RESET": 15 minutes
  *
  * Explain type names:
- * - "verify": verify email
- * - "change": change email
- * - "password": reset password
+ * - "EMAIL_VERIFICATION": EMAIL_VERIFICATION
+ * - "CHANGE_EMAIL": CHANGE_EMAIL
+ * - "PASSWORD_RESET": PASSWORD_RESET
  *
- * @param {String} type - Either 'verify', 'change', or 'password'.
+ * @param {TokenType} type - Either 'EMAIL_VERIFICATION', 'CHANGE_EMAIL', or 'PASSWORD_RESET'.
  * @returns {Date}
  */
-export const setExpiredAt = (type: string): Date => {
+export const setExpiredAt = (type: TokenType): Date => {
 	//* the verify email token will expire in 24 hours
-	if (type === 'verify') return addMinutes(new Date(), 60 * 24);
+	if (type === TokenType.EMAIL_VERIFICATION)
+		return addMinutes(new Date(), 60 * 24);
 
 	//* the change email token will expire in 60 minutes
-	if (type === 'change') return addMinutes(new Date(), 60);
+	if (type === TokenType.CHANGE_EMAIL) return addMinutes(new Date(), 60);
 
 	//* the password reset token will expire in 15 minutes
 	return addMinutes(new Date(), 15);

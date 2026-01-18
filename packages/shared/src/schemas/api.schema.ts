@@ -80,6 +80,7 @@ export const dateRangeSchema = z
 		 */
 		to: FieldsSchema.date(false),
 	})
+	.partial()
 	/**
 	 * Cross-field validation.
 	 *
@@ -144,6 +145,7 @@ export const numberRangeSchema = <M extends NumericEntity>(
 					.optional()
 					.transform((val) => normalizeRound(val, decimals)),
 			})
+			.partial()
 			/**
 			 * Cross-field validation.
 			 *
@@ -189,53 +191,55 @@ export const QuerySchema = {
 	 * - All fields are optional to allow flexible combinations
 	 * - Mapped directly to Prisma `where` conditions downstream
 	 */
-	userFilter: z.strictObject({
-		/**
-		 * User email address.
-		 *
-		 * @remarks
-		 * - Optional exact-match filter
-		 * - Useful for locating a specific account
-		 * - Case-sensitivity should be handled at the DB layer if needed
-		 */
-		email: FieldsSchema.email(false),
+	userFilter: z
+		.strictObject({
+			/**
+			 * User email address.
+			 *
+			 * @remarks
+			 * - Optional exact-match filter
+			 * - Useful for locating a specific account
+			 * - Case-sensitivity should be handled at the DB layer if needed
+			 */
+			email: FieldsSchema.email(false),
 
-		/**
-		 * User role filter.
-		 *
-		 * @remarks
-		 * - Restricts results to a specific system role
-		 * - Enum-based validation prevents privilege escalation attempts
-		 */
-		role: FieldsSchema.enum<typeof Role>(Role, false),
+			/**
+			 * User role filter.
+			 *
+			 * @remarks
+			 * - Restricts results to a specific system role
+			 * - Enum-based validation prevents privilege escalation attempts
+			 */
+			role: FieldsSchema.enum<typeof Role>(Role, false),
 
-		/**
-		 * Account active status.
-		 *
-		 * @remarks
-		 * - Used for moderation and lifecycle management
-		 * - Commonly paired with pagination and ordering
-		 */
-		isActive: z.boolean().optional(),
+			/**
+			 * Account active status.
+			 *
+			 * @remarks
+			 * - Used for moderation and lifecycle management
+			 * - Commonly paired with pagination and ordering
+			 */
+			isActive: z.boolean(),
 
-		/**
-		 * Email verification status.
-		 *
-		 * @remarks
-		 * - Helps identify unverified or manually verified accounts
-		 * - Useful for compliance or onboarding audits
-		 */
-		isEmailVerified: z.boolean().optional(),
+			/**
+			 * Email verification status.
+			 *
+			 * @remarks
+			 * - Helps identify unverified or manually verified accounts
+			 * - Useful for compliance or onboarding audits
+			 */
+			isEmailVerified: z.boolean(),
 
-		/**
-		 * User creation date range.
-		 *
-		 * @remarks
-		 * - Supports filtering users created within a specific period
-		 * - Typically translated into `gte` / `lte` Prisma filters
-		 */
-		createdAt: dateRangeSchema.optional(),
-	}),
+			/**
+			 * User creation date range.
+			 *
+			 * @remarks
+			 * - Supports filtering users created within a specific period
+			 * - Typically translated into `gte` / `lte` Prisma filters
+			 */
+			createdAt: dateRangeSchema,
+		})
+		.partial(),
 
 	/**
 	 * Profile filter schema.
@@ -244,11 +248,13 @@ export const QuerySchema = {
 	 * - Supports location-based filtering
 	 * - Allows date range filtering on creation date
 	 */
-	profileFilter: z.strictObject({
-		city: FieldsSchema.name('City Name', 'place', false),
-		country: FieldsSchema.name('Country Name', 'place', false),
-		createdAt: dateRangeSchema.optional(),
-	}),
+	profileFilter: z
+		.strictObject({
+			city: FieldsSchema.name('City Name', 'place', false),
+			country: FieldsSchema.name('Country Name', 'place', false),
+			createdAt: dateRangeSchema,
+		})
+		.partial(),
 
 	/**
 	 * Item filter schema.
@@ -257,14 +263,16 @@ export const QuerySchema = {
 	 * - Supports categorical and numeric filtering
 	 * - Weight and volume use domain-aware range validation
 	 */
-	itemFilter: z.strictObject({
-		category: FieldsSchema.enum(ItemCategory, false),
-		color: z.string().optional(),
-		isFragile: z.boolean().optional(),
-		weight: numberRangeSchema('item', 'weight').optional(),
-		volume: numberRangeSchema('item', 'volume').optional(),
-		createdAt: dateRangeSchema.optional(),
-	}),
+	itemFilter: z
+		.strictObject({
+			category: FieldsSchema.enum(ItemCategory, false),
+			color: z.string(),
+			isFragile: z.boolean(),
+			weight: numberRangeSchema('item', 'weight'),
+			volume: numberRangeSchema('item', 'volume'),
+			createdAt: dateRangeSchema,
+		})
+		.partial(),
 
 	/**
 	 * Bag filter schema.
@@ -273,15 +281,17 @@ export const QuerySchema = {
 	 * - Designed around physical constraints (capacity / weight)
 	 * - Prevents invalid ranges and values early
 	 */
-	bagFilter: z.strictObject({
-		type: FieldsSchema.enum(BagType, false),
-		size: FieldsSchema.enum(Size, false),
-		material: FieldsSchema.enum(Material, false),
-		color: z.string().optional(),
-		maxCapacity: numberRangeSchema('bag', 'capacity').optional(),
-		maxWeight: numberRangeSchema('bag', 'weight').optional(),
-		createdAt: dateRangeSchema.optional(),
-	}),
+	bagFilter: z
+		.strictObject({
+			type: FieldsSchema.enum(BagType, false),
+			size: FieldsSchema.enum(Size, false),
+			material: FieldsSchema.enum(Material, false),
+			color: z.string(),
+			maxCapacity: numberRangeSchema('bag', 'capacity'),
+			maxWeight: numberRangeSchema('bag', 'weight'),
+			createdAt: dateRangeSchema,
+		})
+		.partial(),
 
 	/**
 	 * Suitcase filter schema.
@@ -290,16 +300,18 @@ export const QuerySchema = {
 	 * - Mirrors bag filtering with suitcase-specific fields
 	 * - Wheel type included as a discrete filter
 	 */
-	suitcaseFilter: z.strictObject({
-		type: FieldsSchema.enum(SuitcaseType, false),
-		size: FieldsSchema.enum(Size, false),
-		material: FieldsSchema.enum(Material, false),
-		wheels: FieldsSchema.enum(WheelType, false),
-		color: z.string().optional(),
-		maxCapacity: numberRangeSchema('suitcase', 'capacity').optional(),
-		maxWeight: numberRangeSchema('suitcase', 'weight').optional(),
-		createdAt: dateRangeSchema.optional(),
-	}),
+	suitcaseFilter: z
+		.strictObject({
+			type: FieldsSchema.enum(SuitcaseType, false),
+			size: FieldsSchema.enum(Size, false),
+			material: FieldsSchema.enum(Material, false),
+			wheels: FieldsSchema.enum(WheelType, false),
+			color: z.string(),
+			maxCapacity: numberRangeSchema('suitcase', 'capacity'),
+			maxWeight: numberRangeSchema('suitcase', 'weight'),
+			createdAt: dateRangeSchema,
+		})
+		.partial(),
 };
 
 /**

@@ -61,7 +61,7 @@ export const passwordChangeAt = () => {
  * @returns {Number} Timestamp
  */
 const passwordChangeTimestamp = (changeAt: Date): number => {
-	const timestamp = parseInt(changeAt.getTime() / 1000, 10);
+	const timestamp = Math.floor(changeAt.getTime() / 1000);
 	return timestamp;
 };
 

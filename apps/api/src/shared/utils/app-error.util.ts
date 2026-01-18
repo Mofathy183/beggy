@@ -14,6 +14,8 @@ import type { StatusCode } from '@shared/types';
  * - Interpreted in the error-handling middleware
  */
 export class AppError extends Error {
+	public readonly originalCause?: unknown;
+
 	/**
 	 * @param code        Domain-level error code (used for messages & frontend logic)
 	 * @param status      HTTP status code for the response
@@ -23,7 +25,7 @@ export class AppError extends Error {
 	constructor(
 		public readonly code: ErrorCode, //* Stable, machine-readable error identifier
 		public readonly status: StatusCode, //* HTTP status code to be used by the error handler
-		override cause?: unknown,
+		cause?: unknown,
 		public readonly options?: ErrorResponseOptions
 	) {
 		/**

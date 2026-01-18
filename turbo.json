@@ -69,7 +69,7 @@
 				"**/*.spec.ts",
 				"**/*.spec.tsx"
 			],
-			"outputs": ["coverage/**"],
+			"outputs": [],
 			"env": ["NODE_ENV", "DATABASE_URL"]
 		},
 

@@ -1,12 +1,12 @@
 import express, { Express } from 'express';
-import session from 'express-session';
+// import session from 'express-session';
 import flash from 'express-flash';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { xss } from 'express-xss-sanitizer';
 import swaggerUi from 'swagger-ui-express';
 
-import { sessionConfig } from '@config';
+// import { sessionConfig } from '@config';
 import {
 	limiter,
 	swaggerSpec,
@@ -54,7 +54,7 @@ app.use(cookieParser());
 // ============================================
 
 // 8. Session configuration (must come before Passport)
-app.use(session(sessionConfig));
+// app.use(session(sessionConfig));
 
 // 9. Flash messages (depends on sessions)
 app.use(flash());

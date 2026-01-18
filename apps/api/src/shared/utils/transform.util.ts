@@ -208,8 +208,13 @@ const applyUserBasics = (where: UserWhereInput, filter: UserFilterInput) => {
 	if (filter.email)
 		where.email = { contains: filter.email, mode: 'insensitive' };
 	if (filter.role) where.role = filter.role;
-	if (filter.isActive) where.isActive = filter.isActive;
-	if (filter.isEmailVerified) where.isEmailVerified = filter.isEmailVerified;
+	if (filter.isActive !== undefined) {
+		where.isActive = filter.isActive;
+	}
+
+	if (filter.isEmailVerified !== undefined) {
+		where.isEmailVerified = filter.isEmailVerified;
+	}
 };
 
 /**
