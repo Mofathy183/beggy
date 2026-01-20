@@ -2,10 +2,10 @@ import { ZodType } from 'zod';
 import type {
 	Action,
 	OrderDirection,
-	PaginationParams,
 	Role,
 	Subject,
-} from '@beggy/shared/types';
+} from '@beggy/shared/constants';
+import { PaginationParams } from '@beggy/shared/types';
 import { PureAbility } from '@casl/ability';
 
 /**

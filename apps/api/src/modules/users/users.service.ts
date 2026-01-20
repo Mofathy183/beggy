@@ -56,7 +56,7 @@ export class UserService {
 	 * - A list of users for the current page
 	 * - Pagination metadata describing navigation state
 	 */
-	async getAll(
+	async listUsers(
 		pagination: PaginationPayload,
 		filter: UserFilterInput,
 		orderBy: UserOrderByInput
@@ -133,7 +133,7 @@ export class UserService {
 	 *
 	 * @returns The newly created user record
 	 */
-	async create(user: CreateUserPayload): Promise<User> {
+	async createUser(user: CreateUserPayload): Promise<User> {
 		// Hash password before persisting credentials
 		const hashedPassword = await hashPassword(user.password);
 
@@ -297,7 +297,7 @@ export class UserService {
 	 *
 	 * @returns Summary payload describing the delete operation
 	 */
-	async deleteMany(filter?: UserFilterInput): Promise<DeletePayload> {
+	async deleteUsers(filter?: UserFilterInput): Promise<DeletePayload> {
 		const { where } = buildUserQuery(
 			filter ?? ({} as UserFilterInput),
 			{} as UserOrderByInput

@@ -15,6 +15,7 @@ import type {
 	ItemOrderByInput,
 	SuitcaseFilterInput,
 	SuitcaseOrderByInput,
+    ISODateString,
 } from '@beggy/shared/types';
 import {
 	UserWhereInput,
@@ -480,3 +481,7 @@ export const buildSuitcaseQuery = (
 		),
 	};
 };
+
+
+export const toISO = (date: Date): ISODateString =>
+	date.toISOString() as ISODateString;

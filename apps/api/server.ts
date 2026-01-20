@@ -1,5 +1,5 @@
 import app from './app';
-import { serverConfig } from './src/config/env.js';
+import { serverConfig } from '@config';
 
 // Application Listen
 app.listen(serverConfig.port, () => {

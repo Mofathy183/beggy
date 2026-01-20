@@ -3,11 +3,9 @@ import { type ExtendedPrismaClient } from '@prisma';
 import { Role, ErrorCode } from '@beggy/shared/constants';
 import {
 	buildProfile,
-	buildUser,
-	buildUsers,
 	profileFactory,
-	userFactory,
-} from '@beggy/shared/testing/factories';
+} from '@modules/profiles/__tests__/profile.factory';
+import { buildUser, buildUsers, userFactory } from './factories/user.factory';
 import { UserService } from '@modules/users';
 
 vi.mock('@shared/utils/password.util', async () => {
@@ -60,7 +58,7 @@ describe('UserService.getAll()', () => {
 		(prismaMock.user.findMany as any).mockResolvedValue(users);
 		(prismaMock.user.count as any).mockResolvedValue(3);
 
-		const result = await service.getAll(
+		const result = await service.listUsers(
 			{ page: 1, limit: 10, offset: 0 },
 			{} as any,
 			{} as any
@@ -77,7 +75,7 @@ describe('UserService.getAll()', () => {
 		(prismaMock.user.findMany as any).mockResolvedValue(users);
 		(prismaMock.user.count as any).mockResolvedValue(11);
 
-		const result = await service.getAll(
+		const result = await service.listUsers(
 			{ page: 1, limit: 10, offset: 0 },
 			{} as any,
 			{} as any
@@ -132,7 +130,7 @@ describe('UserService.create()', () => {
 
 		(prismaMock.user.create as any).mockResolvedValue(user);
 
-		const result = await service.create({
+		const result = await service.createUser({
 			email: user.email,
 			password: 'password123',
 			firstName: profile.firstName,
@@ -164,17 +162,28 @@ describe('UserService.updateProfile()', () => {
 describe('UserService.updateStatus()', () => {
 	const service = new UserService(prismaMock);
 
-	it('updates active and verification status', async () => {
-		const user = buildUser({ isActive: false });
+	it('updates user active and verification status', async () => {
+		const existingUser = {
+			...buildUser(),
+			isActive: true,
+			isEmailVerified: false,
+		};
 
-		(prismaMock.user.update as any).mockResolvedValue(user);
+		const updatedUser = {
+			...existingUser,
+			isActive: false,
+			isEmailVerified: true,
+		};
 
-		const result = await service.updateStatus(user.id, {
+		(prismaMock.user.update as any).mockResolvedValue(updatedUser);
+
+		const result = await service.updateStatus(existingUser.id, {
 			isActive: false,
 			isEmailVerified: true,
 		});
 
 		expect(result.isActive).toBe(false);
+		expect(result.isEmailVerified).toBe(true);
 	});
 });
 
@@ -212,7 +221,7 @@ describe('UserService.deleteMany()', () => {
 	it('returns delete summary', async () => {
 		(prismaMock.user.deleteMany as any).mockResolvedValue({ count: 3 });
 
-		const result = await service.deleteMany();
+		const result = await service.deleteUsers();
 
 		expect(result.count).toBe(3);
 	});
