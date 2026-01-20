@@ -8,8 +8,9 @@ import {
 import type * as z from 'zod';
 import type { Permissions } from '../types/auth.types.js';
 import type { AuthProvider } from '../constants/auth.enums.js';
-import type { User } from '../types/user.types.js';
-import type { Profile } from '../types/profile.types.js';
+import type { UserDTO } from '../types/user.types.js';
+import type { ProfileDTO } from '../types/profile.types.js';
+import type { ISODateString } from './index.js';
 
 /**
  * Lightweight authenticated user identity snapshot.
@@ -20,10 +21,7 @@ import type { Profile } from '../types/profile.types.js';
  * - Safe to expose to clients via `/auth/me`
  * - Does NOT include authentication secrets or domain relations
  */
-export interface AuthMeUser extends Pick<
-	User,
-	'id' | 'email' | 'role' | 'isActive' | 'isEmailVerified' | 'createdAt'
-> {}
+export type AuthMeUser = Pick<UserDTO, 'id' | 'email' | 'role' | 'createdAt'>;
 
 /**
  * Public-facing user profile subset for authenticated sessions.
@@ -34,8 +32,8 @@ export interface AuthMeUser extends Pick<
  * - Excludes sensitive or rarely-used profile attributes
  * - May be `null` for newly created or incomplete profiles
  */
-export interface AuthMeProfile extends Pick<
-	Profile,
+export type AuthMeProfile = Pick<
+	ProfileDTO,
 	| 'firstName'
 	| 'lastName'
 	| 'avatarUrl'
@@ -43,7 +41,7 @@ export interface AuthMeProfile extends Pick<
 	| 'age'
 	| 'city'
 	| 'country'
-> {}
+>;
 
 /**
  * Authenticated session context returned by `/auth/me`.
@@ -184,7 +182,7 @@ export interface PaginationMeta {
 export interface BaseResponse {
 	success: boolean;
 	message: string;
-	timestamp: string; // ISO string format
+	timestamp: ISODateString; // ISO string format
 }
 
 /**

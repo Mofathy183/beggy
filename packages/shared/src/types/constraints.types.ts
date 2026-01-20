@@ -1,6 +1,7 @@
 import type { WeightUnit, VolumeUnit } from '../constants/item.enums.js';
-import type { BagItems } from '../types/bag.types.js';
-import type { SuitcaseItems } from '../types/suitcase.types.js';
+import type { BagDTO } from '../types/bag.types.js';
+import type { SuitcaseDTO } from '../types/suitcase.types.js';
+import type { ItemDTO } from '../types/item.types.js';
 
 /**
  * Lookup map for converting any supported weight unit into kilograms.
@@ -41,6 +42,30 @@ export type ConvertToKilogram = Record<WeightUnit, number>;
  * ```
  */
 export type ConvertToLiter = Record<VolumeUnit, number>;
+
+/**
+ * Join model linking suitcases to contained items.
+ *
+ * @remarks
+ * - Enables many-to-many relationships
+ * - Used for capacity, weight, and packing validation
+ */
+interface SuitcaseItems {
+	item: ItemDTO;
+	suitcase: SuitcaseDTO;
+}
+
+/**
+ * Join model linking bags to contained items.
+ *
+ * @remarks
+ * - Enables many-to-many relationships
+ * - Useful for inventory tracking and capacity calculations
+ */
+interface BagItems {
+	item: ItemDTO;
+	bag: BagDTO;
+}
 
 /**
  * Union type representing item collections inside containers.

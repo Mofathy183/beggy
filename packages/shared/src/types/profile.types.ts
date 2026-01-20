@@ -1,7 +1,7 @@
 import type * as z from 'zod';
-import { type User } from '../types/user.types.js';
 import { type ProfileSchema } from '../schemas/profile.schema.js';
 import type { Gender } from '../constants/profile.enums.js';
+import type { ISODateString } from './index.js';
 
 /**
  * User profile containing public and user-editable information.
@@ -11,7 +11,7 @@ import type { Gender } from '../constants/profile.enums.js';
  * - Safe to expose (partially) to clients via controlled DTOs
  * - Does not contain authentication or authorization data
  */
-export interface Profile {
+export interface ProfileDTO {
 	/**
 	 * Primary identifier for the profile.
 	 */
@@ -54,7 +54,7 @@ export interface Profile {
 	 * @remarks
 	 * Used only for derived calculations (e.g. age).
 	 */
-	birthDate: Date | null;
+	birthDate: ISODateString | null;
 
 	/**
 	 * Optional country.
@@ -78,28 +78,14 @@ export interface Profile {
 	city: string | null;
 
 	/**
-	 * Profile creation timestamp.
+	 * Profile creation ISODateString.
 	 */
-	createdAt: Date;
+	createdAt: ISODateString;
 
 	/**
-	 * Profile last update timestamp.
+	 * Profile last update ISODateString.
 	 */
-	updatedAt: Date;
-}
-
-/**
- * Profile model with resolved relations.
- *
- * @remarks
- * - Intended for internal or service-layer usage
- * - Should not be returned directly to public clients
- */
-export interface ProfileWithRelations extends Profile {
-	/**
-	 * Owning user identity.
-	 */
-	user: User;
+	updatedAt: ISODateString;
 }
 
 // ─────────────────────────────────────────────

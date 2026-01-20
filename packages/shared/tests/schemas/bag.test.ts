@@ -1,7 +1,7 @@
 import { it, describe, expect } from 'vitest';
 import { BagSchema } from '../../src/schemas/bag.schema';
 import { BagFeature } from '../../src/constants/bag.enums';
-import { bagFactory } from '../../src/testing/factories/bag.factory';
+import { bagFactory } from '../factories/bag.factory';
 
 describe('BagSchema.create', () => {
 	it('accepts valid input and applies defaults', () => {

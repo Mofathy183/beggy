@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { type User } from '../../types/user.types.js';
-import { Role } from '../../constants/auth.enums.js';
+import { type UserDTO } from '../../src/types/user.types.js';
+import { Role } from '../../src/constants/auth.enums.js';
 
 /**
  * Fields that can be overridden when creating a User via factories.
@@ -9,9 +9,7 @@ import { Role } from '../../constants/auth.enums.js';
  * - This intentionally excludes relations and system-managed fields.
  * - A factory should only allow overrides for fields it actually owns.
  */
-type UserFactoryOverrides = Partial<
-	Pick<User, 'email' | 'role' | 'isActive' | 'isEmailVerified'>
->;
+type UserFactoryOverrides = Partial<Pick<UserDTO, 'email' | 'role'>>;
 
 /**
  * Optional configuration for factory-generated values.
@@ -41,12 +39,10 @@ type UserFactoryOptions = {
 export const userFactory = (
 	overrides: UserFactoryOverrides = {},
 	options: UserFactoryOptions = {}
-): Omit<User, 'id' | 'createdAt' | 'updatedAt'> => ({
+): Omit<UserDTO, 'id' | 'createdAt' | 'updatedAt'> => ({
 	email: overrides.email ?? faker.internet.email(options.email),
 
 	role: overrides.role ?? Role.USER,
-	isActive: overrides.isActive ?? true,
-	isEmailVerified: overrides.isEmailVerified ?? false,
 });
 
 /**
@@ -63,17 +59,14 @@ export const userFactory = (
 export const buildUser = (
 	overrides: UserFactoryOverrides = {},
 	options: UserFactoryOptions = {}
-): User => {
-	const createdAt = faker.date.past();
-	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
+): Omit<UserDTO, 'createdAt' | 'updatedAt'> => {
+	// const createdAt = faker.date.past().toISOString();
+	// const updatedAt = faker.date.between({ from: createdAt, to: new Date() }).toISOString();
 
 	return {
 		id: faker.string.uuid(),
 
 		...userFactory(overrides, options),
-
-		createdAt,
-		updatedAt,
 	};
 };
 
@@ -103,4 +96,5 @@ export const buildUsers = (
 	count: number,
 	overrides?: UserFactoryOverrides,
 	options?: UserFactoryOptions
-): User[] => Array.from({ length: count }, () => buildUser(overrides, options));
+): Omit<UserDTO, 'createdAt' | 'updatedAt'>[] =>
+	Array.from({ length: count }, () => buildUser(overrides, options));

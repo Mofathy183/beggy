@@ -1,14 +1,14 @@
 import { faker } from '@faker-js/faker';
-import type { Item } from '../../types/item.types.js';
+import type { ItemDTO } from '../../src/types/item.types.js';
 import {
 	ItemCategory,
 	WeightUnit,
 	VolumeUnit,
-} from '../../constants/item.enums.js';
+} from '../../src/constants/item.enums.js';
 
 export type ItemFactoryOverrides = Partial<
 	Pick<
-		Item,
+		ItemDTO,
 		| 'name'
 		| 'category'
 		| 'quantity'
@@ -21,7 +21,7 @@ export type ItemFactoryOverrides = Partial<
 	>
 >;
 
-type ItemFactoryOmitFields = Omit<Item, 'id' | 'createdAt' | 'updatedAt'>;
+type ItemFactoryOmitFields = Omit<ItemDTO, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * Optional configuration flags for Item factories.
@@ -104,17 +104,14 @@ export const itemFactory = (
 export const buildItem = (
 	userId: string,
 	overrides: ItemFactoryOverrides = {}
-): Item => {
-	const createdAt = faker.date.past();
-	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
+): Omit<ItemDTO, 'createdAt' | 'updatedAt'> => {
+	// const createdAt = faker.date.past().toISOString();
+	// const updatedAt = faker.date.between({ from: createdAt, to: new Date() }).toISOString();
 
 	return {
 		id: faker.string.uuid(),
 
 		...itemFactory(userId, overrides),
-
-		createdAt,
-		updatedAt,
 	};
 };
 
@@ -130,4 +127,5 @@ export const buildItems = (
 	count: number,
 	userId: string,
 	overrides: ItemFactoryOverrides = {}
-): Item[] => Array.from({ length: count }, () => buildItem(userId, overrides));
+): Omit<ItemDTO, 'createdAt' | 'updatedAt'>[] =>
+	Array.from({ length: count }, () => buildItem(userId, overrides));

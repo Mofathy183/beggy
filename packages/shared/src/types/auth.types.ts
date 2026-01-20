@@ -1,14 +1,7 @@
-import type { User } from '../types/user.types.js';
 import { type AuthSchema } from '../schemas/auth.schema.js';
 import type * as z from 'zod';
 import type { Override } from './index.js';
-import type {
-	Role,
-	Action,
-	Scope,
-	Subject,
-	TokenType,
-} from '../constants/auth.enums.js';
+import type { Action, Scope, Subject } from '../constants/auth.enums.js';
 
 /**
  * A list of permissions assigned to a role or user.
@@ -18,108 +11,6 @@ export type Permissions = {
 	scope: Scope;
 	subject: Subject;
 }[];
-
-/* -------------------------------------------------------------------------- */
-/*                               MODEL INTERFACES                             */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Represents a user-issued token stored in persistence.
- *
- * @remarks
- * - Tokens should always be stored as **hashed values**
- * - Never expose `hashToken` to clients
- */
-export interface UserToken {
-	id: string;
-	type: TokenType;
-	hashToken: string;
-	expiresAt: Date;
-	createdAt: Date;
-
-	/**
-	 * Owning user identifier
-	 */
-	userId: string;
-
-	/**
-	 * Related user entity
-	 */
-	user: User;
-}
-
-/**
- * Atomic permission definition.
- *
- * @remarks
- * - This is the canonical RBAC rule
- * - Roles are composed by grouping these permissions
- */
-export interface Permission {
-	/**
-	 * Primary identifier
-	 */
-	id: string;
-
-	/**
-	 * The action being allowed
-	 */
-	action: Action;
-
-	/**
-	 * Whether the permission applies to OWN or ANY resource
-	 */
-	scope: Scope;
-
-	/**
-	 * The resource type this permission applies to
-	 */
-	subject: Subject;
-}
-
-/**
- * Join table mapping roles to permissions.
- *
- * @remarks
- * - Enables many-to-many relationships
- * - Allows dynamic permission assignment without code changes
- */
-export interface RoleOnPermission {
-	/**
-	 * Primary identifier
-	 */
-	id: string;
-
-	/**
-	 * Role assigned in this mapping
-	 */
-	role: Role;
-
-	/**
-	 * Foreign key reference to Permission
-	 */
-	permissionId: string;
-}
-
-/**
- * Permission with its associated role mappings.
- *
- * @remarks
- * Useful for admin panels and permission audits.
- */
-export interface PermissionWithRelations extends Permission {
-	rolePermissions: RoleOnPermission[];
-}
-
-/**
- * Role-permission mapping with the resolved permission entity.
- *
- * @remarks
- * Commonly used when loading role capabilities at runtime.
- */
-export interface RoleOnPermissionWithRelations extends RoleOnPermission {
-	permission: Permission;
-}
 
 // ─────────────────────────────────────────────
 // Schemas with identical input & output

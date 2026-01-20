@@ -3,12 +3,10 @@
  */
 
 import { type Size, type Material } from '../constants/bag.enums.js';
-import type { User } from '../types/user.types.js';
-import type { Item } from '../types/item.types.js';
 import { type ContainerStatus } from '../constants/constraints.enums.js';
 import { type SuitcaseSchema } from '../schemas/suitcase.schema.js';
 import type * as z from 'zod';
-import type { Override } from './index.js';
+import type { Override, ISODateString } from './index.js';
 import type {
 	SuitcaseFeature,
 	SuitcaseType,
@@ -23,7 +21,7 @@ import type {
  * - Subject to airline baggage constraints
  * - Acts as an aggregate root for contained items
  */
-export interface Suitcase {
+export interface SuitcaseDTO {
 	/**
 	 * Primary suitcase identifier.
 	 */
@@ -144,47 +142,19 @@ export interface Suitcase {
 	wheels?: WheelType | null;
 
 	/**
-	 * Suitcase creation timestamp.
+	 * Suitcase creation ISODateString.
 	 */
-	createdAt: Date;
+	createdAt: ISODateString;
 
 	/**
-	 * Suitcase last update timestamp.
+	 * Suitcase last update ISODateString.
 	 */
-	updatedAt: Date;
+	updatedAt: ISODateString;
 
 	/**
 	 * Identifier of the owning user.
 	 */
 	userId?: string | null;
-}
-
-/**
- * Join model linking suitcases to contained items.
- *
- * @remarks
- * - Enables many-to-many relationships
- * - Used for capacity, weight, and packing validation
- */
-export interface SuitcaseItems {
-	suitcaseId: string;
-	itemId: string;
-	item: Item;
-	suitcase: Suitcase;
-	createdAt: Date;
-	updatedAt: Date;
-}
-
-/**
- * Suitcase model with resolved relations.
- *
- * @remarks
- * - Intended for read-heavy endpoints and UI hydration
- * - Avoid using for write operations
- */
-export interface SuitcaseWithRelations extends Suitcase {
-	suitcaseItems: SuitcaseItems[];
-	user: User;
 }
 
 // ─────────────────────────────────────────────

@@ -1,12 +1,9 @@
 /**
  * API Response Types for Items
  */
-import type { BagItems } from '../types/bag.types.js';
-import type { SuitcaseItems } from '../types/suitcase.types.js';
-import type { User } from '../types/user.types.js';
 import { type ItemSchema } from '../schemas/item.schema.js';
 import type * as z from 'zod';
-import type { Override } from './index.js';
+import type { Override, ISODateString } from './index.js';
 import type {
 	ItemCategory,
 	WeightUnit,
@@ -20,7 +17,7 @@ import type {
  * - Represents a physical object that can be placed into containers
  * - Units must always match the provided measurement values
  */
-export interface Item {
+export interface ItemDTO {
 	id: string;
 	name: string;
 	category: ItemCategory;
@@ -31,22 +28,9 @@ export interface Item {
 	volumeUnit: VolumeUnit;
 	color?: string | null;
 	isFragile: boolean;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: ISODateString;
+	updatedAt: ISODateString;
 	userId?: string | null;
-}
-
-/**
- * Item model with resolved relations.
- *
- * @remarks
- * - Intended for read-heavy queries and UI hydration
- * - Avoid using for write operations
- */
-export interface ItemWithRelations extends Item {
-	bagItems: BagItems[];
-	suitcaseItems: SuitcaseItems[];
-	user?: User | null;
 }
 
 // ─────────────────────────────────────────────

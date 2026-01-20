@@ -5,79 +5,8 @@
  */
 import type * as z from 'zod';
 import { type AdminSchema } from '../schemas/user.schema.js';
-import type { UserToken } from '../types/auth.types.js';
-import type { AuthProvider, Role } from '../constants/auth.enums.js';
-import type { Profile } from '../types/profile.types.js';
-import type { Bag } from '../types/bag.types.js';
-import type { Suitcase } from '../types/suitcase.types.js';
-import type { Item } from '../types/item.types.js';
-import type { Override } from './index.js';
-
-/**
- * Authentication account linked to a user.
- *
- * @remarks
- * - Represents a single authentication method (LOCAL or OAuth)
- * - A user may have multiple accounts linked to different providers
- * - Security-sensitive fields must never be exposed to clients
- */
-export interface Account {
-	/**
-	 * Primary identifier for the account.
-	 */
-	id: string;
-
-	/**
-	 * Authentication provider used by this account.
-	 */
-	authProvider: AuthProvider;
-
-	/**
-	 * External provider identifier.
-	 *
-	 * @remarks
-	 * - Used only for OAuth-based authentication
-	 * - Must be unique per provider
-	 * - Always null for LOCAL authentication
-	 */
-	providerId: string | null;
-
-	/**
-	 * Hashed password for LOCAL authentication.
-	 *
-	 * @remarks
-	 * - Never store or expose plain-text passwords
-	 * - Always null for OAuth-based accounts
-	 */
-	hashedPassword?: string | null;
-
-	/**
-	 * Timestamp of the last password change.
-	 *
-	 * @remarks
-	 * - Used for security enforcement (e.g. token invalidation)
-	 * - Null if the account has never set a password
-	 */
-	passwordChangeAt?: Date | null;
-
-	/**
-	 * Identifier of the owning user.
-	 *
-	 * @remarks
-	 * Nullable during account provisioning or migration flows.
-	 */
-	userId?: string | null;
-
-	/**
-	 * Account creation timestamp.
-	 */
-	createdAt: Date;
-
-	/**
-	 * Account last update timestamp.
-	 */
-	updatedAt: Date;
-}
+import type { Role } from '../constants/auth.enums.js';
+import type { Override, ISODateString } from './index.js';
 
 /**
  * Core user domain model.
@@ -87,7 +16,7 @@ export interface Account {
  * - Contains only security-critical and system-level fields
  * - Public or user-editable data must live outside this model
  */
-export interface User {
+export interface UserDTO {
 	/**
 	 * Primary user identifier.
 	 */
@@ -104,6 +33,18 @@ export interface User {
 	role: Role;
 
 	/**
+	 * User creation ISODateString.
+	 */
+	createdAt: ISODateString;
+
+	/**
+	 * User last update ISODateString.
+	 */
+	updatedAt: ISODateString;
+}
+
+export interface AdminUserDTO extends UserDTO {
+	/**
 	 * Indicates whether the user account is active.
 	 *
 	 * @remarks
@@ -115,54 +56,6 @@ export interface User {
 	 * Indicates whether the user's email address has been verified.
 	 */
 	isEmailVerified: boolean;
-
-	/**
-	 * User creation timestamp.
-	 */
-	createdAt: Date;
-
-	/**
-	 * User last update timestamp.
-	 */
-	updatedAt: Date;
-}
-
-/**
- * User model with resolved relations.
- *
- * @remarks
- * - Intended for internal, service-level, or admin usage
- * - Aggregates identity, authentication, and domain ownership
- * - Must never be returned directly to public or client-facing APIs
- */
-export interface UserWithRelations extends User {
-	/**
-	 * Linked authentication accounts.
-	 *
-	 * @remarks
-	 * Includes LOCAL and OAuth-based providers.
-	 */
-	account: Account[];
-
-	/**
-	 * User profile containing public and user-editable information.
-	 */
-	profile?: Profile | null;
-
-	/**
-	 * Authentication tokens associated with the user.
-	 */
-	userToken: UserToken[];
-
-	/**
-	 * Domain-owned resources.
-	 *
-	 * @remarks
-	 * Ownership is enforced at the user level.
-	 */
-	bags: Bag[];
-	suitcases: Suitcase[];
-	items: Item[];
 }
 
 // ─────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { type Profile } from '../../types/profile.types.js';
-import { Gender } from '../../constants/profile.enums.js';
+import { type ProfileDTO } from '../../src/types/profile.types.js';
+import { Gender } from '../../src/constants/profile.enums.js';
 
 /**
  * Fields that can be overridden when creating a Profile via factories.
@@ -13,7 +13,7 @@ import { Gender } from '../../constants/profile.enums.js';
  */
 type ProfileFactoryOverrides = Partial<
 	Pick<
-		Profile,
+		ProfileDTO,
 		| 'firstName'
 		| 'lastName'
 		| 'avatarUrl'
@@ -57,7 +57,10 @@ export const profileFactory = (
 	userId: string,
 	overrides: ProfileFactoryOverrides = {},
 	options: ProfileFactoryOptions = {}
-): Omit<Profile, 'id' | 'createdAt' | 'updatedAt' | 'displayName' | 'age'> => ({
+): Omit<
+	ProfileDTO,
+	'id' | 'createdAt' | 'updatedAt' | 'displayName' | 'age' | 'birthDate'
+> => ({
 	userId,
 
 	firstName: overrides.firstName ?? faker.person.firstName(),
@@ -73,11 +76,11 @@ export const profileFactory = (
 			? faker.helpers.arrayElement(Object.values(Gender))
 			: null),
 
-	birthDate:
-		overrides.birthDate ??
-		(options.withDetails
-			? faker.date.birthdate({ min: 18, max: 65, mode: 'age' })
-			: null),
+	// birthDate:
+	// 	overrides.birthDate ??
+	// 	(options.withDetails
+	// 		? faker.date.birthdate({ min: 18, max: 65, mode: 'age' }).toISOString()
+	// 		: null),
 
 	country:
 		overrides.country ??
@@ -104,17 +107,14 @@ export const profileFactory = (
 export const buildProfile = (
 	userId: string,
 	overrides: ProfileFactoryOverrides = {}
-): Profile => {
-	const createdAt = faker.date.past();
-	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
+): Omit<ProfileDTO, 'birthDate' | 'createdAt' | 'updatedAt'> => {
+	// const createdAt = faker.date.past().toISOString();
+	// const updatedAt = faker.date.between({ from: createdAt, to: new Date() }).toISOString();
 
 	return {
 		id: faker.string.uuid(),
 
 		...profileFactory(userId, overrides),
-
-		createdAt,
-		updatedAt,
 	};
 };
 
@@ -134,5 +134,5 @@ export const buildProfiles = (
 	count: number,
 	userId: string,
 	overrides: ProfileFactoryOverrides = {}
-): Profile[] =>
+): Omit<ProfileDTO, 'birthDate' | 'createdAt' | 'updatedAt'>[] =>
 	Array.from({ length: count }, () => buildProfile(userId, overrides));

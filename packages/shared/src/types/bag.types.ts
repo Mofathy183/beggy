@@ -3,11 +3,9 @@
  */
 
 import type * as z from 'zod';
-import type { Item } from '../types/item.types.js';
-import type { User } from '../types/user.types.js';
 import { type ContainerStatus } from '../constants/constraints.enums.js';
 import { type BagSchema } from '../schemas/bag.schema.js';
-import type { Override } from './index.js';
+import type { Override, ISODateString } from './index.js';
 import type {
 	BagType,
 	BagFeature,
@@ -23,7 +21,7 @@ import type {
  * - Capacity and weight constraints are enforced at the business-logic level
  * - Acts as an aggregate root for contained items
  */
-export interface Bag {
+export interface BagDTO {
 	/**
 	 * Primary bag identifier.
 	 */
@@ -133,47 +131,19 @@ export interface Bag {
 	features: BagFeature[];
 
 	/**
-	 * Bag creation timestamp.
+	 * Bag creation ISODateString.
 	 */
-	createdAt: Date;
+	createdAt: ISODateString;
 
 	/**
-	 * Bag last update timestamp.
+	 * Bag last update ISODateString.
 	 */
-	updatedAt: Date;
+	updatedAt: ISODateString;
 
 	/**
 	 * Identifier of the owning user.
 	 */
 	userId?: string | null;
-}
-
-/**
- * Join model linking bags to contained items.
- *
- * @remarks
- * - Enables many-to-many relationships
- * - Useful for inventory tracking and capacity calculations
- */
-export interface BagItems {
-	bagId: string;
-	itemId: string;
-	item: Item;
-	bag: Bag;
-	createdAt: Date;
-	updatedAt: Date;
-}
-
-/**
- * Bag model with resolved relations.
- *
- * @remarks
- * - Intended for read-heavy endpoints
- * - Avoid using for write operations
- */
-export interface BagWithRelations extends Bag {
-	bagItems: BagItems[];
-	user: User;
 }
 
 // ─────────────────────────────────────────────

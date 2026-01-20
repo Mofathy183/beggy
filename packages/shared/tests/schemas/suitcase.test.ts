@@ -1,5 +1,5 @@
 import { it, describe, expect } from 'vitest';
-import { suitcaseFactory } from '../../src/testing/factories/suitcase.factory';
+import { suitcaseFactory } from '../factories/suitcase.factory';
 import { SuitcaseSchema } from '../../src/schemas/suitcase.schema';
 import { Size } from '../../src/constants/bag.enums';
 import {

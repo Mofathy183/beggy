@@ -1,6 +1,6 @@
 import { it, describe, expect } from 'vitest';
-import { userFactory } from '../../src/testing/factories/user.factory';
-import { profileFactory } from '../../src/testing/factories/profile.factory';
+import { userFactory } from '../factories/user.factory';
+import { profileFactory } from '../factories/profile.factory';
 import { AdminSchema } from '../../src/schemas/user.schema';
 import { Role } from '../../src/constants/auth.enums';
 

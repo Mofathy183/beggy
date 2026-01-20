@@ -20,3 +20,5 @@ export type Override<Base, Overrides extends Partial<Base>> = Omit<
 	keyof Overrides
 > &
 	Overrides;
+
+export type ISODateString = string;

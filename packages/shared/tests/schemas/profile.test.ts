@@ -1,5 +1,6 @@
 import { it, describe, expect } from 'vitest';
-import { profileFactory } from '../../src/testing/factories/profile.factory';
+import { faker } from '@faker-js/faker';
+import { profileFactory } from '../factories/profile.factory';
 import { ProfileSchema } from '../../src/schemas/profile.schema';
 import { Gender } from '../../src/constants/profile.enums';
 import { Role } from '../../src/constants/auth.enums';
@@ -20,11 +21,17 @@ describe('ProfileSchema.editProfile', () => {
 	});
 
 	it('accepts multiple profile fields together', () => {
-		const { userId: _userId, ...mockProfile } = profileFactory(
+		const { userId: _userId, ...mock } = profileFactory(
 			'user-1',
 			{},
 			{ withDetails: true }
 		);
+
+		const mockProfile = {
+			...mock,
+			birthDate: faker.date.birthdate({ min: 18, max: 65, mode: 'age' }),
+		};
+
 		const result = ProfileSchema.editProfile.parse(mockProfile);
 
 		expect(result).toEqual(mockProfile);
