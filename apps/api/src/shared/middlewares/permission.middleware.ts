@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AbilityClass, PureAbility, AbilityBuilder } from '@casl/ability';
 import { RolePermissions, ErrorCode } from '@beggy/shared/constants';
-import { Role, Permissions, Action, Subject } from '@beggy/shared/types';
+import { Role, Action, Subject } from '@beggy/shared/constants';
+import { Permissions} from '@beggy/shared/types';
 import type { AppAbility } from '@shared/types';
 import { appErrorMap } from '@shared/utils';
 

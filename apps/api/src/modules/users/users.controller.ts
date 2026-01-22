@@ -1,16 +1,42 @@
 import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '@prisma';
 import { UserService, UserMapper } from '@modules/users';
-import type { User, UserOrderByInput } from '@beggy/shared/types';
+import { ProfileMapper } from '@modules/profiles';
+import type { UserDTO, UserOrderByInput, ProfileDTO } from '@beggy/shared/types';
 import { apiResponseMap } from '@shared/utils';
 import type { PaginationPayload } from '@shared/types';
 
+/**
+ * User controller layer.
+ *
+ * @remarks
+ * - Acts as the HTTP boundary for the Users domain
+ * - Responsible ONLY for:
+ *   - Extracting request data
+ *   - Calling the service layer
+ *   - Mapping domain models to DTOs
+ *   - Returning standardized API responses
+ *
+ * - Business rules, validation, and error handling
+ *   are delegated to services and middleware
+ */
+
 const userService = new UserService(prisma);
 
+/**
+ * GET /users
+ *
+ * Retrieves a paginated list of users with optional filtering and ordering.
+ *
+ * @remarks
+ * - Intended for administrative usage
+ * - Supports pagination, filtering, and sorting
+ * - Returns pagination metadata for client-side navigation
+ */
 export const getUsers = async (
 	req: Request,
 	res: Response,
-	next: NextFunction
+    _next: NextFunction
 ): Promise<void> => {
 	const { pagination, orderBy, query: filter } = req;
 
@@ -20,10 +46,162 @@ export const getUsers = async (
 		orderBy as UserOrderByInput
 	);
 
-	const userResponse = users.map(() => UserMapper.fromPrisma);
+    //* Map domain models to transport-safe DTOs
+	const usersResponse = users.map(UserMapper.toDTO);
 
-	res.json(apiResponseMap.ok<User[]>(userResponse, 'LOGIN_SUCCESS', meta));
+	res.json(apiResponseMap.ok<UserDTO[]>(usersResponse, "USERS_FETCHED", meta));
 };
+
+/**
+ * GET /users/:id
+ *
+ * Retrieves a single user by its unique identifier.
+ *
+ * @remarks
+ * - Throws USER_NOT_FOUND via the service if the user does not exist
+ * - Accessible only to authorized administrative roles
+ */
+export const getUserById = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+
+    const user = await userService.getById(id ?? ""); 
+
+    res.json(
+        apiResponseMap.ok<UserDTO>(UserMapper.toDTO(user), "USER_RETRIEVED")
+    )
+}
+
+/**
+ * POST /users
+ *
+ * Creates a new user account.
+ *
+ * @remarks
+ * - Used by administrators to provision accounts
+ * - Returns the newly created user for immediate client use
+ */
+export const createUser = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { body } = req;;
+
+    const newUser = await userService.createUser(body);
+
+    res.json(
+        apiResponseMap.created<UserDTO>(
+            UserMapper.toDTO(newUser),
+            "USER_CREATED"
+        )
+    )
+}
+
+/**
+ * PATCH /users/:id/profile
+ *
+ * Updates profile-related user information.
+ *
+ * @remarks
+ * - Operates strictly on the Profile domain
+ * - Uses PATCH semantics (partial updates allowed)
+ * - Does NOT affect authentication, role, or status
+ */
+export const updateUserProfile = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { body, params: { id } } = req;
+
+    const updatedUser = await userService.updateProfile(id ?? "", body);
+
+    res.json(
+        apiResponseMap.ok<ProfileDTO>(
+            ProfileMapper.toDTO(updatedUser),
+            "PROFILE_UPDATED"
+        )
+    )
+}
+
+/**
+ * PATCH /users/:id/status
+ *
+ * Updates a user's operational and verification status.
+ *
+ * @remarks
+ * - Intended for moderation and enforcement workflows
+ * - Controls access without deleting the account
+ */
+export const updateUserStatus = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { body, params: { id } } = req;
+
+    const updatedUser = await userService.updateStatus(id ?? "", body);
+
+    res.json(
+        apiResponseMap.ok<UserDTO>(
+            UserMapper.toAdminDTO(updatedUser),
+            "USER_STATUS_UPDATED"
+        )
+    )
+}
+
+/**
+ * PATCH /users/:id/role
+ *
+ * Changes the role assigned to a user.
+ *
+ * @remarks
+ * - Restricted to authorized administrators
+ * - Role-based access control is enforced elsewhere
+ */
+export const changeUserRole = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { body, params: { id } } = req;
+
+    const updatedUser = await userService.changeRole(id ?? "", body);
+
+    res.json(
+        apiResponseMap.ok<UserDTO>(
+            UserMapper.toDTO(updatedUser),
+            "USER_ROLE_UPDATED"
+        )
+    )
+}
+
+/**
+ * DELETE /users/:id
+ *
+ * Deletes a single user by ID.
+ *
+ * @remarks
+ * - Administrative operation
+ * - Uses no-content semantics since the resource no longer exists
+ */
+export const deleteUserById = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+
+    await userService.deleteById(id ?? "");
+
+    res.json(
+        apiResponseMap.noContent(
+            "USER_DELETED"
+        )
+    )
+}
+
+/**
+ * DELETE /users
+ *
+ * Bulk deletes users based on optional filter criteria.
+ *
+ * @remarks
+ * - Admin-only operation
+ * - Intended for cleanup and moderation workflows
+ * - Uses no-content semantics
+ */
+export const deleteUsers = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { query: filter } = req;
+
+    await userService.deleteUsers(filter);
+
+    res.json(
+        apiResponseMap.noContent(
+            "USERS_DELETED"
+        )
+    )
+}
 
 // 	try {
 // 		const { body } = req as Request<{}, {}, any>;

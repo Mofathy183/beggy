@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { PaginationSchema } from '@beggy/shared/schemas';
-import { ListQueryOptions } from '@shared/types';
+import { ListQueryOptions, OrderBy } from '@shared/types';
 
 /**
  * Middleware factory for preparing list-query metadata
@@ -95,7 +95,7 @@ export const prepareListQuery =
 				req.orderBy = await orderBySchema.parseAsync({
 					orderBy,
 					direction,
-				});
+				}) as OrderBy
 			}
 
 			next();

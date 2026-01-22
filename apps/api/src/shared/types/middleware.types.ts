@@ -147,5 +147,5 @@ export type ListQueryOptions = {
 	 * - When omitted, ordering parameters are ignored
 	 * - Intended to be entity-specific (users, items, bags, etc.)
 	 */
-	orderBySchema?: ZodType<OrderBy>;
+	orderBySchema?: ZodType;
 };

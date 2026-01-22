@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { xss } from 'express-xss-sanitizer';
 import swaggerUi from 'swagger-ui-express';
 
+import { rootRouter } from "@route"
 // import { sessionConfig } from '@config';
 import {
 	limiter,
@@ -92,7 +93,7 @@ app.use(doubleCsrfProtection);
 // ============================================
 
 // 15. Main API routes
-// app.use('/api/beggy', rootRoute);
+app.use('/api/beggy', rootRouter);
 
 // ============================================
 //* ERROR HANDLING MIDDLEWARE (SPECIFIC ORDER!)

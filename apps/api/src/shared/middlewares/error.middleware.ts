@@ -12,9 +12,10 @@
  * - HTTP responses for errors are created
  * - Library-specific errors are interpreted
  */
+import jwt from "jsonwebtoken";
 
 import type { Request, Response, NextFunction } from 'express';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+const { JsonWebTokenError, TokenExpiredError } = jwt;
 import { ZodError, treeifyError } from 'zod';
 import { Prisma } from '@prisma-generated/client';
 import { ErrorCode } from '@beggy/shared/constants';

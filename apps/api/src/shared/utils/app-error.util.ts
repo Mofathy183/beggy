@@ -65,6 +65,10 @@ export class AppError extends Error {
 export const appErrorMap = {
 	/**
 	 * Resource was not found.
+	 *
+	 * @remarks
+	 * - Used when a requested entity does not exist
+	 * - Common for lookup, read, update, or delete operations
 	 */
 	notFound: (
 		code: ErrorCode,
@@ -74,6 +78,11 @@ export const appErrorMap = {
 
 	/**
 	 * Client sent invalid or malformed data.
+	 *
+	 * @remarks
+	 * - Validation failures
+	 * - Missing or incorrect request payload
+	 * - Schema or constraint violations
 	 */
 	badRequest: (
 		code: ErrorCode,
@@ -83,6 +92,10 @@ export const appErrorMap = {
 
 	/**
 	 * Authentication is required or failed.
+	 *
+	 * @remarks
+	 * - Missing authentication credentials
+	 * - Invalid or expired tokens
 	 */
 	unauthorized: (
 		code: ErrorCode,
@@ -92,6 +105,10 @@ export const appErrorMap = {
 
 	/**
 	 * User is authenticated but not allowed to perform this action.
+	 *
+	 * @remarks
+	 * - Authorization failures
+	 * - Insufficient permissions or role restrictions
 	 */
 	forbidden: (
 		code: ErrorCode,
@@ -99,6 +116,15 @@ export const appErrorMap = {
 		options?: ErrorResponseOptions
 	) => new AppError(code, STATUS_CODE.FORBIDDEN, cause, options),
 
+    /**
+	 * Request could not be completed due to a state conflict.
+	 *
+	 * @remarks
+	 * - Resource already exists
+	 * - Duplicate unique fields (email, username, etc.)
+	 * - Invalid state transitions
+	 *   (e.g. activating an already active account)
+	 */
 	conflict: (
 		code: ErrorCode,
 		cause?: unknown,
@@ -107,6 +133,11 @@ export const appErrorMap = {
 
 	/**
 	 * Unhandled or unexpected server error.
+	 *
+	 * @remarks
+	 * - Fallback for non-recoverable conditions
+	 * - Should generally not be thrown directly in services
+	 * - Reserved for truly exceptional scenarios
 	 */
 	serverError: (
 		code: ErrorCode,

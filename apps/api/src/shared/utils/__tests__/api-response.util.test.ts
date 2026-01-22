@@ -102,6 +102,16 @@ describe('apiResponseMap.ok()', () => {
 	});
 });
 
+describe('apiResponseMap.noContent()', () => {
+	it('returns success response with 204 status and null data', () => {
+		const result = apiResponseMap.noContent('USERS_DELETED');
+
+		expect(result.success).toBe(true);
+		expect(result.status).toBe(STATUS_CODE.NO_CONTENT);
+		expect(result.message).toBe(SuccessMessages.USERS_DELETED);
+	});
+});
+
 describe('apiResponseMap.created()', () => {
 	it('returns success response with 201 status', () => {
 		const result = apiResponseMap.created({ id: 1 }, 'BAG_CREATED');
