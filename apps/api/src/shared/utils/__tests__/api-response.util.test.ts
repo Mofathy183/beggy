@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import { createResponse, apiResponseMap } from '@shared/utils';
 
@@ -10,16 +10,6 @@ import {
 } from '@beggy/shared/constants';
 
 import { STATUS_CODE } from '@shared/constants';
-
-vi.mock('@shared/utils/password.util', async () => {
-	const actual =
-		await vi.importActual<typeof import('@shared/utils')>('@shared/utils');
-
-	return {
-		...actual,
-		hashPassword: vi.fn().mockResolvedValue('hashed-password'),
-	};
-});
 
 describe('createResponse.success()', () => {
 	it('returns standardized success response', () => {
@@ -99,16 +89,6 @@ describe('apiResponseMap.ok()', () => {
 		expect(result.success).toBe(true);
 		expect(result.status).toBe(STATUS_CODE.OK);
 		expect(result.message).toBe(SuccessMessages.BAGS_FETCHED);
-	});
-});
-
-describe('apiResponseMap.noContent()', () => {
-	it('returns success response with 204 status and null data', () => {
-		const result = apiResponseMap.noContent('USERS_DELETED');
-
-		expect(result.success).toBe(true);
-		expect(result.status).toBe(STATUS_CODE.NO_CONTENT);
-		expect(result.message).toBe(SuccessMessages.USERS_DELETED);
 	});
 });
 

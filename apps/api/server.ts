@@ -1,5 +1,5 @@
 // MUST be first — before any other imports
-import "dotenv/config";
+import 'dotenv/config';
 
 import app from './app';
 import { serverConfig } from '@config';

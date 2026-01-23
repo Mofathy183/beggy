@@ -1,5 +1,10 @@
-import { Router } from "express";
-import { userRouter } from "./src/modules/users"
+import { Router } from 'express';
+import { prisma } from '@prisma';
+import {
+	createUserRouter,
+	UserController,
+	UserService,
+} from './src/modules/users';
 
 /**
  * Root application router.
@@ -16,6 +21,7 @@ import { userRouter } from "./src/modules/users"
  */
 export const rootRouter = Router();
 
+const userController = new UserController(new UserService(prisma));
 /**
  * 👥 Users domain routes.
  *
@@ -23,4 +29,4 @@ export const rootRouter = Router();
  * - Protected (authentication + authorization enforced downstream)
  * - Intended for administrative or system-level access
  */
-rootRouter.use("/users", userRouter);
+rootRouter.use('/users', createUserRouter(userController));

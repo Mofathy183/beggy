@@ -71,8 +71,8 @@ export const prepareListQuery =
 				const { page, limit } = req.query;
 
 				const parsed = await PaginationSchema.pagination.parseAsync({
-					page,
-					limit,
+					page: page !== undefined ? Number(page) : undefined,
+					limit: limit !== undefined ? Number(limit) : undefined,
 				});
 
 				req.pagination = {
@@ -92,10 +92,10 @@ export const prepareListQuery =
 			if (orderBySchema) {
 				const { orderBy, direction } = req.query;
 
-				req.orderBy = await orderBySchema.parseAsync({
+				req.orderBy = (await orderBySchema.parseAsync({
 					orderBy,
 					direction,
-				}) as OrderBy
+				})) as OrderBy;
 			}
 
 			next();

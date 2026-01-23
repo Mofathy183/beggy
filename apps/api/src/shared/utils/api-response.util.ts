@@ -166,38 +166,6 @@ export const apiResponseMap = {
 		createResponse.success(data, msgKey, STATUS_CODE.CREATED),
 
 	/**
-	 * Creates a 204 No Content success response.
-	 *
-	 * @param msgKey - Success message key describing the completed action
-	 * @returns SuccessResponse with 204 status and no data payload
-	 *
-	 * @remarks
-	 * - Intended for operations that do not return a resource
-	 *   (e.g. DELETE, bulk actions, command-style endpoints)
-	 * - Explicitly sets `data` to `null` to maintain a consistent response shape
-	 *   across the API while still signaling "no result"
-	 * - Represents the semantic intent of "no content", even if the transport
-	 *   layer chooses how strictly to enforce HTTP 204 rules
-	 *
-	 * Usage guidelines:
-	 * - Use for delete operations or side-effect-only actions
-	 * - Do NOT use for endpoints that are expected to return data
-	 * - Controllers may choose to omit sending a response body for strict
-	 *   HTTP 204 compliance
-	 *
-	 * @example
-	 * ```typescript
-	 * apiResponseMap.noContent('USERS_DELETED')
-	 * ```
-	 */
-	noContent: (msgKey: keyof typeof SuccessMessages) =>
-		createResponse.success(
-			null,
-			msgKey,
-			STATUS_CODE.NO_CONTENT
-		),
-
-	/**
 	 * Creates a 404 Not Found response.
 	 *
 	 * @param code - Specific ErrorCode for the not found scenario

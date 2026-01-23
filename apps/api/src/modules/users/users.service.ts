@@ -1,4 +1,4 @@
-import { type ExtendedPrismaClient } from '@prisma';
+import type { ExtendedPrismaClient } from '@prisma/prisma.types';
 import type { Profile, User } from '@prisma/generated/prisma/client';
 import type {
 	UserFilterInput,
@@ -7,7 +7,7 @@ import type {
 	CreateUserPayload,
 	UpdateStatusInput,
 	EditProfileInput,
-    ChangeRoleInput,
+	ChangeRoleInput,
 } from '@beggy/shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
 import { logger } from '@shared/middlewares';
@@ -260,7 +260,7 @@ export class UserService {
 		const updatedRole = await this.prisma.user.update({
 			where: { id },
 			data: {
-				role: user.role
+				role: user.role,
 			},
 		});
 

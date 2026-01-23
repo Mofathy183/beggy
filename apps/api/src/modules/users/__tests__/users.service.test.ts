@@ -4,7 +4,7 @@ import { Role, ErrorCode } from '@beggy/shared/constants';
 import {
 	buildProfile,
 	profileFactory,
-} from '@modules/profiles/__tests__/profile.factory';
+} from '@/modules/profiles/__tests__/factories/profile.factory';
 import { buildUser, buildUsers, userFactory } from './factories/user.factory';
 import { UserService } from '@modules/users';
 
@@ -195,7 +195,7 @@ describe('UserService.changeRole()', () => {
 
 		(prismaMock.user.update as any).mockResolvedValue(user);
 
-		const result = await service.changeRole(user.id, Role.ADMIN);
+		const result = await service.changeRole(user.id, { role: Role.ADMIN });
 
 		expect(result.role).toBe(Role.ADMIN);
 	});

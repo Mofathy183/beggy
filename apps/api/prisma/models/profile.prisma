@@ -11,7 +11,7 @@ model Profile {
     userId String @unique @map("user_id")
 
     /// Relation to the owning user.
-    user User @relation(fields: [userId], references: [id])
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     /// User first name.
     firstName String @map("first_name")

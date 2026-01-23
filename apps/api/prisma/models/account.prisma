@@ -29,7 +29,7 @@ model Account {
     userId String @unique @map("user_id")
 
     /// Relation to the owning user.
-    user User @relation(fields: [userId], references: [id])
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     /// Account creation timestamp.
     createdAt DateTime @default(now()) @map("created_at")

@@ -6,16 +6,6 @@ import { ErrorCode, ErrorMessages } from '@beggy/shared/constants';
 
 import { STATUS_CODE } from '@shared/constants';
 
-vi.mock('@shared/utils/password.util', async () => {
-	const actual =
-		await vi.importActual<typeof import('@shared/utils')>('@shared/utils');
-
-	return {
-		...actual,
-		hashPassword: vi.fn().mockResolvedValue('hashed-password'),
-	};
-});
-
 describe('AppError', () => {
 	it('creates error with resolved message from constants', () => {
 		const error = new AppError(

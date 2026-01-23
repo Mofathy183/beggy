@@ -1,4 +1,4 @@
-import { hash, compare, genSalt } from 'bcrypt';
+import { hash, compare } from 'bcryptjs';
 import { envConfig } from '@config';
 import { appErrorMap } from '@shared/utils';
 import { ErrorCode } from '@beggy/shared/constants';
@@ -14,9 +14,7 @@ const {
  */
 export const hashPassword = async (password: string): Promise<string> => {
 	try {
-		const saltRound = await genSalt(bcrypt.saltRounds);
-
-		return await hash(password, saltRound);
+		return await hash(password, bcrypt.saltRounds);
 	} catch (error) {
 		throw appErrorMap.serverError(ErrorCode.PASSWORD_HASH_FAILED, error);
 	}
@@ -47,10 +45,7 @@ export const verifyPassword = async (
  * @description this will add to the database because to handle the password change at felid
  * @returns {Date}
  */
-export const passwordChangeAt = () => {
-	const changeAt = new Date();
-	return changeAt;
-};
+export const passwordChangeAt = (): Date => new Date();
 
 /**
  * @description for compare it with the timestamp in token
@@ -60,10 +55,8 @@ export const passwordChangeAt = () => {
  * @param {Date} changeAt
  * @returns {Number} Timestamp
  */
-const passwordChangeTimestamp = (changeAt: Date): number => {
-	const timestamp = Math.floor(changeAt.getTime() / 1000);
-	return timestamp;
-};
+const passwordChangeTimestamp = (changeAt: Date): number =>
+	Math.floor(changeAt.getTime() / 1000);
 
 /**
  * @description Check if user password change

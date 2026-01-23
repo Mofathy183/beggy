@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import { hashPassword, verifyPassword } from '@shared/utils';
 import { ErrorCode } from '@beggy/shared/constants';
 
-vi.mock('bcrypt', () => ({
-	genSalt: vi.fn(),
+vi.mock('bcryptjs', () => ({
 	hash: vi.fn(),
 	compare: vi.fn(),
 }));
 
-import { genSalt, hash, compare } from 'bcrypt';
+import { hash, compare } from 'bcryptjs';
 
 describe('hashPassword()', () => {
 	beforeEach(() => {
@@ -17,21 +15,23 @@ describe('hashPassword()', () => {
 	});
 
 	it('returns a hashed password', async () => {
-		(genSalt as any).mockResolvedValue('salt');
+		// Arrange
 		(hash as any).mockResolvedValue('hashed-password');
 
+		// Act
 		const result = await hashPassword('plain-password');
 
-		expect(genSalt).toHaveBeenCalledWith(10);
-		expect(hash).toHaveBeenCalledWith('plain-password', 'salt');
+		// Assert
+		expect(hash).toHaveBeenCalledWith('plain-password', expect.any(Number));
 		expect(result).toBe('hashed-password');
 	});
 
-	it('throws server error when hashing fails', async () => {
+	it('throws when hashing fails', async () => {
+		// Arrange
 		const error = new Error('bcrypt failed');
+		(hash as any).mockRejectedValue(error);
 
-		(genSalt as any).mockRejectedValue(error);
-
+		// Act + Assert
 		await expect(hashPassword('plain-password')).rejects.toMatchObject({
 			code: ErrorCode.PASSWORD_HASH_FAILED,
 		});
@@ -44,20 +44,25 @@ describe('verifyPassword()', () => {
 	});
 
 	it('returns false when hashed password is missing', async () => {
+		// Act
 		const result = await verifyPassword('plain-password', '');
 
+		// Assert
 		expect(result).toBe(false);
 		expect(compare).not.toHaveBeenCalled();
 	});
 
 	it('returns true when passwords match', async () => {
+		// Arrange
 		(compare as any).mockResolvedValue(true);
 
+		// Act
 		const result = await verifyPassword(
 			'plain-password',
 			'hashed-password'
 		);
 
+		// Assert
 		expect(compare).toHaveBeenCalledWith(
 			'plain-password',
 			'hashed-password'
@@ -66,23 +71,27 @@ describe('verifyPassword()', () => {
 	});
 
 	it('returns false when passwords do not match', async () => {
+		// Arrange
 		(compare as any).mockResolvedValue(false);
 
+		// Act
 		const result = await verifyPassword(
 			'plain-password',
 			'hashed-password'
 		);
 
+		// Assert
 		expect(result).toBe(false);
 	});
 
-	it('throws server error when verification fails', async () => {
-		const error = new Error('bcrypt compare failed');
-
+	it('throws when verification fails', async () => {
+		// Arrange
+		const error = new Error('compare failed');
 		(compare as any).mockRejectedValue(error);
 
+		// Act + Assert
 		await expect(
-			verifyPassword('plain-password', 'hashed')
+			verifyPassword('plain-password', 'hashed-password')
 		).rejects.toMatchObject({
 			code: ErrorCode.PASSWORD_VERIFY_FAILED,
 		});

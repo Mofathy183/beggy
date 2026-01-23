@@ -12,7 +12,7 @@
  * - HTTP responses for errors are created
  * - Library-specific errors are interpreted
  */
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 
 import type { Request, Response, NextFunction } from 'express';
 const { JsonWebTokenError, TokenExpiredError } = jwt;

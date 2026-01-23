@@ -35,27 +35,58 @@ export const corsMiddleware = cors({
 });
 
 /**
+ * Rate-limit violation handler.
+ *
+ * @remarks
+ * This handler is invoked by `express-rate-limit` when a client
+ * exceeds the allowed number of requests within the configured window.
+ *
+ * It ensures that rate-limit errors are returned using the same
+ * standardized API error response format as the rest of the system.
+ *
+ * @param _req - Express request object (unused but required by the interface)
+ * @param res - Express response object
+ *
+ * @returns A normalized HTTP 429 (Too Many Requests) error response
+ */
+export const rateLimitHandler = (_req: Request, res: Response) => {
+	// Build a standardized API error response
+	const response = createResponse.error(
+		ErrorCode.RATE_LIMITED,
+		STATUS_CODE.TOO_MANY_REQUESTS
+	);
+
+	// Send HTTP 429 response
+	return res.status(STATUS_CODE.TOO_MANY_REQUESTS).json(response);
+};
+
+/**
  * Global rate-limiting middleware.
  *
  * @remarks
- * Protects the API from abuse by limiting the number of
- * requests per IP within a fixed time window.
+ * Protects the API from abuse and accidental overload by limiting
+ * the number of requests per client (IP-based by default).
  *
- * When the limit is exceeded, the response is normalized
- * to match the API's standard HTTP error response shape.
+ * This middleware:
+ * - Applies a rolling time window
+ * - Enforces a maximum number of requests per window
+ * - Uses standard rate-limit headers
+ * - Delegates error formatting to `rateLimitHandler`
+ *
+ * Designed to be applied globally or per-router depending on use case.
  */
 export const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15-minute rolling window
-	max: 100, // Max requests per IP per window
-	standardHeaders: true, // Send rate-limit info via standard headers
-	handler: (_req: Request, res: Response) => {
-		const response = createResponse.error(
-			ErrorCode.RATE_LIMITED,
-			STATUS_CODE.TOO_MANY_REQUESTS
-		);
+	// Duration of the rate-limit window (15 minutes)
+	windowMs: 15 * 60 * 1000,
 
-		return res.status(STATUS_CODE.TOO_MANY_REQUESTS).json(response);
-	},
+	// Maximum number of requests allowed per IP within the window
+	max: 100,
+
+	// Expose rate-limit info via standardized headers
+	standardHeaders: true,
+
+	// Custom handler to return normalized API error responses
+	handler: rateLimitHandler,
 });
 
 /**

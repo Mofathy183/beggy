@@ -21,16 +21,6 @@ import type {
 	ItemOrderByInput,
 } from '@beggy/shared/types';
 
-vi.mock('@shared/utils/password.util', async () => {
-	const actual =
-		await vi.importActual<typeof import('@shared/utils')>('@shared/utils');
-
-	return {
-		...actual,
-		hashPassword: vi.fn().mockResolvedValue('hashed-password'),
-	};
-});
-
 describe('formatValidationError()', () => {
 	it('returns undefined when there are no validation errors', () => {
 		const tree = {

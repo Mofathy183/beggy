@@ -20,20 +20,9 @@ const MOCK_USER_ID = crypto.randomUUID();
 
 const MOCK_INVALID_USER_ID = 'not-a-uuid';
 
-vi.mock('@shared/utils/password.util', async () => {
-	const actual =
-		await vi.importActual<typeof import('@shared/utils')>('@shared/utils');
-
-	return {
-		...actual,
-		hashPassword: vi.fn().mockResolvedValue('hashed-password'),
-	};
-});
-
 describe('signAccessToken()', () => {
 	it('returns a signed JWT', () => {
 		const token = signAccessToken(MOCK_USER_ID, Role.USER);
-
 		expect(typeof token).toBe('string');
 		expect(token.split('.')).toHaveLength(3);
 	});

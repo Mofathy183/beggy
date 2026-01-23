@@ -53,7 +53,7 @@ CREATE TYPE "VolumeUnit" AS ENUM ('ML', 'LITER', 'CU_CM', 'CU_IN');
 CREATE TABLE "accounts" (
     "id" TEXT NOT NULL,
     "authProvider" "AuthProvider" NOT NULL,
-    "provider_id" TEXT NOT NULL,
+    "provider_id" TEXT,
     "hashedPassword" TEXT,
     "password_change_at" TIMESTAMP(3),
     "user_id" TEXT NOT NULL,

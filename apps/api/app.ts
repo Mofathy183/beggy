@@ -6,7 +6,7 @@ import helmet from 'helmet';
 import { xss } from 'express-xss-sanitizer';
 import swaggerUi from 'swagger-ui-express';
 
-import { rootRouter } from "@route"
+import { rootRouter } from '@route';
 // import { sessionConfig } from '@config';
 import {
 	limiter,

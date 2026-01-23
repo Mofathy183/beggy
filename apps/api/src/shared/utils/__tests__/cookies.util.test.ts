@@ -5,16 +5,6 @@ import { envConfig, env } from '@config';
 import { setAuthCookies, clearAuthCookies } from '@shared/utils';
 import { Role } from '@beggy/shared/constants';
 
-vi.mock('@shared/utils/password.util', async () => {
-	const actual =
-		await vi.importActual<typeof import('@shared/utils')>('@shared/utils');
-
-	return {
-		...actual,
-		hashPassword: vi.fn().mockResolvedValue('hashed-password'),
-	};
-});
-
 vi.mock('@shared/utils/token.util', () => ({
 	signAccessToken: vi.fn(),
 	signRefreshToken: vi.fn(),

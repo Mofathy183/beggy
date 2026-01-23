@@ -18,34 +18,32 @@ import { ErrorCode } from '../constants/error.codes.js';
  * Confident but humble • Encouraging • Practical wisdom • Playful edge
  */
 export const SuccessMessages = {
+	// ============================================================================
+	// USER MANAGEMENT
+	// ============================================================================
+	USER_STATUS_UPDATED:
+		'User status updated! It’s like confirming who’s cleared for boarding — everything’s aligned and ready for the next leg of the journey.',
 
-    // ============================================================================
-    // USER MANAGEMENT
-    // ============================================================================
-    USER_STATUS_UPDATED:
-    "User status updated! It’s like confirming who’s cleared for boarding — everything’s aligned and ready for the next leg of the journey.",
+	USER_ROLE_UPDATED:
+		'User role adjusted! Everyone’s got their boarding zone now — smooth coordination ahead for the whole crew.',
 
-    USER_ROLE_UPDATED:
-    "User role adjusted! Everyone’s got their boarding zone now — smooth coordination ahead for the whole crew.",
+	USER_UPDATED:
+		'User details polished up! Feels good to have everything current — like checking your itinerary before takeoff.',
 
-    USER_UPDATED:
-    "User details polished up! Feels good to have everything current — like checking your itinerary before takeoff.",
+	USER_CREATED:
+		'New traveler registered — welcome aboard! Every great adventure starts with a good check-in.',
 
-    USER_CREATED:
-    "New traveler registered — welcome aboard! Every great adventure starts with a good check-in.",
+	USERS_FETCHED:
+		'All users loaded and accounted for — looks like the passenger manifest’s up-to-date and ready for review.',
 
-    USERS_FETCHED:
-    "All users loaded and accounted for — looks like the passenger manifest’s up-to-date and ready for review.",
+	USER_RETRIEVED:
+		'User profile retrieved! Everything’s right where it should be — ready for another smooth trip through the system.',
 
-    USER_RETRIEVED:
-    "User profile retrieved! Everything’s right where it should be — ready for another smooth trip through the system.",
+	USER_DELETED:
+		'User removed — sometimes even the best trips need a few cancellations to keep things running smoothly. All tidy and logged for the record.',
 
-    USER_DELETED:
-	'User removed — sometimes even the best trips need a few cancellations to keep things running smoothly. All tidy and logged for the record.',
-
-    USERS_DELETED:
-        'Selected users deleted — a little housekeeping goes a long way. The roster’s lighter now, ready for new travelers to come aboard.',
-
+	USERS_DELETED:
+		'Selected users deleted — a little housekeeping goes a long way. The roster’s lighter now, ready for new travelers to come aboard.',
 
 	// ============================================================================
 	// AUTHENTICATION & ACCOUNT

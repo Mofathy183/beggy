@@ -1,10 +1,8 @@
 import { Profile } from '@prisma/generated/prisma/client';
 import { getAge, getDisplayName } from '@prisma';
-import type {
-	ProfileDTO,
-} from '@beggy/shared/types';
+import type { ProfileDTO } from '@beggy/shared/types';
 import { Gender } from '@beggy/shared/constants';
-import { toISO } from "@shared/utils"
+import { toISO } from '@shared/utils';
 
 /**
  * Extended Profile model with optional computed fields.
@@ -34,7 +32,6 @@ type ProfileWithComputed = Profile & {
 	 */
 	age?: number | null;
 };
-
 
 /**
  * Profile domain mapper.
@@ -95,9 +92,7 @@ export const ProfileMapper = {
 			 * - Null when not provided
 			 * - Normalized for transport safety
 			 */
-			birthDate: profile.birthDate
-				? toISO(profile.birthDate)
-				: null,
+			birthDate: profile.birthDate ? toISO(profile.birthDate) : null,
 
 			/** Country of residence */
 			country: profile.country,
@@ -126,9 +121,7 @@ export const ProfileMapper = {
 			 */
 			age:
 				profile.age ??
-				(profile.birthDate
-					? getAge(profile.birthDate)
-					: null),
+				(profile.birthDate ? getAge(profile.birthDate) : null),
 
 			/** Profile creation timestamp (ISO-8601) */
 			createdAt: toISO(profile.createdAt),

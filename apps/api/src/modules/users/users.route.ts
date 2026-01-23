@@ -60,163 +60,134 @@
  * Pagination and ordering are supported on list endpoints
  * to ensure scalability and predictable data access.
  */
-import { Router } from "express"
+import { Router } from 'express';
 
-import { Action, Subject } from "@beggy/shared/constants"
-import { AdminSchema, QuerySchema, OrderByQuerySchemas } from "@beggy/shared/schemas"
-
-import { 
-    getUsers,
-    getUserById,
-    createUser,
-    updateUserProfile,
-    updateUserStatus,
-    changeUserRole,
-    deleteUserById,
-    deleteUsers
-} from "@modules/users"
+import { Action, Subject } from '@beggy/shared/constants';
 import {
-    requireAuth,
-    requirePermission,
-    prepareListQuery,
-    validateBody,
-    validateUuidParam,
-    validateQuery
-} from "@shared/middlewares";
+	AdminSchema,
+	QuerySchema,
+	OrderByQuerySchemas,
+} from '@beggy/shared/schemas';
 
-/**
- * 👥 USERS — Administrative / System Resource
- *
- * @remarks
- * The Users domain represents user accounts as **system-managed entities**.
- * These endpoints are intended for:
- * - Administrators
- * - Moderators
- * - Internal system workflows
- *
- * Users are:
- * - Controlled via roles and permissions
- * - NOT responsible for authentication logic
- *
- * ------------------------------------------------------------------
- * Middleware layering philosophy:
- * ------------------------------------------------------------------
- * 1. Authentication (`requireAuth`)
- * 2. Authorization (`requirePermission`)
- * 3. Query normalization (`prepareListQuery`)
- * 4. Request validation (Zod)
- * 5. Controller execution
- *
- * Controllers can safely assume:
- * - `req.user` is authenticated
- * - `req.ability` is initialized
- * - Request data is validated & normalized
- */
-export const userRouter = Router();
-
-userRouter.get(
-	"/",
+import { UserController } from '@modules/users';
+import {
 	requireAuth,
-	requirePermission(Action.READ, Subject.USER),
-
-	/**
-	 * Normalize pagination and ordering metadata.
-	 */
-	prepareListQuery({
-		orderBySchema: OrderByQuerySchemas.userOrderBy,
-	}),
-
-	/**
-	 * Validate filtering and search parameters.
-	 */
-	validateQuery(QuerySchema.userFilter),
-
-	getUsers
-);
-
-
-userRouter.get(
-	"/:id",
-	requireAuth,
-	requirePermission(Action.READ, Subject.USER),
+	requirePermission,
+	prepareListQuery,
+	validateBody,
 	validateUuidParam,
-	getUserById
-);
+	validateQuery,
+} from '@shared/middlewares';
 
+export const createUserRouter = (userController: UserController): Router => {
+	/**
+	 * 👥 USERS — Administrative / System Resource
+	 *
+	 * @remarks
+	 * The Users domain represents user accounts as **system-managed entities**.
+	 * These endpoints are intended for:
+	 * - Administrators
+	 * - Moderators
+	 * - Internal system workflows
+	 *
+	 * Users are:
+	 * - Controlled via roles and permissions
+	 * - NOT responsible for authentication logic
+	 *
+	 * ------------------------------------------------------------------
+	 * Middleware layering philosophy:
+	 * ------------------------------------------------------------------
+	 * 1. Authentication (`requireAuth`)
+	 * 2. Authorization (`requirePermission`)
+	 * 3. Query normalization (`prepareListQuery`)
+	 * 4. Request validation (Zod)
+	 * 5. Controller execution
+	 *
+	 * Controllers can safely assume:
+	 * - `req.user` is authenticated
+	 * - `req.ability` is initialized
+	 * - Request data is validated & normalized
+	 */
+	const router = Router();
 
-userRouter.post(
-	"/",
-	requireAuth,
-	requirePermission(Action.CREATE, Subject.USER),
-	validateBody(AdminSchema.createUser),
-	createUser
-);
+	router.get(
+		'/',
+		requireAuth,
+		requirePermission(Action.READ, Subject.USER),
 
-userRouter.patch(
-    "/:id/profile",
-    requireAuth,
-	requirePermission(Action.UPDATE, Subject.USER),
-    validateUuidParam,
-    updateUserProfile
-)
+		/**
+		 * Normalize pagination and ordering metadata.
+		 */
+		prepareListQuery({
+			orderBySchema: OrderByQuerySchemas.userOrderBy,
+		}),
 
-userRouter.patch(
-    "/:id/status",
-	requireAuth,
-	requirePermission(Action.UPDATE, Subject.USER),
-    validateUuidParam,
-    updateUserStatus
-)
+		/**
+		 * Validate filtering and search parameters.
+		 */
+		validateQuery(QuerySchema.userFilter),
 
-userRouter.patch(
-    "/:id/role",
-	requireAuth,
-	requirePermission(Action.UPDATE, Subject.ROLE),
-    validateUuidParam,
-    changeUserRole
-)
+		userController.getUsers
+	);
 
+	router.get(
+		'/:id',
+		requireAuth,
+		requirePermission(Action.READ, Subject.USER),
+		validateUuidParam,
+		userController.getUserById
+	);
 
-userRouter.delete(
-	"/",
-	requireAuth,
-	requirePermission(Action.DELETE, Subject.USER),
-	validateQuery(QuerySchema.userFilter),
-	deleteUsers
-);
+	router.post(
+		'/',
+		requireAuth,
+		requirePermission(Action.CREATE, Subject.USER),
+		validateBody(AdminSchema.createUser),
+		userController.createUser
+	);
 
-userRouter.delete(
-	"/:id",
-	requireAuth,
-	requirePermission(Action.DELETE, Subject.USER),
-    validateUuidParam,
-	deleteUserById
-);
+	router.patch(
+		'/:id/profile',
+		requireAuth,
+		requirePermission(Action.UPDATE, Subject.USER),
+		validateUuidParam,
+		userController.updateUserProfile
+	);
 
+	router.patch(
+		'/:id/status',
+		requireAuth,
+		requirePermission(Action.UPDATE, Subject.USER),
+		validateUuidParam,
+		userController.updateUserStatus
+	);
 
+	router.patch(
+		'/:id/role',
+		requireAuth,
+		requirePermission(Action.UPDATE, Subject.ROLE),
+		validateUuidParam,
+		userController.changeUserRole
+	);
 
+	router.delete(
+		'/',
+		requireAuth,
+		requirePermission(Action.DELETE, Subject.USER),
+		validateQuery(QuerySchema.userFilter),
+		userController.deleteUsers
+	);
 
+	router.delete(
+		'/:id',
+		requireAuth,
+		requirePermission(Action.DELETE, Subject.USER),
+		validateUuidParam,
+		userController.deleteUserById
+	);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return router;
+};
 
 //* USERS: "Manage your profile"
 //* router.get('/users/me', requireAuth, usersController.getMe);
@@ -393,4 +364,3 @@ userRouter.delete(
 // publicRoute.get('/users/:id', getUserPublicProfile);
 
 //*======================================={Users Public Route}==============================================
-

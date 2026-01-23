@@ -8,8 +8,18 @@ export type PrismaBagModel = BagsGetPayload<{
 	include: {
 		bagItems: {
 			include: {
-				item: true;
-				bag: true;
+				item: {
+					omit: {
+						createdAt: true;
+						updatedAt: true;
+					};
+				};
+				bag: {
+					omit: {
+						createdAt: true;
+						updatedAt: true;
+					};
+				};
 			};
 		};
 		user: true;
@@ -20,8 +30,18 @@ export type PrismaSuitcaseModel = SuitcasesGetPayload<{
 	include: {
 		suitcaseItems: {
 			include: {
-				suitcase: true;
-				item: true;
+				suitcase: {
+					omit: {
+						createdAt: true;
+						updatedAt: true;
+					};
+				};
+				item: {
+					omit: {
+						createdAt: true;
+						updatedAt: true;
+					};
+				};
 			};
 		};
 		user: true;

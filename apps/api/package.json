@@ -54,6 +54,7 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
+		"test:integration": "pnpm prisma:test && vitest run",
 		"test:coverage": "vitest run --coverage",
 		"build": "swc src -d dist/src --config-file .swcrc && swc server.ts app.ts -d dist --config-file .swcrc",
 		"build:watch": "swc src -d dist --config-file .swcrc --watch",
@@ -69,13 +70,13 @@
 		"prisma:migrate": "pnpm prisma migrate dev",
 		"prisma:deploy": "pnpm prisma migrate deploy",
 		"prisma:reset": "pnpm prisma migrate reset",
-		"prisma:seed": "tsx prisma/seed.ts"
+		"prisma:seed": "tsx prisma/seed.ts",
+		"prisma:test": "dotenv -e .env.test -- pnpm prisma migrate deploy"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^9.6.0",
 		"@swc/cli": "^0.7.9",
 		"@swc/core": "^1.15.3",
-		"@types/bcrypt": "^6.0.0",
 		"@types/cookie-parser": "^1.4.10",
 		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.6",
@@ -91,6 +92,7 @@
 		"@types/supertest": "^6.0.3",
 		"@types/swagger-jsdoc": "^6.0.4",
 		"@types/swagger-ui-express": "^4.1.8",
+		"dotenv-cli": "^11.0.0",
 		"pino-pretty": "^13.1.3",
 		"prettier": "^3.4.2",
 		"prisma": "^7.2.0",
@@ -100,9 +102,10 @@
 	"dependencies": {
 		"@beggy/shared": "workspace:*",
 		"@casl/ability": "^6.7.3",
+		"@prisma/adapter-pg": "^7.3.0",
 		"@prisma/client": "^7.2.0",
 		"axios": "^1.8.4",
-		"bcrypt": "^5.1.1",
+		"bcryptjs": "^3.0.3",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.5",
 		"csrf-csrf": "^4.0.3",

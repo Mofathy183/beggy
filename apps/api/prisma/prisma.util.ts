@@ -1,5 +1,9 @@
 import { Prisma } from '@prisma-generated/client';
-import { PrismaBagModel, PrismaSuitcaseModel } from '@prisma';
+import {
+	PrismaBagModel,
+	PrismaSuitcaseModel,
+	type ExtendedPrismaClient,
+} from '@prisma';
 import {
 	//*======={Suitcase and Bags}========
 	calculateCurrentCapacity,
@@ -77,13 +81,37 @@ export const profileExtensions = Prisma.defineExtension({
 	},
 });
 
+/**
+ * Completely resets the test database.
+ *
+ * IMPORTANT:
+ * - Must be called before each integration test
+ * - Order matters due to foreign key constraints
+ * - Uses deleteMany (NOT truncate) for Prisma safety
+ */
+export async function truncateAllTables(
+	prisma: ExtendedPrismaClient
+): Promise<void> {
+	// Leaf tables (depend on User)
+	await prisma.items.deleteMany();
+	await prisma.bags.deleteMany();
+	await prisma.suitcases.deleteMany();
+
+	// 1:1 relations
+	await prisma.account.deleteMany();
+	await prisma.profile.deleteMany();
+
+	// Root table
+	await prisma.user.deleteMany();
+}
+
 export const bagExtensions = Prisma.defineExtension({
 	name: 'BagComputedFields',
 	result: {
 		bags: {
 			currentWeight: {
 				needs: {},
-				compute(bag: PrismaBagModel): number | null {
+				compute(bag: PrismaBagModel) {
 					if ('bagItems' in bag && !Array.isArray(bag.bagItems))
 						return null;
 					// If bagItems is undefined or not an array, treat as empty array
@@ -114,7 +142,7 @@ export const bagExtensions = Prisma.defineExtension({
 					const currentWeight = calculateCurrentWeight(items);
 
 					return calculateRemainingWeight(
-						currentWeight,
+						currentWeight as number,
 						bag.maxWeight
 					);
 				},

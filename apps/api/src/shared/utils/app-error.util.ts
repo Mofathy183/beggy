@@ -116,7 +116,7 @@ export const appErrorMap = {
 		options?: ErrorResponseOptions
 	) => new AppError(code, STATUS_CODE.FORBIDDEN, cause, options),
 
-    /**
+	/**
 	 * Request could not be completed due to a state conflict.
 	 *
 	 * @remarks
