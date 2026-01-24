@@ -2,7 +2,7 @@ import {
 	ContainerStatus,
 	ContainerStatusReason,
 } from '../constants/constraints.enums.js';
-import type { ContainerStatusResult, ContainerStatusParams } from "../types/constraints.types.js"
+import type { ContainerStatusResult, ContainerStatusParams, ContainerState, ContainerMetrics } from "../types/constraints.types.js"
 // ============================================================================
 // STATUS CHECK FUNCTIONS
 // ============================================================================
@@ -220,4 +220,70 @@ export const getContainerStatus = (
 	const status = resolveContainerState(reasons);
 
 	return { status, reasons };
+};
+
+
+/**
+ * Builds a high-level, UI-facing state snapshot for a container (bag/suitcase).
+ *
+ * @remarks
+ * - This function does NOT perform raw calculations.
+ * - It interprets already-computed metrics and translates them into
+ *   boolean flags and human-readable status signals.
+ * - Intended to drive UI indicators, warnings, and summaries.
+ *
+ * @param metrics - Precomputed container metrics (weights, capacity, percentages).
+ * @param limits - Hard constraints defined by the container (max weight / capacity).
+ *
+ * @returns A derived container state describing usability and constraint violations.
+ */
+export const buildContainerState = (
+	metrics: ContainerMetrics,
+	limits: {
+		maxWeight: number;
+		maxCapacity: number;
+	}
+): ContainerState => {
+	// Indicates whether the container exceeds its allowed weight limit.
+	const isOverweight = checkIsOverweight(
+		metrics.currentWeight,
+		limits.maxWeight
+	);
+
+	// Indicates whether the container exceeds its allowed capacity limit.
+	const isOverCapacity = checkIsOverCapacity(
+		metrics.currentCapacity,
+		limits.maxCapacity
+	);
+
+	// Indicates whether the container is effectively "full",
+	// considering both weight and capacity constraints together.
+	const isFull = checkIsFull(
+		metrics.currentWeight,
+		limits.maxWeight,
+		metrics.currentCapacity,
+		limits.maxCapacity
+	);
+
+	/**
+	 * Resolve the container's semantic status and explanatory reasons.
+	 *
+	 * Near-limit thresholds (≥ 95%) are intentionally handled here
+	 * to keep UI-warning logic centralized and consistent.
+	 */
+	const { status, reasons } = getContainerStatus({
+		isOverweight,
+		isOverCapacity,
+		isWeightNearLimit: metrics.weightPercentage >= 95,
+		isCapacityNearLimit: metrics.capacityPercentage >= 95,
+		itemCount: metrics.itemCount,
+	});
+
+	return {
+		isOverweight,
+		isOverCapacity,
+		isFull,
+		status,
+		reasons,
+	};
 };

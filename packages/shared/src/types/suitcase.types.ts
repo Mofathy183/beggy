@@ -3,10 +3,9 @@
  */
 
 import { type Size, type Material } from '../constants/bag.enums.js';
-import { type ContainerStatus } from '../constants/constraints.enums.js';
 import { type SuitcaseSchema } from '../schemas/suitcase.schema.js';
 import type * as z from 'zod';
-import type { Override, ISODateString } from './index.js';
+import type { Override, ISODateString, ContainerStatusDTO } from './index.js';
 import type {
 	SuitcaseFeature,
 	SuitcaseType,
@@ -80,53 +79,6 @@ export interface SuitcaseDTO {
 	suitcaseWeight: number;
 
 	/**
-	 * Computed suitcase metrics.
-	 *
-	 * @remarks
-	 * - Derived from contained items and suitcase constraints
-	 * - Read-only values exposed for API responses and UI consumption
-	 * - Never persisted directly in the database
-	 */
-	currentWeight?: number | null;
-	currentCapacity?: number | null;
-	remainingWeight?: number | null;
-	remainingCapacity?: number | null;
-
-	/**
-	 * Constraint state flags.
-	 *
-	 * @remarks
-	 * - Provide quick insight into airline and capacity violations
-	 * - Useful for UI indicators and validation feedback
-	 */
-	isOverweight?: boolean | null;
-	isOverCapacity?: boolean | null;
-	isFull?: boolean | null;
-
-	/**
-	 * Utilization percentages.
-	 *
-	 * @remarks
-	 * - Values range from 0 to 100
-	 * - Used for progress indicators and summaries
-	 */
-	weightPercentage?: number | null;
-	capacityPercentage?: number | null;
-
-	/**
-	 * Number of items currently contained in the suitcase.
-	 */
-	itemCount?: number | null;
-
-	/**
-	 * Derived suitcase status.
-	 *
-	 * @remarks
-	 * Computed from capacity, weight, and airline constraints.
-	 */
-	status?: ContainerStatus | null;
-
-	/**
 	 * Suitcase material.
 	 */
 	material?: Material | null;
@@ -140,6 +92,17 @@ export interface SuitcaseDTO {
 	 * Wheel configuration.
 	 */
 	wheels?: WheelType | null;
+
+    /**
+     * High-level semantic status of the container.
+     *
+     * @remarks
+     * - Represents the overall usability state of the bag/suitcase.
+     * - Derived from multiple metrics (weight, capacity, thresholds, item count).
+     * - Intended for UI messaging, icons, and visual indicators.
+     * - Not a persistence or business-rule source of truth.
+     */
+    status?: ContainerStatusDTO;
 
 	/**
 	 * Suitcase creation ISODateString.

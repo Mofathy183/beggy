@@ -83,3 +83,68 @@ export interface ContainerStatusParams {
 	isCapacityNearLimit: boolean;
 	itemCount: number; // will be the quantity that in the ContainerItems
 }
+
+/**
+ * Derived container metrics shared by all container types.
+ *
+ * @remarks
+ * - Computed at runtime from items + constraints
+ * - Never persisted
+ * - UI-facing, read-only data
+ */
+export interface ContainerMetrics {
+    /**
+	 * Computed bag metrics.
+	 *
+	 * @remarks
+	 * - Derived from contained items and bag constraints
+	 * - Never persisted directly in the database
+	 */
+	currentWeight: number;
+	currentCapacity: number;
+	remainingWeight: number;
+	remainingCapacity: number;
+
+	/**
+	 * Utilization percentages.
+	 *
+	 * @remarks
+	 * - Values range from 0 to 100
+	 * - Used for progress indicators and summaries
+	 */
+	weightPercentage: number;
+	capacityPercentage: number;
+
+	/**
+	 * Number of items currently contained in the bag.
+	 */
+	itemCount: number;
+}
+
+export interface ContainerState {
+	/**
+	 * Constraint state flags.
+	 *
+	 * @remarks
+	 * - Provide quick insight into constraint violations
+	 * - Useful for UI indicators and validation feedback
+	 */
+	isOverweight: boolean;
+	isOverCapacity: boolean;
+	isFull: boolean;
+
+	/**
+	 * Derived bag status.
+	 *
+	 * @remarks
+	 * Computed from capacity and weight constraints.
+	 */
+	status: ContainerStatus;
+	reasons: ContainerStatusReason[];
+}
+
+
+export interface ContainerStatusDTO {
+	metrics: ContainerMetrics;
+	state: ContainerState;
+}

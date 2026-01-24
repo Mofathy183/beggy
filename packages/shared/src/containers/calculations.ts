@@ -2,6 +2,7 @@ import type {
 	ConvertToKilogram,
 	ConvertToLiter,
 	ContainerItem,
+    ContainerMetrics,
 } from '../types/constraints.types.js';
 import { type WeightUnit, type VolumeUnit } from '../constants/item.enums.js';
 
@@ -257,4 +258,65 @@ export const calculateCapacityPercentage = (
 
 	// Calculate percentage and round to 1 decimal place
 	return Number(((currentCapacity / maxCapacity) * 100).toFixed(1));
+};
+
+
+/**
+ * Computes derived container metrics based on its items and constraints.
+ *
+ * @remarks
+ * - All values returned here are calculated at runtime.
+ * - No field produced by this function should be persisted.
+ * - The output is designed for UI consumption (progress bars, limits, summaries).
+ *
+ * @param params.items - Items currently placed inside the container.
+ * @param params.containerWeight - The empty container's own weight.
+ * @param params.maxWeight - Maximum allowed total weight.
+ * @param params.maxCapacity - Maximum allowed capacity.
+ *
+ * @returns A snapshot of calculated container metrics.
+ */
+export const buildContainerMetrics = (params: {
+	items: ContainerItem[];
+	containerWeight: number;
+	maxWeight: number;
+	maxCapacity: number;
+}): ContainerMetrics => {
+	// Aggregate capacity derived from all contained items.
+	const currentCapacity = calculateCurrentCapacity(params.items);
+
+	// Total carried weight including both items and the container itself.
+	const currentWeight = calculateTotalWeightWithContainer(
+		params.items,
+		params.containerWeight
+	);
+
+	return {
+		// Absolute usage values
+		currentWeight,
+		currentCapacity,
+
+		// Remaining available space before limits are reached
+		remainingWeight: calculateRemainingWeight(
+			currentWeight,
+			params.maxWeight
+		),
+		remainingCapacity: calculateRemainingCapacity(
+			currentCapacity,
+			params.maxCapacity
+		),
+
+		// Utilization percentages used for UI indicators and warnings
+		weightPercentage: calculateWeightPercentage(
+			currentWeight,
+			params.maxWeight
+		),
+		capacityPercentage: calculateCapacityPercentage(
+			currentCapacity,
+			params.maxCapacity
+		),
+
+		// Simple count of contained items (used for summaries and status logic)
+		itemCount: params.items.length,
+	};
 };

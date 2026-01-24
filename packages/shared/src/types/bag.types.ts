@@ -3,7 +3,7 @@
  */
 
 import type * as z from 'zod';
-import { type ContainerStatus } from '../constants/constraints.enums.js';
+import type { ContainerStatusDTO } from './constraints.types.js'; 
 import { type BagSchema } from '../schemas/bag.schema.js';
 import type { Override, ISODateString } from './index.js';
 import type {
@@ -75,52 +75,6 @@ export interface BagDTO {
 	bagWeight: number;
 
 	/**
-	 * Computed bag metrics.
-	 *
-	 * @remarks
-	 * - Derived from contained items and bag constraints
-	 * - Never persisted directly in the database
-	 */
-	currentWeight?: number | null;
-	currentCapacity?: number | null;
-	remainingWeight?: number | null;
-	remainingCapacity?: number | null;
-
-	/**
-	 * Constraint state flags.
-	 *
-	 * @remarks
-	 * - Provide quick insight into constraint violations
-	 * - Useful for UI indicators and validation feedback
-	 */
-	isOverweight?: boolean | null;
-	isOverCapacity?: boolean | null;
-	isFull?: boolean | null;
-
-	/**
-	 * Utilization percentages.
-	 *
-	 * @remarks
-	 * - Values range from 0 to 100
-	 * - Used for progress indicators and summaries
-	 */
-	weightPercentage?: number | null;
-	capacityPercentage?: number | null;
-
-	/**
-	 * Number of items currently contained in the bag.
-	 */
-	itemCount?: number | null;
-
-	/**
-	 * Derived bag status.
-	 *
-	 * @remarks
-	 * Computed from capacity and weight constraints.
-	 */
-	status?: ContainerStatus | null;
-
-	/**
 	 * Bag material.
 	 */
 	material?: Material | null;
@@ -129,6 +83,17 @@ export interface BagDTO {
 	 * Supported bag features.
 	 */
 	features: BagFeature[];
+
+    /**
+     * High-level semantic status of the container.
+     *
+     * @remarks
+     * - Represents the overall usability state of the bag/suitcase.
+     * - Derived from multiple metrics (weight, capacity, thresholds, item count).
+     * - Intended for UI messaging, icons, and visual indicators.
+     * - Not a persistence or business-rule source of truth.
+     */
+    status?: ContainerStatusDTO;
 
 	/**
 	 * Bag creation ISODateString.
