@@ -1,0 +1,95 @@
+/// Represents a generic physical container.
+///
+/// A container defines universal physical constraints
+/// such as capacity and weight limits, and acts as the
+/// single source of truth for packing calculations.
+///
+/// Bags and Suitcases reference this model instead of
+/// duplicating physical properties.
+model Containers {
+    /// Primary identifier for the container.
+    id String @id @default(uuid())
+
+    /// Logical container type (bag, suitcase, etc.).
+    ///
+    /// Used for validation, business rules, and
+    /// polymorphic ownership.
+    type ContainerType
+
+    /// Maximum internal volume the container can hold.
+    ///
+    /// Represents total usable capacity (e.g., liters).
+    maxCapacity Float
+
+    /// Maximum total weight allowed, including contents.
+    ///
+    /// Exceeding this value should be prevented at
+    /// the application or service layer.
+    maxWeight Float
+
+    /// Weight of the empty container itself.
+    ///
+    /// Used when calculating total carried weight.
+    emptyWeight Float
+
+    /// Optional owner of the container.
+    ///
+    /// Nullable to allow system-created or template containers.
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    /// Optional specialization relations.
+    ///
+    /// A container is specialized as either a Bag or a Suitcase.
+    /// Exactly one of these should exist, enforced at the service layer.
+    bags      Bags?
+    suitcases Suitcases?
+
+    /// Items currently packed into this container.
+    containerItems ContainerItems[]
+
+    /// Container creation timestamp.
+    createdAt DateTime @default(now())
+
+    /// Container update timestamp.
+    updatedAt DateTime @updatedAt
+
+    /// Database table name.
+    @@map("containers")
+}
+
+/// Join table representing items packed into a container.
+///
+/// Stores the relationship between containers and items,
+/// including quantity, enabling accurate volume and
+/// weight aggregation.
+model ContainerItems {
+    /// Identifier of the container.
+    containerId String
+
+    /// Identifier of the packed item.
+    itemId String
+
+    /// Relation to the owning container.
+    container Containers @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+    /// Relation to the packed item.
+    item Items @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+    /// Quantity of this item inside the container.
+    ///
+    /// Represents how many identical units exist.
+    quantity Int
+
+    /// Packing record creation timestamp.
+    createdAt DateTime @default(now())
+
+    /// Packing record update timestamp.
+    updatedAt DateTime @updatedAt
+
+    /// Composite primary key ensures an item
+    /// appears only once per container.
+    @@id([containerId, itemId])
+    /// Database table name.
+    @@map("container_items")
+}

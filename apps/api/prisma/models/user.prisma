@@ -33,6 +33,9 @@ model User {
     /// User authentication tokens.
     userToken UserToken[]
 
+    /// Containers owned by the user
+    containers Containers[]
+
     /// Domain-owned resources.
     bags      Bags[]
     suitcases Suitcases[]

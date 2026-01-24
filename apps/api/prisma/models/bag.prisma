@@ -1,10 +1,15 @@
 /// Represents a bag owned by a user.
 ///
-/// Stores static physical properties and configuration
-/// used for packing and weight calculations.
+/// Stores identity, appearance, and feature metadata.
+/// All physical constraints and packing logic are
+/// delegated to the linked container.
 model Bags {
     /// Primary identifier for the bag.
     id String @id @default(uuid())
+
+    /// Linked container providing physical constraints.
+    containerId String     @unique @map("container_id")
+    container   Containers @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
     /// Display name of the bag.
     name String
@@ -13,21 +18,12 @@ model Bags {
     type BagType
 
     /// Primary color of the bag.
+    ///
     /// Defaults to black if not specified.
     color String? @default("black")
 
     /// Size classification of the bag.
     size Size
-
-    /// Maximum internal capacity of the bag.
-    /// Represents volume (e.g., liters or cubic units).
-    maxCapacity Float
-
-    /// Maximum allowed weight the bag can safely hold.
-    maxWeight Float
-
-    /// Weight of the empty bag.
-    bagWeight Float
 
     /// Material used to construct the bag.
     material Material?
@@ -42,47 +38,13 @@ model Bags {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     /// Identifier of the owning user.
+    ///
     /// Nullable to allow system-created or unassigned bags.
     userId String? @map("user_id")
 
     /// Relation to the owning user.
     user User? @relation(fields: [userId], references: [id])
 
-    /// Items packed inside this bag.
-    bagItems BagItems[]
-
     /// Database table name.
     @@map("bags")
-}
-
-/// Join table representing items packed inside a bag.
-///
-/// Enables a many-to-many relationship between
-/// bags and items.
-model BagItems {
-    /// Identifier of the bag.
-    bagId String @map("bag_id")
-
-    /// Identifier of the item.
-    itemId String @map("item_id")
-
-    /// Relation to the bag.
-    /// Cascades on delete to prevent orphan records.
-    bag Bags @relation(fields: [bagId], references: [id], onDelete: Cascade)
-
-    /// Relation to the item.
-    /// Cascades on delete to prevent orphan records.
-    item Items @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-    /// Record creation timestamp.
-    createdAt DateTime @default(now()) @map("created_at")
-
-    /// Record update timestamp.
-    updatedAt DateTime @updatedAt @map("updated_at")
-
-    /// Composite primary key to ensure
-    /// each item appears only once per bag.
-    @@id([bagId, itemId])
-    /// Database table name.
-    @@map("bag_items")
 }

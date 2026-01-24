@@ -226,6 +226,16 @@ enum WheelType {
     SPINNER
 }
 
+/// Defines the concrete type of a container.
+///
+/// Used to distinguish the owning domain model
+/// (e.g., Bag vs Suitcase) while keeping shared
+/// physical constraints in the Containers table.
+enum ContainerType {
+    BAG
+    SUITCASE
+}
+
 /// Gender information used in user profiles.
 enum Gender {
     MALE

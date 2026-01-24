@@ -1,7 +1,8 @@
-/// Represents an item that can be packed into bags or suitcases.
+/// Represents an item that can be packed into containers.
 ///
-/// Stores physical characteristics used for capacity and
-/// weight calculations, as well as classification metadata.
+/// Stores physical characteristics used for volume
+/// and weight calculations, as well as classification
+/// and display metadata.
 model Items {
     /// Primary identifier for the item.
     id String @id @default(uuid())
@@ -12,23 +13,20 @@ model Items {
     /// Category used to classify the item.
     category ItemCategory
 
-    /// Quantity of this item.
-    /// Represents how many identical units exist.
-    quantity Int
-
-    /// Weight value of a single item unit.
+    /// Weight of a single item unit.
     weight Float
 
     /// Unit used for the item's weight.
     weightUnit WeightUnit @default(KILOGRAM)
 
-    /// Volume value of a single item unit.
+    /// Volume of a single item unit.
     volume Float
 
     /// Unit used for the item's volume.
     volumeUnit VolumeUnit @default(LITER)
 
     /// Optional color of the item.
+    ///
     /// Defaults to black if not specified.
     color String? @default("black")
 
@@ -42,17 +40,15 @@ model Items {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     /// Identifier of the owning user.
+    ///
     /// Nullable to allow shared or system-defined items.
     userId String? @map("user_id")
 
     /// Relation to the owning user.
     user User? @relation(fields: [userId], references: [id])
 
-    /// Bag associations for this item.
-    bagItems BagItems[]
-
-    /// Suitcase associations for this item.
-    suitcaseItems SuitcaseItems[]
+    /// Containers this item is packed into.
+    containerItems ContainerItems[]
 
     /// Database table name.
     @@map("items")

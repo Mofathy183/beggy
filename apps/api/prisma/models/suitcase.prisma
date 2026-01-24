@@ -1,10 +1,16 @@
 /// Represents a suitcase owned by a user.
 ///
-/// Stores static physical properties and configuration
-/// used for packing calculations and organization.
+/// Stores identity, appearance, and configuration
+/// details. Physical constraints such as capacity
+/// and weight limits are delegated to the linked
+/// container.
 model Suitcases {
     /// Primary identifier for the suitcase.
     id String @id @default(uuid())
+
+    /// Linked container providing physical constraints.
+    containerId String     @unique @map("container_id")
+    container   Containers @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
     /// Display name of the suitcase.
     name String
@@ -16,21 +22,12 @@ model Suitcases {
     type SuitcaseType
 
     /// Primary color of the suitcase.
+    ///
     /// Defaults to black if not specified.
     color String? @default("black")
 
     /// Size classification of the suitcase.
     size Size
-
-    /// Maximum internal capacity of the suitcase.
-    /// Represents volume (e.g., liters).
-    maxCapacity Float
-
-    /// Maximum allowed weight when fully packed.
-    maxWeight Float
-
-    /// Weight of the empty suitcase.
-    suitcaseWeight Float
 
     /// Material used to construct the suitcase.
     material Material?
@@ -48,47 +45,13 @@ model Suitcases {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     /// Identifier of the owning user.
+    ///
     /// Nullable to allow system-created or unassigned suitcases.
     userId String? @map("user_id")
 
     /// Relation to the owning user.
     user User? @relation(fields: [userId], references: [id])
 
-    /// Items packed inside this suitcase.
-    suitcaseItems SuitcaseItems[]
-
     /// Database table name.
     @@map("suitcases")
-}
-
-/// Join table representing items packed inside a suitcase.
-///
-/// Enables a many-to-many relationship between
-/// suitcases and items.
-model SuitcaseItems {
-    /// Identifier of the suitcase.
-    suitcaseId String @map("suitcase_id")
-
-    /// Identifier of the item.
-    itemId String @map("item_id")
-
-    /// Relation to the suitcase.
-    /// Cascades on delete to prevent orphan records.
-    suitcase Suitcases @relation(fields: [suitcaseId], references: [id], onDelete: Cascade)
-
-    /// Relation to the item.
-    /// Cascades on delete to prevent orphan records.
-    item Items @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-    /// Record creation timestamp.
-    createdAt DateTime @default(now()) @map("created_at")
-
-    /// Record update timestamp.
-    updatedAt DateTime @updatedAt @map("updated_at")
-
-    /// Composite primary key to ensure
-    /// each item appears only once per suitcase.
-    @@id([suitcaseId, itemId])
-    /// Database table name.
-    @@map("suitcase_items")
 }
