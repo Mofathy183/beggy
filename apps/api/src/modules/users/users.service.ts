@@ -1,4 +1,4 @@
-import type { ExtendedPrismaClient } from '@prisma/prisma.types';
+import type { PrismaClientType } from '@prisma';
 import type { Profile, User } from '@prisma/generated/prisma/client';
 import type {
 	UserFilterInput,
@@ -36,10 +36,10 @@ export class UserService {
 	 * Prisma client instance.
 	 *
 	 * @remarks
-	 * - Typed as ExtendedPrismaClient to allow future extensions
+	 * - Typed as PrismaClientType to allow future extensions
 	 * - Initialized once per service instance
 	 */
-	constructor(private readonly prisma: ExtendedPrismaClient) {}
+	constructor(private readonly prisma: PrismaClientType) {}
 
 	/**
 	 * Retrieves a paginated list of users with filtering and ordering support.

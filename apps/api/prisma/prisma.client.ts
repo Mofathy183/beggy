@@ -1,27 +1,23 @@
+import { envConfig } from '@/config';
 import { PrismaClient } from '@prisma-generated/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import {
-	profileExtensions,
-	bagExtensions,
-	suitcaseExtensions,
-} from '@prisma/prisma.util';
+import { profileExtensions } from '@prisma/prisma.util';
 
 const connectionString = `${process.env.DATABASE_URL}`;
 
 const adapter = new PrismaPg({ connectionString });
 
-// Create extended client with logging based on environment
-export const prismaClient = new PrismaClient({
+/**
+ * Singleton Prisma client with PostgreSQL adapter and extensions.
+ */
+export const prisma = new PrismaClient({
 	adapter,
-	log: ['warn', 'error'],
-});
+	log: envConfig.server.isProduction
+		? ['warn', 'error']
+		: ['query', 'warn', 'error'],
+}).$extends(profileExtensions);
 
-//* add extension for Prisma to get the age of the user and the display name
-// Apply extensions
-const extendedPrisma = prismaClient
-	.$extends(profileExtensions)
-	.$extends(bagExtensions)
-	.$extends(suitcaseExtensions);
-
-// Export the instance
-export const prisma = extendedPrisma;
+/**
+ * Type representing the extended Prisma client instance.
+ */
+export type PrismaClientType = typeof prisma;

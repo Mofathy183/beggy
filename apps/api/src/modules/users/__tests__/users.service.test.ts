@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { type ExtendedPrismaClient } from '@prisma';
+import { type PrismaClientType } from '@prisma';
 import { Role, ErrorCode } from '@beggy/shared/constants';
 import {
 	buildProfile,
@@ -42,7 +42,7 @@ vi.mock('@prisma/prisma.client', () => ({
 
 import { prisma as Prisma } from '@prisma/prisma.client';
 
-const prismaMock = Prisma as unknown as ExtendedPrismaClient;
+const prismaMock = Prisma as unknown as PrismaClientType;
 
 describe('UserService.getAll()', () => {
 	let service: UserService;
