@@ -3,24 +3,24 @@ import { z } from 'zod';
 import { FieldsSchema } from '../../src/schemas/fields.schema';
 
 describe('FieldsSchema.name()', () => {
-	it('returns a working name schema', () => {
+	it('parses a valid name value', () => {
 		const schema = FieldsSchema.name('First name', 'person');
 		expect(schema.parse('Mohamed')).toBe('Mohamed');
 	});
 });
 
 describe('FieldsSchema.email()', () => {
-	it('allows null', () => {
+	it('returns null when value is null and field is optional', () => {
 		const schema = FieldsSchema.email(false);
 		expect(schema.parse(null)).toBeNull();
 	});
 
-	it('allows undefined', () => {
+	it('returns undefined when value is undefined and field is optional', () => {
 		const schema = FieldsSchema.email(false);
 		expect(schema.parse(undefined)).toBeUndefined();
 	});
 
-	it('accepts a valid email', () => {
+	it('parses a valid email address', () => {
 		const schema = FieldsSchema.email();
 
 		const result = schema.parse('traveler@example.com');
@@ -28,7 +28,7 @@ describe('FieldsSchema.email()', () => {
 		expect(result).toBe('traveler@example.com');
 	});
 
-	it('trims surrounding whitespace', () => {
+	it('trims surrounding whitespace from the email', () => {
 		const schema = FieldsSchema.email();
 
 		const result = schema.parse('  Traveler@Example.com  ');
@@ -36,7 +36,7 @@ describe('FieldsSchema.email()', () => {
 		expect(result).toBe('traveler@example.com');
 	});
 
-	it('normalizes email to lowercase', () => {
+	it('normalizes the email to lowercase', () => {
 		const schema = FieldsSchema.email();
 
 		const result = schema.parse('Traveler@Example.COM');
@@ -44,7 +44,7 @@ describe('FieldsSchema.email()', () => {
 		expect(result).toBe('traveler@example.com');
 	});
 
-	it('rejects invalid email format', () => {
+	it('throws when email format is invalid', () => {
 		const schema = FieldsSchema.email();
 
 		expect(() => schema.parse('not-an-email')).toThrow();
@@ -52,13 +52,13 @@ describe('FieldsSchema.email()', () => {
 		expect(() => schema.parse('@example.com')).toThrow();
 	});
 
-	it('rejects empty string', () => {
+	it('throws when email is an empty string', () => {
 		const schema = FieldsSchema.email();
 
 		expect(() => schema.parse('')).toThrow();
 	});
 
-	it('normalizes valid email when provided', () => {
+	it('normalizes the email when provided for an optional field', () => {
 		const schema = FieldsSchema.email(false);
 
 		const result = schema.parse('  USER@Example.COM  ');
@@ -66,7 +66,7 @@ describe('FieldsSchema.email()', () => {
 		expect(result).toBe('user@example.com');
 	});
 
-	it('rejects invalid email even when optional', () => {
+	it('throws when an invalid email is provided even if optional', () => {
 		const schema = FieldsSchema.email(false);
 
 		expect(() => schema.parse('invalid-email')).toThrow();
@@ -74,22 +74,22 @@ describe('FieldsSchema.email()', () => {
 });
 
 describe('FieldsSchema.password()', () => {
-	it('accepts a strong password', () => {
+	it('parses a strong password', () => {
 		const schema = FieldsSchema.password();
 		expect(schema.parse('Strong@123')).toBe('Strong@123');
 	});
 
-	it('rejects weak passwords', () => {
+	it('throws when password does not meet strength requirements', () => {
 		const schema = FieldsSchema.password();
 		expect(() => schema.parse('weak')).toThrow();
 	});
 
-	it('trims surrounding whitespace', () => {
+	it('trims surrounding whitespace from the password', () => {
 		const schema = FieldsSchema.password();
 		expect(schema.parse('  Strong@123  ')).toBe('Strong@123');
 	});
 
-	it('allows null for optional password', () => {
+	it('returns null when password is optional and value is null', () => {
 		const schema = FieldsSchema.password(false);
 		expect(schema.parse(null)).toBeNull();
 	});
@@ -101,19 +101,19 @@ enum TestEnum {
 }
 
 describe('FieldsSchema.enum()', () => {
-	it('accepts valid enum value', () => {
+	it('parses a valid enum value', () => {
 		const schema = FieldsSchema.enum(TestEnum);
 		expect(schema.parse(TestEnum.A)).toBe(TestEnum.A);
 	});
 
-	it('rejects invalid enum value', () => {
+	it('throws when value is not part of the enum', () => {
 		const schema = FieldsSchema.enum(TestEnum);
 		expect(() => schema.parse('C')).toThrow();
 	});
 });
 
 describe('FieldsSchema.date()', () => {
-	it('accepts a valid Date instance', () => {
+	it('parses a valid Date instance', () => {
 		const schema = FieldsSchema.date();
 
 		const input = new Date('2020-01-01');
@@ -123,20 +123,17 @@ describe('FieldsSchema.date()', () => {
 		expect(result.getTime()).toBe(input.getTime());
 	});
 
-	it('returns a new Date instance (no mutation)', () => {
+	it('returns a new Date instance without mutating the input', () => {
 		const schema = FieldsSchema.date();
 
 		const input = new Date('2020-01-01');
 		const result = schema.parse(input) as Date;
 
-		// Same value
 		expect(result.getTime()).toBe(input.getTime());
-
-		// Different reference
 		expect(result).not.toBe(input);
 	});
 
-	it('rejects dates before 1900-01-01', () => {
+	it('throws when date is before the minimum allowed value', () => {
 		const schema = FieldsSchema.date();
 
 		const tooOld = new Date('1800-01-01');
@@ -144,7 +141,7 @@ describe('FieldsSchema.date()', () => {
 		expect(() => schema.parse(tooOld)).toThrow();
 	});
 
-	it('rejects future dates', () => {
+	it('throws when date is in the future', () => {
 		const schema = FieldsSchema.date();
 
 		const future = new Date();
@@ -153,7 +150,7 @@ describe('FieldsSchema.date()', () => {
 		expect(() => schema.parse(future)).toThrow();
 	});
 
-	it('rejects non-Date values', () => {
+	it('throws when value is not a Date instance', () => {
 		const schema = FieldsSchema.date();
 
 		expect(() => schema.parse('2020-01-01')).toThrow();
@@ -163,33 +160,33 @@ describe('FieldsSchema.date()', () => {
 });
 
 describe('FieldsSchema.url()', () => {
-	it('accepts valid URL and trims it', () => {
+	it('parses a valid URL and trims whitespace', () => {
 		const schema = FieldsSchema.url();
 		expect(schema.parse('  https://example.com  ')).toBe(
 			'https://example.com'
 		);
 	});
 
-	it('rejects unsafe characters', () => {
+	it('throws when URL contains unsafe characters', () => {
 		const schema = FieldsSchema.url();
 		expect(() => schema.parse('https://exa mple.com')).toThrow();
 	});
 
-	it('allows null when optional', () => {
+	it('returns null when URL is optional and value is null', () => {
 		const schema = FieldsSchema.url(false);
 		expect(schema.parse(null)).toBeNull();
 	});
 });
 
 describe('FieldsSchema.number()', () => {
-	it('returns a working number schema', () => {
+	it('parses a valid number value', () => {
 		const schema = FieldsSchema.number('bag', 'capacity');
 		expect(schema.parse(10)).toBe(10);
 	});
 });
 
 describe('FieldsSchema.array()', () => {
-	it('returns a working array schema', () => {
+	it('parses a valid array value', () => {
 		const schema = FieldsSchema.array(z.string());
 		expect(schema.parse(['a'])).toEqual(['a']);
 	});

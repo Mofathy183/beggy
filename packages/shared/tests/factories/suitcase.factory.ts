@@ -6,7 +6,6 @@ import {
 	WheelType,
 } from '../../src/constants/suitcase.enums.js';
 import { Material, Size } from '../../src/constants/bag.enums.js';
-// import { type ItemFactoryOverrides, buildItem } from './item.factory.js';
 
 type SuitcaseFactoryOverrides = Partial<
 	Pick<
@@ -51,26 +50,6 @@ type SuitcaseFactoryOptions = {
 	 */
 	withDetails?: boolean;
 };
-
-// /**
-//  * Options required to build a SuitcaseItems join entity.
-//  */
-// type SuitcaseItemsOptions = {
-// 	/**
-// 	 * Identifier of the owning user.
-// 	 */
-// 	userId: string;
-
-// 	/**
-// 	 * Optional existing suitcase identifier.
-// 	 */
-// 	suitcaseId?: string;
-
-// 	/**
-// 	 * Optional existing item identifier.
-// 	 */
-// 	itemId?: string;
-// };
 
 /**
  * Creates a valid **non-persisted** Suitcase entity.
@@ -177,46 +156,3 @@ export const buildSuitcases = (
 ): Omit<SuitcaseDTO, 'createdAt' | 'updatedAt'>[] =>
 	Array.from({ length: count }, () => buildSuitcase(userId, overrides));
 
-// /**
-//  * Creates a **persisted** SuitcaseItems join entity.
-//  *
-//  * Use for:
-//  * - airline weight checks
-//  * - suitcase capacity validation
-//  * - packing rule enforcement tests
-//  */
-// export const buildSuitcaseItem = (
-// 	options: SuitcaseItemsOptions,
-// 	suitcaseOverrides: SuitcaseFactoryOverrides = {},
-// 	itemOverrides: ItemFactoryOverrides = {}
-// ): SuitcaseItems => {
-// 	const createdAt = faker.date.past();
-// 	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
-
-// 	const suitcase = buildSuitcase(options.userId, suitcaseOverrides);
-// 	const item = buildItem(options.userId, itemOverrides);
-
-// 	return {
-// 		suitcaseId: options.suitcaseId ?? suitcase.id,
-// 		itemId: options.itemId ?? item.id,
-
-// 		suitcase,
-// 		item,
-
-// 		createdAt,
-// 		updatedAt,
-// 	};
-// };
-
-// /**
-//  * Creates multiple **persisted** SuitcaseItems join entities.
-//  */
-// export const buildSuitcaseItems = (
-// 	count: number,
-// 	options: SuitcaseItemsOptions,
-// 	suitcaseOverrides: SuitcaseFactoryOverrides = {},
-// 	itemOverrides: ItemFactoryOverrides = {}
-// ): SuitcaseItems[] =>
-// 	Array.from({ length: count }, () =>
-// 		buildSuitcaseItem(options, suitcaseOverrides, itemOverrides)
-// 	);

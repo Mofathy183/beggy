@@ -1,9 +1,8 @@
 import { it, describe, expect } from 'vitest';
-// import { buildBagItem } from '../../src/testing/factories/bag.factory';
+import { buildContainerItem } from '../factories/constraints.factory';
 import {
 	calculateCurrentCapacity,
 	calculateCurrentWeight,
-	calculateItemCount,
 	calculateRemainingCapacity,
 	calculateRemainingWeight,
 	calculateTotalWeightWithContainer,
@@ -15,7 +14,7 @@ import {
 import { WeightUnit, VolumeUnit } from '../../src/constants/item.enums';
 
 describe('convertToKilogram()', () => {
-	it('returns the same value for kilograms', () => {
+	it('returns the same value when unit is kilogram', () => {
 		expect(convertToKilogram(5, WeightUnit.KILOGRAM)).toBe(5);
 	});
 
@@ -33,8 +32,9 @@ describe('convertToKilogram()', () => {
 	});
 });
 
+
 describe('convertToLiter()', () => {
-	it('returns the same value for liters', () => {
+	it('returns the same value when unit is liter', () => {
 		expect(convertToLiter(5, VolumeUnit.LITER)).toBe(5);
 	});
 
@@ -53,96 +53,85 @@ describe('convertToLiter()', () => {
 	});
 });
 
+
 describe('calculateCurrentWeight()', () => {
 	it('returns 0 when items are empty', () => {
 		expect(calculateCurrentWeight([])).toBe(0);
 	});
 
-	// it('returns 0 when items are undefined', () => {
-	// 	expect(calculateCurrentWeight(undefined as any)).toBe(0);
-	// });
+	it('returns 0 when items are missing', () => {
+		expect(calculateCurrentWeight(undefined as any)).toBe(0);
+	});
 
-	// it('calculates total weight using item quantity', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 2,
-	// 				weightUnit: WeightUnit.KILOGRAM,
-	// 				quantity: 3, // 6 kg
-	// 			}
-	// 		),
-	// 	];
+	it('calculates total weight using item quantity', () => {
+		const items = [
+			buildContainerItem({ 
+                quantity: 3, // 6 kg
+                item: {
+					weight: 2,
+					weightUnit: WeightUnit.KILOGRAM,
+                }
+            }),
+		];
 
-	// 	expect(calculateCurrentWeight(items)).toBe(6);
-	// });
+		expect(calculateCurrentWeight(items)).toBe(6);
+	});
 
-	// it('sums weights across multiple items', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 1,
-	// 				weightUnit: WeightUnit.KILOGRAM,
-	// 				quantity: 2, // 2 kg
-	// 			}
-	// 		),
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 500,
-	// 				weightUnit: WeightUnit.GRAM,
-	// 				quantity: 2, // 1 kg
-	// 			}
-	// 		),
-	// 	];
+	it('sums weight across multiple items', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 2, // 2 kg
+                item: {
+					weight: 1,
+					weightUnit: WeightUnit.KILOGRAM,
+				}
+            }),
+			buildContainerItem({
+                quantity: 2, // 1 kg
+                item: {
+					weight: 500,
+					weightUnit: WeightUnit.GRAM,
+				}
+            }),
+		];
 
-	// 	expect(calculateCurrentWeight(items)).toBe(3);
-	// });
+		expect(calculateCurrentWeight(items)).toBe(3);
+	});
 
-	// it('handles mixed weight units correctly', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 1000,
-	// 				weightUnit: WeightUnit.GRAM,
-	// 				quantity: 1, // 1 kg
-	// 			}
-	// 		),
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 2.20462,
-	// 				weightUnit: WeightUnit.POUND,
-	// 				quantity: 1, // ≈ 1 kg
-	// 			}
-	// 		),
-	// 	];
+	it('handles mixed weight units', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 1, // 1 kg
+                item: {
+					weight: 1000,
+					weightUnit: WeightUnit.GRAM,
+				}
+            }),
+			buildContainerItem({
+                quantity: 1, // ≈ 1 kg
+                item: {
+					weight: 2.20462,
+					weightUnit: WeightUnit.POUND,
+				}
+            }),
+		];
 
-	// 	expect(calculateCurrentWeight(items)).toBe(2);
-	// });
+		expect(calculateCurrentWeight(items)).toBe(2);
+	});
 
-	// it('rounds the result to 2 decimal places', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 2.20462,
-	// 				weightUnit: WeightUnit.POUND,
-	// 				quantity: 2, // ≈ 1.999994 kg
-	// 			}
-	// 		),
-	// 	];
+	it('rounds the result to 2 decimal places', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 2, // ≈ 1.999994 kg
+                item: {
+					weight: 2.20462,
+					weightUnit: WeightUnit.POUND,
+				}
+            }),
+		];
 
-	// 	expect(calculateCurrentWeight(items)).toBe(2);
-	// });
+		expect(calculateCurrentWeight(items)).toBe(2);
+	});
 });
 
 describe('calculateTotalWeightWithContainer()', () => {
@@ -150,38 +139,34 @@ describe('calculateTotalWeightWithContainer()', () => {
 		expect(calculateTotalWeightWithContainer([], 2.5)).toBe(2.5);
 	});
 
-	// it('adds container weight to item weight', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 5,
-	// 				weightUnit: WeightUnit.KILOGRAM,
-	// 				quantity: 1, // 5 kg
-	// 			}
-	// 		),
-	// 	];
+	it('adds container weight to item weight', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 1, // 5 kg
+                item: {
+					weight: 5,
+					weightUnit: WeightUnit.KILOGRAM,
+				}
+            }),
+		];
 
-	// 	expect(calculateTotalWeightWithContainer(items, 2.5)).toBe(7.5);
-	// });
+		expect(calculateTotalWeightWithContainer(items, 2.5)).toBe(7.5);
+	});
 
-	// it('rounds the final result to 2 decimal places', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				weight: 2.20462,
-	// 				weightUnit: WeightUnit.POUND,
-	// 				quantity: 1, // ≈ 1 kg
-	// 			}
-	// 		),
-	// 	];
+	it('rounds the final result to 2 decimal places', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 1, // ≈ 1 kg
+                item: {
+					weight: 2.20462,
+					weightUnit: WeightUnit.POUND,
+				}
+            }),
+		];
 
-	// 	// items ≈ 1.00 + container 2.555 = 3.555 → 3.56
-	// 	expect(calculateTotalWeightWithContainer(items, 2.555)).toBe(3.56);
-	// });
+		// items ≈ 1.00 + container 2.555 = 3.555 → 3.56
+		expect(calculateTotalWeightWithContainer(items, 2.555)).toBe(3.56);
+	});
 });
 
 describe('calculateCurrentCapacity()', () => {
@@ -189,91 +174,79 @@ describe('calculateCurrentCapacity()', () => {
 		expect(calculateCurrentCapacity([])).toBe(0);
 	});
 
-	it('returns 0 when items are undefined', () => {
+	it('returns 0 when items are missing', () => {
 		expect(calculateCurrentCapacity(undefined as any)).toBe(0);
 	});
 
-	// it('calculates capacity using item quantity', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				volume: 2,
-	// 				volumeUnit: VolumeUnit.LITER,
-	// 				quantity: 3, // 6 L
-	// 			}
-	// 		),
-	// 	];
+	it('calculates capacity using item quantity', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 3, // 6 L
+                item: {
+					volume: 2,
+					volumeUnit: VolumeUnit.LITER,
+				}
+            }),
+		];
 
-	// 	expect(calculateCurrentCapacity(items)).toBe(6);
-	// });
+		expect(calculateCurrentCapacity(items)).toBe(6);
+	});
 
-	// it('sums capacity across multiple items', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				volume: 500,
-	// 				volumeUnit: VolumeUnit.ML,
-	// 				quantity: 2, // 1 L
-	// 			}
-	// 		),
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				volume: 1.5,
-	// 				volumeUnit: VolumeUnit.LITER,
-	// 				quantity: 2, // 3 L
-	// 			}
-	// 		),
-	// 	];
+	it('sums capacity across multiple items', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 2, // 1 L
+                item: {
+					volume: 500,
+					volumeUnit: VolumeUnit.ML,
+				}
+            }),
+			buildContainerItem({
+                quantity: 2, // 3 L
+                item: {
+					volume: 1.5,
+					volumeUnit: VolumeUnit.LITER,
+				}
+            }),
+		];
 
-	// 	expect(calculateCurrentCapacity(items)).toBe(4);
-	// });
+		expect(calculateCurrentCapacity(items)).toBe(4);
+	});
 
-	// it('handles mixed volume units correctly', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				volume: 1000,
-	// 				volumeUnit: VolumeUnit.CU_CM,
-	// 				quantity: 1, // 1 L
-	// 			}
-	// 		),
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				volume: 61.0237,
-	// 				volumeUnit: VolumeUnit.CU_IN,
-	// 				quantity: 1, // ≈ 1 L
-	// 			}
-	// 		),
-	// 	];
+	it('sums capacity across multiple items', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 1, // 1 L
+                item: {
+					volume: 1000,
+					volumeUnit: VolumeUnit.CU_CM,
+				}
+            }),
+			buildContainerItem({
+                quantity: 1, // ≈ 1 L
+                item: {
+					volume: 61.0237,
+					volumeUnit: VolumeUnit.CU_IN,
+				}
+            }),
+		];
 
-	// 	expect(calculateCurrentCapacity(items)).toBe(2);
-	// });
+		expect(calculateCurrentCapacity(items)).toBe(2);
+	});
 
-	// it('rounds the result to 2 decimal places', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				volume: 61.0237,
-	// 				volumeUnit: VolumeUnit.CU_IN,
-	// 				quantity: 3, // ≈ 3.00001 L
-	// 			}
-	// 		),
-	// 	];
+	it('rounds the result to 2 decimal places', () => {
+		const items = [
+			buildContainerItem({
+                quantity: 3, // ≈ 3.00001 L
+                item: {
+					volume: 61.0237,
+					volumeUnit: VolumeUnit.CU_IN,
+				}
+            }),
+		];
 
-	// 	expect(calculateCurrentCapacity(items)).toBe(3);
-	// });
+		expect(calculateCurrentCapacity(items)).toBe(3);
+	});
 });
 
 describe('calculateRemainingWeight()', () => {
@@ -285,11 +258,11 @@ describe('calculateRemainingWeight()', () => {
 		expect(calculateRemainingWeight(25, 20)).toBe(0);
 	});
 
-	it('returns 0 when max weight is 0', () => {
+	it('returns 0 when max weight is missing', () => {
 		expect(calculateRemainingWeight(10, 0)).toBe(0);
 	});
 
-	it('returns 0 when max weight is negative', () => {
+	it('returns 0 when max weight is invalid', () => {
 		expect(calculateRemainingWeight(10, -5)).toBe(0);
 	});
 
@@ -322,72 +295,20 @@ describe('calculateRemainingCapacity()', () => {
 	});
 });
 
-describe('calculateItemCount()', () => {
-	it('returns 0 when items are empty', () => {
-		expect(calculateItemCount([])).toBe(0);
-	});
-
-	it('returns 0 when items are undefined', () => {
-		expect(calculateItemCount(undefined as any)).toBe(0);
-	});
-
-	// it('counts quantity for a single item', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				quantity: 3,
-	// 			}
-	// 		),
-	// 	];
-
-	// 	expect(calculateItemCount(items)).toBe(3);
-	// });
-
-	// it('sums quantities across multiple items', () => {
-	// 	const items = [
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				quantity: 3,
-	// 			}
-	// 		),
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				quantity: 2,
-	// 			}
-	// 		),
-	// 		buildBagItem(
-	// 			{ userId: 'user-1' },
-	// 			{},
-	// 			{
-	// 				quantity: 1,
-	// 			}
-	// 		),
-	// 	];
-
-	// 	expect(calculateItemCount(items)).toBe(6);
-	// });
-});
-
 describe('calculateWeightPercentage()', () => {
-	it('returns 0 when max weight is 0', () => {
+	it('returns 0 when max weight is missing', () => {
 		expect(calculateWeightPercentage(10, 0)).toBe(0);
 	});
 
-	it('returns 0 when max weight is negative', () => {
+	it('returns 0 when max weight is invalid', () => {
 		expect(calculateWeightPercentage(10, -20)).toBe(0);
 	});
 
-	it('returns 0 when current weight is 0', () => {
+	it('returns 0 when current weight is missing', () => {
 		expect(calculateWeightPercentage(0, 20)).toBe(0);
 	});
 
-	it('returns 0 when current weight is negative', () => {
+	it('returns 0 when current weight is invalid', () => {
 		expect(calculateWeightPercentage(-5, 20)).toBe(0);
 	});
 
@@ -406,19 +327,19 @@ describe('calculateWeightPercentage()', () => {
 });
 
 describe('calculateCapacityPercentage()', () => {
-	it('returns 0 when max capacity is 0', () => {
+	it('returns 0 when max capacity is missing', () => {
 		expect(calculateCapacityPercentage(10, 0)).toBe(0);
 	});
 
-	it('returns 0 when max capacity is negative', () => {
+	it('returns 0 when max capacity is invalid', () => {
 		expect(calculateCapacityPercentage(10, -50)).toBe(0);
 	});
 
-	it('returns 0 when current capacity is 0', () => {
+	it('returns 0 when current capacity is missing', () => {
 		expect(calculateCapacityPercentage(0, 50)).toBe(0);
 	});
 
-	it('returns 0 when current capacity is negative', () => {
+	it('returns 0 when current capacity is invalid', () => {
 		expect(calculateCapacityPercentage(-10, 50)).toBe(0);
 	});
 

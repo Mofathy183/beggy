@@ -7,39 +7,39 @@ import {
 } from '../../src/utils/schema.util';
 
 describe('createNumberField()', () => {
-	it('accepts a valid number and rounds correctly', () => {
+	it('parses a valid number and applies configured rounding', () => {
 		const schema = createNumberField('bag', 'capacity');
 		expect(schema.parse(10.456)).toBe(10.5); // decimals: 1
 	});
 
-	it('rejects numbers below minimum', () => {
+	it('fails when value is below the minimum constraint', () => {
 		const schema = createNumberField('bag', 'capacity');
 		expect(() => schema.parse(0)).toThrow();
 	});
 
-	it('rejects numbers above maximum', () => {
+	it('fails when value exceeds the maximum constraint', () => {
 		const schema = createNumberField('bag', 'capacity');
 		expect(() => schema.parse(1000)).toThrow();
 	});
 
-	it('rejects non-numeric values', () => {
+	it('fails when value is not a number', () => {
 		const schema = createNumberField('bag', 'capacity');
 		expect(() => schema.parse('10')).toThrow();
 	});
 
-	it('allows null for optional number fields', () => {
+	it('parses null when field is optional', () => {
 		const schema = createNumberField('bag', 'capacity', false);
 		expect(schema.parse(null)).toBeNull();
 	});
 
-	it('allows undefined for optional number fields', () => {
+	it('parses undefined when field is optional', () => {
 		const schema = createNumberField('bag', 'capacity', false);
 		expect(schema.parse(undefined)).toBeUndefined();
 	});
 });
 
 describe('createNameField()', () => {
-	it('accepts a valid person name', () => {
+	it('parses a valid name value', () => {
 		const schema = createNameField('person', 'First name');
 		expect(schema.parse('Mohamed')).toBe('Mohamed');
 	});
@@ -49,54 +49,54 @@ describe('createNameField()', () => {
 		expect(schema.parse('  Mohamed  ')).toBe('Mohamed');
 	});
 
-	it('rejects names shorter than minimum length', () => {
+	it('fails when name is shorter than the minimum length', () => {
 		const schema = createNameField('person', 'First name');
 		expect(() => schema.parse('M')).toThrow();
 	});
 
-	it('rejects names with invalid characters', () => {
+	it('fails when name contains invalid characters', () => {
 		const schema = createNameField('person', 'First name');
 		expect(() => schema.parse('Mohamed@123')).toThrow();
 	});
 
-	it('allows null for optional name fields', () => {
+	it('parses null when field is optional', () => {
 		const schema = createNameField('person', 'First name', false);
 		expect(schema.parse(null)).toBeNull();
 	});
 
-	it('allows undefined for optional name fields', () => {
+	it('parses undefined when field is optional', () => {
 		const schema = createNameField('person', 'First name', false);
 		expect(schema.parse(undefined)).toBeUndefined();
 	});
 });
 
 describe('createArrayField()', () => {
-	it('accepts a valid required array', () => {
+	it('parses a valid required array', () => {
 		const schema = createArrayField(z.string());
 		expect(schema.parse(['a'])).toEqual(['a']);
 	});
 
-	it('rejects empty array when required', () => {
+	it('fails when required array is empty', () => {
 		const schema = createArrayField(z.string());
 		expect(() => schema.parse([])).toThrow();
 	});
 
-	it('rejects array exceeding max length', () => {
+	it('fails when array exceeds the maximum allowed length', () => {
 		const schema = createArrayField(z.string());
 		expect(() => schema.parse(['a', 'b', 'c', 'd', 'e', 'f'])).toThrow();
 	});
 
-	it('allows empty array when optional', () => {
+	it('parses empty array when field is optional', () => {
 		const schema = createArrayField(z.string(), false);
 		expect(schema.parse([])).toEqual([]);
 	});
 
-	it('allows undefined when optional', () => {
+	it('parses undefined when field is optional', () => {
 		const schema = createArrayField(z.string(), false);
 		expect(schema.parse(undefined)).toBeUndefined();
 	});
 
-	it('delegates validation to element schema', () => {
+	it('fails when array elements do not satisfy the element schema', () => {
 		const schema = createArrayField(z.number());
 		expect(() => schema.parse(['not-a-number'])).toThrow();
 	});

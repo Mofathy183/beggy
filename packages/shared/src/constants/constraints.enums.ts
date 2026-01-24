@@ -38,3 +38,17 @@ export enum ContainerStatus {
 	 */
 	OVER_CAPACITY = 'over_capacity',
 }
+
+/**
+ * Specific reasons explaining why a container
+ * is in a given status.
+ *
+ * Used for UI warnings, tooltips, and validation messages.
+ */
+export enum ContainerStatusReason {
+	WEIGHT_OVER_LIMIT = 'weight_over_limit',
+	WEIGHT_NEAR_LIMIT = 'weight_near_limit',
+	CAPACITY_OVER_LIMIT = 'capacity_over_limit',
+	CAPACITY_NEAR_LIMIT = 'capacity_near_limit',
+	EMPTY = 'empty',
+}

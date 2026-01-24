@@ -6,7 +6,6 @@ import {
 	Material,
 } from '../../src/constants/bag.enums.js';
 import { type BagDTO } from '../../src/types/bag.types.js';
-// import { type ItemFactoryOverrides, buildItem } from './item.factory.js';
 
 type BagFactoryOverrides = Partial<
 	Pick<
@@ -54,17 +53,6 @@ type BagFactoryOptions = {
 	 */
 	withDetails?: boolean;
 };
-
-// type BagItemsOptions = {
-// 	/** Owning user identifier */
-// 	userId: string;
-
-// 	/** Existing bag identifier (optional) */
-// 	bagId?: string;
-
-// 	/** Existing item identifier (optional) */
-// 	itemId?: string;
-// };
 
 /**
  * Creates a valid **non-persisted** Bag entity.
@@ -163,56 +151,3 @@ export const buildBags = (
 	overrides: BagFactoryOverrides = {}
 ): Omit<BagDTO, 'createdAt' | 'updatedAt'>[] =>
 	Array.from({ length: count }, () => buildBag(userId, overrides));
-
-// /**
-//  * Creates a **persisted** BagItems join entity.
-//  *
-//  * Use for:
-//  * - weight and capacity calculations
-//  * - bag aggregation tests
-//  * - join-table query simulations
-//  *
-//  * IMPORTANT:
-//  * - Always returns persisted `Bag` and `Item`
-//  * - Generated entities are consistent and owned by the same user
-//  */
-// export const buildBagItem = (
-// 	options: BagItemsOptions,
-// 	bagOverrides: BagFactoryOverrides = {},
-// 	itemOverrides: ItemFactoryOverrides = {}
-// ): BagItems => {
-// 	const createdAt = faker.date.past();
-// 	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
-
-// 	const bag = buildBag(options.userId, bagOverrides);
-// 	const item = buildItem(options.userId, itemOverrides);
-
-// 	return {
-// 		bagId: options.bagId ?? bag.id,
-// 		itemId: options.itemId ?? item.id,
-
-// 		bag,
-// 		item,
-
-// 		createdAt,
-// 		updatedAt,
-// 	};
-// };
-
-// /**
-//  * Creates multiple **persisted** BagItems join entities.
-//  *
-//  * Useful for:
-//  * - testing lists
-//  * - bulk calculations
-//  * - pagination scenarios
-//  */
-// export const buildBagItems = (
-// 	count: number,
-// 	options: BagItemsOptions,
-// 	bagOverrides: BagFactoryOverrides = {},
-// 	itemOverrides: ItemFactoryOverrides = {}
-// ): BagItems[] =>
-// 	Array.from({ length: count }, () =>
-// 		buildBagItem(options, bagOverrides, itemOverrides)
-// 	);

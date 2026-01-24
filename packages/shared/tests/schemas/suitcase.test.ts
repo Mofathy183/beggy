@@ -8,8 +8,8 @@ import {
 	WheelType,
 } from '../../src/constants/suitcase.enums';
 
-describe('SuitcaseSchema.create', () => {
-	it('accepts valid input and applies defaults', () => {
+describe('SuitcaseSchema.create()', () => {
+	it('parses valid input and applies default values', () => {
 		const {
 			userId: _userId,
 			suitcaseWeight: _suitcaseWeight,
@@ -23,7 +23,7 @@ describe('SuitcaseSchema.create', () => {
 		expect(result).toEqual(mockSuitcase);
 	});
 
-	it('accepts optional descriptive fields', () => {
+	it('parses optional descriptive fields when provided', () => {
 		const {
 			userId: _userId,
 			suitcaseWeight: _suitcaseWeight,
@@ -40,7 +40,7 @@ describe('SuitcaseSchema.create', () => {
 		expect(result.features).toEqual([SuitcaseFeature.TSA_LOCK]);
 	});
 
-	it('rejects unknown fields', () => {
+	it('throws when unknown fields are provided', () => {
 		const {
 			userId: _userId,
 			suitcaseWeight: _suitcaseWeight,
@@ -56,8 +56,8 @@ describe('SuitcaseSchema.create', () => {
 	});
 });
 
-describe('SuitcaseSchema.update', () => {
-	it('accepts partial updates', () => {
+describe('SuitcaseSchema.update()', () => {
+	it('parses partial update payloads', () => {
 		const result = SuitcaseSchema.update.parse({
 			color: 'red',
 			wheels: WheelType.TWO_WHEEL,
@@ -69,12 +69,12 @@ describe('SuitcaseSchema.update', () => {
 		});
 	});
 
-	it('does not apply defaults', () => {
+	it('parses an empty object without applying defaults', () => {
 		const result = SuitcaseSchema.update.parse({});
 		expect(result).toEqual({});
 	});
 
-	it('rejects unknown fields', () => {
+	it('throws when unknown fields are provided', () => {
 		expect(() =>
 			SuitcaseSchema.update.parse({
 				size: Size.LARGE,

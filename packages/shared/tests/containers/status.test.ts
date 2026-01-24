@@ -5,22 +5,22 @@ import {
 	checkIsOverweight,
 	getContainerStatus,
 } from '../../src/containers/status';
-import { ContainerStatus } from '../../src/constants/constraints.enums';
+import { ContainerStatus, ContainerStatusReason } from '../../src/constants/constraints.enums';
 
 describe('checkIsOverweight()', () => {
-	it('returns false when max weight is 0', () => {
+	it('returns false when max weight is missing', () => {
 		expect(checkIsOverweight(10, 0)).toBe(false);
 	});
 
-	it('returns false when max weight is negative', () => {
+	it('returns false when max weight is invalid', () => {
 		expect(checkIsOverweight(10, -20)).toBe(false);
 	});
 
-	it('returns false when current weight is 0', () => {
+	it('returns false when current weight is missing', () => {
 		expect(checkIsOverweight(0, 20)).toBe(false);
 	});
 
-	it('returns false when current weight is negative', () => {
+	it('returns false when current weight is invalid', () => {
 		expect(checkIsOverweight(-5, 20)).toBe(false);
 	});
 
@@ -33,20 +33,21 @@ describe('checkIsOverweight()', () => {
 	});
 });
 
+
 describe('checkIsOverCapacity()', () => {
-	it('returns false when max capacity is 0', () => {
+	it('returns false when max capacity is missing', () => {
 		expect(checkIsOverCapacity(10, 0)).toBe(false);
 	});
 
-	it('returns false when max capacity is negative', () => {
+	it('returns false when max capacity is invalid', () => {
 		expect(checkIsOverCapacity(10, -50)).toBe(false);
 	});
 
-	it('returns false when current capacity is 0', () => {
+	it('returns false when current capacity is missing', () => {
 		expect(checkIsOverCapacity(0, 50)).toBe(false);
 	});
 
-	it('returns false when current capacity is negative', () => {
+	it('returns false when current capacity is invalid', () => {
 		expect(checkIsOverCapacity(-10, 50)).toBe(false);
 	});
 
@@ -60,79 +61,163 @@ describe('checkIsOverCapacity()', () => {
 });
 
 describe('checkIsFull()', () => {
-	it('returns false when both max weight and max capacity are missing', () => {
+	it('returns false when both limits are missing', () => {
 		expect(checkIsFull(10, 0, 10, 0)).toBe(false);
 	});
 
-	it('returns true when weight is exactly 95% of max', () => {
+	it('returns true when weight reaches near-limit threshold', () => {
 		expect(checkIsFull(19, 20, 10, 50)).toBe(true);
 	});
 
-	it('returns true when weight is above 95% of max', () => {
+	it('returns true when weight exceeds near-limit threshold', () => {
 		expect(checkIsFull(19.5, 20, 10, 50)).toBe(true);
 	});
 
-	it('returns true when capacity is exactly 95% of max', () => {
+	it('returns true when capacity reaches near-limit threshold', () => {
 		expect(checkIsFull(10, 20, 47.5, 50)).toBe(true);
 	});
 
-	it('returns true when capacity is above 95% of max', () => {
+	it('returns true when capacity exceeds near-limit threshold', () => {
 		expect(checkIsFull(10, 20, 48, 50)).toBe(true);
 	});
 
-	it('returns true when only weight dimension is near full', () => {
+	it('returns true when only weight is near limit', () => {
 		expect(checkIsFull(19, 20, 0, 0)).toBe(true);
 	});
 
-	it('returns true when only capacity dimension is near full', () => {
+	it('returns true when only capacity is near limit', () => {
 		expect(checkIsFull(0, 0, 48, 50)).toBe(true);
 	});
 
-	it('returns false when both weight and capacity are below threshold', () => {
+	it('returns false when both dimensions are below threshold', () => {
 		expect(checkIsFull(10, 20, 30, 50)).toBe(false);
 	});
 });
 
+
 describe('getContainerStatus()', () => {
-	it('returns OVERWEIGHT when overweight is true', () => {
-		expect(getContainerStatus(true, false, false, 5)).toBe(
-			ContainerStatus.OVERWEIGHT
+	it('returns EMPTY when container has no items', () => {
+		// Arrange
+		const params = {
+			itemCount: 0,
+			isOverweight: true,
+			isOverCapacity: true,
+			isWeightNearLimit: true,
+			isCapacityNearLimit: true,
+		};
+
+		// Act
+		const result = getContainerStatus(params);
+
+		// Assert
+		expect(result).toEqual({
+			status: ContainerStatus.EMPTY,
+			reasons: [ContainerStatusReason.EMPTY],
+		});
+	});
+
+	it('returns OVERWEIGHT when weight exceeds limit', () => {
+		// Arrange
+		const params = {
+			itemCount: 3,
+			isOverweight: true,
+			isOverCapacity: true,
+			isWeightNearLimit: false,
+			isCapacityNearLimit: false,
+		};
+
+		// Act
+		const result = getContainerStatus(params);
+
+		// Assert
+		expect(result.status).toBe(ContainerStatus.OVERWEIGHT);
+		expect(result.reasons).toContain(ContainerStatusReason.WEIGHT_OVER_LIMIT);
+		expect(result.reasons).toContain(
+			ContainerStatusReason.CAPACITY_OVER_LIMIT
 		);
 	});
 
-	it('returns OVER_CAPACITY when over capacity is true and not overweight', () => {
-		expect(getContainerStatus(false, true, false, 5)).toBe(
-			ContainerStatus.OVER_CAPACITY
-		);
+	it('returns OVER_CAPACITY when capacity exceeds limit without overweight', () => {
+		// Arrange
+		const params = {
+			itemCount: 4,
+			isOverweight: false,
+			isOverCapacity: true,
+			isWeightNearLimit: true,
+			isCapacityNearLimit: false,
+		};
+
+		// Act
+		const result = getContainerStatus(params);
+
+		// Assert
+		expect(result).toEqual({
+			status: ContainerStatus.OVER_CAPACITY,
+			reasons: [
+                ContainerStatusReason.WEIGHT_NEAR_LIMIT,
+                ContainerStatusReason.CAPACITY_OVER_LIMIT
+            ],
+		});
 	});
 
-	it('returns FULL when full is true and not over limits', () => {
-		expect(getContainerStatus(false, false, true, 5)).toBe(
-			ContainerStatus.FULL
-		);
+	it('returns FULL when near capacity or weight limit', () => {
+		// Arrange
+		const params = {
+			itemCount: 5,
+			isOverweight: false,
+			isOverCapacity: false,
+			isWeightNearLimit: true,
+			isCapacityNearLimit: false,
+		};
+
+		// Act
+		const result = getContainerStatus(params);
+
+		// Assert
+		expect(result).toEqual({
+			status: ContainerStatus.FULL,
+			reasons: [ContainerStatusReason.WEIGHT_NEAR_LIMIT],
+		});
 	});
 
-	it('returns EMPTY when item count is zero and no other flags are set', () => {
-		expect(getContainerStatus(false, false, false, 0)).toBe(
-			ContainerStatus.EMPTY
-		);
+	it('returns OK when container is within safe limits', () => {
+		// Arrange
+		const params = {
+			itemCount: 2,
+			isOverweight: false,
+			isOverCapacity: false,
+			isWeightNearLimit: false,
+			isCapacityNearLimit: false,
+		};
+
+		// Act
+		const result = getContainerStatus(params);
+
+		// Assert
+		expect(result).toEqual({
+			status: ContainerStatus.OK,
+			reasons: [],
+		});
 	});
 
-	it('returns OK when none of the conditions apply', () => {
-		expect(getContainerStatus(false, false, false, 3)).toBe(
-			ContainerStatus.OK
-		);
-	});
+	it('ignores near-limit reasons when over-limit applies', () => {
+		// Arrange
+		const params = {
+			itemCount: 6,
+			isOverweight: true,
+			isOverCapacity: false,
+			isWeightNearLimit: true,
+			isCapacityNearLimit: true,
+		};
 
-	it('prioritizes OVERWEIGHT over all other states', () => {
-		expect(getContainerStatus(true, true, true, 0)).toBe(
-			ContainerStatus.OVERWEIGHT
-		);
-	});
+		// Act
+		const result = getContainerStatus(params);
 
-	it('prioritizes OVER_CAPACITY over FULL', () => {
-		expect(getContainerStatus(false, true, true, 10)).toBe(
-			ContainerStatus.OVER_CAPACITY
-		);
+		// Assert
+		expect(result.reasons).toEqual([
+			ContainerStatusReason.WEIGHT_OVER_LIMIT,
+			ContainerStatusReason.CAPACITY_NEAR_LIMIT,
+		]);
+		expect(result.status).toBe(ContainerStatus.OVERWEIGHT);
 	});
 });

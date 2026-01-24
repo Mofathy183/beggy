@@ -3,8 +3,8 @@ import { BagSchema } from '../../src/schemas/bag.schema';
 import { BagFeature } from '../../src/constants/bag.enums';
 import { bagFactory } from '../factories/bag.factory';
 
-describe('BagSchema.create', () => {
-	it('accepts valid input and applies defaults', () => {
+describe('BagSchema.create()', () => {
+	it('parses valid input and applies default values', () => {
 		const {
 			userId: _userId,
 			bagWeight: _bagWeight,
@@ -15,7 +15,7 @@ describe('BagSchema.create', () => {
 		expect(result).toEqual(mockBag);
 	});
 
-	it('accepts optional fields when provided', () => {
+	it('parses optional fields when they are provided', () => {
 		const {
 			userId: _userId,
 			bagWeight: _bagWeight,
@@ -30,7 +30,7 @@ describe('BagSchema.create', () => {
 		expect(result.color).toBe('red');
 	});
 
-	it('rejects unknown fields', () => {
+	it('throws when unknown fields are provided', () => {
 		const {
 			userId: _userId,
 			bagWeight: _bagWeight,
@@ -46,8 +46,8 @@ describe('BagSchema.create', () => {
 	});
 });
 
-describe('BagSchema.update', () => {
-	it('accepts partial updates', () => {
+describe('BagSchema.update()', () => {
+	it('parses partial update payloads', () => {
 		const result = BagSchema.update.parse({
 			name: 'Updated Bag Name',
 			maxWeight: 18,
@@ -59,13 +59,13 @@ describe('BagSchema.update', () => {
 		});
 	});
 
-	it('does not apply defaults during update', () => {
+	it('returns an empty object when no fields are provided', () => {
 		const result = BagSchema.update.parse({});
 
 		expect(result).toEqual({});
 	});
 
-	it('rejects unknown fields', () => {
+	it('throws when unknown fields are provided', () => {
 		expect(() =>
 			BagSchema.update.parse({
 				color: 'blue',

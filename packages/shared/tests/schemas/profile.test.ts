@@ -5,12 +5,12 @@ import { ProfileSchema } from '../../src/schemas/profile.schema';
 import { Gender } from '../../src/constants/profile.enums';
 import { Role } from '../../src/constants/auth.enums';
 
-describe('ProfileSchema.editProfile', () => {
-	it('accepts an empty object for partial updates', () => {
+describe('ProfileSchema.editProfile()', () => {
+	it('parses an empty object for partial updates', () => {
 		expect(() => ProfileSchema.editProfile.parse({})).not.toThrow();
 	});
 
-	it('accepts a single field update', () => {
+	it('parses a single profile field update', () => {
 		const result = ProfileSchema.editProfile.parse({
 			firstName: 'Mohamed',
 		});
@@ -20,7 +20,7 @@ describe('ProfileSchema.editProfile', () => {
 		});
 	});
 
-	it('accepts multiple profile fields together', () => {
+	it('parses multiple profile fields in a single payload', () => {
 		const { userId: _userId, ...mock } = profileFactory(
 			'user-1',
 			{},
@@ -37,7 +37,7 @@ describe('ProfileSchema.editProfile', () => {
 		expect(result).toEqual(mockProfile);
 	});
 
-	it('rejects unknown fields to prevent mass assignment', () => {
+	it('throws when unknown fields are provided (mass assignment protection)', () => {
 		expect(() =>
 			ProfileSchema.editProfile.parse({
 				firstName: 'Mohamed',
@@ -46,7 +46,7 @@ describe('ProfileSchema.editProfile', () => {
 		).toThrow();
 	});
 
-	it('accepts a valid gender value when provided', () => {
+	it('parses a valid gender value when provided', () => {
 		const result = ProfileSchema.editProfile.parse({
 			gender: Gender.MALE,
 		});

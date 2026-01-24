@@ -18,12 +18,12 @@ enum TestOrderBy {
 describe('buildOrderBySchema()', () => {
 	const schema = buildOrderBySchema(TestOrderBy);
 
-	it('accepts a valid orderBy field', () => {
+	it('accepts valid orderBy field', () => {
 		const result = schema.parse({ orderBy: TestOrderBy.NAME });
 		expect(result.orderBy).toBe(TestOrderBy.NAME);
 	});
 
-	it('defaults direction to ASC', () => {
+	it('defaults direction to ASC when not provided', () => {
 		const result = schema.parse({ orderBy: TestOrderBy.CREATED_AT });
 		expect(result.direction).toBe(OrderDirection.ASC);
 	});
@@ -41,7 +41,7 @@ describe('buildOrderBySchema()', () => {
 		expect(() => schema.parse({ orderBy: 'invalid' })).toThrow();
 	});
 
-	it('rejects extra keys (strict)', () => {
+	it('rejects extra keys', () => {
 		expect(() =>
 			schema.parse({
 				orderBy: TestOrderBy.NAME,
@@ -52,19 +52,19 @@ describe('buildOrderBySchema()', () => {
 });
 
 describe('dateRangeSchema', () => {
-	it('accepts only from date', () => {
+	it('accepts range with only from date', () => {
 		expect(() =>
 			dateRangeSchema.parse({ from: new Date('2024-01-01') })
 		).not.toThrow();
 	});
 
-	it('accepts only to date', () => {
+	it('accepts range with only to date', () => {
 		expect(() =>
 			dateRangeSchema.parse({ to: new Date('2024-01-10') })
 		).not.toThrow();
 	});
 
-	it('accepts valid range (from <= to)', () => {
+	it('accepts valid date range', () => {
 		expect(() =>
 			dateRangeSchema.parse({
 				from: new Date('2024-01-01'),
@@ -73,7 +73,7 @@ describe('dateRangeSchema', () => {
 		).not.toThrow();
 	});
 
-	it('rejects invalid range (from > to)', () => {
+	it('rejects invalid date range', () => {
 		expect(() =>
 			dateRangeSchema.parse({
 				from: new Date('2024-01-10'),
@@ -87,29 +87,29 @@ describe('numberRangeSchema()', () => {
 	// weight have decimals: 3 for the items in the NUMBER_CONFIG
 	const schema = numberRangeSchema('item', 'weight');
 
-	it('accepts min only', () => {
+	it('accepts minimum value only', () => {
 		const result = schema.parse({ min: 1.234 });
 		expect(result.min).toBeDefined();
 	});
 
-	it('accepts max only', () => {
+	it('accepts maximum value only', () => {
 		const result = schema.parse({ max: 10 });
 		expect(result.max).toBeDefined();
 	});
 
-	it('accepts valid min and max', () => {
+	it('accepts valid minimum and maximum', () => {
 		expect(() => schema.parse({ min: 1, max: 10 })).not.toThrow();
 	});
 
-	it('rejects when both min and max are missing', () => {
+	it('rejects range when both values are missing', () => {
 		expect(() => schema.parse({})).toThrow();
 	});
 
-	it('rejects when min > max', () => {
+	it('rejects range when minimum exceeds maximum', () => {
 		expect(() => schema.parse({ min: 10, max: 5 })).toThrow();
 	});
 
-	it('applies rounding to configured decimals', () => {
+	it('rounds values to configured precision', () => {
 		const result = schema.parse({ min: 1.23456 });
 		// that why that round to decimals 3
 		expect(result.min).toBe(1.235);
@@ -117,11 +117,11 @@ describe('numberRangeSchema()', () => {
 });
 
 describe('QuerySchema', () => {
-	it('accepts minimal user filter', () => {
+	it('accepts empty user filter', () => {
 		expect(() => QuerySchema.userFilter.parse({})).not.toThrow();
 	});
 
-	it('accepts minimal bag filter', () => {
+	it('accepts valid bag filter', () => {
 		expect(() =>
 			QuerySchema.bagFilter.parse({
 				type: BagType.BACKPACK,
@@ -131,7 +131,7 @@ describe('QuerySchema', () => {
 		).not.toThrow();
 	});
 
-	it('rejects unknown keys', () => {
+	it('rejects unknown filter keys', () => {
 		expect(() => QuerySchema.userFilter.parse({ unknown: true })).toThrow();
 	});
 });
@@ -151,7 +151,7 @@ describe('ParamsSchema.uuid', () => {
 });
 
 describe('PaginationSchema.pagination', () => {
-	it('applies default values', () => {
+	it('applies default pagination values', () => {
 		const result = PaginationSchema.pagination.parse({});
 		expect(result).toEqual({ page: 1, limit: 10 });
 	});
@@ -166,11 +166,11 @@ describe('PaginationSchema.pagination', () => {
 		expect(result.limit).toBe(20);
 	});
 
-	it('rejects page < 1', () => {
+	it('rejects page values below 1', () => {
 		expect(() => PaginationSchema.pagination.parse({ page: 0 })).toThrow();
 	});
 
-	it('rejects limit > 100', () => {
+	it('rejects limit values above maximum', () => {
 		expect(() =>
 			PaginationSchema.pagination.parse({ limit: 101 })
 		).toThrow();

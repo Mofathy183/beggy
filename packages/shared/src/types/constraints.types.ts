@@ -1,6 +1,5 @@
 import type { WeightUnit, VolumeUnit } from '../constants/item.enums.js';
-import type { BagDTO } from '../types/bag.types.js';
-import type { SuitcaseDTO } from '../types/suitcase.types.js';
+import type { ContainerStatusReason, ContainerStatus } from '../constants/constraints.enums.js';
 import type { ItemDTO } from '../types/item.types.js';
 
 /**
@@ -44,30 +43,6 @@ export type ConvertToKilogram = Record<WeightUnit, number>;
 export type ConvertToLiter = Record<VolumeUnit, number>;
 
 /**
- * Join model linking suitcases to contained items.
- *
- * @remarks
- * - Enables many-to-many relationships
- * - Used for capacity, weight, and packing validation
- */
-interface SuitcaseItems {
-	item: ItemDTO;
-	suitcase: SuitcaseDTO;
-}
-
-/**
- * Join model linking bags to contained items.
- *
- * @remarks
- * - Enables many-to-many relationships
- * - Useful for inventory tracking and capacity calculations
- */
-interface BagItems {
-	item: ItemDTO;
-	bag: BagDTO;
-}
-
-/**
  * Union type representing item collections inside containers.
  *
  * @remarks
@@ -81,4 +56,30 @@ interface BagItems {
  * calculateCurrentCapacity(suitcase.suitcaseItems);
  * ```
  */
-export type ItemsType = (BagItems | SuitcaseItems)[];
+export interface ContainerItem {
+	quantity: number;
+	item: Pick<ItemDTO, 'volume' | 'weight' | 'weightUnit' | 'volumeUnit'>;
+}
+
+/**
+ * Derived container state with both high-level status
+ * and low-level explanatory reasons.
+ */
+export interface ContainerStatusResult {
+	status: ContainerStatus;
+	reasons: ContainerStatusReason[];
+}
+
+/**
+ * Factual container state derived from calculation functions.
+ *
+ * This structure MUST be built from calculation outputs,
+ * not recomputed inside the status layer.
+ */
+export interface ContainerStatusParams {
+	isOverweight: boolean;
+	isOverCapacity: boolean;
+	isWeightNearLimit: boolean;
+	isCapacityNearLimit: boolean;
+	itemCount: number; // will be the quantity that in the ContainerItems
+}

@@ -7,8 +7,8 @@ import {
 } from '../../src/constants/item.enums';
 import { itemFactory } from '../factories/item.factory';
 
-describe('ItemSchema.create', () => {
-	it('accepts valid input and applies defaults', () => {
+describe('ItemSchema.create()', () => {
+	it('parses valid input and applies default values', () => {
 		const { userId: _userId, ...mockItem } = itemFactory('user-1', {
 			category: ItemCategory.ELECTRONICS,
 			weightUnit: WeightUnit.KILOGRAM,
@@ -19,7 +19,7 @@ describe('ItemSchema.create', () => {
 		expect(result).toEqual(mockItem);
 	});
 
-	it('accepts optional fields when provided', () => {
+	it('parses optional fields when they are provided', () => {
 		const { userId: _userId, ...mockItem } = itemFactory('user-1', {
 			color: 'clear',
 			isFragile: true,
@@ -30,7 +30,7 @@ describe('ItemSchema.create', () => {
 		expect(result.isFragile).toBe(true);
 	});
 
-	it('rejects unknown fields', () => {
+	it('throws when unknown fields are provided', () => {
 		const { userId: _userId, ...mockItem } = itemFactory('user-1');
 		expect(() =>
 			ItemSchema.create.parse({
@@ -41,8 +41,8 @@ describe('ItemSchema.create', () => {
 	});
 });
 
-describe('ItemSchema.update', () => {
-	it('accepts partial updates', () => {
+describe('ItemSchema.update()', () => {
+	it('parses partial update payloads', () => {
 		const result = ItemSchema.update.parse({
 			quantity: 3,
 			isFragile: true,
@@ -54,13 +54,13 @@ describe('ItemSchema.update', () => {
 		});
 	});
 
-	it('does not apply defaults', () => {
+	it('returns an empty object when no fields are provided', () => {
 		const result = ItemSchema.update.parse({});
 
 		expect(result).toEqual({});
 	});
 
-	it('rejects unknown fields', () => {
+	it('throws when unknown fields are provided', () => {
 		expect(() =>
 			ItemSchema.update.parse({
 				color: 'red',
