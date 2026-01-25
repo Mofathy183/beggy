@@ -76,6 +76,8 @@ export const SuccessMessages = {
 	// Profile & Preferences
 	PROFILE_UPDATED:
 		'Profile updated! I’ve saved your preferences so packing gets easier each time.',
+	PROFILE_FETCHED:
+		'Profile loaded! Everything’s right where you left it — ready to help you plan the next step of your journey.',
 	PREFERENCES_SAVED:
 		'Got it! I’ll remember these packing preferences next time wanderlust strikes.',
 
@@ -413,6 +415,10 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 	[ErrorCode.INVALID_PACKING_ORDER]:
 		'From experience, heavier items work best at the bottom — try moving those shoes down a bit.',
 
+	// Profile
+	[ErrorCode.PROFILE_NOT_FOUND]:
+		'Hmm… I couldn’t find a profile here. Looks like this stop might not exist.',
+
 	// =========================================================================
 	// API-ONLY / INFRASTRUCTURE
 	// =========================================================================
@@ -671,6 +677,10 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 		'Review your setup — a quick tweak can make everything fit beautifully.',
 	[ErrorCode.INVALID_PACKING_ORDER]:
 		'From experience, heavier items work best at the bottom — let’s repack smart.',
+
+	// Profile
+	[ErrorCode.PROFILE_NOT_FOUND]:
+		'Double-check the details or try heading back and opening the profile again — sometimes it’s just a wrong turn.',
 
 	// =========================================================================
 	// API-ONLY / INFRASTRUCTURE

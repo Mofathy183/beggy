@@ -32,7 +32,6 @@ describe('convertToKilogram()', () => {
 	});
 });
 
-
 describe('convertToLiter()', () => {
 	it('returns the same value when unit is liter', () => {
 		expect(convertToLiter(5, VolumeUnit.LITER)).toBe(5);
@@ -53,7 +52,6 @@ describe('convertToLiter()', () => {
 	});
 });
 
-
 describe('calculateCurrentWeight()', () => {
 	it('returns 0 when items are empty', () => {
 		expect(calculateCurrentWeight([])).toBe(0);
@@ -65,13 +63,13 @@ describe('calculateCurrentWeight()', () => {
 
 	it('calculates total weight using item quantity', () => {
 		const items = [
-			buildContainerItem({ 
-                quantity: 3, // 6 kg
-                item: {
+			buildContainerItem({
+				quantity: 3, // 6 kg
+				item: {
 					weight: 2,
 					weightUnit: WeightUnit.KILOGRAM,
-                }
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentWeight(items)).toBe(6);
@@ -80,19 +78,19 @@ describe('calculateCurrentWeight()', () => {
 	it('sums weight across multiple items', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 2, // 2 kg
-                item: {
+				quantity: 2, // 2 kg
+				item: {
 					weight: 1,
 					weightUnit: WeightUnit.KILOGRAM,
-				}
-            }),
+				},
+			}),
 			buildContainerItem({
-                quantity: 2, // 1 kg
-                item: {
+				quantity: 2, // 1 kg
+				item: {
 					weight: 500,
 					weightUnit: WeightUnit.GRAM,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentWeight(items)).toBe(3);
@@ -101,19 +99,19 @@ describe('calculateCurrentWeight()', () => {
 	it('handles mixed weight units', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 1, // 1 kg
-                item: {
+				quantity: 1, // 1 kg
+				item: {
 					weight: 1000,
 					weightUnit: WeightUnit.GRAM,
-				}
-            }),
+				},
+			}),
 			buildContainerItem({
-                quantity: 1, // ≈ 1 kg
-                item: {
+				quantity: 1, // ≈ 1 kg
+				item: {
 					weight: 2.20462,
 					weightUnit: WeightUnit.POUND,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentWeight(items)).toBe(2);
@@ -122,12 +120,12 @@ describe('calculateCurrentWeight()', () => {
 	it('rounds the result to 2 decimal places', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 2, // ≈ 1.999994 kg
-                item: {
+				quantity: 2, // ≈ 1.999994 kg
+				item: {
 					weight: 2.20462,
 					weightUnit: WeightUnit.POUND,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentWeight(items)).toBe(2);
@@ -142,12 +140,12 @@ describe('calculateTotalWeightWithContainer()', () => {
 	it('adds container weight to item weight', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 1, // 5 kg
-                item: {
+				quantity: 1, // 5 kg
+				item: {
 					weight: 5,
 					weightUnit: WeightUnit.KILOGRAM,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateTotalWeightWithContainer(items, 2.5)).toBe(7.5);
@@ -156,12 +154,12 @@ describe('calculateTotalWeightWithContainer()', () => {
 	it('rounds the final result to 2 decimal places', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 1, // ≈ 1 kg
-                item: {
+				quantity: 1, // ≈ 1 kg
+				item: {
 					weight: 2.20462,
 					weightUnit: WeightUnit.POUND,
-				}
-            }),
+				},
+			}),
 		];
 
 		// items ≈ 1.00 + container 2.555 = 3.555 → 3.56
@@ -181,12 +179,12 @@ describe('calculateCurrentCapacity()', () => {
 	it('calculates capacity using item quantity', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 3, // 6 L
-                item: {
+				quantity: 3, // 6 L
+				item: {
 					volume: 2,
 					volumeUnit: VolumeUnit.LITER,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentCapacity(items)).toBe(6);
@@ -195,19 +193,19 @@ describe('calculateCurrentCapacity()', () => {
 	it('sums capacity across multiple items', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 2, // 1 L
-                item: {
+				quantity: 2, // 1 L
+				item: {
 					volume: 500,
 					volumeUnit: VolumeUnit.ML,
-				}
-            }),
+				},
+			}),
 			buildContainerItem({
-                quantity: 2, // 3 L
-                item: {
+				quantity: 2, // 3 L
+				item: {
 					volume: 1.5,
 					volumeUnit: VolumeUnit.LITER,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentCapacity(items)).toBe(4);
@@ -216,19 +214,19 @@ describe('calculateCurrentCapacity()', () => {
 	it('sums capacity across multiple items', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 1, // 1 L
-                item: {
+				quantity: 1, // 1 L
+				item: {
 					volume: 1000,
 					volumeUnit: VolumeUnit.CU_CM,
-				}
-            }),
+				},
+			}),
 			buildContainerItem({
-                quantity: 1, // ≈ 1 L
-                item: {
+				quantity: 1, // ≈ 1 L
+				item: {
 					volume: 61.0237,
 					volumeUnit: VolumeUnit.CU_IN,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentCapacity(items)).toBe(2);
@@ -237,12 +235,12 @@ describe('calculateCurrentCapacity()', () => {
 	it('rounds the result to 2 decimal places', () => {
 		const items = [
 			buildContainerItem({
-                quantity: 3, // ≈ 3.00001 L
-                item: {
+				quantity: 3, // ≈ 3.00001 L
+				item: {
 					volume: 61.0237,
 					volumeUnit: VolumeUnit.CU_IN,
-				}
-            }),
+				},
+			}),
 		];
 
 		expect(calculateCurrentCapacity(items)).toBe(3);

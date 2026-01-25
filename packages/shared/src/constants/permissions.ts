@@ -33,6 +33,7 @@ export const RolePermissions: Record<Role, Permissions> = {
 			scope: Scope.ANY,
 			subject: Subject.PERMISSION,
 		},
+		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.PROFILE },
 	],
 
 	[Role.MODERATOR]: [
@@ -44,6 +45,7 @@ export const RolePermissions: Record<Role, Permissions> = {
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.ITEM },
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.SUITCASE },
 		{ action: Action.READ, scope: Scope.ANY, subject: Subject.USER },
+		{ action: Action.READ, scope: Scope.ANY, subject: Subject.PROFILE },
 	],
 
 	[Role.MEMBER]: [
@@ -56,6 +58,8 @@ export const RolePermissions: Record<Role, Permissions> = {
 		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.BAG },
 		{ action: Action.MANAGE, scope: Scope.OWN, subject: Subject.ITEM },
 		{ action: Action.MANAGE, scope: Scope.OWN, subject: Subject.SUITCASE },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.PROFILE },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.PROFILE },
 	],
 
 	[Role.USER]: [
@@ -70,5 +74,7 @@ export const RolePermissions: Record<Role, Permissions> = {
 		{ action: Action.MANAGE, scope: Scope.OWN, subject: Subject.ITEM },
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.USER },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.USER },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.PROFILE },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.PROFILE },
 	],
 };

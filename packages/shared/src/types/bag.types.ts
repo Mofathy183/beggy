@@ -3,7 +3,7 @@
  */
 
 import type * as z from 'zod';
-import type { ContainerStatusDTO } from './constraints.types.js'; 
+import type { ContainerStatusDTO } from './constraints.types.js';
 import { type BagSchema } from '../schemas/bag.schema.js';
 import type { Override, ISODateString } from './index.js';
 import type {
@@ -84,16 +84,16 @@ export interface BagDTO {
 	 */
 	features: BagFeature[];
 
-    /**
-     * High-level semantic status of the container.
-     *
-     * @remarks
-     * - Represents the overall usability state of the bag/suitcase.
-     * - Derived from multiple metrics (weight, capacity, thresholds, item count).
-     * - Intended for UI messaging, icons, and visual indicators.
-     * - Not a persistence or business-rule source of truth.
-     */
-    status?: ContainerStatusDTO;
+	/**
+	 * High-level semantic status of the container.
+	 *
+	 * @remarks
+	 * - Represents the overall usability state of the bag/suitcase.
+	 * - Derived from multiple metrics (weight, capacity, thresholds, item count).
+	 * - Intended for UI messaging, icons, and visual indicators.
+	 * - Not a persistence or business-rule source of truth.
+	 */
+	status?: ContainerStatusDTO;
 
 	/**
 	 * Bag creation ISODateString.

@@ -5,6 +5,11 @@ import {
 	UserController,
 	UserService,
 } from './src/modules/users';
+import {
+	createProfileRouter,
+	ProfileController,
+	ProfileService,
+} from '@modules/profiles';
 
 /**
  * Root application router.
@@ -30,3 +35,22 @@ const userController = new UserController(new UserService(prisma));
  * - Intended for administrative or system-level access
  */
 rootRouter.use('/users', createUserRouter(userController));
+
+/**
+ * Profiles module wiring.
+ *
+ * @remarks
+ * - Dependencies are constructed explicitly
+ * - No hidden global state
+ * - Easy to refactor or swap implementations later
+ */
+const profileController = new ProfileController(new ProfileService(prisma));
+/**
+ * Mounts the Profiles router under /profiles.
+ *
+ * Example routes:
+ * - GET    /profiles/me
+ * - PATCH  /profiles/me
+ * - GET    /profiles/:id
+ */
+rootRouter.use('/profiles', createProfileRouter(profileController));

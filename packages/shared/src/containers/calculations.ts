@@ -2,7 +2,7 @@ import type {
 	ConvertToKilogram,
 	ConvertToLiter,
 	ContainerItem,
-    ContainerMetrics,
+	ContainerMetrics,
 } from '../types/constraints.types.js';
 import { type WeightUnit, type VolumeUnit } from '../constants/item.enums.js';
 
@@ -259,7 +259,6 @@ export const calculateCapacityPercentage = (
 	// Calculate percentage and round to 1 decimal place
 	return Number(((currentCapacity / maxCapacity) * 100).toFixed(1));
 };
-
 
 /**
  * Computes derived container metrics based on its items and constraints.

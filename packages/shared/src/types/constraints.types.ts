@@ -1,5 +1,8 @@
 import type { WeightUnit, VolumeUnit } from '../constants/item.enums.js';
-import type { ContainerStatusReason, ContainerStatus } from '../constants/constraints.enums.js';
+import type {
+	ContainerStatusReason,
+	ContainerStatus,
+} from '../constants/constraints.enums.js';
 import type { ItemDTO } from '../types/item.types.js';
 
 /**
@@ -93,7 +96,7 @@ export interface ContainerStatusParams {
  * - UI-facing, read-only data
  */
 export interface ContainerMetrics {
-    /**
+	/**
 	 * Computed bag metrics.
 	 *
 	 * @remarks
@@ -142,7 +145,6 @@ export interface ContainerState {
 	status: ContainerStatus;
 	reasons: ContainerStatusReason[];
 }
-
 
 export interface ContainerStatusDTO {
 	metrics: ContainerMetrics;

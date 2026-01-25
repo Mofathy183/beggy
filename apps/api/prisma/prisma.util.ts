@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma-generated/client';
 import type { PrismaClientType } from '@prisma';
 
 // ============================================================================
@@ -39,28 +38,6 @@ export function getAge(
 
 	return age;
 }
-
-export const profileExtensions = Prisma.defineExtension({
-	name: 'ProfileComputedFields',
-	result: {
-		profile: {
-			displayName: {
-				needs: { firstName: true, lastName: true },
-				compute(user) {
-					const { firstName, lastName } = user;
-					return getDisplayName(firstName, lastName);
-				},
-			},
-			age: {
-				needs: { birthDate: true },
-				compute(user) {
-					const { birthDate } = user;
-					return getAge(birthDate);
-				},
-			},
-		},
-	},
-});
 
 /**
  * Completely resets the test database.

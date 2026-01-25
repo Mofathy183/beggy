@@ -88,6 +88,18 @@ export interface ProfileDTO {
 	updatedAt: ISODateString;
 }
 
+export type PublicProfileDTO = Pick<
+	ProfileDTO,
+	| 'id'
+	| 'firstName'
+	| 'lastName'
+	| 'avatarUrl'
+	| 'country'
+	| 'city'
+	| 'displayName'
+	| 'age'
+>;
+
 // ─────────────────────────────────────────────
 // Schemas with identical input & output
 // (No transforms → input === payload)

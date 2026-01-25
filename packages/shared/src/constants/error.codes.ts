@@ -85,6 +85,7 @@ export enum ErrorCode {
 	INVALID_CAPACITY_VALUE = 'INVALID_CAPACITY_VALUE',
 	CANNOT_PACK_ITEM = 'CANNOT_PACK_ITEM',
 
+	PROFILE_NOT_FOUND = 'PROFILE_NOT_FOUND',
 	// -------------------------------------------------------------------------
 	// 429 — Rate limiting
 	// -------------------------------------------------------------------------

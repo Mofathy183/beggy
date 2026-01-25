@@ -93,16 +93,16 @@ export interface SuitcaseDTO {
 	 */
 	wheels?: WheelType | null;
 
-    /**
-     * High-level semantic status of the container.
-     *
-     * @remarks
-     * - Represents the overall usability state of the bag/suitcase.
-     * - Derived from multiple metrics (weight, capacity, thresholds, item count).
-     * - Intended for UI messaging, icons, and visual indicators.
-     * - Not a persistence or business-rule source of truth.
-     */
-    status?: ContainerStatusDTO;
+	/**
+	 * High-level semantic status of the container.
+	 *
+	 * @remarks
+	 * - Represents the overall usability state of the bag/suitcase.
+	 * - Derived from multiple metrics (weight, capacity, thresholds, item count).
+	 * - Intended for UI messaging, icons, and visual indicators.
+	 * - Not a persistence or business-rule source of truth.
+	 */
+	status?: ContainerStatusDTO;
 
 	/**
 	 * Suitcase creation ISODateString.

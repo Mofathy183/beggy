@@ -1,37 +1,8 @@
-import { Profile } from '@prisma/generated/prisma/client';
 import { getAge, getDisplayName } from '@prisma';
-import type { ProfileDTO } from '@beggy/shared/types';
+import type { ProfileDTO, PublicProfileDTO } from '@beggy/shared/types';
 import { Gender } from '@beggy/shared/constants';
 import { toISO } from '@shared/utils';
-
-/**
- * Extended Profile model with optional computed fields.
- *
- * @remarks
- * - Used internally in the service/mapping layer
- * - Allows passing precomputed values from the database layer
- *   (e.g. via raw SQL, Prisma extensions, or SELECT aliases)
- * - Keeps DTO mapping logic flexible without polluting persistence models
- */
-type ProfileWithComputed = Profile & {
-	/**
-	 * Precomputed display name.
-	 *
-	 * @remarks
-	 * - May be injected by the query layer
-	 * - Falls back to computed value in the mapper if not provided
-	 */
-	displayName?: string | null;
-
-	/**
-	 * Precomputed age.
-	 *
-	 * @remarks
-	 * - Optional optimization to avoid recomputation
-	 * - Falls back to runtime calculation if not provided
-	 */
-	age?: number | null;
-};
+import type { PublicProfileEntity, ProfileWithComputed } from '@shared/types';
 
 /**
  * Profile domain mapper.
@@ -128,6 +99,51 @@ export const ProfileMapper = {
 
 			/** Profile last update timestamp (ISO-8601) */
 			updatedAt: toISO(profile.updatedAt),
+		};
+	},
+
+	toPublicDTO: (profile: PublicProfileEntity): PublicProfileDTO => {
+		return {
+			/** Unique profile identifier */
+			id: profile.id,
+
+			/** User's first name */
+			firstName: profile.firstName,
+
+			/** User's last name */
+			lastName: profile.lastName,
+
+			/** Public avatar URL */
+			avatarUrl: profile.avatarUrl,
+
+			/** Country of residence */
+			country: profile.country,
+
+			/** City of residence */
+			city: profile.city,
+
+			/**
+			 * Display name shown to clients.
+			 *
+			 * @remarks
+			 * - Uses precomputed value when available
+			 * - Falls back to first + last name composition
+			 */
+			displayName:
+				profile.displayName ??
+				getDisplayName(profile.firstName, profile.lastName),
+
+			/**
+			 * User age.
+			 *
+			 * @remarks
+			 * - Uses precomputed value when available
+			 * - Falls back to calculation from birth date
+			 * - Null when birth date is missing
+			 */
+			age:
+				profile.age ??
+				(profile.birthDate ? getAge(profile.birthDate) : null),
 		};
 	},
 };

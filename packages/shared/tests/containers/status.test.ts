@@ -5,7 +5,10 @@ import {
 	checkIsOverweight,
 	getContainerStatus,
 } from '../../src/containers/status';
-import { ContainerStatus, ContainerStatusReason } from '../../src/constants/constraints.enums';
+import {
+	ContainerStatus,
+	ContainerStatusReason,
+} from '../../src/constants/constraints.enums';
 
 describe('checkIsOverweight()', () => {
 	it('returns false when max weight is missing', () => {
@@ -32,7 +35,6 @@ describe('checkIsOverweight()', () => {
 		expect(checkIsOverweight(22.5, 20)).toBe(true);
 	});
 });
-
 
 describe('checkIsOverCapacity()', () => {
 	it('returns false when max capacity is missing', () => {
@@ -94,7 +96,6 @@ describe('checkIsFull()', () => {
 	});
 });
 
-
 describe('getContainerStatus()', () => {
 	it('returns EMPTY when container has no items', () => {
 		// Arrange
@@ -131,7 +132,9 @@ describe('getContainerStatus()', () => {
 
 		// Assert
 		expect(result.status).toBe(ContainerStatus.OVERWEIGHT);
-		expect(result.reasons).toContain(ContainerStatusReason.WEIGHT_OVER_LIMIT);
+		expect(result.reasons).toContain(
+			ContainerStatusReason.WEIGHT_OVER_LIMIT
+		);
 		expect(result.reasons).toContain(
 			ContainerStatusReason.CAPACITY_OVER_LIMIT
 		);
@@ -154,9 +157,9 @@ describe('getContainerStatus()', () => {
 		expect(result).toEqual({
 			status: ContainerStatus.OVER_CAPACITY,
 			reasons: [
-                ContainerStatusReason.WEIGHT_NEAR_LIMIT,
-                ContainerStatusReason.CAPACITY_OVER_LIMIT
-            ],
+				ContainerStatusReason.WEIGHT_NEAR_LIMIT,
+				ContainerStatusReason.CAPACITY_OVER_LIMIT,
+			],
 		});
 	});
 

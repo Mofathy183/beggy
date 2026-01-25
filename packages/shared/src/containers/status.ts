@@ -2,7 +2,12 @@ import {
 	ContainerStatus,
 	ContainerStatusReason,
 } from '../constants/constraints.enums.js';
-import type { ContainerStatusResult, ContainerStatusParams, ContainerState, ContainerMetrics } from "../types/constraints.types.js"
+import type {
+	ContainerStatusResult,
+	ContainerStatusParams,
+	ContainerState,
+	ContainerMetrics,
+} from '../types/constraints.types.js';
 // ============================================================================
 // STATUS CHECK FUNCTIONS
 // ============================================================================
@@ -221,7 +226,6 @@ export const getContainerStatus = (
 
 	return { status, reasons };
 };
-
 
 /**
  * Builds a high-level, UI-facing state snapshot for a container (bag/suitcase).

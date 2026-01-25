@@ -61,6 +61,7 @@ export enum TokenType {
  */
 export enum Subject {
 	USER = 'USER',
+	PROFILE = 'PROFILE',
 	BAG = 'BAG',
 	ITEM = 'ITEM',
 	SUITCASE = 'SUITCASE',

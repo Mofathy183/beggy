@@ -155,4 +155,3 @@ export const buildSuitcases = (
 	overrides: SuitcaseFactoryOverrides = {}
 ): Omit<SuitcaseDTO, 'createdAt' | 'updatedAt'>[] =>
 	Array.from({ length: count }, () => buildSuitcase(userId, overrides));
-
