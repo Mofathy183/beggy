@@ -49,7 +49,7 @@ export const AuthSchema = {
 			 */
 			confirmPassword: z.string().trim(),
 
-			profilePicture: FieldsSchema.url(false),
+			avatarUrl: FieldsSchema.url(false),
 			gender: FieldsSchema.enum<typeof Gender>(Gender, false),
 			birthDate: FieldsSchema.date(false),
 			country: FieldsSchema.name('Country', 'place', false),

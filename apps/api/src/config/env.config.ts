@@ -219,10 +219,16 @@ export const doubleCsrfConfig: DoubleCsrfConfig = {
 	// Required: Function that returns a unique session identifier
 	// Helper function for session identifier
 	getSessionIdentifier: (req: Request): string => {
-		// Try to get session ID first, then fall back to IP
-		return (
-			req.session?.id || req.sessionID || req.ip || 'anonymous-session'
-		);
+		// // Try to get session ID first, then fall back to IP
+		// return (
+		// 	req.session?.id || req.sessionID || req.ip || 'anonymous-session'
+		// );
+        // Tie CSRF to refresh token presence (best stateless anchor)
+        return (
+            req.cookies?.[env.JWT_REFRESH_TOKEN_NAME] ??
+            req.cookies?.[env.JWT_ACCESS_TOKEN_NAME] ??
+            'unauthenticated'
+        );
 	},
 
 	// Required: Cookie name for the CSRF token
@@ -368,6 +374,7 @@ const baseCookieOptions: CookieOptions = {
 	httpOnly: true,
 	secure: serverConfig.isProduction,
 	sameSite: serverConfig.isProduction ? 'strict' : 'lax',
+    path: '/',
 };
 
 export const cookieOptions: CookieOptions = {
@@ -397,5 +404,6 @@ export const envConfig = {
 	cookies: {
 		access: cookieOptions,
 		refresh: cookieRefreshOptions,
+        base: baseCookieOptions
 	},
 } as const;

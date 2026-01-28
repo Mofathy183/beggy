@@ -1,12 +1,14 @@
 import { signAccessToken, signRefreshToken } from '@shared/utils';
 import { env, envConfig } from '@config';
 import type { Response, CookieOptions } from 'express';
-import { Role } from '@beggy/shared/constants';
+import { Role } from '@prisma-generated/enums';
+
 const accessTokenName = env.JWT_ACCESS_TOKEN_NAME;
 const refreshTokenName = env.JWT_REFRESH_TOKEN_NAME;
 
 const accessConfig: CookieOptions = envConfig.cookies.access;
 const refreshConfig: CookieOptions = envConfig.cookies.refresh;
+const baseConfig: CookieOptions = envConfig.cookies.base;
 
 //* ============================== AUTH COOKIES ============================== */
 
@@ -23,13 +25,23 @@ const refreshConfig: CookieOptions = envConfig.cookies.refresh;
 export const setAuthCookies = (
 	res: Response,
 	userId: string,
-	userRole: Role
+	userRole: Role,
+    rememberMe: boolean = false
 ): void => {
 	const accessToken = signAccessToken(userId, userRole);
 	const refreshToken = signRefreshToken(userId);
 
-	res.cookie(accessTokenName, accessToken, accessConfig);
-	res.cookie(refreshTokenName, refreshToken, refreshConfig);
+    // Access token → always short-lived
+    res.cookie(accessTokenName, accessToken, accessConfig);
+
+    // Refresh token → session vs persistent
+    res.cookie(
+        refreshTokenName,
+        refreshToken,
+        rememberMe
+        ? refreshConfig     // 7 days
+        : { ...baseConfig } // session cookie
+    );
 };
 
 /**
@@ -40,8 +52,8 @@ export const setAuthCookies = (
  * @param res - Express response object
  */
 export const clearAuthCookies = (res: Response): void => {
-	res.clearCookie(accessTokenName, accessConfig);
-	res.clearCookie(refreshTokenName, refreshConfig);
+	res.clearCookie(accessTokenName);
+	res.clearCookie(refreshTokenName);
 };
 
 // //* ============================== SESSION ============================== */

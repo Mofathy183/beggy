@@ -26,7 +26,7 @@ model Account {
     passwordChangeAt DateTime? @map("password_change_at")
 
     /// Identifier of the owning user.
-    userId String @unique @map("user_id")
+    userId String @map("user_id")
 
     /// Relation to the owning user.
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)

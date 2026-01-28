@@ -46,11 +46,12 @@ model User {
 }
 
 model UserToken {
-    id        String    @id @default(uuid())
-    type      TokenType
-    hashToken String    @unique
-    expiresAt DateTime
-    createdAt DateTime  @default(now()) @map("created_at")
+    id         String    @id @default(uuid())
+    type       TokenType
+    hashToken  String    @unique @db.VarChar(255)
+    expiresAt  DateTime
+    lastUsedAt DateTime?
+    createdAt  DateTime  @default(now()) @map("created_at")
 
     userId String
     user   User   @relation(fields: [userId], references: [id])

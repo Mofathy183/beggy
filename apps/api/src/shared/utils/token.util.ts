@@ -8,7 +8,7 @@ import {
 	SecureTokenPair,
 } from '@shared/types';
 import { envConfig } from '@config';
-import { Role, TokenType } from '@beggy/shared/constants';
+import { Role, TokenType } from '@prisma-generated/enums';
 import { ErrorCode } from '@beggy/shared/constants';
 import { FieldsSchema, ParamsSchema } from '@beggy/shared/schemas';
 import { appErrorMap } from '@shared/utils';
