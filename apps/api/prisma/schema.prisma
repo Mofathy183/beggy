@@ -111,10 +111,6 @@ enum Subject {
 
 /// Types of system-issued tokens.
 enum TokenType {
-    // Auth / session
-    REFRESH
-    
-    // User actions
     EMAIL_VERIFICATION
     PASSWORD_RESET
     CHANGE_EMAIL

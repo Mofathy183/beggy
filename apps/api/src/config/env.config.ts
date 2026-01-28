@@ -117,12 +117,53 @@ export const env = {
 	PORT: optionalNumber('PORT', 3000),
 
 	// Security
-	JWT_SECRET: required('JWT_SECRET') as Secret,
-	JWT_EXPIRES_IN: required('JWT_EXPIRES_IN') as StringValue,
+	// Must be unique and NEVER shared with refresh tokens.
+	JWT_ACCESS_SECRET: required('JWT_ACCESS_SECRET') as Secret,
+
+	// Logical lifetime of the access token (JWT `exp` claim).
+	// This controls how long the token is cryptographically valid.
+	JWT_ACCESS_EXPIRES_IN: required('JWT_ACCESS_EXPIRES_IN') as StringValue,
+
+	// Should match or be slightly shorter than JWT_ACCESS_EXPIRES_IN.
+	// Access tokens are always short-lived and never persistent.
+	JWT_ACCESS_MAX_AGE_MS: optionalNumber(
+		'JWT_ACCESS_MAX_AGE_MS',
+		15 * 60 * 1000 // 15 minutes
+	),
+
+	// Should be obscure and app-specific to avoid collisions.
 	JWT_ACCESS_TOKEN_NAME: required('JWT_ACCESS_TOKEN_NAME'),
 
+	// -------------------------------
+	// Refresh Token (long-lived)
+	// -------------------------------
+
+	// Must be DIFFERENT from JWT_ACCESS_SECRET to reduce blast radius.
 	JWT_REFRESH_SECRET: required('JWT_REFRESH_SECRET') as Secret,
+
+	// Logical lifetime of a standard refresh token (JWT `exp` claim).
+	// Used when "Remember Me" is NOT checked.
 	JWT_REFRESH_EXPIRES_IN: required('JWT_REFRESH_EXPIRES_IN') as StringValue,
+
+	// Logical lifetime of a refresh token when "Remember Me" IS checked.
+	JWT_REFRESH_REMEMBER_EXPIRES_IN: required(
+		'JWT_REFRESH_REMEMBER_EXPIRES_IN'
+	) as StringValue,
+
+	// Cookie lifetime for a standard refresh token (in milliseconds).
+	// Used when the user does NOT enable "Remember Me".
+	JWT_REFRESH_MAX_AGE_MS: optionalNumber(
+		'JWT_REFRESH_MAX_AGE_MS',
+		7 * 24 * 60 * 60 * 1000 // 7 days
+	),
+
+	// Cookie lifetime for a refresh token when "Remember Me" is enabled.
+	JWT_REFRESH_REMEMBER_MAX_AGE_MS: optionalNumber(
+		'JWT_REFRESH_REMEMBER_MAX_AGE_MS',
+		30 * 24 * 60 * 60 * 1000 // 30 days
+	),
+
+	// Cookie name used to store the refresh token.
 	JWT_REFRESH_TOKEN_NAME: required('JWT_REFRESH_TOKEN_NAME'),
 
 	SESSION_SECRET: required('SESSION_SECRET'),
@@ -188,26 +229,128 @@ export const coreConfig = {
 	baseUrl: env.BASE_URL,
 } as const;
 
-// Security Configuration
+/**
+ * Base JWT signing options shared across all token types.
+ *
+ * @remarks
+ * These options define global JWT constraints that must be consistent
+ * for both signing and verification:
+ *
+ * - `algorithm`: Cryptographic algorithm used to sign tokens
+ * - `issuer`: Identifies the authority that issued the token
+ * - `audience`: Identifies the intended consumer of the token
+ *
+ * Enforcing `issuer` and `audience` protects against:
+ * - Token replay across different services
+ * - Tokens issued by another system being accepted accidentally
+ */
+const baseJwtOptions = {
+	algorithm: 'HS256',
+	issuer: 'beggy-api',
+	audience: 'beggy-client',
+} satisfies SignOptions;
+
+/**
+ * Security Configuration
+ *
+ * Centralized security-related configuration for the application.
+ *
+ * @remarks
+ * This object is intentionally:
+ * - Explicit (no magic defaults)
+ * - Environment-driven
+ * - Immutable (`as const`)
+ *
+ * It defines cryptographic behavior for:
+ * - Password hashing (bcrypt)
+ * - Access tokens
+ * - Refresh tokens
+ */
 export const securityConfig = {
 	bcrypt: {
+		/**
+		 * Number of salt rounds used when hashing passwords.
+		 *
+		 * @remarks
+		 * Higher values increase security but also CPU cost.
+		 * This should be tuned based on deployment environment.
+		 */
 		saltRounds: env.BCRYPT_SALT_ROUNDS,
 	},
+
 	jwt: {
+		/**
+		 * Access token configuration.
+		 *
+		 * @remarks
+		 * Access tokens are:
+		 * - Short-lived
+		 * - Sent on every authenticated request
+		 * - Used for authorization decisions (roles, permissions)
+		 */
 		access: {
-			secret: env.JWT_SECRET,
-			config: {
-				expiresIn: env.JWT_EXPIRES_IN,
-				algorithm: 'HS256' as const, // Add algorithm
+			/**
+			 * Secret key used to sign and verify access tokens.
+			 *
+			 * @security
+			 * Must be unique and NEVER shared with refresh tokens.
+			 */
+			secret: env.JWT_ACCESS_SECRET,
+
+			/**
+			 * Signing options for access tokens.
+			 *
+			 * @remarks
+			 * - Includes standard JWT claims (issuer, audience)
+			 * - Includes a fixed expiration time
+			 */
+			signOptions: {
+				...baseJwtOptions,
+				expiresIn: env.JWT_ACCESS_EXPIRES_IN,
 			} as SignOptions,
 		},
+
+		/**
+		 * Refresh token configuration.
+		 *
+		 * @remarks
+		 * Refresh tokens are:
+		 * - Long-lived
+		 * - Never used to access protected resources directly
+		 * - Used only to issue new access tokens
+		 */
 		refresh: {
+			/**
+			 * Secret key used to sign and verify refresh tokens.
+			 *
+			 * @security
+			 * Must be DIFFERENT from the access token secret
+			 * to reduce blast radius in case of compromise.
+			 */
 			secret: env.JWT_REFRESH_SECRET,
-			config: {
-				expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-				algorithm: 'HS256' as const, // Add algorithm
+
+			/**
+			 * Base signing options for refresh tokens.
+			 *
+			 * @remarks
+			 * The expiration (`expiresIn`) is intentionally NOT
+			 * defined here because it is decided at runtime
+			 * based on whether "Remember Me" is enabled.
+			 */
+			signOptions: {
+				...baseJwtOptions,
+				// refresh TTL is decided dynamically at sign time
 			} as SignOptions,
 		},
+
+		/**
+		 * Exposes shared JWT base options.
+		 *
+		 * @remarks
+		 * Used during verification to enforce issuer and audience
+		 * consistency across all token types.
+		 */
+		base: baseJwtOptions,
 	},
 } as const;
 
@@ -223,12 +366,12 @@ export const doubleCsrfConfig: DoubleCsrfConfig = {
 		// return (
 		// 	req.session?.id || req.sessionID || req.ip || 'anonymous-session'
 		// );
-        // Tie CSRF to refresh token presence (best stateless anchor)
-        return (
-            req.cookies?.[env.JWT_REFRESH_TOKEN_NAME] ??
-            req.cookies?.[env.JWT_ACCESS_TOKEN_NAME] ??
-            'unauthenticated'
-        );
+		// Tie CSRF to refresh token presence (best stateless anchor)
+		return (
+			req.cookies?.[env.JWT_REFRESH_TOKEN_NAME] ??
+			req.cookies?.[env.JWT_ACCESS_TOKEN_NAME] ??
+			'unauthenticated'
+		);
 	},
 
 	// Required: Cookie name for the CSRF token
@@ -369,22 +512,72 @@ export const sessionConfig: SessionOptions = {
 	},
 };
 
-// Cookie Options
+/**
+ * Base cookie options shared across all authentication cookies.
+ *
+ * @remarks
+ * These options enforce core security guarantees:
+ *
+ * - `httpOnly` prevents JavaScript access (XSS protection)
+ * - `secure` ensures cookies are sent only over HTTPS in production
+ * - `sameSite` mitigates CSRF attacks
+ * - `path` scopes cookies to the entire application
+ *
+ * Any auth-related cookie should extend from this object
+ * rather than redefining these flags.
+ */
 const baseCookieOptions: CookieOptions = {
+	/**
+	 * Prevents access via `document.cookie`.
+	 * This is critical for protecting tokens from XSS attacks.
+	 */
 	httpOnly: true,
+
+	/**
+	 * Ensures cookies are only sent over HTTPS in production.
+	 *
+	 * @remarks
+	 * In local development, this is disabled to allow HTTP.
+	 */
 	secure: serverConfig.isProduction,
+
+	/**
+	 * Controls cross-site cookie behavior.
+	 *
+	 * @remarks
+	 * - `strict` in production for maximum CSRF protection
+	 * - `lax` in development to allow OAuth redirects and local testing
+	 */
 	sameSite: serverConfig.isProduction ? 'strict' : 'lax',
-    path: '/',
+
+	/**
+	 * Cookie is available to the entire application.
+	 */
+	path: '/',
 };
 
+/**
+ * Cookie options for access token cookies.
+ *
+ * @remarks
+ * Access token cookies are:
+ * - Short-lived
+ * - Sent with every authenticated request
+ * - Automatically expired by the browser
+ *
+ * The `maxAge` must stay in sync with the access token JWT expiration.
+ */
 export const cookieOptions: CookieOptions = {
 	...baseCookieOptions,
-	maxAge: 15 * 60 * 1000, // 15 minutes for access token
-};
 
-export const cookieRefreshOptions: CookieOptions = {
-	...baseCookieOptions,
-	maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for refresh token
+	/**
+	 * Maximum lifetime of the access token cookie (in milliseconds).
+	 *
+	 * @remarks
+	 * This value should closely match `JWT_ACCESS_EXPIRES_IN`
+	 * to avoid having a valid cookie with an expired JWT.
+	 */
+	maxAge: env.JWT_ACCESS_MAX_AGE_MS, // 15 minutes
 };
 
 // ============================================
@@ -403,7 +596,6 @@ export const envConfig = {
 	// session: sessionConfig,
 	cookies: {
 		access: cookieOptions,
-		refresh: cookieRefreshOptions,
-        base: baseCookieOptions
+		base: baseCookieOptions,
 	},
 } as const;

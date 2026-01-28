@@ -34,7 +34,7 @@ describe('UserService', () => {
 		} as CreateUserPayload;
 
 		// Act
-		const createdUser = await service.createUser(input);
+		const createdUser = await service.createUser(input); //that create users locally only
 
 		// Assert
 		const user = await prisma.user.findUnique({
@@ -46,7 +46,12 @@ describe('UserService', () => {
 		});
 
 		const account = await prisma.account.findUnique({
-			where: { userId: createdUser.id },
+			where: {
+				userId_authProvider: {
+					userId: createdUser.id,
+					authProvider: 'LOCAL',
+				},
+			},
 		});
 
 		expect(user).toBeTruthy();

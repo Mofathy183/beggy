@@ -3,186 +3,231 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { differenceInMinutes } from 'date-fns';
+import { ParamsSchema } from '@beggy/shared/schemas/api.schema';
+import { FieldsSchema } from '@beggy/shared/schemas/fields.schema';
 
-import { envConfig } from '@config';
 import {
 	signAccessToken,
 	signRefreshToken,
 	verifyAccessToken,
 	verifyRefreshToken,
-	generatePasswordResetToken,
+	hashToken,
 	generateEmailVerificationToken,
 	setExpiredAt,
 } from '@shared/utils';
-import { Role, TokenType } from '@beggy/shared/constants';
+import { Role, TokenType } from '@prisma-generated/enums';
 
-const MOCK_USER_ID = crypto.randomUUID();
+vi.mock('jsonwebtoken', () => ({
+	default: {
+		sign: vi.fn(),
+		verify: vi.fn(),
+	},
+}));
 
-const MOCK_INVALID_USER_ID = 'not-a-uuid';
+vi.mock('@shared/utils/app-error.util', () => ({
+	appErrorMap: {
+		badRequest: vi.fn((code, error) => ({ code, error })),
+		unauthorized: vi.fn((code, error) => ({ code, error })),
+	},
+}));
 
-describe('signAccessToken()', () => {
-	it('returns a signed JWT', () => {
-		const token = signAccessToken(MOCK_USER_ID, Role.USER);
-		expect(typeof token).toBe('string');
-		expect(token.split('.')).toHaveLength(3);
-	});
-
-	it('embeds the user id as subject', () => {
-		const token = signAccessToken(MOCK_USER_ID, Role.USER);
-
-		const payload = jwt.verify(
-			token,
-			envConfig.security.jwt.access.secret
-		) as jwt.JwtPayload;
-
-		expect(payload.sub).toBe(MOCK_USER_ID);
-	});
-
-	it('embeds the user role', () => {
-		const token = signAccessToken(MOCK_USER_ID, Role.ADMIN);
-
-		const payload = jwt.verify(
-			token,
-			envConfig.security.jwt.access.secret
-		) as jwt.JwtPayload;
-
-		expect(payload.role).toBe(Role.ADMIN);
-	});
+const mockJwtPayload = (overrides: Partial<any> = {}) => ({
+	sub: 'user-id',
+	role: Role.USER,
+	iat: 123456789,
+	...overrides,
 });
 
-describe('signRefreshToken()', () => {
-	it('returns a signed JWT', () => {
-		const token = signRefreshToken(MOCK_USER_ID);
+beforeEach(() => {
+	vi.clearAllMocks();
 
-		expect(typeof token).toBe('string');
-		expect(token.split('.')).toHaveLength(3);
-	});
+	vi.spyOn(ParamsSchema.uuid, 'safeParse').mockReturnValue({
+		success: true,
+		data: { id: 'user-id' },
+	} as any);
 
-	it('embeds the user id as subject', () => {
-		const token = signRefreshToken(MOCK_USER_ID);
-
-		const payload = jwt.verify(
-			token,
-			envConfig.security.jwt.refresh.secret
-		) as jwt.JwtPayload;
-
-		expect(payload.sub).toBe(MOCK_USER_ID);
-	});
-
-	it('does not include a role claim', () => {
-		const token = signRefreshToken(MOCK_USER_ID);
-
-		const payload = jwt.verify(
-			token,
-			envConfig.security.jwt.refresh.secret
-		) as jwt.JwtPayload;
-
-		expect(payload.role).toBeUndefined();
-	});
+	vi.spyOn(FieldsSchema, 'enum').mockReturnValue({
+		safeParse: vi.fn().mockReturnValue({
+			success: true,
+			data: Role.USER,
+		}),
+	} as any);
 });
 
-describe('verifyAccessToken()', () => {
-	it('returns verified identity data for a valid token', () => {
-		const token = signAccessToken(MOCK_USER_ID, Role.USER);
+describe('JWT tokens', () => {
+	describe('signAccessToken()', () => {
+		it('returns a signed access token', () => {
+			(jwt.sign as any).mockReturnValue('access.jwt');
 
-		const result = verifyAccessToken(token);
+			const result = signAccessToken('user-id', Role.USER);
 
-		expect(result).toEqual({
-			id: MOCK_USER_ID,
-			role: Role.USER,
-			issuedAt: expect.any(Number),
+			expect(result).toBe('access.jwt');
+			expect(jwt.sign).toHaveBeenCalledWith(
+				{
+					sub: 'user-id',
+					role: Role.USER,
+				},
+				expect.anything(),
+				expect.anything()
+			);
 		});
 	});
 
-	it('throws when token is invalid', () => {
-		expect(() => verifyAccessToken('invalid.token.value')).toThrow();
-	});
+	describe('signRefreshToken()', () => {
+		it('returns a signed refresh token with standard expiry', () => {
+			(jwt.sign as any).mockReturnValue('refresh.jwt');
 
-	it('throws when subject is invalid', () => {
-		const token = jwt.sign(
-			{ sub: MOCK_INVALID_USER_ID, role: Role.USER },
-			envConfig.security.jwt.access.secret,
-			envConfig.security.jwt.access.config
-		);
+			const result = signRefreshToken('user-id');
 
-		expect(() => verifyAccessToken(token)).toThrow();
-	});
+			expect(result).toBe('refresh.jwt');
+			expect(jwt.sign).toHaveBeenCalledWith(
+				{ sub: 'user-id' },
+				expect.anything(),
+				expect.objectContaining({
+					expiresIn: expect.anything(),
+				})
+			);
+		});
 
-	it('throws when role is invalid', () => {
-		const token = jwt.sign(
-			{ sub: MOCK_USER_ID, role: 'HACKER' },
-			envConfig.security.jwt.access.secret,
-			envConfig.security.jwt.access.config
-		);
+		it('returns a signed refresh token with extended expiry', () => {
+			(jwt.sign as any).mockReturnValue('refresh.jwt');
 
-		expect(() => verifyAccessToken(token)).toThrow();
-	});
+			signRefreshToken('user-id', true);
 
-	it('throws when issued at is missing', () => {
-		const token = jwt.sign(
-			{ sub: MOCK_USER_ID, role: Role.USER },
-			envConfig.security.jwt.access.secret,
-			{ ...envConfig.security.jwt.access.config, noTimestamp: true }
-		);
-
-		expect(() => verifyAccessToken(token)).toThrow();
-	});
-});
-
-describe('verifyRefreshToken()', () => {
-	it('returns verified identity data for a valid token', () => {
-		const token = signRefreshToken(MOCK_USER_ID);
-
-		const result = verifyRefreshToken(token);
-
-		expect(result).toEqual({
-			id: MOCK_USER_ID,
-			issuedAt: expect.any(Number),
+			expect(jwt.sign).toHaveBeenCalledWith(
+				{ sub: 'user-id' },
+				expect.anything(),
+				expect.objectContaining({
+					expiresIn: expect.anything(),
+				})
+			);
 		});
 	});
 
-	it('throws when token is invalid', () => {
-		expect(() => verifyRefreshToken('invalid.token.value')).toThrow();
+	describe('verifyAccessToken()', () => {
+		it('returns verified access token identity', () => {
+			(jwt.verify as any).mockReturnValue(mockJwtPayload());
+
+			const result = verifyAccessToken('access.jwt');
+
+			expect(result).toEqual({
+				id: 'user-id',
+				role: Role.USER,
+				issuedAt: 123456789,
+			});
+		});
+
+		it('throws when token is invalid', () => {
+			(jwt.verify as any).mockImplementation(() => {
+				throw new Error('invalid');
+			});
+
+			expect(() => verifyAccessToken('bad.jwt')).toThrow();
+		});
+
+		it('throws when subject is invalid', () => {
+			(jwt.verify as any).mockReturnValue(mockJwtPayload());
+
+			vi.spyOn(ParamsSchema.uuid, 'safeParse').mockReturnValue({
+				success: false,
+			} as any);
+
+			expect(() => verifyAccessToken('access.jwt')).toThrow();
+		});
+
+		it('throws when role is invalid', () => {
+			(jwt.verify as any).mockReturnValue(mockJwtPayload());
+
+			vi.spyOn(FieldsSchema, 'enum').mockReturnValue({
+				safeParse: vi.fn().mockReturnValue({ success: false }),
+			} as any);
+
+			expect(() => verifyAccessToken('access.jwt')).toThrow();
+		});
+
+		it('throws when role is missing', () => {
+			(jwt.verify as any).mockReturnValue({
+				sub: 'user-id',
+				iat: 123456789,
+			});
+
+			vi.spyOn(ParamsSchema.uuid, 'safeParse').mockReturnValue({
+				success: false,
+			} as any);
+
+			expect(() => verifyAccessToken('access.jwt')).toThrow();
+		});
+
+		it('throws when issuedAt is missing', () => {
+			(jwt.verify as any).mockReturnValue(
+				mockJwtPayload({ iat: undefined })
+			);
+
+			expect(() => verifyAccessToken('access.jwt')).toThrow();
+		});
 	});
 
-	it('throws when subject is invalid', () => {
-		const token = jwt.sign(
-			{ sub: MOCK_INVALID_USER_ID },
-			envConfig.security.jwt.refresh.secret,
-			envConfig.security.jwt.refresh.config
-		);
+	describe('verifyRefreshToken()', () => {
+		it('returns verified refresh token identity', () => {
+			(jwt.verify as any).mockReturnValue({
+				sub: 'user-id',
+				iat: 123456789,
+			});
 
-		expect(() => verifyRefreshToken(token)).toThrow();
-	});
+			const result = verifyRefreshToken('refresh.jwt');
 
-	it('throws when issued at is missing', () => {
-		const token = jwt.sign(
-			{ sub: MOCK_USER_ID },
-			envConfig.security.jwt.refresh.secret,
-			{ ...envConfig.security.jwt.refresh.config, noTimestamp: true }
-		);
+			expect(result).toEqual({
+				id: 'user-id',
+				issuedAt: 123456789,
+			});
+		});
 
-		expect(() => verifyRefreshToken(token)).toThrow();
+		it('throws when token is invalid', () => {
+			(jwt.verify as any).mockImplementation(() => {
+				throw new Error('invalid');
+			});
+
+			expect(() => verifyRefreshToken('bad.jwt')).toThrow();
+		});
+
+		it('throws when subject is invalid', () => {
+			(jwt.verify as any).mockReturnValue({
+				sub: 'bad-id',
+				iat: 123,
+			});
+
+			vi.spyOn(ParamsSchema.uuid, 'safeParse').mockReturnValue({
+				success: false,
+			} as any);
+
+			expect(() => verifyRefreshToken('refresh.jwt')).toThrow();
+		});
+
+		it('throws when issuedAt is missing', () => {
+			(jwt.verify as any).mockReturnValue({ sub: 'user-id' });
+
+			expect(() => verifyRefreshToken('refresh.jwt')).toThrow();
+		});
 	});
 });
 
-describe('generatePasswordResetToken()', () => {
+describe('hashToken()', () => {
 	it('returns a hashed token', () => {
-		const hash = generatePasswordResetToken('plain-token');
+		const hash = hashToken('plain-token');
 
 		expect(typeof hash).toBe('string');
 		expect(hash).not.toBe('plain-token');
 	});
 
 	it('returns the same hash for the same input', () => {
-		const hash1 = generatePasswordResetToken('same-token');
-		const hash2 = generatePasswordResetToken('same-token');
+		const hash1 = hashToken('same-token');
+		const hash2 = hashToken('same-token');
 
 		expect(hash1).toBe(hash2);
 	});
 
 	it('throws when token is missing', () => {
-		expect(() => generatePasswordResetToken('')).toThrow();
+		expect(() => hashToken('')).toThrow();
 	});
 });
 

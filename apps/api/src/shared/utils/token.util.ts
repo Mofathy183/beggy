@@ -7,30 +7,74 @@ import {
 	VerifiedAccessToken,
 	SecureTokenPair,
 } from '@shared/types';
-import { envConfig } from '@config';
+import { env, envConfig } from '@config';
 import { Role, TokenType } from '@prisma-generated/enums';
 import { ErrorCode } from '@beggy/shared/constants';
 import { FieldsSchema, ParamsSchema } from '@beggy/shared/schemas';
 import { appErrorMap } from '@shared/utils';
 
+/**
+ * Secrets used for signing and verifying JWTs.
+ *
+ * @remarks
+ * Access and refresh tokens MUST use separate secrets
+ * to reduce blast radius in case of key compromise.
+ */
 const accessTokenSecret: Secret = envConfig.security.jwt.access.secret;
 const refreshTokenSecret: Secret = envConfig.security.jwt.refresh.secret;
-const accessConfig: SignOptions = envConfig.security.jwt.access.config;
-const refreshConfig: SignOptions = envConfig.security.jwt.refresh.config;
+
+/**
+ * JWT signing configurations.
+ *
+ * @remarks
+ * These options include algorithm, issuer, audience,
+ * and expiration rules. They are injected from the
+ * centralized security configuration to avoid drift.
+ */
+const accessConfig: SignOptions = envConfig.security.jwt.access.signOptions;
+const refreshConfig: SignOptions = envConfig.security.jwt.refresh.signOptions;
+
+/**
+ * Verification options shared across access and refresh tokens.
+ *
+ * @remarks
+ * Issuer and audience validation ensures tokens were:
+ * - Issued by this API
+ * - Intended for this client
+ *
+ * These checks prevent token replay across services.
+ */
+const verifyJwtOptions = {
+	issuer: envConfig.security.jwt.base.issuer,
+	audience: envConfig.security.jwt.base.audience,
+};
 
 /**
  * Signs a short-lived access token.
  *
- * Access tokens are used for authenticating API requests
- * and may contain authorization-related claims such as user role.
+ * @remarks
+ * Access tokens:
+ * - Are sent with every authenticated request
+ * - Are short-lived by design
+ * - May contain authorization-related claims (e.g. role)
  *
- * @param id - User UUID
- * @param role - User role used for authorization
+ * They are optimized for frequent verification and
+ * MUST be strictly validated on each request.
+ *
+ * @param userId - Authenticated user UUID
+ * @param role - User role used for authorization checks
  * @returns Signed JWT access token
  */
-export const signAccessToken = (id: string, role: Role): string => {
+export const signAccessToken = (userId: string, role: Role): string => {
 	const payload: JwtPayload = {
-		sub: id,
+		/**
+		 * Subject (`sub`) uniquely identifies the authenticated user.
+		 */
+		sub: userId,
+
+		/**
+		 * Role claim is used for authorization decisions.
+		 */
 		role,
 	};
 
@@ -40,18 +84,45 @@ export const signAccessToken = (id: string, role: Role): string => {
 /**
  * Signs a long-lived refresh token.
  *
- * Refresh tokens are used only to obtain new access tokens
- * and should contain the minimum amount of information.
+ * @remarks
+ * Refresh tokens:
+ * - Are used ONLY to issue new access tokens
+ * - Are never used to access protected resources
+ * - Contain the minimum identity data possible
  *
- * @param id - User UUID
+ * Token lifetime is decided at runtime based on
+ * the "remember me" flag.
+ *
+ * @param userId - Authenticated user UUID
+ * @param rememberMe - Whether extended session lifetime is requested
  * @returns Signed JWT refresh token
  */
-export const signRefreshToken = (id: string): string => {
+export const signRefreshToken = (
+	userId: string,
+	rememberMe: boolean = false
+): string => {
 	const payload: JwtPayload = {
-		sub: id,
+		/**
+		 * Subject (`sub`) identifies the account requesting refresh.
+		 */
+		sub: userId,
 	};
 
-	return jwt.sign(payload, refreshTokenSecret, refreshConfig);
+	/**
+	 * Decide refresh token expiration dynamically.
+	 *
+	 * @remarks
+	 * - Standard sessions use a shorter TTL
+	 * - "Remember me" sessions extend token lifetime
+	 */
+	const expiresIn = rememberMe
+		? env.JWT_REFRESH_REMEMBER_EXPIRES_IN
+		: env.JWT_REFRESH_EXPIRES_IN;
+
+	return jwt.sign(payload, refreshTokenSecret, {
+		...refreshConfig,
+		expiresIn,
+	});
 };
 
 /**
@@ -73,15 +144,20 @@ export const signRefreshToken = (id: string): string => {
 export const verifyAccessToken = (token: string): VerifiedAccessToken => {
 	try {
 		/**
-		 * Verify JWT signature and standard claims (exp, nbf, etc).
+		 * Verify JWT signature and standard claims.
 		 *
 		 * @remarks
 		 * `jwt.verify` ensures:
 		 * - Token integrity
 		 * - Token is not expired
 		 * - Token was signed using the expected secret
+		 * - Issuer and audience are valid
 		 */
-		const payload = jwt.verify(token, accessTokenSecret) as JwtPayload;
+		const payload = jwt.verify(
+			token,
+			accessTokenSecret,
+			verifyJwtOptions
+		) as JwtPayload;
 
 		/**
 		 * Validate subject (`sub`) claim.
@@ -170,10 +246,14 @@ export const verifyRefreshToken = (token: string): VerifiedRefreshToken => {
 		 * Verify JWT signature and expiration.
 		 *
 		 * @remarks
-		 * Uses a dedicated secret separate from access tokens
-		 * to reduce blast radius in case of compromise.
+		 * Uses a dedicated refresh secret to reduce
+		 * blast radius if an access token secret leaks.
 		 */
-		const payload = jwt.verify(token, refreshTokenSecret) as JwtPayload;
+		const payload = jwt.verify(
+			token,
+			refreshTokenSecret,
+			verifyJwtOptions
+		) as JwtPayload;
 
 		/**
 		 * Validate subject (`sub`) claim.
@@ -229,7 +309,7 @@ export const verifyRefreshToken = (token: string): VerifiedRefreshToken => {
  * @param {string} token - The token to be hashed.
  * @returns {string} The SHA256 hash of the token as a hexadecimal string.
  */
-export const generatePasswordResetToken = (token: string): string => {
+export const hashToken = (token: string): string => {
 	if (!token) {
 		throw appErrorMap.badRequest(ErrorCode.TOKEN_MISSING);
 	}

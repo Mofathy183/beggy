@@ -15,7 +15,7 @@ model Account {
 
     /// External provider identifier (OAuth only).
     /// Null for LOCAL authentication.
-    providerId String? @unique @map("provider_id")
+    providerId String? @map("provider_id")
 
     /// Hashed password for LOCAL authentication.
     /// Always null for OAuth-based accounts.
@@ -37,6 +37,24 @@ model Account {
     /// Account update timestamp.
     updatedAt DateTime @updatedAt @map("updated_at")
 
+    /// Ensures that a user can have at most one account per authentication provider.
+    /// 
+    /// Examples:
+    /// - A user may have one LOCAL account.
+    /// - A user may have one GOOGLE account.
+    /// - A user may NOT have two GOOGLE accounts.
+    ///
+    /// This enables account linking across providers while preventing duplicates.
+    @@unique([userId, authProvider])
+    /// Ensures that an external provider identity cannot be linked to multiple users.
+    ///
+    /// Provider identifiers (e.g. Google `sub`, Facebook `id`) are only guaranteed
+    /// to be unique within the scope of their provider.
+    ///
+    /// This composite constraint prevents the same OAuth identity from being reused
+    /// across different users while still allowing identical IDs from different providers.
+    @@unique([authProvider, providerId])
+    
     /// Database table name.
     @@map("accounts")
 }

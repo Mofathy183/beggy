@@ -1,86 +1,83 @@
-import type { PrismaClientType } from "@prisma"
-import { User, AuthProvider } from "@prisma-generated/client"
-import type { SignUpPayload, LoginInput } from "@beggy/shared/types"
-import { ErrorCode } from "@beggy/shared/constants"
-import { appErrorMap, hashPassword, verifyPassword } from "@shared/utils"
+import type { PrismaClientType } from '@prisma';
+import { User, AuthProvider } from '@prisma-generated/client';
+import type { SignUpPayload, LoginInput } from '@beggy/shared/types';
+import { ErrorCode } from '@beggy/shared/constants';
+import { appErrorMap, hashPassword, verifyPassword } from '@shared/utils';
 
 export class AuthService {
-    constructor(private readonly prisma: PrismaClientType) {}
+	constructor(private readonly prisma: PrismaClientType) {}
 
-    async signupUser(user: SignUpPayload): Promise<User> {
-        const isEmailExist = await this.prisma.user.findUnique({
-            where: { email: user.email }
-        })
+	async signupUser(user: SignUpPayload): Promise<User> {
+		const isEmailExist = await this.prisma.user.findUnique({
+			where: { email: user.email },
+		});
 
-        if (isEmailExist) {
-            throw appErrorMap.conflict(ErrorCode.EMAIL_ALREADY_EXISTS)
-        }
+		if (isEmailExist) {
+			throw appErrorMap.conflict(ErrorCode.EMAIL_ALREADY_EXISTS);
+		}
 
-        const hashedPassword = await hashPassword(user.password)
+		const hashedPassword = await hashPassword(user.password);
 
-        const newUser = await this.prisma.user.create({
-            data: {
-                email: user.email,
-                account: {
-                    create: {
-                        authProvider: "LOCAL",
-                        hashedPassword
-                    }
-                },
-                profile: {
-                    create: {
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        city: user.city,
-                        country: user.country,
-                        avatarUrl: user.avatarUrl,
-                        gender: user.gender,
-                        birthDate: user.birthDate
-                    }
-                },
-            }
-        });
+		const newUser = await this.prisma.user.create({
+			data: {
+				email: user.email,
+				account: {
+					create: {
+						authProvider: 'LOCAL',
+						hashedPassword,
+					},
+				},
+				profile: {
+					create: {
+						firstName: user.firstName,
+						lastName: user.lastName,
+						city: user.city,
+						country: user.country,
+						avatarUrl: user.avatarUrl,
+						gender: user.gender,
+						birthDate: user.birthDate,
+					},
+				},
+			},
+		});
 
-        return newUser;
-    }
+		return newUser;
+	}
 
-    async loginUser(input: LoginInput): Promise<User> {
-        const user = await this.prisma.user.findUnique({
-            where: { email: input.email },
-            include: { account: true },
-        })
-    
-        if (!user) {
-        throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS)
-        }
-    
-        if (!user.isActive) {
-            throw appErrorMap.forbidden(ErrorCode.USER_DISABLED)
-        }
-    
-        const localAccount = user.account.find(
-            a => a.authProvider === AuthProvider.LOCAL
-        )
-    
-        if (!localAccount || !localAccount.hashedPassword) {
-            throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS)
-        }
-    
-        const isValid = await verifyPassword(
-        input.password,
-            localAccount.hashedPassword
-        )
-    
-        if (!isValid) {
-            throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS)
-        }
-    
-        return user
-    }
+	async loginUser(input: LoginInput): Promise<User> {
+		const user = await this.prisma.user.findUnique({
+			where: { email: input.email },
+			include: { account: true },
+		});
+
+		if (!user) {
+			throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS);
+		}
+
+		if (!user.isActive) {
+			throw appErrorMap.forbidden(ErrorCode.USER_DISABLED);
+		}
+
+		const localAccount = user.account.find(
+			(a) => a.authProvider === AuthProvider.LOCAL
+		);
+
+		if (!localAccount || !localAccount.hashedPassword) {
+			throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS);
+		}
+
+		const isValid = await verifyPassword(
+			input.password,
+			localAccount.hashedPassword
+		);
+
+		if (!isValid) {
+			throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS);
+		}
+
+		return user;
+	}
 }
-
-
-
 
 // import { ErrorHandler } from '../utils/error.js';
 // import type { PrismaClient } from '../generated/client/index.js';

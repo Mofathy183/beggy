@@ -14,45 +14,6 @@ export enum Role {
 }
 
 /**
- * Supported authentication providers.
- *
- * @remarks
- * - Defines how a user authenticates with the system
- * - Used for login flows, account linking, and security auditing
- * - Designed to be safely extendable (e.g. APPLE, GITHUB) without
- *   breaking existing users or accounts
- */
-export enum AuthProvider {
-	/**
-	 * Google OAuth provider.
-	 */
-	GOOGLE = 'GOOGLE',
-
-	/**
-	 * Facebook OAuth provider.
-	 */
-	FACEBOOK = 'FACEBOOK',
-
-	/**
-	 * Native email/password authentication.
-	 */
-	LOCAL = 'LOCAL',
-}
-
-/**
- * Types of one-time or short-lived tokens.
- *
- * @remarks
- * - Used for security-sensitive workflows
- * - Each type usually has a different expiration policy
- */
-export enum TokenType {
-	EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
-	PASSWORD_RESET = 'PASSWORD_RESET',
-	CHANGE_EMAIL = 'CHANGE_EMAIL',
-}
-
-/**
  * Domain entities that can be protected by permissions.
  *
  * @remarks

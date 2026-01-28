@@ -240,7 +240,7 @@
  * OAuth endpoints are intentionally simple and provider-specific
  * to keep authentication flows easy to reason about.
  */
-import { Router } from "express";
+import { Router } from 'express';
 
 import { Action, Subject } from '@beggy/shared/constants';
 import { AuthSchema } from '@beggy/shared/schemas';
@@ -253,10 +253,8 @@ import {
 	validateUuidParam,
 } from '@shared/middlewares';
 
-
 // export const createAuthRouter = (authController: AuthController): Router => {
 //     const router = Router();
-
 
 //     return router
 // }

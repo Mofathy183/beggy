@@ -50,7 +50,6 @@ model UserToken {
     type       TokenType
     hashToken  String    @unique @db.VarChar(255)
     expiresAt  DateTime
-    lastUsedAt DateTime?
     createdAt  DateTime  @default(now()) @map("created_at")
 
     userId String
