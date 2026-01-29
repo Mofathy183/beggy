@@ -48,6 +48,9 @@ export const SuccessMessages = {
 	// ============================================================================
 	// AUTHENTICATION & ACCOUNT
 	// ============================================================================
+	// Authenticated user retrieved (/auth/me)
+	AUTH_USER_RETRIEVED:
+		'Found you! You’re logged in and ready — everything checks out on this end.',
 	SIGNUP_SUCCESS:
 		'Welcome aboard, traveler! Go ahead and check your email — we’ll get your account verified and your next adventure packed right.',
 	LOGIN_SUCCESS:
@@ -163,6 +166,13 @@ export const SuccessMessages = {
 		'All changes saved! You’re all set for smoother packing next time.',
 	OPERATION_SUCCESSFUL:
 		'Done and dusted! That went off without a hitch — nice work.',
+	// CSRF token issued
+	CSRF_TOKEN_ISSUED:
+		'All set! I’ve issued a fresh security token — think of it like stamping your passport before the journey continues.',
+
+	// Token refreshed
+	TOKEN_REFRESHED:
+		'Your session’s been refreshed smoothly. No need to worry — you’re cleared to keep going.',
 } as const;
 
 /**
@@ -418,6 +428,10 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 	// Profile
 	[ErrorCode.PROFILE_NOT_FOUND]:
 		'Hmm… I couldn’t find a profile here. Looks like this stop might not exist.',
+
+	// User
+	[ErrorCode.USER_DISABLED]:
+		'This account’s currently paused, so we can’t continue just yet.',
 
 	// =========================================================================
 	// API-ONLY / INFRASTRUCTURE
@@ -682,6 +696,9 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 	[ErrorCode.PROFILE_NOT_FOUND]:
 		'Double-check the details or try heading back and opening the profile again — sometimes it’s just a wrong turn.',
 
+	// User
+	[ErrorCode.USER_DISABLED]:
+		'If you think this is a mistake or need help getting back on the road, reaching out to support is the best next step.',
 	// =========================================================================
 	// API-ONLY / INFRASTRUCTURE
 	// =========================================================================

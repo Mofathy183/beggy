@@ -107,6 +107,9 @@ export const limiter = rateLimit({
 export const logger = pino(
 	{
 		level: env.NODE_ENV === 'production' ? 'info' : 'debug',
+		base: {
+			app: 'beggy-api',
+		},
 	},
 	env.NODE_ENV !== 'production'
 		? pinoPretty({

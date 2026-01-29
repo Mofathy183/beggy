@@ -1,55 +1,85 @@
 import type { Request, Response } from 'express';
-import type { LoginInput } from '@beggy/shared/types';
-import { AuthService } from '@modules/auth';
+import type { AuthMeDTO, LoginInput } from '@beggy/shared/types';
+import { AuthService, AuthMapper } from '@modules/auth';
 import { UserService } from '@modules/users';
 import { STATUS_CODE } from '@shared/constants';
 import {
 	apiResponseMap,
-	setAuthCookies,
-	clearAuthCookies,
+	AuthCookies,
 	verifyRefreshToken,
 	appErrorMap,
 } from '@shared/utils';
-import { generateCsrfToken } from '@shared/middlewares';
+import { generateCsrfToken, logger } from '@shared/middlewares';
 import { ErrorCode } from '@beggy/shared/constants';
 import { env } from '@/config';
 
+/**
+ * AuthController
+ *
+ * Handles HTTP request/response lifecycle for authentication routes.
+ * Delegates all business logic to services and manages cookies, status codes,
+ * and API response formatting.
+ */
 export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
-		private readonly UserService: UserService
+		private readonly userService: UserService
 	) {}
 
+	/**
+	 * Registers a new user and establishes an authenticated session.
+	 *
+	 * @route POST /auth/signup
+	 */
 	signup = async (req: Request, res: Response): Promise<void> => {
 		const { body: user } = req;
 
 		const { id, role } = await this.authService.signupUser(user);
 
-		setAuthCookies(res, id, role);
+		AuthCookies.setCookies(res, id, role);
 
 		res.status(STATUS_CODE.CREATED).json(
 			apiResponseMap.created(null, 'SIGNUP_SUCCESS')
 		);
 	};
 
+	/**
+	 * Authenticates a user using email/password and issues session cookies.
+	 *
+	 * @route POST /auth/login
+	 */
 	login = async (req: Request, res: Response): Promise<void> => {
 		const input = req.body as LoginInput;
 
 		const { id, role } = await this.authService.loginUser(input);
 
-		setAuthCookies(res, id, role, input.rememberMe);
+		AuthCookies.setCookies(res, id, role, input.rememberMe);
 
 		res.status(STATUS_CODE.OK).json(
 			apiResponseMap.ok(null, 'LOGIN_SUCCESS')
 		);
 	};
 
+	/**
+	 * Logs out the current user by clearing authentication cookies.
+	 *
+	 * @remarks
+	 * - Stateless and idempotent
+	 * - Always succeeds if called with valid authentication
+	 *
+	 * @route DELETE /auth/logout
+	 */
 	logout = async (_req: Request, res: Response): Promise<void> => {
-		clearAuthCookies(res);
+		AuthCookies.clear(res);
 
 		res.sendStatus(STATUS_CODE.NO_CONTENT);
 	};
 
+	/**
+	 * Issues a new access token using a valid refresh token.
+	 *
+	 * @route POST /auth/refresh-token
+	 */
 	refreshToken = async (req: Request, res: Response): Promise<void> => {
 		const refreshToken = req.cookies?.[env.JWT_REFRESH_TOKEN_NAME];
 
@@ -59,22 +89,23 @@ export class AuthController {
 
 		const { id } = verifyRefreshToken(refreshToken);
 
-		const user = await this.UserService.getById(id);
+		const user = await this.userService.getById(id);
 		if (!user) {
 			throw appErrorMap.notFound(ErrorCode.USER_NOT_FOUND);
 		}
 
-		// 🔑 Infer rememberMe from cookie persistence
-		const rememberMe = Boolean(req.cookies?.[env.JWT_REFRESH_TOKEN_NAME]);
-		// Explanation below 👇
-
-		setAuthCookies(res, user.id, user.role, rememberMe);
+		AuthCookies.setAccessTokenCookie(res, user.id, user.role);
 
 		res.status(STATUS_CODE.OK).json(
 			apiResponseMap.ok(null, 'TOKEN_REFRESHED')
 		);
 	};
 
+	/**
+	 * Issues a CSRF token for state-changing requests.
+	 *
+	 * @route GET /auth/csrf-token
+	 */
 	csrfToken = async (req: Request, res: Response): Promise<void> => {
 		const token = generateCsrfToken(req, res);
 
@@ -82,6 +113,36 @@ export class AuthController {
 			apiResponseMap.ok<{ csrfToken: string }>(
 				{ csrfToken: token },
 				'CSRF_TOKEN_ISSUED'
+			)
+		);
+	};
+
+	/**
+	 * Returns the authenticated user's auth context.
+	 *
+	 * @remarks
+	 * - Used by frontend to bootstrap auth state
+	 * - Single source of truth for identity & permissions
+	 *
+	 * @route GET /auth/me
+	 */
+	authMe = async (req: Request, res: Response): Promise<void> => {
+		if (!req.user?.id) {
+			logger.error(
+				{ path: req.path },
+				'Auth middleware allowed request without user context'
+			);
+			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
+		}
+
+		const userId = req.user.id;
+
+		const { user, permissions } = await this.authService.authUser(userId);
+
+		res.status(STATUS_CODE.OK).json(
+			apiResponseMap.ok<AuthMeDTO>(
+				AuthMapper.toDTO(user, permissions),
+				'AUTH_USER_RETRIEVED'
 			)
 		);
 	};

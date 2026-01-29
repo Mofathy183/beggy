@@ -154,7 +154,7 @@
  * - Authenticates a user using credentials (email/password)
  * - Issues access and refresh tokens
  *
- * POST /auth/logout
+ * DELETE /auth/logout
  * - Invalidates the current user session
  * - Revokes refresh tokens where applicable
  *
@@ -245,16 +245,59 @@ import { Router } from 'express';
 import { Action, Subject } from '@beggy/shared/constants';
 import { AuthSchema } from '@beggy/shared/schemas';
 
-// import { AuthController } from "@modules/auth"
+import { AuthController } from '@modules/auth';
 import {
 	requireAuth,
 	requirePermission,
 	validateBody,
-	validateUuidParam,
 } from '@shared/middlewares';
 
-// export const createAuthRouter = (authController: AuthController): Router => {
-//     const router = Router();
+/**
+ * Creates and configures the Auth router.
+ *
+ * @remarks
+ * - Uses dependency injection for the controller
+ * - Keeps routing declarative and testable
+ * - Applies validation and auth middleware per route
+ *
+ * @param authController - AuthController instance
+ * @returns Configured Express router
+ */
+export const createAuthRouter = (authController: AuthController): Router => {
+	const router = Router();
 
-//     return router
-// }
+	/**
+	 * Register a new user using email & password.
+	 */
+	router.post(
+		'/signup',
+		validateBody(AuthSchema.signUp),
+		authController.signup
+	);
+
+	/**
+	 * Authenticate a user using LOCAL credentials.
+	 */
+	router.post('/login', validateBody(AuthSchema.login), authController.login);
+
+	/**
+	 * Logout the currently authenticated user.
+	 *
+	 * @remarks
+	 * - Stateless and idempotent
+	 * - Clears authentication cookies
+	 */
+	router.delete('/logout', requireAuth, authController.logout);
+
+	/**
+	 * Refresh the access token using a valid refresh token.
+	 */
+	router.post('/refresh-token', authController.refreshToken);
+
+	/**
+	 * Issue a CSRF token for protected state-changing requests.
+	 */
+	router.get('/csrf-token', authController.csrfToken);
+
+	return router;
+};

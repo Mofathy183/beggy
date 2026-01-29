@@ -21,7 +21,10 @@ import type { ISODateString } from './index.js';
  * - Safe to expose to clients via `/auth/me`
  * - Does NOT include authentication secrets or domain relations
  */
-export type AuthMeUser = Pick<UserDTO, 'id' | 'email' | 'role' | 'createdAt'>;
+export type AuthMeUserDTO = Pick<
+	UserDTO,
+	'id' | 'email' | 'role' | 'createdAt'
+>;
 
 /**
  * Public-facing user profile subset for authenticated sessions.
@@ -32,7 +35,7 @@ export type AuthMeUser = Pick<UserDTO, 'id' | 'email' | 'role' | 'createdAt'>;
  * - Excludes sensitive or rarely-used profile attributes
  * - May be `null` for newly created or incomplete profiles
  */
-export type AuthMeProfile = Pick<
+export type AuthMeProfileDTO = Pick<
 	ProfileDTO,
 	| 'firstName'
 	| 'lastName'
@@ -60,11 +63,11 @@ export type AuthMeProfile = Pick<
  * (e.g. bags, items, suitcases) to preserve separation of concerns
  * and minimize payload size.
  */
-export interface AuthMe {
+export interface AuthMeDTO {
 	/**
 	 * Core authenticated user identity.
 	 */
-	user: AuthMeUser;
+	user: AuthMeUserDTO;
 
 	/**
 	 * Public profile information associated with the user.
@@ -73,7 +76,7 @@ export interface AuthMe {
 	 * - May be `null` if the profile has not been created yet
 	 * - Should not be assumed to exist on first login or OAuth sign-up
 	 */
-	profile: AuthMeProfile | null;
+	profile: AuthMeProfileDTO | null;
 
 	/**
 	 * Effective permissions granted to the user.
@@ -82,7 +85,7 @@ export interface AuthMe {
 	 * - Used by the client for feature gating and UI access control
 	 * - Must be treated as authoritative over role-based assumptions
 	 */
-	permissions: Permissions[];
+	permissions: Permissions;
 
 	/**
 	 * Authentication method metadata for the current user.
@@ -100,16 +103,7 @@ export interface AuthMe {
 		/**
 		 * Indicates whether a LOCAL (email/password) account exists.
 		 */
-		hasLocalAccount: boolean;
-
-		/**
-		 * Indicates whether the user has a password set.
-		 *
-		 * @remarks
-		 * - May be `false` for OAuth-only accounts
-		 * - Used to prompt password setup flows
-		 */
-		hasPassword: boolean;
+		hasLocalAuth: boolean;
 	};
 }
 

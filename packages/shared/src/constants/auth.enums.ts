@@ -14,6 +14,15 @@ export enum Role {
 }
 
 /**
+ * Authentication providers supported by the system.
+ */
+export enum AuthProvider {
+	GOOGLE = 'GOOGLE',
+	FACEBOOK = 'FACEBOOK',
+	LOCAL = 'LOCAL',
+}
+
+/**
  * Domain entities that can be protected by permissions.
  *
  * @remarks

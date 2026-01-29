@@ -1,21 +1,45 @@
 import type { PrismaClientType } from '@prisma';
-import { User, AuthProvider } from '@prisma-generated/client';
-import type { SignUpPayload, LoginInput } from '@beggy/shared/types';
-import { ErrorCode } from '@beggy/shared/constants';
+import { User, AuthProvider, Role } from '@prisma-generated/client';
+import type {
+	SignUpPayload,
+	LoginInput,
+	Permissions,
+} from '@beggy/shared/types';
+import { ErrorCode, RolePermissions } from '@beggy/shared/constants';
 import { appErrorMap, hashPassword, verifyPassword } from '@shared/utils';
+import { logger } from '@shared/middlewares';
+import { AuthMe } from '@shared/types';
 
+/**
+ * AuthService
+ *
+ * Handles authentication-related business logic:
+ * - User registration (LOCAL accounts)
+ * - Credential verification (login)
+ * - Authenticated user context resolution
+ *
+ * This service is framework-agnostic and contains no HTTP concerns.
+ */
 export class AuthService {
+	/**
+	 * Scoped logger for authentication domain events
+	 */
+	private readonly authLogger = logger.child({ domain: 'auth' });
 	constructor(private readonly prisma: PrismaClientType) {}
 
+	/**
+	 * Registers a new user using email & password authentication.
+	 *
+	 * @remarks
+	 * - Creates a LOCAL auth account with a hashed password
+	 * - Creates an initial user profile
+	 * - Persists multiple related records in a single operation
+	 * - Email uniqueness is assumed to be validated at a higher layer
+	 *
+	 * @param user - Signup payload containing identity and profile data
+	 * @returns The newly created User entity
+	 */
 	async signupUser(user: SignUpPayload): Promise<User> {
-		const isEmailExist = await this.prisma.user.findUnique({
-			where: { email: user.email },
-		});
-
-		if (isEmailExist) {
-			throw appErrorMap.conflict(ErrorCode.EMAIL_ALREADY_EXISTS);
-		}
-
 		const hashedPassword = await hashPassword(user.password);
 
 		const newUser = await this.prisma.user.create({
@@ -41,28 +65,60 @@ export class AuthService {
 			},
 		});
 
+		this.authLogger.info(
+			{ userId: newUser.id },
+			'User signed up successfully'
+		);
+
 		return newUser;
 	}
 
-	async loginUser(input: LoginInput): Promise<User> {
+	/**
+	 * Authenticates a user using LOCAL credentials.
+	 *
+	 * @remarks
+	 * - Validates email/password
+	 * - Ensures the user is active
+	 * - Rejects OAuth-only accounts (no password exists)
+	 *
+	 * @param input - Login credentials
+	 * @throws INVALID_CREDENTIALS if authentication fails
+	 * @throws USER_DISABLED if the account is inactive
+	 *
+	 * @returns Minimal identity required to establish a session
+	 */
+	async loginUser(input: LoginInput): Promise<{ id: string; role: Role }> {
 		const user = await this.prisma.user.findUnique({
 			where: { email: input.email },
 			include: { account: true },
 		});
 
 		if (!user) {
+			this.authLogger.warn(
+				{ email: input.email },
+				'Login failed: user not found'
+			);
 			throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS);
 		}
 
 		if (!user.isActive) {
+			this.authLogger.warn(
+				{ userId: user.id },
+				'Login blocked: user disabled'
+			);
 			throw appErrorMap.forbidden(ErrorCode.USER_DISABLED);
 		}
 
+		// Only LOCAL accounts are allowed to authenticate with passwords
 		const localAccount = user.account.find(
 			(a) => a.authProvider === AuthProvider.LOCAL
 		);
 
 		if (!localAccount || !localAccount.hashedPassword) {
+			this.authLogger.warn(
+				{ userId: user.id },
+				'Login failed: no LOCAL auth provider'
+			);
 			throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS);
 		}
 
@@ -72,10 +128,58 @@ export class AuthService {
 		);
 
 		if (!isValid) {
-			throw appErrorMap.badRequest(ErrorCode.INVALID_CREDENTIALS);
+			this.authLogger.warn(
+				{ userId: user.id },
+				'Login failed: invalid password'
+			);
+			throw appErrorMap.badRequest(ErrorCode.PASSWORDS_DO_NOT_MATCH);
 		}
 
-		return user;
+		this.authLogger.info(
+			{ userId: user.id, role: user.role },
+			'User logged in successfully'
+		);
+
+		return { id: user.id, role: user.role };
+	}
+
+	/**
+	 * Resolves the authenticated user's identity and authorization context.
+	 *
+	 * @remarks
+	 * - Used by `/auth/me`
+	 * - Excludes sensitive authentication data (e.g. passwords)
+	 * - Permissions are derived from role, not stored directly
+	 * - Assumes the caller has already been authenticated
+	 *
+	 * @param userId - Authenticated user ID (from access token)
+	 * @throws UNAUTHORIZED if the user does not exist
+	 *
+	 * @returns Authenticated user snapshot and effective permissions
+	 */
+	async authUser(
+		userId: string
+	): Promise<{ user: AuthMe; permissions: Permissions }> {
+		const user = await this.prisma.user.findUnique({
+			where: { id: userId },
+			include: {
+				profile: true,
+				account: { omit: { hashedPassword: true } },
+			},
+		});
+
+		if (!user) {
+			this.authLogger.warn(
+				{ userId },
+				'Auth context requested for non-existent user'
+			);
+			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
+		}
+
+		return {
+			user,
+			permissions: RolePermissions[user.role],
+		};
 	}
 }
 

@@ -1,4 +1,5 @@
 import { Profile } from '@prisma-generated/client';
+import { UserGetPayload } from '@prisma-generated/models';
 
 /**
  * Extended Profile model with optional computed fields.
@@ -41,3 +42,7 @@ export type PublicProfileEntity = Pick<
 	| 'displayName'
 	| 'age'
 >;
+
+export type AuthMe = UserGetPayload<{
+	include: { profile: true; account: { omit: { hashedPassword: true } } };
+}>;
