@@ -44,7 +44,7 @@ import { prisma as Prisma } from '@prisma/prisma.client';
 
 const prismaMock = Prisma as unknown as PrismaClientType;
 
-describe('UserService.getAll()', () => {
+describe('UserService', () => {
 	let service: UserService;
 
 	beforeEach(() => {
@@ -52,177 +52,162 @@ describe('UserService.getAll()', () => {
 		service = new UserService(prismaMock);
 	});
 
-	it('returns users with pagination meta', async () => {
-		const users = buildUsers(3);
+	describe('getAll()', () => {
+		it('returns users with pagination meta', async () => {
+			const users = buildUsers(3);
 
-		(prismaMock.user.findMany as any).mockResolvedValue(users);
-		(prismaMock.user.count as any).mockResolvedValue(3);
+			(prismaMock.user.findMany as any).mockResolvedValue(users);
+			(prismaMock.user.count as any).mockResolvedValue(3);
 
-		const result = await service.listUsers(
-			{ page: 1, limit: 10, offset: 0 },
-			{} as any,
-			{} as any
-		);
+			const result = await service.listUsers(
+				{ page: 1, limit: 10, offset: 0 },
+				{} as any,
+				{} as any
+			);
 
-		expect(result.users).toHaveLength(3);
-		expect(result.meta.hasNextPage).toBe(false);
-		expect(result.meta.hasPreviousPage).toBe(false);
-	});
-
-	it('sets hasNextPage when extra record exists', async () => {
-		const users = buildUsers(11);
-
-		(prismaMock.user.findMany as any).mockResolvedValue(users);
-		(prismaMock.user.count as any).mockResolvedValue(11);
-
-		const result = await service.listUsers(
-			{ page: 1, limit: 10, offset: 0 },
-			{} as any,
-			{} as any
-		);
-
-		expect(result.users).toHaveLength(10);
-		expect(result.meta.hasNextPage).toBe(true);
-	});
-});
-
-describe('UserService.getById()', () => {
-	let service: UserService;
-
-	beforeEach(() => {
-		vi.clearAllMocks();
-		service = new UserService(prismaMock);
-	});
-
-	it('returns user when found', async () => {
-		const user = buildUser();
-
-		(prismaMock.user.findUnique as any).mockResolvedValue(user);
-
-		const result = await service.getById(user.id);
-
-		expect(result).toEqual(user);
-	});
-
-	it('throws when user does not exist', async () => {
-		(prismaMock.user.findUnique as any).mockResolvedValue(null);
-
-		await expect(service.getById('missing-id')).rejects.toMatchObject({
-			code: ErrorCode.USER_NOT_FOUND,
-		});
-	});
-});
-
-describe('UserService.create()', () => {
-	const service = new UserService(prismaMock);
-
-	it('creates user with profile and account', async () => {
-		const profile = profileFactory('user-1');
-		const user = userFactory(
-			{},
-			{
-				email: {
-					firstName: profile.firstName,
-					lastName: profile.lastName,
-				},
-			}
-		);
-
-		(prismaMock.user.create as any).mockResolvedValue(user);
-
-		const result = await service.createUser({
-			email: user.email,
-			password: 'password123',
-			firstName: profile.firstName,
-			lastName: profile.lastName,
-		} as any);
-
-		expect(prismaMock.user.create).toHaveBeenCalledOnce();
-		expect(result).toEqual(user);
-	});
-});
-
-describe('UserService.updateProfile()', () => {
-	const service = new UserService(prismaMock);
-
-	it('updates user profile fields', async () => {
-		const profile = buildProfile('user-id');
-
-		(prismaMock.profile.update as any).mockResolvedValue(profile);
-
-		const result = await service.updateProfile('user-id', {
-			firstName: 'Gon',
-		} as any);
-
-		expect(prismaMock.profile.update).toHaveBeenCalledOnce();
-		expect(result).toEqual(profile);
-	});
-});
-
-describe('UserService.updateStatus()', () => {
-	const service = new UserService(prismaMock);
-
-	it('updates user active and verification status', async () => {
-		const existingUser = {
-			...buildUser(),
-			isActive: true,
-			isEmailVerified: false,
-		};
-
-		const updatedUser = {
-			...existingUser,
-			isActive: false,
-			isEmailVerified: true,
-		};
-
-		(prismaMock.user.update as any).mockResolvedValue(updatedUser);
-
-		const result = await service.updateStatus(existingUser.id, {
-			isActive: false,
-			isEmailVerified: true,
+			expect(result.users).toHaveLength(3);
+			expect(result.meta.hasNextPage).toBe(false);
+			expect(result.meta.hasPreviousPage).toBe(false);
 		});
 
-		expect(result.isActive).toBe(false);
-		expect(result.isEmailVerified).toBe(true);
+		it('sets hasNextPage when extra record exists', async () => {
+			const users = buildUsers(11);
+
+			(prismaMock.user.findMany as any).mockResolvedValue(users);
+			(prismaMock.user.count as any).mockResolvedValue(11);
+
+			const result = await service.listUsers(
+				{ page: 1, limit: 10, offset: 0 },
+				{} as any,
+				{} as any
+			);
+
+			expect(result.users).toHaveLength(10);
+			expect(result.meta.hasNextPage).toBe(true);
+		});
 	});
-});
 
-describe('UserService.changeRole()', () => {
-	const service = new UserService(prismaMock);
+	describe('getById()', () => {
+		it('returns user when found', async () => {
+			const user = buildUser();
 
-	it('updates user role', async () => {
-		const user = buildUser({ role: Role.ADMIN });
+			(prismaMock.user.findUnique as any).mockResolvedValue(user);
 
-		(prismaMock.user.update as any).mockResolvedValue(user);
+			const result = await service.getById(user.id);
 
-		const result = await service.changeRole(user.id, { role: Role.ADMIN });
+			expect(result).toEqual(user);
+		});
 
-		expect(result.role).toBe(Role.ADMIN);
+		it('throws when user does not exist', async () => {
+			(prismaMock.user.findUnique as any).mockResolvedValue(null);
+
+			await expect(service.getById('missing-id')).rejects.toMatchObject({
+				code: ErrorCode.USER_NOT_FOUND,
+			});
+		});
 	});
-});
 
-describe('UserService.deleteById()', () => {
-	const service = new UserService(prismaMock);
+	describe('create()', () => {
+		it('creates user with profile and account', async () => {
+			const profile = profileFactory('user-1');
+			const user = userFactory(
+				{},
+				{
+					email: {
+						firstName: profile.firstName,
+						lastName: profile.lastName,
+					},
+				}
+			);
 
-	it('deletes user by id', async () => {
-		const user = buildUser();
+			(prismaMock.user.create as any).mockResolvedValue(user);
 
-		(prismaMock.user.delete as any).mockResolvedValue(user);
+			const result = await service.createUser({
+				email: user.email,
+				password: 'password123',
+				firstName: profile.firstName,
+				lastName: profile.lastName,
+			} as any);
 
-		const result = await service.deleteById(user.id);
-
-		expect(result).toEqual(user);
+			expect(prismaMock.user.create).toHaveBeenCalledOnce();
+			expect(result).toEqual(user);
+		});
 	});
-});
 
-describe('UserService.deleteMany()', () => {
-	const service = new UserService(prismaMock);
+	describe('updateProfile()', () => {
+		it('updates user profile fields', async () => {
+			const profile = buildProfile('user-id');
 
-	it('returns delete summary', async () => {
-		(prismaMock.user.deleteMany as any).mockResolvedValue({ count: 3 });
+			(prismaMock.profile.update as any).mockResolvedValue(profile);
 
-		const result = await service.deleteUsers();
+			const result = await service.updateProfile('user-id', {
+				firstName: 'Gon',
+			} as any);
 
-		expect(result.count).toBe(3);
+			expect(prismaMock.profile.update).toHaveBeenCalledOnce();
+			expect(result).toEqual(profile);
+		});
+	});
+
+	describe('updateStatus()', () => {
+		it('updates user active and verification status', async () => {
+			const existingUser = {
+				...buildUser(),
+				isActive: true,
+				isEmailVerified: false,
+			};
+
+			const updatedUser = {
+				...existingUser,
+				isActive: false,
+				isEmailVerified: true,
+			};
+
+			(prismaMock.user.update as any).mockResolvedValue(updatedUser);
+
+			const result = await service.updateStatus(existingUser.id, {
+				isActive: false,
+				isEmailVerified: true,
+			});
+
+			expect(result.isActive).toBe(false);
+			expect(result.isEmailVerified).toBe(true);
+		});
+	});
+
+	describe('changeRole()', () => {
+		it('updates user role', async () => {
+			const user = buildUser({ role: Role.ADMIN });
+
+			(prismaMock.user.update as any).mockResolvedValue(user);
+
+			const result = await service.changeRole(user.id, {
+				role: Role.ADMIN,
+			});
+
+			expect(result.role).toBe(Role.ADMIN);
+		});
+	});
+
+	describe('deleteById()', () => {
+		it('deletes user by id', async () => {
+			const user = buildUser();
+
+			(prismaMock.user.delete as any).mockResolvedValue(user);
+
+			const result = await service.deleteById(user.id);
+
+			expect(result).toEqual(user);
+		});
+	});
+
+	describe('deleteMany()', () => {
+		it('returns delete summary', async () => {
+			(prismaMock.user.deleteMany as any).mockResolvedValue({ count: 3 });
+
+			const result = await service.deleteUsers();
+
+			expect(result.count).toBe(3);
+		});
 	});
 });

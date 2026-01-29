@@ -32,6 +32,10 @@ import { BatchPayload as DeletePayload } from '@prisma/generated/prisma/internal
  *   and are normalized by the centralized errorHandler middleware
  */
 export class UserService {
+	private readonly userLogger = logger.child({
+		domain: 'users',
+		service: 'UserService',
+	});
 	/**
 	 * Prisma client instance.
 	 *
@@ -115,7 +119,7 @@ export class UserService {
 		});
 
 		if (!user) {
-			logger.warn({ userId: id }, 'User not found');
+			this.userLogger.warn({ userId: id }, 'User not found');
 			throw appErrorMap.notFound(ErrorCode.USER_NOT_FOUND);
 		}
 
@@ -170,7 +174,7 @@ export class UserService {
 			},
 		});
 
-		logger.info(
+		this.userLogger.info(
 			{ userId: newUser.id, email: newUser.email },
 			'User account created'
 		);
@@ -228,7 +232,7 @@ export class UserService {
 			},
 		});
 
-		logger.info(
+		this.userLogger.info(
 			{
 				userId: id,
 				isActive: status.isActive,
@@ -260,6 +264,11 @@ export class UserService {
 			},
 		});
 
+		this.userLogger.warn(
+			{ userId: id, role: user.role },
+			'User role changed'
+		);
+
 		return updatedRole;
 	}
 
@@ -278,6 +287,8 @@ export class UserService {
 		const deletedUser = await this.prisma.user.delete({
 			where: { id },
 		});
+
+		this.userLogger.warn({ userId: id }, 'User account deleted');
 
 		return deletedUser;
 	}
@@ -303,6 +314,11 @@ export class UserService {
 		const deletedUsers = await this.prisma.user.deleteMany({
 			where,
 		});
+
+		this.userLogger.warn(
+			{ deletedCount: deletedUsers.count, filter },
+			'Bulk user deletion executed'
+		);
 
 		return deletedUsers;
 	}

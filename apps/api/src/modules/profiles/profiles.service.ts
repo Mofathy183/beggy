@@ -22,6 +22,10 @@ import { logger } from '@shared/middlewares';
  * - Authorization checks
  */
 export class ProfileService {
+	private readonly profileLogger = logger.child({
+		domain: 'profiles',
+		service: 'ProfileService',
+	});
 	constructor(private readonly prisma: PrismaClientType) {}
 
 	/**
@@ -36,7 +40,7 @@ export class ProfileService {
 		});
 
 		if (!profile) {
-			logger.warn({ userId }, 'Profile not found');
+			this.profileLogger.warn({ userId }, 'Profile not found');
 			throw appErrorMap.notFound(ErrorCode.PROFILE_NOT_FOUND);
 		}
 
@@ -69,7 +73,7 @@ export class ProfileService {
 		});
 
 		if (!profile) {
-			logger.warn({ profileId }, 'Profile not found');
+			this.profileLogger.warn({ profileId }, 'Profile not found');
 			throw appErrorMap.notFound(ErrorCode.PROFILE_NOT_FOUND);
 		}
 

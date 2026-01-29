@@ -3,15 +3,9 @@ import type { AuthMeDTO, LoginInput } from '@beggy/shared/types';
 import { AuthService, AuthMapper } from '@modules/auth';
 import { UserService } from '@modules/users';
 import { STATUS_CODE } from '@shared/constants';
-import {
-	apiResponseMap,
-	AuthCookies,
-	verifyRefreshToken,
-	appErrorMap,
-} from '@shared/utils';
+import { apiResponseMap, AuthCookies, appErrorMap } from '@shared/utils';
 import { generateCsrfToken, logger } from '@shared/middlewares';
 import { ErrorCode } from '@beggy/shared/constants';
-import { env } from '@/config';
 
 /**
  * AuthController
@@ -78,22 +72,44 @@ export class AuthController {
 	/**
 	 * Issues a new access token using a valid refresh token.
 	 *
+	 * @remarks
+	 * This endpoint:
+	 * - Requires `requireRefreshToken` middleware
+	 * - Validates that the referenced user still exists
+	 * - Issues a new access token and sets it as an HTTP-only cookie
+	 *
+	 * It does NOT:
+	 * - Reuse the old access token
+	 * - Authenticate permissions
+	 * - Return sensitive user data
+	 *
 	 * @route POST /auth/refresh-token
+	 *
+	 * @throws {@link AppError}
+	 * - `UNAUTHORIZED` when refresh middleware was not executed
+	 * - `USER_NOT_FOUND` when the user no longer exists
 	 */
 	refreshToken = async (req: Request, res: Response): Promise<void> => {
-		const refreshToken = req.cookies?.[env.JWT_REFRESH_TOKEN_NAME];
-
-		if (!refreshToken) {
-			throw appErrorMap.unauthorized(ErrorCode.TOKEN_MISSING);
+		// Defensive check: ensures middleware contract was respected
+		if (!req.refreshPayload) {
+			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
 		}
 
-		const { id } = verifyRefreshToken(refreshToken);
+		const { userId } = req.refreshPayload;
 
-		const user = await this.userService.getById(id);
+		// Ensure the user still exists and is valid
+		const user = await this.userService.getById(userId);
 		if (!user) {
 			throw appErrorMap.notFound(ErrorCode.USER_NOT_FOUND);
 		}
 
+		/**
+		 * Issue and set a new access token.
+		 *
+		 * @remarks
+		 * - Token is written as an HTTP-only cookie
+		 * - Role is embedded to support downstream authorization
+		 */
 		AuthCookies.setAccessTokenCookie(res, user.id, user.role);
 
 		res.status(STATUS_CODE.OK).json(

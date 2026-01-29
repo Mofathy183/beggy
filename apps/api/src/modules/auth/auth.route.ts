@@ -248,7 +248,7 @@ import { AuthSchema } from '@beggy/shared/schemas';
 import { AuthController } from '@modules/auth';
 import {
 	requireAuth,
-	requirePermission,
+	requireRefreshToken,
 	validateBody,
 } from '@shared/middlewares';
 
@@ -292,7 +292,11 @@ export const createAuthRouter = (authController: AuthController): Router => {
 	/**
 	 * Refresh the access token using a valid refresh token.
 	 */
-	router.post('/refresh-token', authController.refreshToken);
+	router.post(
+		'/refresh-token',
+		requireRefreshToken,
+		authController.refreshToken
+	);
 
 	/**
 	 * Issue a CSRF token for protected state-changing requests.

@@ -25,16 +25,7 @@ export class UserController {
 	 * - Business rules, validation, and error handling
 	 *   are delegated to services and middleware
 	 */
-	constructor(private readonly userService: UserService) {
-		this.getUsers = this.getUsers.bind(this);
-		this.getUserById = this.getUserById.bind(this);
-		this.createUser = this.createUser.bind(this);
-		this.updateUserProfile = this.updateUserProfile.bind(this);
-		this.updateUserStatus = this.updateUserStatus.bind(this);
-		this.changeUserRole = this.changeUserRole.bind(this);
-		this.deleteUserById = this.deleteUserById.bind(this);
-		this.deleteUsers = this.deleteUsers.bind(this);
-	}
+	constructor(private readonly userService: UserService) {}
 
 	/**
 	 * GET /users
@@ -46,7 +37,7 @@ export class UserController {
 	 * - Supports pagination, filtering, and sorting
 	 * - Returns pagination metadata for client-side navigation
 	 */
-	async getUsers(req: Request, res: Response): Promise<void> {
+	getUsers = async (req: Request, res: Response): Promise<void> => {
 		const { pagination, orderBy, query: filter } = req;
 
 		const { users, meta } = await this.userService.listUsers(
@@ -61,7 +52,7 @@ export class UserController {
 		res.status(STATUS_CODE.OK).json(
 			apiResponseMap.ok<UserDTO[]>(usersResponse, 'USERS_FETCHED', meta)
 		);
-	}
+	};
 
 	/**
 	 * GET /users/:id
@@ -72,7 +63,7 @@ export class UserController {
 	 * - Throws USER_NOT_FOUND via the service if the user does not exist
 	 * - Accessible only to authorized administrative roles
 	 */
-	async getUserById(req: Request, res: Response): Promise<void> {
+	getUserById = async (req: Request, res: Response): Promise<void> => {
 		const { id } = req.params;
 
 		const user = await this.userService.getById(id as string);
@@ -80,7 +71,7 @@ export class UserController {
 		res.status(STATUS_CODE.OK).json(
 			apiResponseMap.ok<UserDTO>(UserMapper.toDTO(user), 'USER_RETRIEVED')
 		);
-	}
+	};
 
 	/**
 	 * POST /users
@@ -91,7 +82,7 @@ export class UserController {
 	 * - Used by administrators to provision accounts
 	 * - Returns the newly created user for immediate client use
 	 */
-	async createUser(req: Request, res: Response): Promise<void> {
+	createUser = async (req: Request, res: Response): Promise<void> => {
 		const { body } = req;
 
 		const newUser = await this.userService.createUser(body);
@@ -102,7 +93,7 @@ export class UserController {
 				'USER_CREATED'
 			)
 		);
-	}
+	};
 
 	/**
 	 * PATCH /users/:id/profile
@@ -114,7 +105,7 @@ export class UserController {
 	 * - Uses PATCH semantics (partial updates allowed)
 	 * - Does NOT affect authentication, role, or status
 	 */
-	async updateUserProfile(req: Request, res: Response): Promise<void> {
+	updateUserProfile = async (req: Request, res: Response): Promise<void> => {
 		const {
 			body,
 			params: { id },
@@ -131,7 +122,7 @@ export class UserController {
 				'PROFILE_UPDATED'
 			)
 		);
-	}
+	};
 
 	/**
 	 * PATCH /users/:id/status
@@ -142,7 +133,7 @@ export class UserController {
 	 * - Intended for moderation and enforcement workflows
 	 * - Controls access without deleting the account
 	 */
-	async updateUserStatus(req: Request, res: Response): Promise<void> {
+	updateUserStatus = async (req: Request, res: Response): Promise<void> => {
 		const {
 			body,
 			params: { id },
@@ -159,7 +150,7 @@ export class UserController {
 				'USER_STATUS_UPDATED'
 			)
 		);
-	}
+	};
 
 	/**
 	 * PATCH /users/:id/role
@@ -170,7 +161,7 @@ export class UserController {
 	 * - Restricted to authorized administrators
 	 * - Role-based access control is enforced elsewhere
 	 */
-	async changeUserRole(req: Request, res: Response): Promise<void> {
+	changeUserRole = async (req: Request, res: Response): Promise<void> => {
 		const {
 			body,
 			params: { id },
@@ -187,7 +178,7 @@ export class UserController {
 				'USER_ROLE_UPDATED'
 			)
 		);
-	}
+	};
 
 	/**
 	 * DELETE /users/:id
@@ -198,13 +189,13 @@ export class UserController {
 	 * - Administrative operation
 	 * - Uses no-content semantics since the resource no longer exists
 	 */
-	async deleteUserById(req: Request, res: Response): Promise<void> {
+	deleteUserById = async (req: Request, res: Response): Promise<void> => {
 		const { id } = req.params;
 
 		await this.userService.deleteById(id as string);
 
 		res.sendStatus(STATUS_CODE.NO_CONTENT);
-	}
+	};
 
 	/**
 	 * DELETE /users
@@ -216,11 +207,11 @@ export class UserController {
 	 * - Intended for cleanup and moderation workflows
 	 * - Uses no-content semantics
 	 */
-	async deleteUsers(req: Request, res: Response): Promise<void> {
+	deleteUsers = async (req: Request, res: Response): Promise<void> => {
 		const { query: filter } = req;
 
 		await this.userService.deleteUsers(filter);
 
 		res.sendStatus(STATUS_CODE.NO_CONTENT);
-	}
+	};
 }

@@ -62,6 +62,18 @@ declare global {
 			 * - Undefined when authentication middleware has not run
 			 */
 			ability?: AppAbility;
+
+			/**
+			 * Minimal refresh token context attached by `requireRefreshToken`.
+			 *
+			 * @remarks
+			 * - Represents a previously authenticated identity
+			 * - Must never be treated as an authenticated user
+			 * - Intended exclusively for token refresh flows
+			 */
+			refreshPayload?: {
+				userId: string;
+			};
 		}
 
 		/**

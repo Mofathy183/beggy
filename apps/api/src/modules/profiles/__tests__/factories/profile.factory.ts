@@ -106,7 +106,8 @@ export const profileFactory = (
  */
 export const buildProfile = (
 	userId: string,
-	overrides: ProfileFactoryOverrides = {}
+	overrides: ProfileFactoryOverrides = {},
+	options: ProfileFactoryOptions = {}
 ): ProfileModel => {
 	const createdAt = faker.date.past();
 	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
@@ -114,7 +115,7 @@ export const buildProfile = (
 	return {
 		id: faker.string.uuid(),
 
-		...profileFactory(userId, overrides),
+		...profileFactory(userId, overrides, options),
 
 		createdAt,
 		updatedAt,

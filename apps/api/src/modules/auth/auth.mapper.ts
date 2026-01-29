@@ -1,7 +1,8 @@
 import { AuthProvider, Role } from '@beggy/shared/constants';
 import { AuthMeDTO, Permissions } from '@beggy/shared/types';
 import { AuthMe } from '@shared/types';
-import { getAge } from '@prisma';
+import { toISO } from '@shared/utils';
+import { getAge, getDisplayName } from '@prisma/prisma.util';
 
 /**
  * AuthMapper
@@ -33,7 +34,7 @@ export const AuthMapper = {
 				id: user.id,
 				email: user.email,
 				role: user.role as Role,
-				createdAt: user.createdAt.toISOString(),
+				createdAt: toISO(user.createdAt),
 			},
 
 			profile: user.profile
@@ -41,7 +42,10 @@ export const AuthMapper = {
 						firstName: user.profile.firstName,
 						lastName: user.profile.lastName,
 						avatarUrl: user.profile.avatarUrl,
-						displayName: `${user.profile.firstName} ${user.profile.lastName}`,
+						displayName: getDisplayName(
+							user.profile.firstName,
+							user.profile.lastName
+						),
 						age: user.profile.birthDate
 							? getAge(user.profile.birthDate)
 							: null,

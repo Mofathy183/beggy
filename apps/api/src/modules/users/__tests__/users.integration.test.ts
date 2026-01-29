@@ -28,7 +28,15 @@ describe('UserService', () => {
 			{ withDetails: true }
 		);
 		const input = {
-			...userFactory(),
+			...userFactory(
+				{},
+				{
+					email: {
+						firstName: profileData.firstName,
+						lastName: profileData.lastName,
+					},
+				}
+			),
 			password: 'Password123!',
 			...profileData,
 		} as CreateUserPayload;
@@ -54,9 +62,9 @@ describe('UserService', () => {
 			},
 		});
 
-		expect(user).toBeTruthy();
-		expect(profile).toBeTruthy();
-		expect(account).toBeTruthy();
+		expect(user?.email).toBe(input.email);
+		expect(profile?.userId).toBe(user!.id);
+		expect(account?.authProvider).toBe('LOCAL');
 	});
 
 	it('rejects duplicate email', async () => {

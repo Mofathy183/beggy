@@ -1,9 +1,14 @@
 import type { Request, Response, NextFunction } from 'express';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { authCookieParser, requireAuth } from '@shared/middlewares';
+import {
+	authCookieParser,
+	requireAuth,
+	requireRefreshToken,
+} from '@shared/middlewares';
 
 vi.mock('@shared/utils/token.util', () => ({
 	verifyAccessToken: vi.fn(),
+	verifyRefreshToken: vi.fn(),
 }));
 
 vi.mock('@shared/middlewares/permission.middleware', () => ({
@@ -11,7 +16,10 @@ vi.mock('@shared/middlewares/permission.middleware', () => ({
 }));
 
 import { defineAbilityFor } from '@shared/middlewares/permission.middleware';
-import { verifyAccessToken } from '@shared/utils/token.util';
+import {
+	verifyAccessToken,
+	verifyRefreshToken,
+} from '@shared/utils/token.util';
 
 describe('authCookieParser', () => {
 	let req: Partial<Request>;
@@ -131,6 +139,87 @@ describe('requireAuth', () => {
 
 			// Assert
 			expect(next).toHaveBeenCalledWith(error);
+		});
+	});
+});
+
+describe('requireRefreshToken', () => {
+	let req: Partial<Request>;
+	let res: Partial<Response>;
+	let next: NextFunction;
+
+	beforeEach(() => {
+		req = {};
+		res = {};
+		next = vi.fn();
+
+		vi.clearAllMocks();
+	});
+
+	it('throws when refresh token is missing', () => {
+		// Arrange
+		req.authTokens = {
+			accessToken: 'access-token',
+			refreshToken: '',
+		};
+
+		// Act + Assert
+		expect(() =>
+			requireRefreshToken(req as Request, res as Response, next)
+		).toThrow();
+
+		expect(verifyRefreshToken).not.toHaveBeenCalled();
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	describe('when refresh token is present', () => {
+		it('allows requests with a valid refresh token', () => {
+			// Arrange
+			req.authTokens = {
+				accessToken: 'access-token',
+				refreshToken: 'valid-refresh-token',
+			};
+
+			(verifyRefreshToken as any).mockReturnValue({
+				id: 'user-id',
+			});
+
+			// Act
+			requireRefreshToken(req as Request, res as Response, next);
+
+			// Assert
+			expect(verifyRefreshToken).toHaveBeenCalledWith(
+				'valid-refresh-token'
+			);
+
+			expect(req.refreshPayload).toEqual({
+				userId: 'user-id',
+			});
+
+			expect(next).toHaveBeenCalledOnce();
+		});
+
+		it('passes token verification errors to next', () => {
+			// Arrange
+			req.authTokens = {
+				accessToken: 'access-token',
+				refreshToken: 'invalid-refresh-token',
+			};
+
+			const error = new Error('Invalid refresh token');
+			(verifyRefreshToken as any).mockImplementation(() => {
+				throw error;
+			});
+
+			// Act
+			requireRefreshToken(req as Request, res as Response, next);
+
+			// Assert
+			expect(verifyRefreshToken).toHaveBeenCalledWith(
+				'invalid-refresh-token'
+			);
+			expect(next).toHaveBeenCalledWith(error);
+			expect(req.refreshPayload).toBeUndefined();
 		});
 	});
 });

@@ -1,6 +1,10 @@
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import { ErrorCode } from '@beggy/shared/constants';
-import { verifyAccessToken, appErrorMap } from '@shared/utils';
+import {
+	verifyAccessToken,
+	appErrorMap,
+	verifyRefreshToken,
+} from '@shared/utils';
 import { defineAbilityFor } from '@shared/middlewares';
 
 /**
@@ -79,6 +83,66 @@ export const requireAuth: RequestHandler = (
 
 		next();
 	} catch (error: unknown) {
+		next(error);
+	}
+};
+
+/**
+ * Refresh token guard middleware.
+ *
+ * @remarks
+ * This middleware:
+ * - Extracts the refresh token from `req.authTokens`
+ * - Verifies its validity and integrity
+ * - Attaches a minimal, non-auth identity payload to the request
+ *
+ * ⚠️ Important:
+ * - This middleware does NOT authenticate the user
+ * - It does NOT attach `req.user`
+ * - It does NOT initialize permissions or abilities
+ *
+ * Its sole responsibility is to prove that the client holds
+ * a valid refresh token issued by the system.
+ *
+ * @throws {@link AppError}
+ * - `UNAUTHORIZED` when the refresh token is missing or invalid
+ *
+ * @usage
+ * Must be used before the refresh controller handler.
+ * Example:
+ * `router.post('/refresh-token', requireRefreshToken, controller.refreshToken)`
+ */
+export const requireRefreshToken: RequestHandler = (
+	req: Request,
+	_res: Response,
+	next: NextFunction
+) => {
+	// Extract refresh token parsed earlier by authCookieParser
+	const token = req.authTokens?.refreshToken;
+
+	// Refresh token is mandatory for this flow
+	if (!token) {
+		throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
+	}
+
+	try {
+		// Verify refresh token signature, expiry, and claims
+		const payload = verifyRefreshToken(token);
+
+		/**
+		 * Attach minimal refresh context to the request.
+		 *
+		 * @remarks
+		 * - This is NOT an authenticated user
+		 * - This payload should only be trusted for token rotation
+		 * - Never use it for authorization or permissions
+		 */
+		req.refreshPayload = {
+			userId: payload.id,
+		};
+
+		next();
+	} catch (error) {
 		next(error);
 	}
 };

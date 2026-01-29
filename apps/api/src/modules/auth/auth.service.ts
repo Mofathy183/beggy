@@ -24,7 +24,10 @@ export class AuthService {
 	/**
 	 * Scoped logger for authentication domain events
 	 */
-	private readonly authLogger = logger.child({ domain: 'auth' });
+	private readonly authLogger = logger.child({
+		domain: 'auth',
+		service: 'AuthService',
+	});
 	constructor(private readonly prisma: PrismaClientType) {}
 
 	/**
