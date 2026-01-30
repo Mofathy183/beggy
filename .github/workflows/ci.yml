@@ -11,10 +11,8 @@ jobs:
         services:
             postgres:
                 image: postgres:18
-                env:
-                    POSTGRES_DB: beggy_test
-                    POSTGRES_USER: postgres
-                    POSTGRES_PASSWORD: postgres
+cls
+
                 ports:
                     - 5432:5432
                 options: >-
