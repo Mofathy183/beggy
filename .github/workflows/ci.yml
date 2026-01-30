@@ -11,7 +11,10 @@ jobs:
         services:
             postgres:
                 image: postgres:18
-cls
+                env:
+                    POSTGRES_DB: beggy_test
+                    POSTGRES_USER: soliman
+                    POSTGRES_PASSWORD: psqluser18
 
                 ports:
                     - 5432:5432
