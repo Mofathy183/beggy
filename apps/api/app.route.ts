@@ -1,5 +1,5 @@
+import { prisma } from './prisma/prisma.client';
 import { Router } from 'express';
-import { prisma } from '@prisma';
 import {
 	createUserRouter,
 	UserController,
@@ -9,7 +9,12 @@ import {
 	createProfileRouter,
 	ProfileController,
 	ProfileService,
-} from '@modules/profiles';
+} from './src/modules/profiles';
+import {
+	createAuthRouter,
+	AuthController,
+	AuthService,
+} from './src/modules/auth';
 
 /**
  * Root application router.
@@ -54,3 +59,10 @@ const profileController = new ProfileController(new ProfileService(prisma));
  * - GET    /profiles/:id
  */
 rootRouter.use('/profiles', createProfileRouter(profileController));
+
+const authController = new AuthController(
+	new AuthService(prisma),
+	new UserService(prisma)
+);
+
+rootRouter.use('/auth', createAuthRouter(authController));

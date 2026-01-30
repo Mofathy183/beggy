@@ -2,8 +2,7 @@ import { z } from 'zod';
 import type {
 	ItemsOrderByWithAggregationInput,
 	SortOrder,
-	SuitcasesOrderByWithAggregationInput,
-} from '@prisma/generated/prisma/internal/prismaNamespace';
+} from '@prisma-generated/internal/prismaNamespace';
 import type {
 	UserFilterInput,
 	UserOrderByInput,
@@ -23,9 +22,11 @@ import {
 	ProfileWhereInput,
 	ProfileOrderByWithAggregationInput,
 	BagsWhereInput,
-	BagsOrderByWithAggregationInput,
 	SuitcasesWhereInput,
 	ItemsWhereInput,
+	ContainersWhereInput,
+	BagsOrderByWithRelationInput,
+	SuitcasesOrderByWithRelationInput,
 } from '@prisma-generated/models';
 import type { ValidationFieldErrors, ZodErrorTree } from '@shared/types';
 
@@ -117,6 +118,22 @@ export const formatValidationError = (
 };
 
 /**
+ * Represents a numeric range filter used in queries.
+ */
+type NumberRange = {
+	min?: number | null;
+	max?: number | null;
+};
+
+/**
+ * Represents a date range filter used in queries.
+ */
+type DateRange = {
+	from?: Date | null;
+	to?: Date | null;
+};
+
+/**
  * Builds a Prisma-compatible numeric range filter.
  *
  * @remarks
@@ -127,10 +144,7 @@ export const formatValidationError = (
  * @param range - Optional numeric range with min/max bounds
  * @returns Prisma range filter or undefined
  */
-const buildNumberRange = (range?: {
-	min?: number | null;
-	max?: number | null;
-}) => {
+const buildNumberRange = (range?: NumberRange) => {
 	if (!range) return undefined;
 
 	return {
@@ -149,7 +163,7 @@ const buildNumberRange = (range?: {
  * @param range - Optional date range with from/to bounds
  * @returns Prisma date range filter or undefined
  */
-const buildDateRange = (range?: { from?: Date | null; to?: Date | null }) => {
+const buildDateRange = (range?: DateRange) => {
 	if (!range) return undefined;
 
 	return {
@@ -177,6 +191,93 @@ const buildOrderBy = <T extends string>(
 ) => ({
 	[orderBy ?? fallback]: direction,
 });
+
+/**
+ * Builds a Prisma-compatible `orderBy` object.
+ *
+ * @remarks
+ * - Supports all standard orderBy fields
+ * - Automatically redirects container-related fields
+ *   (`maxCapacity`, `maxWeight`) to `container.*`
+ * - Keeps Prisma-specific typing at the boundary (casted by callers)
+ *
+ * @param input - OrderBy input coming from API layer
+ * @returns A partial Prisma `orderBy` object
+ */
+const applyContainerOrderBy = (
+	input: SuitcaseOrderByInput | BagOrderByInput
+) => {
+	// Default to createdAt sorting for stable pagination
+	const field = input.orderBy ?? 'createdAt';
+	const direction = input.direction as SortOrder;
+
+	// Redirect container-scoped fields to the related container entity
+	if (field === 'maxCapacity' || field === 'maxWeight') {
+		return {
+			container: {
+				[field]: direction,
+			},
+		};
+	}
+
+	// Fallback: standard top-level ordering
+	return {
+		[field]: direction,
+	};
+};
+
+/**
+ * Builds a Prisma `orderBy` object for bags.
+ *
+ * @remarks
+ * Uses shared container-aware ordering logic while
+ * preserving Bag-specific Prisma typing.
+ */
+const buildBagOrderBy = (
+	input: BagOrderByInput
+): BagsOrderByWithRelationInput =>
+	applyContainerOrderBy(input) as BagsOrderByWithRelationInput;
+
+/**
+ * Builds a Prisma `orderBy` object for suitcases.
+ *
+ * @remarks
+ * Mirrors bag ordering logic to ensure consistency
+ * across container-based entities.
+ */
+const buildSuitcaseOrderBy = (
+	input: SuitcaseOrderByInput
+): SuitcasesOrderByWithRelationInput =>
+	applyContainerOrderBy(input) as SuitcasesOrderByWithRelationInput;
+
+/**
+ * Applies container-related numeric range filters
+ * (capacity, weight) to a Prisma `where` object.
+ *
+ * @remarks
+ * - Mutates the provided `where` object intentionally
+ * - Only adds `container` if at least one filter is present
+ *
+ * @param where - Prisma where clause to enhance
+ * @param filter - Filter input containing optional ranges
+ */
+const applyContainerRanges = <T extends { container?: ContainersWhereInput }>(
+	where: T,
+	filter: { maxCapacity?: NumberRange; maxWeight?: NumberRange }
+) => {
+	const container: ContainersWhereInput = {};
+
+	if (filter.maxCapacity)
+		container.maxCapacity = buildNumberRange(filter.maxCapacity);
+
+	if (filter.maxWeight)
+		container.maxWeight = buildNumberRange(filter.maxWeight);
+
+	// Avoid adding empty container filters to Prisma queries
+	if (Object.keys(container).length > 0) {
+		where.container = container;
+	}
+};
 
 /**
  * Standardized return type for query builders.
@@ -338,19 +439,18 @@ const applyBagBasics = (where: BagsWhereInput, filter: BagFilterInput) => {
  * Builds a Prisma query for bags.
  *
  * @remarks
- * - Capacity and weight are handled via shared numeric range builder
- * - Designed to mirror suitcase filtering for mental consistency
+ * - Capacity and weight are resolved through the related container
+ * - Designed to stay symmetrical with suitcase queries
  */
 export const buildBagQuery = (
 	filter: BagFilterInput,
 	orderBy: BagOrderByInput
-): BuildQuery<BagsWhereInput, BagsOrderByWithAggregationInput> => {
+): BuildQuery<BagsWhereInput, BagsOrderByWithRelationInput> => {
 	const where: BagsWhereInput = {};
 
 	applyBagBasics(where, filter);
+	applyContainerRanges(where, filter);
 
-	where.maxCapacity = buildNumberRange(filter.maxCapacity);
-	where.maxWeight = buildNumberRange(filter.maxWeight);
 	where.createdAt = buildDateRange({
 		from: filter.createdAt?.from,
 		to: filter.createdAt?.to,
@@ -358,10 +458,7 @@ export const buildBagQuery = (
 
 	return {
 		where,
-		orderBy: buildOrderBy<keyof BagsOrderByWithAggregationInput>(
-			orderBy.orderBy ?? 'createdAt',
-			orderBy.direction as SortOrder
-		),
+		orderBy: buildBagOrderBy(orderBy),
 	};
 };
 
@@ -455,19 +552,18 @@ const applySuitcaseBasics = (
  * Builds a Prisma query for suitcases.
  *
  * @remarks
- * - Capacity and weight limits use shared numeric range logic
- * - Designed to stay symmetrical with bag queries
+ * - Uses shared container filtering and ordering logic
+ * - Intentionally mirrors bag query structure for consistency
  */
 export const buildSuitcaseQuery = (
 	filter: SuitcaseFilterInput,
 	orderBy: SuitcaseOrderByInput
-): BuildQuery<SuitcasesWhereInput, SuitcasesOrderByWithAggregationInput> => {
+): BuildQuery<SuitcasesWhereInput, SuitcasesOrderByWithRelationInput> => {
 	const where: SuitcasesWhereInput = {};
 
 	applySuitcaseBasics(where, filter);
+	applyContainerRanges(where, filter);
 
-	where.maxCapacity = buildNumberRange(filter.maxCapacity);
-	where.maxWeight = buildNumberRange(filter.maxWeight);
 	where.createdAt = buildDateRange({
 		from: filter.createdAt?.from,
 		to: filter.createdAt?.to,
@@ -475,12 +571,13 @@ export const buildSuitcaseQuery = (
 
 	return {
 		where,
-		orderBy: buildOrderBy<keyof SuitcasesOrderByWithAggregationInput>(
-			orderBy.orderBy ?? 'createdAt',
-			orderBy.direction as SortOrder
-		),
+		orderBy: buildSuitcaseOrderBy(orderBy),
 	};
 };
 
+/**
+ * Converts a Date object to an ISO string
+ * while preserving shared DTO typing.
+ */
 export const toISO = (date: Date): ISODateString =>
 	date.toISOString() as ISODateString;

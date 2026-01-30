@@ -175,8 +175,10 @@ describe('buildBagQuery()', () => {
 		expect(result.where).toMatchObject({
 			type: 'BACKPACK',
 			color: { contains: 'black', mode: 'insensitive' },
-			maxCapacity: { gte: 20, lte: 50 },
-			maxWeight: { lte: 30 },
+			container: {
+				maxCapacity: { gte: 20, lte: 50 },
+				maxWeight: { lte: 30 },
+			},
 		});
 	});
 });
@@ -237,8 +239,10 @@ describe('buildSuitcaseQuery()', () => {
 		);
 
 		expect(result.where).toMatchObject({
-			maxCapacity: { gte: 40 },
-			maxWeight: { lte: 25 },
+			container: {
+				maxCapacity: { gte: 40 },
+				maxWeight: { lte: 25 },
+			},
 		});
 	});
 });
