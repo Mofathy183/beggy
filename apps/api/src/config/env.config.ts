@@ -189,14 +189,20 @@ export const env = {
 	// OAuth - Facebook
 	FACEBOOK_CLIENT_ID: required('FACEBOOK_CLIENT_ID'),
 	FACEBOOK_CLIENT_SECRET: required('FACEBOOK_CLIENT_SECRET'),
-	FACEBOOK_CALLBACK_URL: required('FACEBOOK_CALLBACK_URL'),
+	FACEBOOK_CALLBACK_URL: optional(
+		'FACEBOOK_CALLBACK_URL',
+		'http://localhost:3000/api/beggy/auth/facebook/callback'
+	),
 
 	// Email
 	RESEND_API_KEY: required('RESEND_API_KEY'),
 
 	// AI Service
 	AI_API_KEY: required('AI_API_KEY'),
-	AI_API_URL: required('AI_API_URL'),
+	AI_API_URL: optional(
+		'AI_API_URL',
+		'https://api.together.xyz/v1/chat/completions'
+	),
 	AI_API_MODEL: optional(
 		'AI_API_MODEL',
 		'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'
@@ -204,11 +210,14 @@ export const env = {
 
 	// Weather API
 	OPENWEATHER_API_KEY: required('OPENWEATHER_API_KEY'),
-	OPENWEATHER_API_URL: required('OPENWEATHER_API_URL'),
+	OPENWEATHER_API_URL: optional(
+		'OPENWEATHER_API_URL',
+		'https://api.openweathermap.org/data/2.5'
+	),
 
 	// Frontend URLs
-	FRONTEND_OAUTH_SUCCESS_URL: required('FRONTEND_OAUTH_SUCCESS_URL'),
-	FRONTEND_OAUTH_FAILED_URL: required('FRONTEND_OAUTH_FAILED_URL'),
+	FRONTEND_OAUTH_SUCCESS_URL: optional('FRONTEND_OAUTH_SUCCESS_URL', ''),
+	FRONTEND_OAUTH_FAILED_URL: optional('FRONTEND_OAUTH_FAILED_URL', ''),
 } as const;
 
 // ============================================
