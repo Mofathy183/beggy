@@ -1,63 +1,68 @@
-name: CI - Beggy Backend
+name: CI
 
 on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main, develop]
+  push:
+    branches: [main]
 
 jobs:
-    test:
-        name: Run Integration Tests
-        runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
 
-        services:
-            postgres:
-                image: postgres:15
-                env:
-                    POSTGRES_USER: soliman
-                    POSTGRES_PASSWORD: psqluseradmin
-                    POSTGRES_DB: test_db
-                ports:
-                    - 5432:5432
-                options: >-
-                    --health-cmd pg_isready
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
-
+    services:
+      postgres:
+        image: postgres:18
         env:
-            DATABASE_URL: postgresql://soliman:psqluseradmin@localhost:5432/test_db?schema=public
-            NODE_ENV: test
-            SESSION_SECRET: test_session_secret
-            BCRYPT_SALT_ROUNDS: 10
-            COOKIE_EXPIRES_AT: 15
-            COOKIE_REFRESH_EXPIRES_AT: 7
-            JWT_SECRET: test_jwt_secret
-            JWT_EXPIRES_IN: 1h
-            JWT_REFRESH_SECRET: test_refresh_secret
-            JWT_REFRESH_EXPIRES_IN: 7d
-            AI_API_KEY: test_key
-            RESEND_API_KEY: test_key
-            CORE_ORIGIN: http://localhost:5173
+          POSTGRES_DB: beggy_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+    env:
+      NODE_ENV: test
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      CSRF_SECRET_KEY: ${{ secrets.CSRF_SECRET_KEY }}
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
+    #   # Safe dummy values
+    #   GOOGLE_CLIENT_ID: dummy
+    #   GOOGLE_CLIENT_SECRET: dummy
+    #   FACEBOOK_CLIENT_ID: dummy
+    #   FACEBOOK_CLIENT_SECRET: dummy
+    #   RESEND_API_KEY: dummy
+    #   AI_API_KEY: dummy
+    #   OPENWEATHER_API_KEY: dummy
 
-            - name: Install dependencies
-              run: npm install
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-            - name: Generate Prisma Client
-              run: npx prisma generate
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
 
-            - name: Run Migrations
-              run: npx prisma migrate deploy
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
 
-            - name: Run Jest Tests
-              run: npm test
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm turbo run prisma:generate --filter=@beggy/api
+
+      - name: Migrate test database
+        run: pnpm --filter @beggy/api prisma:deploy
+
+      - name: Run tests
+        run: pnpm turbo run test
