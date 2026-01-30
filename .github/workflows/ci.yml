@@ -1,68 +1,67 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
+    push:
+        branches: [main]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+    test:
+        runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:18
+        services:
+            postgres:
+                image: postgres:18
+                env:
+                    POSTGRES_DB: beggy_test
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd="pg_isready -U postgres"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
         env:
-          POSTGRES_DB: beggy_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+            NODE_ENV: test
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+            JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+            SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+            CSRF_SECRET_KEY: ${{ secrets.CSRF_SECRET_KEY }}
 
-    env:
-      NODE_ENV: test
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
-      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-      CSRF_SECRET_KEY: ${{ secrets.CSRF_SECRET_KEY }}
+        #   # Safe dummy values
+        #   GOOGLE_CLIENT_ID: dummy
+        #   GOOGLE_CLIENT_SECRET: dummy
+        #   FACEBOOK_CLIENT_ID: dummy
+        #   FACEBOOK_CLIENT_SECRET: dummy
+        #   RESEND_API_KEY: dummy
+        #   AI_API_KEY: dummy
+        #   OPENWEATHER_API_KEY: dummy
 
-    #   # Safe dummy values
-    #   GOOGLE_CLIENT_ID: dummy
-    #   GOOGLE_CLIENT_SECRET: dummy
-    #   FACEBOOK_CLIENT_ID: dummy
-    #   FACEBOOK_CLIENT_SECRET: dummy
-    #   RESEND_API_KEY: dummy
-    #   AI_API_KEY: dummy
-    #   OPENWEATHER_API_KEY: dummy
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10.28.1
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.28.1
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Generate Prisma Client
+              run: pnpm turbo run prisma:generate --filter=@beggy/api
 
-      - name: Generate Prisma Client
-        run: pnpm turbo run prisma:generate --filter=@beggy/api
+            - name: Migrate test database
+              run: pnpm --filter @beggy/api prisma:deploy
 
-      - name: Migrate test database
-        run: pnpm --filter @beggy/api prisma:deploy
-
-      - name: Run tests
-        run: pnpm turbo run test
+            - name: Run tests
+              run: pnpm turbo run test
