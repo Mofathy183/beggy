@@ -1,7 +1,7 @@
 import type { PrismaClientType } from '@prisma';
-import { EditProfileInput } from '@beggy/shared/types';
+import { type EditProfileInput } from '@beggy/shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
-import { Profile } from '@prisma-generated/client';
+import { type Profile } from '@prisma-generated/client';
 import type { PublicProfileEntity } from '@shared/types';
 import { appErrorMap } from '@shared/utils';
 import { logger } from '@shared/middlewares';

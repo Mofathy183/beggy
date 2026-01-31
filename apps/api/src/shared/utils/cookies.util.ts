@@ -1,5 +1,5 @@
 import type { Response, CookieOptions } from 'express';
-import { Role } from '@prisma-generated/enums';
+import { type Role } from '@prisma-generated/enums';
 import { signAccessToken, signRefreshToken } from '@shared/utils';
 import { env, envConfig } from '@config';
 

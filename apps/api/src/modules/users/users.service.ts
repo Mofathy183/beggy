@@ -13,7 +13,7 @@ import { ErrorCode } from '@beggy/shared/constants';
 import { logger } from '@shared/middlewares';
 import type { PaginationPayload } from '@shared/types';
 import { appErrorMap, buildUserQuery, hashPassword } from '@shared/utils';
-import { BatchPayload as DeletePayload } from '@prisma/generated/prisma/internal/prismaNamespace';
+import { type BatchPayload as DeletePayload } from '@prisma/generated/prisma/internal/prismaNamespace';
 
 /**
  * UserService

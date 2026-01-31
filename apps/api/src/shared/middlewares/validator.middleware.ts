@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { ValidationSchema } from '@shared/types';
-import { ZodType } from 'zod';
+import { type ZodType } from 'zod';
 import { ParamsSchema } from '@beggy/shared/schemas';
 
 /**

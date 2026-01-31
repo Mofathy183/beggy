@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import type { AuthMeDTO, LoginInput } from '@beggy/shared/types';
-import { AuthService, AuthMapper } from '@modules/auth';
-import { UserService } from '@modules/users';
+import { type AuthService, AuthMapper } from '@modules/auth';
+import { type UserService } from '@modules/users';
 import { STATUS_CODE } from '@shared/constants';
 import { apiResponseMap, AuthCookies, appErrorMap } from '@shared/utils';
 import { generateCsrfToken, logger } from '@shared/middlewares';

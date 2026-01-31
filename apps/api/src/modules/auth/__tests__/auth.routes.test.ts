@@ -2,8 +2,12 @@ import express, { type Express } from 'express';
 import request from 'supertest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { createAuthRouter, AuthController, AuthService } from '@modules/auth';
-import { UserService } from '@modules/users';
+import {
+	createAuthRouter,
+	AuthController,
+	type AuthService,
+} from '@modules/auth';
+import { type UserService } from '@modules/users';
 
 import {
 	userFactory,

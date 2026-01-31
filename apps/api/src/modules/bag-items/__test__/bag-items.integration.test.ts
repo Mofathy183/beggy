@@ -13,7 +13,7 @@ let cookies;
 beforeAll(async () => {
 	const response = await request(app).get('/api/beggy/auth/csrf-token');
 	cookies = response.headers['set-cookie'];
-	let secret = cookies
+	const secret = cookies
 		.find((cookie) => cookie.startsWith('X-CSRF-Secret='))
 		.split(';')[0];
 

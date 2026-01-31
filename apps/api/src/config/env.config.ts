@@ -1,15 +1,11 @@
-import { config as dotEnvConfig } from 'dotenv';
-import { CookieOptions } from 'express';
+import dotenv from 'dotenv';
+import { type CookieOptions, type Request } from 'express';
 import type { DoubleCsrfConfig, CsrfIgnoredRequestMethods } from 'csrf-csrf';
-import type { Request } from 'express';
 import type { SessionOptions } from 'express-session';
 import type { Secret, SignOptions } from 'jsonwebtoken';
 import type { StrategyOptions as FacebookStrategyOptions } from 'passport-facebook';
 import type { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth20';
 import { STATUS_CODE } from '@shared/constants';
-
-// Load environment variables
-dotEnvConfig({ path: '../../.env' });
 
 // ============================================
 // TYPES
@@ -66,6 +62,22 @@ const CSRF_IGNORE_PATHS = [
 	'/api/beggy/auth/facebook/callback',
 	'/api/docs', // API documentation
 ];
+
+const NODE_ENV = (process.env.NODE_ENV as Environment) ?? 'development';
+
+const envFileMap: Record<Environment, string> = {
+	development: '.env.local',
+	test: '.env.test',
+	production: '.env.docker',
+};
+
+const envFile = envFileMap[NODE_ENV];
+
+if (envFile) {
+	dotenv.config({ path: envFile });
+} else {
+	dotenv.config(); // fallback to .env
+}
 
 // ============================================
 // HELPER FUNCTIONS
@@ -421,7 +433,7 @@ export const doubleCsrfConfig: DoubleCsrfConfig = {
 	},
 
 	// Optional: Function to skip CSRF protection for specific paths
-	skipCsrfProtection: (req: any): boolean => {
+	skipCsrfProtection: (req: Request): boolean => {
 		// Check if path is in the ignore list
 		return CSRF_IGNORE_PATHS.some((ignoredPath) => {
 			// Exact match or path starts with ignored path

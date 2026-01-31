@@ -1,5 +1,5 @@
-import { STATUS_CODE } from '@shared/constants';
-import { SuccessResponse, ErrorResponse } from '@beggy/shared/types';
+import { type STATUS_CODE } from '@shared/constants';
+import { type SuccessResponse, type ErrorResponse } from '@beggy/shared/types';
 
 /**
  * HTTP Status Code type derived from STATUS_CODE constants.

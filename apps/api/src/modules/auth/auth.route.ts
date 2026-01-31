@@ -242,10 +242,10 @@
  */
 import { Router } from 'express';
 
-import { Action, Subject } from '@beggy/shared/constants';
+// import { Action, Subject } from '@beggy/shared/constants';
 import { AuthSchema } from '@beggy/shared/schemas';
 
-import { AuthController } from '@modules/auth';
+import { type AuthController } from '@modules/auth';
 import {
 	requireAuth,
 	requireRefreshToken,

@@ -1,6 +1,6 @@
-import { AuthProvider, Role } from '@beggy/shared/constants';
-import { AuthMeDTO, Permissions } from '@beggy/shared/types';
-import { AuthMe } from '@shared/types';
+import { type AuthProvider, type Role } from '@beggy/shared/constants';
+import { type AuthMeDTO, type Permissions } from '@beggy/shared/types';
+import { type AuthMe } from '@shared/types';
 import { toISO } from '@shared/utils';
 import { getAge, getDisplayName } from '@prisma/prisma.util';
 

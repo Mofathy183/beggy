@@ -15,17 +15,22 @@
 import jwt from 'jsonwebtoken';
 
 import type { Request, Response, NextFunction } from 'express';
-const { JsonWebTokenError, TokenExpiredError } = jwt;
 import { ZodError, treeifyError } from 'zod';
+
 import { Prisma } from '@prisma-generated/client';
+
 import { ErrorCode } from '@beggy/shared/constants';
+
 import { STATUS_CODE } from '@shared/constants';
+
 import {
 	AppError,
 	createResponse,
 	appErrorMap,
 	formatValidationError,
 } from '@shared/utils';
+
+const { JsonWebTokenError, TokenExpiredError } = jwt;
 
 /**
  * prismaErrorMap

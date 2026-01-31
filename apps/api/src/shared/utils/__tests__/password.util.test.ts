@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { hashPassword, verifyPassword } from '@shared/utils';
 import { ErrorCode } from '@beggy/shared/constants';
 
+import { hash, compare } from 'bcryptjs';
+
 vi.mock('bcryptjs', () => ({
 	hash: vi.fn(),
 	compare: vi.fn(),
 }));
-
-import { hash, compare } from 'bcryptjs';
 
 describe('hashPassword()', () => {
 	beforeEach(() => {

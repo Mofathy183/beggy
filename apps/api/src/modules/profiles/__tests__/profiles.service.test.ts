@@ -8,6 +8,8 @@ import {
 } from '@/modules/profiles/__tests__/factories/profile.factory';
 import { ProfileService } from '@modules/profiles';
 
+import { prisma as Prisma } from '@prisma/prisma.client';
+
 vi.mock('@prisma/prisma.client', () => ({
 	prisma: {
 		profile: {
@@ -16,8 +18,6 @@ vi.mock('@prisma/prisma.client', () => ({
 		},
 	},
 }));
-
-import { prisma as Prisma } from '@prisma/prisma.client';
 
 const prismaMock = Prisma as unknown as PrismaClientType;
 

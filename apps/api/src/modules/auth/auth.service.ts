@@ -1,5 +1,5 @@
 import type { PrismaClientType } from '@prisma';
-import { User, AuthProvider, Role } from '@prisma-generated/client';
+import { type User, AuthProvider, type Role } from '@prisma-generated/client';
 import type {
 	SignUpPayload,
 	LoginInput,
@@ -8,7 +8,7 @@ import type {
 import { ErrorCode, RolePermissions } from '@beggy/shared/constants';
 import { appErrorMap, hashPassword, verifyPassword } from '@shared/utils';
 import { logger } from '@shared/middlewares';
-import { AuthMe } from '@shared/types';
+import { type AuthMe } from '@shared/types';
 
 /**
  * AuthService

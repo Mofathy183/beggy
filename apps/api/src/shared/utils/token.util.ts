@@ -3,9 +3,9 @@ import { addMinutes } from 'date-fns';
 import crypto from 'crypto';
 import type { Secret, SignOptions, JwtPayload } from 'jsonwebtoken';
 import {
-	VerifiedRefreshToken,
-	VerifiedAccessToken,
-	SecureTokenPair,
+	type VerifiedRefreshToken,
+	type VerifiedAccessToken,
+	type SecureTokenPair,
 } from '@shared/types';
 import { env, envConfig } from '@config';
 import { Role, TokenType } from '@prisma-generated/enums';

@@ -69,7 +69,7 @@ import {
 	OrderByQuerySchemas,
 } from '@beggy/shared/schemas';
 
-import { UserController } from '@modules/users';
+import { type UserController } from '@modules/users';
 import {
 	requireAuth,
 	requirePermission,

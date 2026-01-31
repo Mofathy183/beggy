@@ -4,6 +4,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { STATUS_CODE } from '@shared/constants';
 
+import {
+	ProfileController,
+	createProfileRouter,
+	type ProfileService,
+} from '@modules/profiles';
+
+import { buildProfile, profileFactory } from './factories/profile.factory';
+
 // ---- Prisma mock (import-time safety) ----
 vi.mock('@prisma/prisma.client', () => ({
 	prisma: {
@@ -50,14 +58,6 @@ vi.mock('@shared/middlewares/validator.middleware', async () => {
 		validateUuidParam: passThrough,
 	};
 });
-
-import {
-	ProfileController,
-	createProfileRouter,
-	ProfileService,
-} from '@modules/profiles';
-
-import { buildProfile, profileFactory } from './factories/profile.factory';
 
 const setupApp = (service: ProfileService) => {
 	const app = express();

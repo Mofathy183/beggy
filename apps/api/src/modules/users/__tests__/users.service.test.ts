@@ -8,6 +8,8 @@ import {
 import { buildUser, buildUsers, userFactory } from './factories/user.factory';
 import { UserService } from '@modules/users';
 
+import { prisma as Prisma } from '@prisma/prisma.client';
+
 vi.mock('@shared/utils/password.util', async () => {
 	const actual =
 		await vi.importActual<typeof import('@shared/utils')>('@shared/utils');
@@ -39,8 +41,6 @@ vi.mock('@prisma/prisma.client', () => ({
 		},
 	},
 }));
-
-import { prisma as Prisma } from '@prisma/prisma.client';
 
 const prismaMock = Prisma as unknown as PrismaClientType;
 

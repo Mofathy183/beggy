@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { PaginationSchema } from '@beggy/shared/schemas';
-import { ListQueryOptions, OrderBy } from '@shared/types';
+import { type ListQueryOptions, type OrderBy } from '@shared/types';
 
 /**
  * Middleware factory for preparing list-query metadata

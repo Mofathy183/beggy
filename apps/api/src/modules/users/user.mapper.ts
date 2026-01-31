@@ -1,6 +1,6 @@
-import { User } from '@prisma/generated/prisma/client';
+import { type User } from '@prisma/generated/prisma/client';
 import type { UserDTO, AdminUserDTO } from '@beggy/shared/types';
-import { Role } from '@beggy/shared/constants';
+import { type Role } from '@beggy/shared/constants';
 import { toISO } from '@shared/utils';
 
 /**

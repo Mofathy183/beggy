@@ -1,5 +1,5 @@
-import { ErrorCode } from '@beggy/shared/constants';
-import { ZodType } from 'zod';
+import { type ErrorCode } from '@beggy/shared/constants';
+import { type ZodType } from 'zod';
 
 /**
  * Validation schema definition used by `validateRequest` middleware.

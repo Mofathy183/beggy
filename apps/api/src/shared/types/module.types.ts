@@ -1,5 +1,5 @@
-import { Profile } from '@prisma-generated/client';
-import { UserGetPayload } from '@prisma-generated/models';
+import { type Profile } from '@prisma-generated/client';
+import { type UserGetPayload } from '@prisma-generated/models';
 
 /**
  * Extended Profile model with optional computed fields.

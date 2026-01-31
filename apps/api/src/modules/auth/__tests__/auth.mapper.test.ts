@@ -6,6 +6,9 @@ import { Role, AuthProvider } from '@beggy/shared/constants';
 import { buildUser } from '@modules/users/__tests__/factories/user.factory';
 import { buildProfile } from '@modules/profiles/__tests__/factories/profile.factory';
 
+import { getAge, getDisplayName } from '@prisma/prisma.util';
+import { toISO } from '@shared/utils';
+
 vi.mock('@prisma/prisma.util', () => ({
 	getDisplayName: vi.fn(),
 	getAge: vi.fn(),
@@ -14,9 +17,6 @@ vi.mock('@prisma/prisma.util', () => ({
 vi.mock('@shared/utils/transform.util', () => ({
 	toISO: vi.fn(),
 }));
-
-import { getAge, getDisplayName } from '@prisma/prisma.util';
-import { toISO } from '@shared/utils';
 
 describe('AuthMapper', () => {
 	beforeEach(() => {

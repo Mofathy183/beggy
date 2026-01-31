@@ -4,6 +4,9 @@ import 'dotenv/config';
 import app from './app';
 import { serverConfig } from '@config';
 
+if (process.env.NODE_ENV === 'test') {
+	console.log('Running in test mode');
+}
 // Application Listen
 app.listen(serverConfig.port, () => {
 	console.log(`Server is running on port ${serverConfig.port}`);

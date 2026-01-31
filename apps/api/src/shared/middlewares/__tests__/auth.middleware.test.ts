@@ -6,6 +6,12 @@ import {
 	requireRefreshToken,
 } from '@shared/middlewares';
 
+import { defineAbilityFor } from '@shared/middlewares/permission.middleware';
+import {
+	verifyAccessToken,
+	verifyRefreshToken,
+} from '@shared/utils/token.util';
+
 vi.mock('@shared/utils/token.util', () => ({
 	verifyAccessToken: vi.fn(),
 	verifyRefreshToken: vi.fn(),
@@ -14,12 +20,6 @@ vi.mock('@shared/utils/token.util', () => ({
 vi.mock('@shared/middlewares/permission.middleware', () => ({
 	defineAbilityFor: vi.fn(),
 }));
-
-import { defineAbilityFor } from '@shared/middlewares/permission.middleware';
-import {
-	verifyAccessToken,
-	verifyRefreshToken,
-} from '@shared/utils/token.util';
 
 describe('authCookieParser', () => {
 	let req: Partial<Request>;

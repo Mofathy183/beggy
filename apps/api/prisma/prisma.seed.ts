@@ -1,6 +1,13 @@
 import { prisma } from '@prisma';
-import { Role, type Permissions } from '@beggy/shared/types';
+import {
+	Role,
+	type Action as PrismaAction,
+	type Scope as PrismaScope,
+	type Subject as PrismaSubject,
+} from '@prisma-generated/enums';
+import type { PermissionCreateManyInput } from '@prisma-generated/models';
 import { RolePermissions } from '@beggy/shared/constants';
+import type { Permissions } from '@beggy/shared/types';
 // import { faker } from '@faker-js/faker';
 // import {
 // 	ItemCategory,
@@ -125,7 +132,18 @@ import { RolePermissions } from '@beggy/shared/constants';
 // 		await prisma.$disconnect();
 // 	});
 
-async function seedPermissions(role: Role, permissions: Permissions) {
+const mapPermissionsToPrisma = (permissions: Permissions) => {
+	return permissions.map((perm) => ({
+		action: perm.action as PrismaAction,
+		scope: perm.scope as PrismaScope,
+		subject: perm.subject as PrismaSubject,
+	}));
+};
+
+async function seedPermissions(
+	role: Role,
+	permissions: PermissionCreateManyInput[]
+) {
 	console.log(`🌱 Seeding ${role} permissions...`);
 
 	// Fix 1: createMany instead of createManyAndReturn (which doesn't exist)
@@ -173,10 +191,22 @@ async function seedAllPermissions() {
 	await prisma.permission.deleteMany();
 
 	// Seed roles in order
-	await seedPermissions(Role.USER, RolePermissions[Role.USER]);
-	await seedPermissions(Role.MEMBER, RolePermissions[Role.MEMBER]);
-	await seedPermissions(Role.MODERATOR, RolePermissions[Role.MODERATOR]);
-	await seedPermissions(Role.ADMIN, RolePermissions[Role.ADMIN]);
+	await seedPermissions(
+		Role.USER,
+		mapPermissionsToPrisma(RolePermissions[Role.USER])
+	);
+	await seedPermissions(
+		Role.MEMBER,
+		mapPermissionsToPrisma(RolePermissions[Role.MEMBER])
+	);
+	await seedPermissions(
+		Role.MODERATOR,
+		mapPermissionsToPrisma(RolePermissions[Role.MODERATOR])
+	);
+	await seedPermissions(
+		Role.ADMIN,
+		mapPermissionsToPrisma(RolePermissions[Role.ADMIN])
+	);
 
 	console.log('🎉 All permissions seeded successfully!');
 }
@@ -194,4 +224,4 @@ async function main() {
 }
 
 // Execute
-main();
+void main();

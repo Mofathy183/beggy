@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { type Express } from 'express';
 // import session from 'express-session';
 import flash from 'express-flash';
 import cookieParser from 'cookie-parser';

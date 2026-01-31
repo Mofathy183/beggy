@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { ErrorCode } from '@beggy/shared/constants';
-import { LoginInput, SignUpPayload } from '@beggy/shared/types';
+import { type LoginInput, type SignUpPayload } from '@beggy/shared/types';
 import { AuthProvider, Role } from '@prisma-generated/enums';
 import { profileFactory } from '@/modules/profiles/__tests__/factories/profile.factory';
 import { buildUser } from '@modules/users/__tests__/factories/user.factory';
 import { AuthService } from '@modules/auth';
+
+import { hashPassword, verifyPassword } from '@shared/utils';
+
+import { prisma as Prisma, type PrismaClientType } from '@prisma/prisma.client';
 
 vi.mock('@shared/utils/password.util', async () => {
 	const actual =
@@ -17,8 +21,6 @@ vi.mock('@shared/utils/password.util', async () => {
 		verifyPassword: vi.fn().mockResolvedValue('verify-password'),
 	};
 });
-
-import { hashPassword, verifyPassword } from '@shared/utils';
 
 // ---- Prisma mock ----
 vi.mock('@prisma/prisma.client', () => ({
@@ -37,8 +39,6 @@ vi.mock('@prisma/prisma.client', () => ({
 		},
 	},
 }));
-
-import { prisma as Prisma, PrismaClientType } from '@prisma/prisma.client';
 
 const prismaMock = Prisma as unknown as PrismaClientType;
 

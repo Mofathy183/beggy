@@ -1,5 +1,5 @@
-import { ErrorCode, ErrorMessages } from '@beggy/shared/constants';
-import { ErrorResponseOptions } from '@beggy/shared/types';
+import type { ErrorCode, ErrorMessages } from '@beggy/shared/constants';
+import type { ErrorResponseOptions } from '@beggy/shared/types';
 import { STATUS_CODE } from '@shared/constants';
 import type { StatusCode } from '@shared/types';
 

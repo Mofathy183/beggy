@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import type {
 	ItemsOrderByWithAggregationInput,
 	SortOrder,
@@ -17,16 +17,16 @@ import type {
 	ISODateString,
 } from '@beggy/shared/types';
 import {
-	UserWhereInput,
-	UserOrderByWithAggregationInput,
-	ProfileWhereInput,
-	ProfileOrderByWithAggregationInput,
-	BagsWhereInput,
-	SuitcasesWhereInput,
-	ItemsWhereInput,
-	ContainersWhereInput,
-	BagsOrderByWithRelationInput,
-	SuitcasesOrderByWithRelationInput,
+	type UserWhereInput,
+	type UserOrderByWithAggregationInput,
+	type ProfileWhereInput,
+	type ProfileOrderByWithAggregationInput,
+	type BagsWhereInput,
+	type SuitcasesWhereInput,
+	type ItemsWhereInput,
+	type ContainersWhereInput,
+	type BagsOrderByWithRelationInput,
+	type SuitcasesOrderByWithRelationInput,
 } from '@prisma-generated/models';
 import type { ValidationFieldErrors, ZodErrorTree } from '@shared/types';
 

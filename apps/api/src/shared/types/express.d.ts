@@ -1,11 +1,10 @@
-import { Role } from '@prisma/generated/prisma/enums';
 import type {
 	AuthTokens,
 	PaginationPayload,
 	AuthUser,
 	AppAbility,
+	OrderBy,
 } from '@shared/types';
-import { OrderBy } from '@shared/types';
 
 /**
  * Global Express type augmentations.
@@ -84,6 +83,7 @@ declare global {
 		 * - Represents the minimum trusted identity payload
 		 * - Should remain lightweight and free of database entities
 		 */
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 		interface User extends AuthUser {}
 	}
 }

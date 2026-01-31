@@ -41,7 +41,7 @@ import { Router } from 'express';
 import { Action, Subject } from '@beggy/shared/constants';
 import { ProfileSchema } from '@beggy/shared/schemas';
 
-import { ProfileController } from '@modules/profiles';
+import { type ProfileController } from '@modules/profiles';
 import {
 	requireAuth,
 	requirePermission,

@@ -11,18 +11,38 @@
 		"loose": false,
 		"externalHelpers": false,
 		"keepClassNames": true,
-		"baseUrl": ".",  // Changed from "./src" to "." (MUST match tsconfig!)
+		"baseUrl": "./src",  // Changed from "./src" to "." (MUST match tsconfig!)
 		"paths": {
-			// MUST match tsconfig.json paths!
+			//* Global Project related Paths
+			"@beggy/shared": ["../../packages/shared/src"],
+			"@beggy/shared/*": ["../../packages/shared/src/*"],
+
+			//* ========== API ROOT IMPORTS ==========
 			"@/*": ["src/*"],
 			"@prisma/*": ["prisma/*"],
-			// "@tests/*": ["tests/*"],
-			// "@docs/*": ["docs/*"],
-			"@beggy/*": ["../../packages/*/src"]
+			"@prisma": ["prisma"],
+			"@route": ["app.route.ts"],
+			"@doc": ["docs/swaggerDef.doc"],
+
+			//* ========== SPECIFIC SRC PATHS ==========
+			// Direct access to commonly used folders
+			"@config": ["src/config/index.ts"],
+			"@shared": ["src/shared/index.ts"],
+			"@modules": ["src/modules/index.ts"],
+			"@emails": ["src/emails/index.ts"],
+
+			// Deep imports with wildcards
+			"@config/*": ["src/config/*"],
+			"@shared/*": ["src/shared/*"],
+			"@modules/*": ["src/modules/*"],
+			"@emails/*": ["src/emails/*"],
+
+			//* ========== PRISMA SPECIFIC ==========
+			"@prisma-generated/*": ["prisma/generated/prisma/*"]
 		}
 	},
 	"module": {
-		"type": "commonjs",  // Changed from "es6" to "commonjs" (you're using Node.js/Express)
+		"type": "es6",  // Changed from "es6" to "commonjs" (you're using Node.js/Express)
 		"strict": true,
 		"strictMode": true,
 		"lazy": false,

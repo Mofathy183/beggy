@@ -1,11 +1,14 @@
 import { STATUS_CODE } from '@shared/constants';
 import {
-	ErrorCode,
+	type ErrorCode,
 	SuccessMessages,
 	ErrorMessages,
 	ErrorSuggestions,
 } from '@beggy/shared/constants';
-import { PaginationMeta, ErrorResponseOptions } from '@beggy/shared/types';
+import {
+	type PaginationMeta,
+	type ErrorResponseOptions,
+} from '@beggy/shared/types';
 import type {
 	StatusCode,
 	HttpSuccessResponse,

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { ProfileMapper, ProfileService } from '@modules/profiles';
+import { ProfileMapper, type ProfileService } from '@modules/profiles';
 import { apiResponseMap } from '@shared/utils';
 import { STATUS_CODE } from '@shared/constants';
 import type { ProfileDTO } from '@beggy/shared/types';

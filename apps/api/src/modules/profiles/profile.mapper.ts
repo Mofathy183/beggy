@@ -1,6 +1,6 @@
 import { getAge, getDisplayName } from '@prisma';
 import type { ProfileDTO, PublicProfileDTO } from '@beggy/shared/types';
-import { Gender } from '@beggy/shared/constants';
+import { type Gender } from '@beggy/shared/constants';
 import { toISO } from '@shared/utils';
 import type { PublicProfileEntity, ProfileWithComputed } from '@shared/types';
 
