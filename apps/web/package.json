@@ -1,85 +1,27 @@
 {
 	"name": "@beggy/web",
-	"version": "1.0.0",
-	"description": "Beggy Web - Frontend web application for the Beggy travel packing assistant. Built with React 19, Vite, TypeScript, Tailwind CSS, and Redux. Features session-based authentication, role-based access control, drag-and-drop, and weather integration.",
-	"keywords": [
-		"react",
-		"frontend",
-		"web-app",
-		"vite",
-		"typescript",
-		"tailwindcss",
-		"daisyui",
-		"redux",
-		"react-router",
-		"react-hook-form",
-		"yup",
-		"gsap",
-		"casl",
-		"rbac",
-		"vitest",
-		"beggy",
-		"travel",
-		"packing",
-		"luggage",
-		"bags",
-		"suitcases",
-		"weather",
-		"ui",
-		"spa"
-	],
-	"author": {
-		"name": "Mohamed Fathy",
-		"email": "mofathy1833@gmail.com",
-		"url": "https://github.com/Mofathy183"
-	},
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Mofathy183/Beggy-Frontend.git",
-		"directory": "apps/web"
-	},
-	"bugs": {
-		"url": "https://github.com/Mofathy183/Beggy-Frontend/issues"
-	},
-	"homepage": "https://github.com/Mofathy183/Beggy-Frontend#readme",
+	"version": "0.1.0",
 	"private": true,
-	"type": "module",
-	"files": [
-		"dist",
-		"public",
-		"README.md"
-	],
 	"scripts": {
-		"dev": "vite",
-		"build": "tsc -b && vite build",
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix",
-		"format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,mjs}\"",
-		"format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mjs}\"",
-		"preview": "vite preview"
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "eslint"
 	},
 	"dependencies": {
-		"@beggy/shared": "workspace:*",
-		"react": "^19.2.0",
-		"react-dom": "^19.2.0"
+		"next": "16.1.6",
+		"react": "19.2.3",
+		"react-dom": "19.2.3"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.39.1",
-		"@types/node": "^24.10.1",
-		"@types/react": "^19.2.5",
-		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react-swc": "^4.2.2",
-		"eslint": "^9.39.1",
-		"eslint-plugin-react-hooks": "^7.0.1",
-		"eslint-plugin-react-refresh": "^0.4.24",
-		"globals": "^16.5.0",
-		"typescript": "~5.9.3",
-		"typescript-eslint": "^8.46.4",
-		"vite": "^7.2.4"
-	},
-	"engines": {
-		"node": ">=18.0.0"
-	},
-	"packageManager": "pnpm@10.24.0"
+		"@tailwindcss/postcss": "^4",
+		"@types/node": "^20",
+		"@types/react": "^19",
+		"@types/react-dom": "^19",
+		"babel-plugin-react-compiler": "1.0.0",
+		"eslint": "^9",
+		"eslint-config-next": "16.1.6",
+		"tailwindcss": "^4",
+		"typescript": "^5"
+	}
 }

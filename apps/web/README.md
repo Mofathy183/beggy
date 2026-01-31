@@ -1,93 +1,36 @@
-# 🎒 Beggy Frontend
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-This is the **frontend** of **Beggy**, a smart travel packing assistant that helps users organize items into bags and suitcases.  
-The app is built with **React 19**, **Vite**, and styled using **Tailwind CSS v4** and **DaisyUI**.
+## Getting Started
 
----
-
-## 🚀 Features
-
-- 🔐 Session-based authentication (integrated with backend)
-- 🧑‍💼 Role-based access control (RBAC) using CASL
-- 🧳 Create and manage bags, suitcases, and items
-- 🧲 Drag-and-drop support (planned)
-- 🔍 Filter and search by bags, users, and items
-- 🌦️ Weather widget integration using OpenWeather API
-- 📱 Fully responsive UI using Tailwind and DaisyUI
-- ⚙️ Dynamic form validation via React Hook Form + Yup
-- 🔁 Persistent Redux state with `redux-persist`
-- 🎞️ Animated transitions with GSAP
-- 🧪 Unit-tested with Vitest + React Testing Library
-
----
-
-## 🧱 Tech Stack
-
-| Category         | Tools & Libraries                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------- |
-| Framework        | [React 19](https://reactjs.org/), [Vite](https://vitejs.dev/)                                           |
-| Styling          | [Tailwind CSS v4](https://tailwindcss.com/), [DaisyUI](https://daisyui.com/)                            |
-| State Management | [Redux Toolkit](https://redux-toolkit.js.org/), [redux-persist](https://github.com/rt2zz/redux-persist) |
-| Forms            | [React Hook Form](https://react-hook-form.com/), [Yup](https://github.com/jquense/yup)                  |
-| Routing          | [React Router v6](https://reactrouter.com/)                                                             |
-| Animation        | [GSAP](https://greensock.com/gsap/) + [`@gsap/react`](https://www.npmjs.com/package/@gsap/react)        |
-| RBAC             | [CASL](https://casl.js.org/v6/en/)                                                                      |
-| Testing          | [Vitest](https://vitest.dev/), [React Testing Library](https://testing-library.com/)                    |
-| Code Quality     | ESLint (Airbnb config), Prettier                                                                        |
-
----
-
-## ⚙️ Setup Instructions
-
-### 1. Clone the Repo
-
-```bash
-git clone https://github.com/Mofathy183/Beggy-Frontend.git
-cd Beggy-Frontend
-```
-
-## ⚙️ Getting Started
-
-### 📦 Install Dependencies
-
-```bash
-npm install
-```
-
-## 🔐 Add Environment Variables
-
-Create a .env file at the root:
-
-```bash
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-## ▶️ Run Development Server
+First, run the development server:
 
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## 🧪 Run all tests
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-npm run test
-```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 🧪 Run with test UI
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-```bash
-npm run test:ui
-```
+## Learn More
 
-## 🧹 Format Code with Prettier
+To learn more about Next.js, take a look at the following resources:
 
-```bash
-npm run prettier
-```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## 🧪 Lint Code with ESLint (Airbnb Config)
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-```bash
-npm run lint
-```
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
