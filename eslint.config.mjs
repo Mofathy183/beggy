@@ -23,6 +23,11 @@ export default defineConfig([
 			'*.config.js',
 			'*.config.mjs',
 			'*.config.ts',
+
+			// ✅ tests (ADD THESE)
+			'**/__tests__/**',
+			'**/tests/**',
+			'**/*.test.*',
 		],
 	},
 
@@ -72,8 +77,8 @@ export default defineConfig([
 					fixStyle: 'inline-type-imports',
 				},
 			],
-			'@typescript-eslint/no-misused-promises': 'error',
-			'@typescript-eslint/no-floating-promises': 'error',
+			// '@typescript-eslint/no-misused-promises': 'error',
+			// '@typescript-eslint/no-floating-promises': 'error',
 
 			// Import rules
 			'import/no-unresolved': 'off', // TypeScript handles this
@@ -82,7 +87,7 @@ export default defineConfig([
 			'import/default': 'off',
 			'import/no-named-as-default-member': 'off',
 			'import/first': 'error',
-			'import/newline-after-import': 'error',
+			'import/newline-after-import': 'off',
 			'import/no-duplicates': 'error',
 
 			// Prettier

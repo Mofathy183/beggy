@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: beggy-db
+    env_file:
+      - apps/api/.env.docker
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/api/Dockerfile
+  #   container_name: beggy-api
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   env_file:
+  #     - apps/api/.env.docker
+  #   ports:
+  #     - "3000:3000"
+  #   restart: unless-stopped
+
+  # web:
+  #     build:
+  #       context: .
+  #       dockerfile: apps/web/Dockerfile
+  #     container_name: beggy-web
+  #     # env_file:
+  #     #   - apps/web/.env.docker
+  #     ports:
+  #       - "3001:3000"
+  #     depends_on:
+  #       - api
+
+volumes:
+  pgdata:
