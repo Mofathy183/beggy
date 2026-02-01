@@ -242,13 +242,14 @@
  */
 import { Router } from 'express';
 
-// import { Action, Subject } from '@beggy/shared/constants';
+import { Action, Subject } from '@beggy/shared/constants';
 import { AuthSchema } from '@beggy/shared/schemas';
 
 import { type AuthController } from '@modules/auth';
 import {
 	requireAuth,
 	requireRefreshToken,
+	requirePermission,
 	validateBody,
 } from '@shared/middlewares';
 
@@ -279,6 +280,33 @@ export const createAuthRouter = (authController: AuthController): Router => {
 	 * Authenticate a user using LOCAL credentials.
 	 */
 	router.post('/login', validateBody(AuthSchema.login), authController.login);
+
+	/**
+	 * Resolve the currently authenticated user's auth context.
+	 *
+	 * @remarks
+	 * - Used by the frontend to bootstrap authentication state
+	 * - Requires a valid access token (via cookies)
+	 * - Enforces READ permission on USER subject
+	 * - Returns identity + effective permissions
+	 *
+	 * Middleware chain:
+	 * - `requireAuth`:
+	 *   - Verifies access token
+	 *   - Attaches `req.user`
+	 *   - Initializes CASL ability
+	 * - `requirePermission`:
+	 *   - Ensures the user can READ USER resources
+	 *
+	 * @route GET /auth/me
+	 * @access Authenticated users only
+	 */
+	router.get(
+		'/me',
+		requireAuth,
+		requirePermission(Action.READ, Subject.USER),
+		authController.authMe
+	);
 
 	/**
 	 * Logout the currently authenticated user.

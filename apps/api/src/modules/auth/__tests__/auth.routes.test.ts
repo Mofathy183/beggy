@@ -16,6 +16,7 @@ import {
 
 import { STATUS_CODE } from '@shared/constants';
 import { env } from '@/config';
+import { RolePermissions } from '@beggy/shared/constants';
 
 // ---- Prisma mock (import-time safety) ----
 vi.mock('@prisma/prisma.client', () => ({
@@ -39,21 +40,45 @@ vi.mock('@prisma/prisma.client', () => ({
 	},
 }));
 
+let injectUser = true;
+
 // ---- Middleware pass-through mocks ----
 vi.mock('@shared/middlewares/auth.middleware', async () => {
 	const actual = await vi.importActual<any>(
 		'@shared/middlewares/auth.middleware'
 	);
 
-	const passThrough: express.RequestHandler = (req: any, _res, next) => {
+	const requireAuthMock: express.RequestHandler = (req: any, _res, next) => {
+		if (injectUser) {
+			req.user = {
+				id: 'user-123',
+				role: 'USER',
+				issuedAt: Date.now(),
+			};
+		}
+
+		// required for requirePermission (even if mocked)
+		req.ability = {
+			can: () => true,
+			cannot: () => false,
+		};
+
+		next();
+	};
+
+	const requireRefreshTokenMock: express.RequestHandler = (
+		req: any,
+		_res,
+		next
+	) => {
 		req.refreshPayload = { userId: 'user-123' };
 		next();
 	};
 
 	return {
 		...actual,
-		requireAuth: passThrough,
-		requireRefreshToken: passThrough,
+		requireAuth: requireAuthMock,
+		requireRefreshToken: requireRefreshTokenMock,
 	};
 });
 
@@ -99,6 +124,7 @@ const setupApp = (
 
 	app.use((req: any, _res, next) => {
 		req.authTokens = {
+			accessToken: 'fake-access-token',
 			refreshToken: 'fake-refresh-token',
 		};
 		next();
@@ -122,6 +148,7 @@ describe('Auth API', () => {
 	let userService: UserService;
 
 	beforeEach(() => {
+		injectUser = true;
 		authService = {
 			signupUser: vi.fn(),
 			loginUser: vi.fn(),
@@ -212,7 +239,7 @@ describe('Auth API', () => {
 
 			(userService.getById as any).mockResolvedValue(user);
 
-			const app = setupApp(authService, userService);
+			const app = setupApp(authService, userService, true);
 
 			const response = await request(app).post('/auth/refresh-token');
 
@@ -240,6 +267,102 @@ describe('Auth API', () => {
 					csrfToken: expect.any(String),
 				},
 			});
+		});
+	});
+
+	describe('GET /auth/me', () => {
+		it('returns authenticated user and permissions', async () => {
+			// Arrange
+			const { id, ...userData } = buildUser({ role: 'USER' });
+			const user = {
+				id: 'user-123',
+				...userData,
+				account: [{ authProvider: 'LOCAL' }],
+			};
+
+			const permissions = RolePermissions[user.role] ?? [];
+
+			const app = setupApp(authService, userService);
+
+			(authService.authUser as any).mockResolvedValue({
+				user,
+				permissions,
+			});
+
+			// Act
+			const response = await request(app).get('/auth/me');
+
+			expect(response.status).toBe(STATUS_CODE.OK);
+			// Assert
+			expect(response.body).toMatchObject({
+				data: {
+					user: {
+						id: user.id,
+						email: user.email,
+						role: user.role,
+					},
+					permissions,
+				},
+			});
+
+			expect(authService.authUser).toHaveBeenCalledTimes(1);
+			expect(authService.authUser).toHaveBeenCalledWith('user-123');
+		});
+
+		it('throws unauthorized when user context is missing', async () => {
+			// Arrange
+			injectUser = false; // 👈 simulate broken auth context
+
+			const app = setupApp(authService, userService);
+
+			// Act
+			const response = await request(app).get('/auth/me');
+
+			// Assert
+			expect(response.status).toBe(STATUS_CODE.UNAUTHORIZED);
+		});
+
+		it('propagates errors from auth service', async () => {
+			// Arrange
+			(authService.authUser as any).mockRejectedValue(
+				new Error('Auth service failed')
+			);
+
+			const app = setupApp(authService, userService);
+
+			// Act
+			const response = await request(app).get('/auth/me');
+
+			// Assert
+			expect(response.status).toBe(STATUS_CODE.INTERNAL_ERROR);
+			expect(authService.authUser).toHaveBeenCalledOnce();
+		});
+
+		it('returns permissions derived from user role', async () => {
+			// Arrange
+			const { id, ...userData } = buildUser({ role: 'ADMIN' });
+
+			const user = {
+				id: 'user-123',
+				...userData,
+				account: [{ authProvider: 'LOCAL' }],
+			};
+
+			const permissions = RolePermissions.ADMIN;
+
+			(authService.authUser as any).mockResolvedValue({
+				user,
+				permissions,
+			});
+
+			const app = setupApp(authService, userService);
+
+			// Act
+			const response = await request(app).get('/auth/me');
+
+			// Assert
+			expect(response.status).toBe(STATUS_CODE.OK);
+			expect(response.body.data.permissions).toEqual(permissions);
 		});
 	});
 });
