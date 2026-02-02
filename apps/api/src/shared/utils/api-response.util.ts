@@ -1,18 +1,17 @@
 import { STATUS_CODE } from '@shared/constants';
 import {
-	type ErrorCode,
+	ErrorCode,
 	SuccessMessages,
 	ErrorMessages,
 	ErrorSuggestions,
 } from '@beggy/shared/constants';
-import {
-	type PaginationMeta,
-	type ErrorResponseOptions,
-} from '@beggy/shared/types';
+import type { PaginationMeta, FieldErrorsTree } from '@beggy/shared/types';
 import type {
 	StatusCode,
 	HttpSuccessResponse,
 	HttpErrorResponse,
+	HttpValidationErrorResponse,
+	ErrorResponseOptions,
 } from '@shared/types';
 
 /**
@@ -114,6 +113,43 @@ export const createResponse = {
 			options?.customSuggestion || (ErrorSuggestions[code] as string),
 		timestamp: new Date().toISOString(),
 	}),
+
+	/**
+	 * Creates a standardized "invalid request" error response.
+	 *
+	 * @remarks
+	 * This response is reserved exclusively for **request contract violations**
+	 * (e.g. schema validation failures).
+	 *
+	 * Key characteristics:
+	 * - Always returns HTTP 400 (Bad Request)
+	 * - Includes structured `fieldErrors` for UI-level feedback
+	 * - Uses INVALID_REQUEST_DATA as a stable error code
+	 *
+	 * This response should typically be produced by:
+	 * - Zod schema validation failures
+	 * - Request parsing middleware
+	 *
+	 * @param fieldErrors - Field-level validation error tree
+	 * @param options - Optional message or suggestion overrides
+	 * @returns A structured validation error response suitable for API consumers
+	 */
+	invalidRequestError: (
+		fieldErrors: Record<string, FieldErrorsTree>,
+		options?: ErrorResponseOptions
+	): HttpValidationErrorResponse => ({
+		success: false,
+		status: STATUS_CODE.BAD_REQUEST,
+		code: ErrorCode.INVALID_REQUEST_DATA,
+		message:
+			options?.customMessage ??
+			ErrorMessages[ErrorCode.INVALID_REQUEST_DATA],
+		suggestion:
+			options?.customSuggestion ??
+			ErrorSuggestions[ErrorCode.INVALID_REQUEST_DATA],
+		fieldErrors: fieldErrors,
+		timestamp: new Date().toISOString(),
+	}),
 };
 
 /**
@@ -211,6 +247,30 @@ export const apiResponseMap = {
 		error?: unknown,
 		options?: ErrorResponseOptions
 	) => createResponse.error(code, STATUS_CODE.BAD_REQUEST, error, options),
+
+	/**
+	 * Creates a 400 Bad Request response for invalid request payloads.
+	 *
+	 * @remarks
+	 * This helper is a convenience wrapper around
+	 * `createResponse.invalidRequestError`.
+	 *
+	 * Use this ONLY when:
+	 * - The request payload violates the API contract
+	 * - Field-level validation feedback is required by the client
+	 *
+	 * Typical usage:
+	 * - Zod validation failures
+	 * - Invalid query or body shapes
+	 *
+	 * @param fieldErrors - Structured field-level validation errors
+	 * @param options - Optional message/suggestion overrides
+	 * @returns A standardized invalid request error response (HTTP 400)
+	 */
+	invalidRequest: (
+		fieldErrors: Record<string, FieldErrorsTree>,
+		options?: ErrorResponseOptions
+	) => createResponse.invalidRequestError(fieldErrors, options),
 
 	/**
 	 * Creates a 401 Unauthorized response.

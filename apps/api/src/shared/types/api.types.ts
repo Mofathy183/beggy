@@ -1,5 +1,9 @@
-import { type STATUS_CODE } from '@shared/constants';
-import { type SuccessResponse, type ErrorResponse } from '@beggy/shared/types';
+import type { STATUS_CODE } from '@shared/constants';
+import type {
+	SuccessResponse,
+	ErrorResponse,
+	ValidationErrorResponse,
+} from '@beggy/shared/types';
 
 /**
  * HTTP Status Code type derived from STATUS_CODE constants.
@@ -103,4 +107,38 @@ export interface HttpErrorResponse extends ErrorResponse {
 	 * while keeping error details standardized across the system.
 	 */
 	status: StatusCode;
+}
+
+export interface HttpValidationErrorResponse extends ValidationErrorResponse {
+	/**
+	 * HTTP status code associated with the error response.
+	 *
+	 * @remarks
+	 * Used by the HTTP server to set the correct response status
+	 * while keeping error details standardized across the system.
+	 */
+	status: StatusCode;
+}
+
+/**
+ * Options for customizing error responses.
+ *
+ * @remarks
+ * Allows overriding default error messages and suggestions while maintaining
+ * the core error structure. Use sparingly - prefer the default Beggy-style messages.
+ *
+ * @property customMessage - Override the default error message
+ * @property customSuggestion - Override the default error suggestion
+ *
+ * @example
+ * ```typescript
+ * const options: ErrorResponseOptions = {
+ *   customMessage: 'Your bag exceeded the weight limit by 5kg',
+ *   customSuggestion: 'Try removing some items or redistribute weight between bags'
+ * };
+ * ```
+ */
+export interface ErrorResponseOptions {
+	customMessage?: string;
+	customSuggestion?: string;
 }

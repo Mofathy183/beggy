@@ -46,29 +46,29 @@ describe('errorHandler', () => {
 			);
 		});
 
-		it('returns bad request for invalid request data', () => {
-			const schema = z.object({
-				email: z.email(),
-			});
+		// it('returns bad request for invalid request data', () => {
+		// 	const schema = z.object({
+		// 		email: z.email(),
+		// 	});
 
-			let err: ZodError;
-			try {
-				schema.parse({ email: 'invalid' });
-			} catch (e) {
-				err = e as ZodError;
-			}
+		// 	let err: ZodError;
+		// 	try {
+		// 		schema.parse({ email: 'invalid' });
+		// 	} catch (e) {
+		// 		err = e as ZodError;
+		// 	}
 
-			const res = mockResponse();
+		// 	const res = mockResponse();
 
-			errorHandler(err!, mockRequest, res, mockNext);
+		// 	errorHandler(err!, mockRequest, res, mockNext);
 
-			expect(res.status).toHaveBeenCalledWith(STATUS_CODE.BAD_REQUEST);
-			expect(res.json).toHaveBeenCalledWith(
-				expect.objectContaining({
-					code: ErrorCode.INVALID_REQUEST_DATA,
-				})
-			);
-		});
+		// 	expect(res.status).toHaveBeenCalledWith(STATUS_CODE.BAD_REQUEST);
+		// 	expect(res.json).toHaveBeenCalledWith(
+		// 		expect.objectContaining({
+		// 			code: ErrorCode.INVALID_REQUEST_DATA,
+		// 		})
+		// 	);
+		// });
 	});
 
 	describe('authentication errors', () => {
@@ -119,6 +119,49 @@ describe('errorHandler', () => {
 	});
 });
 
+describe('zodErrorMap', () => {
+	it('returns invalid request error for ZodError', () => {
+		const schema = z.object({
+			email: z.email(),
+		});
+
+		let err: ZodError;
+		try {
+			schema.parse({ email: 'not-an-email' });
+		} catch (e) {
+			err = e as ZodError;
+		}
+
+		// act
+		(errorHandler as any).__getZodErrorMap
+			? (errorHandler as any).__getZodErrorMap(err!)
+			: null;
+
+		// fallback: call indirectly via handler
+		const res = mockResponse();
+		errorHandler(err!, mockRequest, res, mockNext);
+
+		// assert
+		expect(res.status).toHaveBeenCalledWith(STATUS_CODE.BAD_REQUEST);
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				code: ErrorCode.INVALID_REQUEST_DATA,
+				success: false,
+			})
+		);
+	});
+
+	it('returns null for non-Zod errors', () => {
+		const err = new Error('not zod');
+
+		// indirect assertion via handler
+		const res = mockResponse();
+		errorHandler(err, mockRequest, res, mockNext);
+
+		expect(res.status).toHaveBeenCalledWith(STATUS_CODE.INTERNAL_ERROR);
+	});
+});
+
 describe('prismaErrorMap', () => {
 	it('maps unique email violations to conflict errors', () => {
 		const err = new Prisma.PrismaClientKnownRequestError(
@@ -158,6 +201,32 @@ describe('prismaErrorMap', () => {
 
 		expect(result?.code).toBe(ErrorCode.INVALID_RELATION_REFERENCE);
 		expect(result?.status).toBe(STATUS_CODE.BAD_REQUEST);
+	});
+
+	it('maps prisma initialization errors to database connection failed', () => {
+		const err = new Prisma.PrismaClientInitializationError(
+			'DB unreachable',
+			'5'
+		);
+
+		const result = prismaErrorMap(err);
+
+		expect(result?.code).toBe(ErrorCode.DATABASE_CONNECTION_FAILED);
+		expect(result?.status).toBe(STATUS_CODE.INTERNAL_ERROR);
+	});
+
+	it('maps critical prisma engine errors to database error', () => {
+		const err = new Prisma.PrismaClientUnknownRequestError(
+			'engine failure',
+			{
+				clientVersion: '5',
+			}
+		);
+
+		const result = prismaErrorMap(err);
+
+		expect(result?.code).toBe(ErrorCode.DATABASE_ERROR);
+		expect(result?.status).toBe(STATUS_CODE.INTERNAL_ERROR);
 	});
 
 	it('returns null for non-prisma errors', () => {

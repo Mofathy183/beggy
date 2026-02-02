@@ -82,6 +82,46 @@ describe('createResponse.error()', () => {
 	});
 });
 
+describe('createResponse.invalidRequestError()', () => {
+	it('returns standardized invalid request response', () => {
+		const fieldErrors = {
+			email: {
+				_errors: ['Invalid email'],
+			},
+		};
+
+		const result = createResponse.invalidRequestError(fieldErrors);
+
+		expect(result.success).toBe(false);
+		expect(result.status).toBe(STATUS_CODE.BAD_REQUEST);
+		expect(result.code).toBe(ErrorCode.INVALID_REQUEST_DATA);
+		expect(result.message).toBe(
+			ErrorMessages[ErrorCode.INVALID_REQUEST_DATA]
+		);
+		expect(result.suggestion).toBe(
+			ErrorSuggestions[ErrorCode.INVALID_REQUEST_DATA]
+		);
+		expect(result.fieldErrors).toEqual(fieldErrors);
+		expect(result.timestamp).toBeTypeOf('string');
+	});
+
+	it('allows custom message and suggestion overrides', () => {
+		const fieldErrors = {
+			password: {
+				_errors: ['Too short'],
+			},
+		};
+
+		const result = createResponse.invalidRequestError(fieldErrors, {
+			customMessage: 'Invalid form data',
+			customSuggestion: 'Fix the highlighted fields',
+		});
+
+		expect(result.message).toBe('Invalid form data');
+		expect(result.suggestion).toBe('Fix the highlighted fields');
+	});
+});
+
 describe('apiResponseMap.ok()', () => {
 	it('returns success response with 200 status', () => {
 		const result = apiResponseMap.ok([{ id: 1 }], 'BAGS_FETCHED');
@@ -115,6 +155,44 @@ describe('apiResponseMap.badRequest()', () => {
 		const result = apiResponseMap.badRequest(ErrorCode.VALIDATION_ERROR);
 
 		expect(result.status).toBe(STATUS_CODE.BAD_REQUEST);
+	});
+});
+
+describe('apiResponseMap.invalidRequest()', () => {
+	it('returns invalid request response with 400 status', () => {
+		const fieldErrors = {
+			username: {
+				_errors: ['Required'],
+			},
+		};
+
+		const result = apiResponseMap.invalidRequest(fieldErrors);
+
+		expect(result.success).toBe(false);
+		expect(result.status).toBe(STATUS_CODE.BAD_REQUEST);
+		expect(result.code).toBe(ErrorCode.INVALID_REQUEST_DATA);
+		expect(result.fieldErrors).toEqual(fieldErrors);
+	});
+
+	it('forwards custom overrides correctly', () => {
+		const fieldErrors = {
+			email: {
+				_errors: ['Invalid'],
+			},
+		};
+
+		const result = apiResponseMap.invalidRequest(fieldErrors, {
+			customMessage: 'Bad payload',
+		});
+
+		expect(result.message).toBe('Bad payload');
+	});
+
+	it('does not include generic error property', () => {
+		const result = apiResponseMap.invalidRequest({});
+
+		expect('error' in result).toBe(false);
+		expect('fieldErrors' in result).toBe(true);
 	});
 });
 

@@ -1,4 +1,3 @@
-import { type ErrorCode } from '@beggy/shared/constants';
 import { type ZodType } from 'zod';
 
 /**
@@ -35,57 +34,6 @@ export interface ValidationSchema {
 	 * Schema for validating `req.params`
 	 */
 	params?: ZodType;
-}
-
-/**
- * Represents validation errors for a single field or a nested structure.
- *
- * - Leaf nodes are arrays of error messages
- * - Nested objects represent structured schema paths
- *
- * Example:
- * ```ts
- * {
- *   name: ["Name is required"],
- *   age: {
- *     min: ["Must be at least 18"],
- *     max: ["Must be under 100"]
- *   }
- * }
- * ```
- */
-export type ValidationFieldErrors =
-	| string[]
-	| { [key: string]: ValidationFieldErrors };
-
-/**
- * Standard API response shape for validation errors.
- *
- * This response is returned when request input fails schema validation
- * before reaching business logic or controllers.
- */
-export interface ValidationErrorResponse {
-	/**
-	 * Machine-readable error code identifying a validation failure.
-	 */
-	code: ErrorCode.VALIDATION_ERROR;
-
-	/**
-	 * Human-readable summary describing the validation issue.
-	 */
-	message: string;
-
-	/**
-	 * Optional guidance to help clients resolve the validation errors.
-	 */
-	suggestion?: string;
-
-	/**
-	 * Structured validation errors mapped by field name.
-	 *
-	 * Supports deeply nested schemas and array-based errors.
-	 */
-	fieldErrors: Record<string, ValidationFieldErrors>;
 }
 
 /**

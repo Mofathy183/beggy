@@ -1,7 +1,7 @@
-import { type ErrorCode, ErrorMessages } from '@beggy/shared/constants';
-import type { ErrorResponseOptions } from '@beggy/shared/types';
+import { ErrorCode, ErrorMessages } from '@beggy/shared/constants';
+import type { FieldErrorsTree } from '@beggy/shared/types';
 import { STATUS_CODE } from '@shared/constants';
-import type { StatusCode } from '@shared/types';
+import type { StatusCode, ErrorResponseOptions } from '@shared/types';
 
 /**
  * AppError
@@ -89,6 +89,38 @@ export const appErrorMap = {
 		cause?: unknown,
 		options?: ErrorResponseOptions
 	) => new AppError(code, STATUS_CODE.BAD_REQUEST, cause, options),
+
+	/**
+	 * Invalid request payload (schema / contract violation).
+	 *
+	 * @remarks
+	 * This error represents **transport-level validation failures**,
+	 * not domain or business rule errors.
+	 *
+	 * Typical sources:
+	 * - Zod schema parsing failures
+	 * - Malformed request bodies
+	 * - Invalid query or path parameter shapes
+	 *
+	 * This error is expected to:
+	 * - Always map to HTTP 400 (Bad Request)
+	 * - Carry structured, field-level error details
+	 * - Be safely exposed to API consumers (UI-friendly)
+	 *
+	 * @param code - Must always be INVALID_REQUEST_DATA
+	 * @param fieldErrors - Structured field-level validation errors
+	 * @param options - Optional message/suggestion overrides
+	 */
+	invalidRequest: (
+		fieldErrors: FieldErrorsTree,
+		options?: ErrorResponseOptions
+	) =>
+		new AppError(
+			ErrorCode.INVALID_REQUEST_DATA,
+			STATUS_CODE.BAD_REQUEST,
+			fieldErrors,
+			options
+		),
 
 	/**
 	 * Authentication is required or failed.

@@ -23,11 +23,14 @@ import { ErrorCode } from '@beggy/shared/constants';
 
 import { STATUS_CODE } from '@shared/constants';
 
+import type { FieldErrorsTree } from '@beggy/shared/types';
+
 import {
 	AppError,
 	createResponse,
 	appErrorMap,
 	formatValidationError,
+	apiResponseMap,
 } from '@shared/utils';
 
 const { JsonWebTokenError, TokenExpiredError } = jwt;
@@ -202,10 +205,7 @@ const zodErrorMap = (err: unknown): AppError | null => {
 		 * - Indicates a transport/schema-layer failure, not a
 		 *   business-rule violation.
 		 */
-		return appErrorMap.badRequest(
-			ErrorCode.INVALID_REQUEST_DATA,
-			formattedError
-		);
+		return appErrorMap.invalidRequest(formattedError as FieldErrorsTree);
 	}
 
 	return null;
@@ -258,10 +258,8 @@ export const errorHandler = (
 		return res
 			.status(zodError.status)
 			.json(
-				createResponse.error(
-					zodError.code,
-					zodError.status,
-					zodError.cause,
+				apiResponseMap.invalidRequest(
+					zodError.cause as Record<string, FieldErrorsTree>,
 					zodError.options
 				)
 			);

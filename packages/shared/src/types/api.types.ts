@@ -258,26 +258,48 @@ export interface ErrorResponse extends BaseResponse {
 }
 
 /**
- * Options for customizing error responses.
+ * Represents validation errors for a single field or a nested structure.
  *
- * @remarks
- * Allows overriding default error messages and suggestions while maintaining
- * the core error structure. Use sparingly - prefer the default Beggy-style messages.
+ * - Leaf nodes are arrays of error messages
+ * - Nested objects represent structured schema paths
  *
- * @property customMessage - Override the default error message
- * @property customSuggestion - Override the default error suggestion
- *
- * @example
- * ```typescript
- * const options: ErrorResponseOptions = {
- *   customMessage: 'Your bag exceeded the weight limit by 5kg',
- *   customSuggestion: 'Try removing some items or redistribute weight between bags'
- * };
+ * Example:
+ * ```ts
+ * {
+ *   name: ["Name is required"],
+ *   age: {
+ *     min: ["Must be at least 18"],
+ *     max: ["Must be under 100"]
+ *   }
+ * }
  * ```
  */
-export interface ErrorResponseOptions {
-	customMessage?: string;
-	customSuggestion?: string;
+export type FieldErrorsTree = string[] | { [key: string]: FieldErrorsTree };
+
+/**
+ * Standard API response shape for validation errors.
+ *
+ * This response is returned when request input fails schema validation
+ * before reaching business logic or controllers.
+ */
+export interface ValidationErrorResponse extends BaseResponse {
+	success: false; // TypeScript will narrow this to literal false
+	/**
+	 * Machine-readable error code identifying a validation failure.
+	 */
+	code: ErrorCode.INVALID_REQUEST_DATA;
+
+	/**
+	 * Optional guidance to help clients resolve the validation errors.
+	 */
+	suggestion?: string;
+
+	/**
+	 * Structured validation errors mapped by field name.
+	 *
+	 * Supports deeply nested schemas and array-based errors.
+	 */
+	fieldErrors: Record<string, FieldErrorsTree>;
 }
 
 /**

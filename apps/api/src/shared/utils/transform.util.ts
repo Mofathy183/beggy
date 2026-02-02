@@ -15,6 +15,7 @@ import type {
 	SuitcaseFilterInput,
 	SuitcaseOrderByInput,
 	ISODateString,
+	FieldErrorsTree,
 } from '@beggy/shared/types';
 import {
 	type UserWhereInput,
@@ -28,10 +29,10 @@ import {
 	type BagsOrderByWithRelationInput,
 	type SuitcasesOrderByWithRelationInput,
 } from '@prisma-generated/models';
-import type { ValidationFieldErrors, ZodErrorTree } from '@shared/types';
+import type { ZodErrorTree } from '@shared/types';
 
 /**
- * Recursively formats a single Zod error tree node into a ValidationFieldErrors structure.
+ * Recursively formats a single Zod error tree node into a FieldErrorsTree structure.
  *
  * This function walks the output of `z.treeifyError()` and:
  * - Treats nodes with direct errors as leaf nodes
@@ -43,9 +44,9 @@ import type { ValidationFieldErrors, ZodErrorTree } from '@shared/types';
  * of validation error formatting utilities.
  *
  * @param node - A single node from Zod's treeifyError error structure
- * @returns A ValidationFieldErrors subtree, or `undefined` if the node contains no errors
+ * @returns A FieldErrorsTree subtree, or `undefined` if the node contains no errors
  */
-const formatNode = (node: ZodErrorTree): ValidationFieldErrors | undefined => {
+const formatNode = (node: ZodErrorTree): FieldErrorsTree | undefined => {
 	// Leaf node:
 	// If this node contains direct validation errors, return them immediately.
 	// Zod guarantees these error messages are strings at runtime.
@@ -54,7 +55,7 @@ const formatNode = (node: ZodErrorTree): ValidationFieldErrors | undefined => {
 	}
 
 	// Container for nested validation errors
-	const result: Record<string, ValidationFieldErrors> = {};
+	const result: Record<string, FieldErrorsTree> = {};
 	let hasErrors = false;
 
 	// Handle nested object properties (e.g. schema.shape fields)
@@ -75,7 +76,7 @@ const formatNode = (node: ZodErrorTree): ValidationFieldErrors | undefined => {
 
 	// Handle array item errors (index-based validation)
 	if (node.items) {
-		const itemsResult: Record<string, ValidationFieldErrors> = {};
+		const itemsResult: Record<string, FieldErrorsTree> = {};
 
 		node.items.forEach((item, index) => {
 			const formatted = formatNode(item);
@@ -96,7 +97,7 @@ const formatNode = (node: ZodErrorTree): ValidationFieldErrors | undefined => {
 };
 
 /**
- * Converts a Zod `treeifyError` result into a `ValidationFieldErrors` structure.
+ * Converts a Zod `treeifyError` result into a `FieldErrorsTree` structure.
  *
  * This function serves as the public entry point for formatting Zod validation errors.
  * It encapsulates Zod-specific error structures and returns a stable,
@@ -111,7 +112,7 @@ const formatNode = (node: ZodErrorTree): ValidationFieldErrors | undefined => {
  */
 export const formatValidationError = (
 	tree: ReturnType<typeof z.treeifyError>
-): ValidationFieldErrors | undefined => {
+): FieldErrorsTree | undefined => {
 	// Cast is safe: this utility operates on the known runtime structure
 	// produced by `z.treeifyError()`
 	return formatNode(tree as ZodErrorTree);

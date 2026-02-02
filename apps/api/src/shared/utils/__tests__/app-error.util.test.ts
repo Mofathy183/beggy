@@ -80,6 +80,48 @@ describe('appErrorMap.badRequest()', () => {
 	});
 });
 
+describe('appErrorMap.invalidRequest()', () => {
+	it('creates invalid request error with fixed code and 400 status', () => {
+		const fieldErrors = {
+			email: {
+				_errors: ['Invalid email format'],
+			},
+		};
+
+		const error = appErrorMap.invalidRequest(fieldErrors);
+
+		expect(error).toBeInstanceOf(AppError);
+		expect(error.code).toBe(ErrorCode.INVALID_REQUEST_DATA);
+		expect(error.status).toBe(STATUS_CODE.BAD_REQUEST);
+	});
+
+	it('does not attach field-level errors to native error cause', () => {
+		const fieldErrors = {
+			password: {
+				_errors: ['Too short'],
+			},
+		};
+
+		const error = appErrorMap.invalidRequest(fieldErrors);
+
+		expect(error.cause).toBeUndefined();
+	});
+
+	it('respects custom message overrides', () => {
+		const fieldErrors = {
+			username: {
+				_errors: ['Required'],
+			},
+		};
+
+		const error = appErrorMap.invalidRequest(fieldErrors, {
+			customMessage: 'Invalid payload',
+		});
+
+		expect(error.message).toBe('Invalid payload');
+	});
+});
+
 describe('appErrorMap.unauthorized()', () => {
 	it('creates error with 401 status', () => {
 		const error = appErrorMap.unauthorized(ErrorCode.TOKEN_EXPIRED);
