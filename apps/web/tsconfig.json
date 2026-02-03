@@ -22,6 +22,9 @@
 		],
 		"baseUrl": ".",
 		"paths": {
+			//* Global Project related Paths
+			"@beggy/shared": ["../../packages/shared/src"],
+			"@beggy/shared/*": ["../../packages/shared/src/*"],
 			"@/*": ["./src/*"],
 			"@shared/*": ["./src/shared/*"]
 		}

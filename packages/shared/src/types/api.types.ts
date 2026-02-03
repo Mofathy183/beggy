@@ -282,17 +282,11 @@ export type FieldErrorsTree = string[] | { [key: string]: FieldErrorsTree };
  * This response is returned when request input fails schema validation
  * before reaching business logic or controllers.
  */
-export interface ValidationErrorResponse extends BaseResponse {
-	success: false; // TypeScript will narrow this to literal false
+export interface ValidationErrorResponse extends ErrorResponse {
 	/**
 	 * Machine-readable error code identifying a validation failure.
 	 */
 	code: ErrorCode.INVALID_REQUEST_DATA;
-
-	/**
-	 * Optional guidance to help clients resolve the validation errors.
-	 */
-	suggestion?: string;
 
 	/**
 	 * Structured validation errors mapped by field name.

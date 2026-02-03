@@ -3,7 +3,7 @@ import type {
 	PublicProfileDTO,
 	SuccessResponse,
 	EditProfileInput,
-} from '@beggy/shared';
+} from '@beggy/shared/types';
 import { apiSlice } from '@shared/api';
 
 /**

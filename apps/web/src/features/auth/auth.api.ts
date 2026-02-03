@@ -4,7 +4,7 @@ import type {
 	SignUpInput,
 	LoginInput,
 	AuthMeDTO,
-} from '@beggy/shared';
+} from '@beggy/shared/types';
 
 /**
  * authApi

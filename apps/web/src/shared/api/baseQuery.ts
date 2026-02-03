@@ -4,6 +4,8 @@ import type {
 	FetchArgs,
 	FetchBaseQueryError,
 } from '@reduxjs/toolkit/query/react';
+import { env } from '@/env';
+import { isApiError, isValidationError } from '@shared/utils';
 
 /**
  * Low-level fetch base query.
@@ -25,7 +27,7 @@ const rawBaseQuery = fetchBaseQuery({
 	 * Must be exposed with `NEXT_PUBLIC_` because this code
 	 * runs in the browser.
 	 */
-	baseUrl: process.env.NEXT_PUBLIC_API_URL,
+	baseUrl: env.API_URL,
 
 	/**
 	 * Ensures cookies (e.g. session, refresh tokens)
@@ -83,9 +85,22 @@ export const baseQuery: BaseQueryFn<
 	 * - manage retries and caching
 	 */
 	if (result.error) {
-		return {
-			error: result.error,
-		};
+		/**
+		 * Stage 1: Observe only
+		 */
+		if (isApiError(result.error)) {
+			// Validation errors → handled by forms
+			if (isValidationError(result.error)) {
+				// intentionally empty
+			}
+
+			// Unauthorized → future auth handling
+			if (result.error.status === 401) {
+				// later: logout / refresh
+			}
+		}
+
+		return { error: result.error };
 	}
 
 	/**

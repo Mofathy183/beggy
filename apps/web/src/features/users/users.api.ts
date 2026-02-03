@@ -8,7 +8,7 @@ import type {
 	ChangeRoleInput,
 	UpdateStatusInput,
 	EditProfileInput,
-} from '@beggy/shared';
+} from '@beggy/shared/types';
 
 /**
  * userApi
