@@ -176,7 +176,7 @@ export interface PaginationMeta {
 export interface BaseResponse {
 	success: boolean;
 	message: string;
-	timestamp: ISODateString; // ISO string format
+	timestamp?: ISODateString; // ISO string format
 }
 
 /**

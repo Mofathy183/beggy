@@ -11,6 +11,8 @@
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",
 		"@beggy/shared": "workspace:*",
+		"@casl/ability": "^6.7.3",
+		"@casl/react": "^5.0.1",
 		"@hugeicons/core-free-icons": "^3.1.1",
 		"@hugeicons/react": "^1.1.4",
 		"@reduxjs/toolkit": "^2.11.2",

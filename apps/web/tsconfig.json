@@ -26,7 +26,8 @@
 			"@beggy/shared": ["../../packages/shared/src"],
 			"@beggy/shared/*": ["../../packages/shared/src/*"],
 			"@/*": ["./src/*"],
-			"@shared/*": ["./src/shared/*"]
+			"@shared/*": ["./src/shared/*"],
+			"@features/*": ["./src/features/*"]
 		}
 	},
 	"include": [

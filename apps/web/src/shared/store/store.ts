@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { apiSlice } from '@/shared/api';
+import { apiSlice } from '@shared/api';
+import { abilityReducer } from '@shared/store/ability';
 
 /**
  * Factory function that creates a new Redux store instance.
@@ -13,6 +14,7 @@ export const makeStore = () => {
 		reducer: {
 			[apiSlice.reducerPath]: apiSlice.reducer,
 			// Add feature reducers here
+			ability: abilityReducer,
 		},
 		// middleware, devTools, and enhancers can be configured here
 		middleware: (getDefaultMiddleware) =>
