@@ -1,16 +1,31 @@
-import { useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppSelector } from '@shared/store';
-import { defineAbilityForUser } from '@shared/store/ability';
+import { AppAbility, defineAbilityForUser } from '@shared/store/ability';
 
 /**
- * Hook that returns the current CASL ability instance for the logged-in user.
+ * useAbility
+ *
+ * Returns a **stable CASL ability instance** representing the current
+ * authenticated user's permissions.
  *
  * @remarks
- * - Ability is derived **only** from permissions stored in Redux
- * - Ability is memoized to avoid unnecessary re-instantiation
- * - Permissions are treated as the single source of truth
+ * Architectural decisions:
+ * - The ability instance is created **once** and preserved across renders
+ * - Permission changes update rules via `ability.update()` instead of
+ *   replacing the instance
+ * - Permissions stored in Redux are the **single source of truth**
  *
- * @returns A memoized `AppAbility` instance representing user permissions
+ * Why this matters:
+ * - CASL abilities are stateful and designed to be updated, not recreated
+ * - Stable identity allows future subscriptions (`ability.on('update')`)
+ * - Prevents permission "flashing" and stale references
+ *
+ * Lifecycle:
+ * - Initial render → empty ability (no permissions)
+ * - `/auth/me` success → permissions injected → rules updated
+ * - Logout / auth failure → permissions cleared → rules reset
+ *
+ * @returns A stable {@link AppAbility} instance
  *
  * @example
  * ```ts
@@ -18,11 +33,45 @@ import { defineAbilityForUser } from '@shared/store/ability';
  * ability.can(Action.UPDATE, Subject.BAG);
  * ```
  */
-export const useAbility = () => {
-	const permissions = useAppSelector((s) => s.ability.permissions);
+export const useAbility = (): AppAbility => {
 	/**
-	 * Rebuild ability only when permissions change.
-	 * This keeps permission checks cheap and predictable.
+	 * Raw permissions from Redux.
+	 *
+	 * This array is treated as immutable input coming from the backend.
 	 */
-	return useMemo(() => defineAbilityForUser(permissions), [permissions]);
+	const permissions = useAppSelector((s) => s.ability.permissions);
+
+	/**
+	 * Persistent reference to the CASL ability instance.
+	 *
+	 * The ability object must remain stable across renders.
+	 */
+	const abilityRef = useRef<AppAbility | null>(null);
+
+	/**
+	 * Lazily initialize the ability with **no permissions**.
+	 *
+	 * This ensures:
+	 * - Safe default state
+	 * - No accidental permission leaks
+	 * - Predictable behavior before auth resolution
+	 */
+	if (!abilityRef.current) {
+		abilityRef.current = defineAbilityForUser([]);
+	}
+
+	/**
+	 * Synchronize CASL rules whenever backend permissions change.
+	 *
+	 * Important:
+	 * - We rebuild rules from scratch
+	 * - We update the existing ability instance
+	 * - We do NOT mutate permissions or infer rules
+	 */
+	useEffect(() => {
+		const nextAbility = defineAbilityForUser(permissions);
+		abilityRef.current?.update(nextAbility.rules);
+	}, [permissions]);
+
+	return abilityRef.current;
 };
