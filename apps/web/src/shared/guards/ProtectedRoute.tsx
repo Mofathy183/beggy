@@ -1,61 +1,63 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import type { Action, Subject } from '@beggy/shared/constants';
 import { useAbility } from '@shared/store/ability';
 
 type ProtectedRouteProps = {
-	/** Required action to access this route */
+	/** Required action to access this content */
 	action: Action;
-	/** Required subject to access this route */
+	/** Required subject to access this content */
 	subject: Subject;
-	/** Route content */
+	/** Content rendered when access is granted */
 	children: React.ReactNode;
+	/** Fallback UI rendered when access is denied */
+	fallback?: React.ReactNode;
 };
 
 /**
  * ProtectedRoute
  *
- * Authorization boundary for route-level access control.
+ * Declarative authorization boundary for UI and route-level access.
  *
  * @remarks
  * Responsibilities:
- * - Prevent access to routes the user is not authorized to view
- * - Redirect to a dedicated forbidden (403) page when access is denied
+ * - Checks whether the current user can perform an action on a subject
+ * - Renders children when access is allowed
+ * - Renders a fallback UI when access is denied
  *
- * Assumptions:
- * - Authentication is already resolved by {@link AuthGate}
- * - Permissions are already loaded into Redux
+ * Non-responsibilities:
+ * - Does NOT handle authentication (AuthGate responsibility)
+ * - Does NOT perform navigation or redirects
+ * - Does NOT infer or elevate permissions
  *
- * Design decisions:
- * - Does NOT redirect to login
- * - Does NOT attempt to refresh authentication
- * - Does NOT silently hide forbidden content
+ * Design principles:
+ * - Authorization is treated as a **rendering concern**
+ * - Forbidden access is a **valid UI state**, not an error
+ * - Routing decisions are left to the caller
  *
- * Forbidden access is treated as a **hard stop**.
+ * @example
+ * ```tsx
+ * <ProtectedRoute
+ *   action={Action.READ}
+ *   subject={Subject.USER}
+ *   fallback={<Forbidden />}
+ * >
+ *   <UsersPage />
+ * </ProtectedRoute>
+ * ```
  */
-const ProtectedRoute = ({ action, subject, children }: ProtectedRouteProps) => {
-	const router = useRouter();
+const ProtectedRoute = ({
+	action,
+	subject,
+	children,
+	fallback = null,
+}: ProtectedRouteProps) => {
 	const ability = useAbility();
 
 	const isAllowed = ability.can(action, subject);
 
-	/**
-	 * Redirect forbidden access **after render** to avoid
-	 * side effects during the render phase.
-	 */
-	useEffect(() => {
-		if (!isAllowed) {
-			router.replace('/forbidden');
-		}
-	}, [isAllowed, router]);
-
-	/**
-	 * Block rendering while redirecting.
-	 */
 	if (!isAllowed) {
-		return null;
+		return <>{fallback}</>;
 	}
 
 	return <>{children}</>;

@@ -332,28 +332,6 @@ export const OrderByQuerySchemas = {
 };
 
 /**
- * Route parameter schemas.
- *
- * @remarks
- * - Used for validating path parameters (e.g. :id)
- * - Keeps controllers and services free from malformed identifiers
- */
-export const ParamsSchema = {
-	/**
-	 * UUID v4 parameter.
-	 *
-	 * @remarks
-	 * - Validates UUID format only (existence is checked later)
-	 * - Prevents invalid DB lookups and noisy errors
-	 */
-	uuid: z.strictObject({
-		id: z.uuidv4({
-			error: 'That ID doesn’t look quite right — it should be a proper unique identifier, like a travel tag that helps us find the right record.',
-		}),
-	}),
-};
-
-/**
  * Pagination query schema.
  *
  * @remarks
@@ -417,5 +395,27 @@ export const PaginationSchema = {
 				error: 'That’s a heavy load! Let’s keep it under 100 per page so things run smoothly.',
 			})
 			.default(10),
+	}),
+};
+
+/**
+ * Route parameter schemas.
+ *
+ * @remarks
+ * - Used for validating path parameters (e.g. :id)
+ * - Keeps controllers and services free from malformed identifiers
+ */
+export const ParamsSchema = {
+	/**
+	 * UUID v4 parameter.
+	 *
+	 * @remarks
+	 * - Validates UUID format only (existence is checked later)
+	 * - Prevents invalid DB lookups and noisy errors
+	 */
+	uuid: z.strictObject({
+		id: z.uuidv4({
+			error: 'That ID doesn’t look quite right — it should be a proper unique identifier, like a travel tag that helps us find the right record.',
+		}),
 	}),
 };
