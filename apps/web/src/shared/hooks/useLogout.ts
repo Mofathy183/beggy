@@ -20,7 +20,7 @@ import { clearPermissions } from '@shared/store/ability';
  * This hook is the **single source of truth**
  * for logout behavior across the app.
  */
-export const useLogout = () => {
+const useLogout = () => {
 	const router = useRouter();
 	const dispatch = useAppDispatch();
 	const [logout] = authApi.useLogoutMutation();
@@ -59,3 +59,5 @@ export const useLogout = () => {
 		}
 	};
 };
+
+export default useLogout;

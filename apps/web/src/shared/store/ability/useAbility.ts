@@ -33,7 +33,7 @@ import { AppAbility, defineAbilityForUser } from '@shared/store/ability';
  * ability.can(Action.UPDATE, Subject.BAG);
  * ```
  */
-export const useAbility = (): AppAbility => {
+const useAbility = (): AppAbility => {
 	/**
 	 * Raw permissions from Redux.
 	 *
@@ -75,3 +75,5 @@ export const useAbility = (): AppAbility => {
 
 	return abilityRef.current;
 };
+
+export default useAbility;
