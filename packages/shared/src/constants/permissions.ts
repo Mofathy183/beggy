@@ -1,5 +1,5 @@
-import type { Permissions } from '../types/auth.types.js';
-import { Role, Action, Scope, Subject } from '../constants/auth.enums.js';
+import type { Permissions } from '../types/auth.types';
+import { Role, Action, Scope, Subject } from '../constants/auth.enums';
 
 /**
  * Default permission matrix for each application role.

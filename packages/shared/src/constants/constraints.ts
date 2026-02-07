@@ -2,7 +2,7 @@ import type {
 	NameFieldConfig,
 	NameFieldType,
 	NumberConfigMap,
-} from '../types/schema.types.js';
+} from '../types/schema.types';
 
 /**
  * Centralized regular expression constraints used across the Beggy platform.

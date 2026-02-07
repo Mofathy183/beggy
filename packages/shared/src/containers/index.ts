@@ -1,2 +1,2 @@
-export * from './calculations.js';
-export * from './status.js';
+export * from './calculations';
+export * from './status';

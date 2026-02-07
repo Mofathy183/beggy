@@ -1,7 +1,7 @@
 import type * as z from 'zod';
-import { type ProfileSchema } from '../schemas/profile.schema.js';
-import type { Gender } from '../constants/profile.enums.js';
-import type { ISODateString } from './index.js';
+import { type ProfileSchema } from '../schemas/profile.schema';
+import type { Gender } from '../constants/profile.enums';
+import type { ISODateString } from './index';
 
 /**
  * User profile containing public and user-editable information.

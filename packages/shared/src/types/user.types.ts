@@ -4,9 +4,9 @@
  * They are derived from Prisma models but tailored for API responses.
  */
 import type * as z from 'zod';
-import { type AdminSchema } from '../schemas/user.schema.js';
-import type { Role } from '../constants/auth.enums.js';
-import type { Override, ISODateString } from './index.js';
+import { type AdminSchema } from '../schemas/user.schema';
+import type { Role } from '../constants/auth.enums';
+import type { Override, ISODateString } from './index';
 
 /**
  * Core user domain model.

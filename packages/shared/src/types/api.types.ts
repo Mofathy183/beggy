@@ -1,16 +1,16 @@
-import { type ErrorCode } from '../constants/error.codes.js';
+import { type ErrorCode } from '../constants/error.codes';
 import {
 	type OrderByQuerySchemas,
 	type QuerySchema,
 	type ParamsSchema,
 	type PaginationSchema,
-} from '../schemas/api.schema.js';
+} from '../schemas/api.schema';
 import type * as z from 'zod';
-import type { Permissions } from '../types/auth.types.js';
-import type { AuthProvider } from '../constants/auth.enums.js';
-import type { UserDTO } from '../types/user.types.js';
-import type { ProfileDTO } from '../types/profile.types.js';
-import type { ISODateString } from './index.js';
+import type { Permissions } from '../types/auth.types';
+import type { AuthProvider } from '../constants/auth.enums';
+import type { UserDTO } from '../types/user.types';
+import type { ProfileDTO } from '../types/profile.types';
+import type { ISODateString } from './index';
 
 /**
  * Lightweight authenticated user identity snapshot.

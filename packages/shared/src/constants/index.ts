@@ -13,15 +13,15 @@
  * - Changes here affect both web and API consumers.
  */
 
-export * from './constraints.js';
-export * from './api.enums.js';
-export * from './auth.enums.js';
-export * from './bag.enums.js';
-export * from './constraints.enums.js';
-export * from './item.enums.js';
-export * from './profile.enums.js';
-export * from './suitcase.enums.js';
-export * from './user.enums.js';
-export * from './error.codes.js';
-export * from './messages.js';
-export * from './permissions.js';
+export * from './constraints';
+export * from './api.enums';
+export * from './auth.enums';
+export * from './bag.enums';
+export * from './constraints.enums';
+export * from './item.enums';
+export * from './profile.enums';
+export * from './suitcase.enums';
+export * from './user.enums';
+export * from './error.codes';
+export * from './messages';
+export * from './permissions';

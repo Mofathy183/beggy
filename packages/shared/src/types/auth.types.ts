@@ -1,7 +1,7 @@
-import { type AuthSchema } from '../schemas/auth.schema.js';
+import { type AuthSchema } from '../schemas/auth.schema';
 import type * as z from 'zod';
-import type { Override } from './index.js';
-import type { Action, Scope, Subject } from '../constants/auth.enums.js';
+import type { Override } from './index';
+import type { Action, Scope, Subject } from '../constants/auth.enums';
 
 /**
  * A list of permissions assigned to a role or user.

@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
-import type { SuitcaseDTO } from '../../src/types/suitcase.types.js';
+import type { SuitcaseDTO } from '../../src/types/suitcase.types';
 import {
 	SuitcaseFeature,
 	SuitcaseType,
 	WheelType,
-} from '../../src/constants/suitcase.enums.js';
-import { Material, Size } from '../../src/constants/bag.enums.js';
+} from '../../src/constants/suitcase.enums';
+import { Material, Size } from '../../src/constants/bag.enums';
 
 type SuitcaseFactoryOverrides = Partial<
 	Pick<

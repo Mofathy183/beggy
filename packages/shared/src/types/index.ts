@@ -1,12 +1,12 @@
-export * from './api.types.js';
-export * from './auth.types.js';
-export * from './bag.types.js';
-export * from './item.types.js';
-export * from './constraints.types.js';
-export * from './profile.types.js';
-export * from './schema.types.js';
-export * from './suitcase.types.js';
-export * from './user.types.js';
+export * from './api.types';
+export * from './auth.types';
+export * from './bag.types';
+export * from './item.types';
+export * from './constraints.types';
+export * from './profile.types';
+export * from './schema.types';
+export * from './suitcase.types';
+export * from './user.types';
 
 /**
  * Overrides selected fields in Zod-derived types.

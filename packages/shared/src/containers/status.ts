@@ -1,13 +1,13 @@
 import {
 	ContainerStatus,
 	ContainerStatusReason,
-} from '../constants/constraints.enums.js';
+} from '../constants/constraints.enums';
 import type {
 	ContainerStatusResult,
 	ContainerStatusParams,
 	ContainerState,
 	ContainerMetrics,
-} from '../types/constraints.types.js';
+} from '../types/constraints.types';
 // ============================================================================
 // STATUS CHECK FUNCTIONS
 // ============================================================================

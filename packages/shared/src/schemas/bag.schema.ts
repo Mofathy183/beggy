@@ -1,6 +1,6 @@
 import * as z from 'zod';
-import { FieldsSchema } from '../schemas/fields.schema.js';
-import { BagType, BagFeature, Size, Material } from '../constants/bag.enums.js';
+import { FieldsSchema } from '../schemas/fields.schema';
+import { BagType, BagFeature, Size, Material } from '../constants/bag.enums';
 
 /**
  * Bag-related validation schemas.

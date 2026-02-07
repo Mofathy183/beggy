@@ -3,15 +3,15 @@
  */
 
 import type * as z from 'zod';
-import type { ContainerStatusDTO } from './constraints.types.js';
-import { type BagSchema } from '../schemas/bag.schema.js';
-import type { Override, ISODateString } from './index.js';
+import type { ContainerStatusDTO } from './constraints.types';
+import { type BagSchema } from '../schemas/bag.schema';
+import type { Override, ISODateString } from './index';
 import type {
 	BagType,
 	BagFeature,
 	Size,
 	Material,
-} from '../constants/bag.enums.js';
+} from '../constants/bag.enums';
 
 /**
  * Core Bag domain model.

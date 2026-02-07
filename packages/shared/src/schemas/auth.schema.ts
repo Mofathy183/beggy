@@ -1,6 +1,6 @@
 import * as z from 'zod';
-import { FieldsSchema } from '../schemas/fields.schema.js';
-import { Gender } from '../constants/profile.enums.js';
+import { FieldsSchema } from '../schemas/fields.schema';
+import { Gender } from '../constants/profile.enums';
 
 /**
  * Authentication-related validation schemas.

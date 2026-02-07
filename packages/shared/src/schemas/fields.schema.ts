@@ -1,17 +1,17 @@
 import * as z from 'zod';
-import { REGEX } from '../constants/constraints.js';
+import { REGEX } from '../constants/constraints';
 import {
 	createArrayField,
 	createNameField,
 	createNumberField,
 	normalizeTrim,
 	normalizeDate,
-} from '../utils/schema.util.js';
+} from '../utils/schema.util';
 import type {
 	NameFieldType,
 	NumericEntity,
 	NumericMetric,
-} from '../types/schema.types.js';
+} from '../types/schema.types';
 
 /**
  * Centralized field schema factory.

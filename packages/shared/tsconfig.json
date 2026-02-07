@@ -4,9 +4,9 @@
 	"compilerOptions": {
 		// Library mode
 		"target": "ES2022",
-		"module": "NodeNext",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
 		"lib": ["ES2022", "DOM", "DOM.Iterable"],
-		"moduleResolution": "NodeNext",
 
 		// Output
 		"outDir": "./dist",

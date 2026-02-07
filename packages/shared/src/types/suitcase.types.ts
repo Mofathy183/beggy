@@ -2,15 +2,15 @@
  * API Response Types for Suitcases
  */
 
-import { type Size, type Material } from '../constants/bag.enums.js';
-import { type SuitcaseSchema } from '../schemas/suitcase.schema.js';
+import { type Size, type Material } from '../constants/bag.enums';
+import { type SuitcaseSchema } from '../schemas/suitcase.schema';
 import type * as z from 'zod';
-import type { Override, ISODateString, ContainerStatusDTO } from './index.js';
+import type { Override, ISODateString, ContainerStatusDTO } from './index';
 import type {
 	SuitcaseFeature,
 	SuitcaseType,
 	WheelType,
-} from '../constants/suitcase.enums.js';
+} from '../constants/suitcase.enums';
 
 /**
  * Core Suitcase domain model.

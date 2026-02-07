@@ -1,14 +1,14 @@
 /**
  * API Response Types for Items
  */
-import { type ItemSchema } from '../schemas/item.schema.js';
+import { type ItemSchema } from '../schemas/item.schema';
 import type * as z from 'zod';
-import type { Override, ISODateString } from './index.js';
+import type { Override, ISODateString } from './index';
 import type {
 	ItemCategory,
 	WeightUnit,
 	VolumeUnit,
-} from '../constants/item.enums.js';
+} from '../constants/item.enums';
 
 /**
  * Core Item domain model.

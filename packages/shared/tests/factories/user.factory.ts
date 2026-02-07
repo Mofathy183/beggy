@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { type UserDTO } from '../../src/types/user.types.js';
-import { Role } from '../../src/constants/auth.enums.js';
+import { type UserDTO } from '../../src/types/user.types';
+import { Role } from '../../src/constants/auth.enums';
 
 /**
  * Fields that can be overridden when creating a User via factories.

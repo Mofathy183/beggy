@@ -3,8 +3,8 @@ import type {
 	NameFieldType,
 	NumericEntity,
 	NumericMetric,
-} from '../types/schema.types.js';
-import { NAME_CONFIG, NUMBER_CONFIG } from '../constants/constraints.js';
+} from '../types/schema.types';
+import { NAME_CONFIG, NUMBER_CONFIG } from '../constants/constraints';
 
 /**
  * Normalizes a string value by trimming surrounding whitespace.

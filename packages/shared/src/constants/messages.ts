@@ -9,7 +9,7 @@
  * - Practical wisdom: Explain the "why"
  */
 
-import { ErrorCode } from '../constants/error.codes.js';
+import { ErrorCode } from '../constants/error.codes';
 
 /**
  * Beggy - Your Seasoned Travel Buddy

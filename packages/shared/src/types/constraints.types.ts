@@ -1,9 +1,9 @@
-import type { WeightUnit, VolumeUnit } from '../constants/item.enums.js';
+import type { WeightUnit, VolumeUnit } from '../constants/item.enums';
 import type {
 	ContainerStatusReason,
 	ContainerStatus,
-} from '../constants/constraints.enums.js';
-import type { ItemDTO } from '../types/item.types.js';
+} from '../constants/constraints.enums';
+import type { ItemDTO } from '../types/item.types';
 
 /**
  * Lookup map for converting any supported weight unit into kilograms.

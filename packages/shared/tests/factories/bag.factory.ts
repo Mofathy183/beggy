@@ -4,8 +4,8 @@ import {
 	BagType,
 	Size,
 	Material,
-} from '../../src/constants/bag.enums.js';
-import { type BagDTO } from '../../src/types/bag.types.js';
+} from '../../src/constants/bag.enums';
+import { type BagDTO } from '../../src/types/bag.types';
 
 type BagFactoryOverrides = Partial<
 	Pick<
