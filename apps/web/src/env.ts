@@ -13,5 +13,7 @@ const required = (key: `NEXT_PUBLIC_${string}`): string => {
 };
 
 export const env = {
-	API_URL: required('NEXT_PUBLIC_API_URL'),
+	get API_URL() {
+		return required('NEXT_PUBLIC_API_URL');
+	},
 } as const;

@@ -19,35 +19,40 @@ import { isApiError, isValidationError } from '@shared/utils';
  *
  * This layer should remain framework-agnostic and free of
  * application-specific logic.
+ *
+ * IMPORTANT:
+ * - Env variables MUST NOT be read at module scope
+ * - This factory ensures runtime-safe access
  */
-const rawBaseQuery = fetchBaseQuery({
-	/**
-	 * Base URL for all API requests.
-	 *
-	 * Must be exposed with `NEXT_PUBLIC_` because this code
-	 * runs in the browser.
-	 */
-	baseUrl: env.API_URL,
+const createRawBaseQuery = () =>
+	fetchBaseQuery({
+		/**
+		 * Base URL for all API requests.
+		 *
+		 * Must be exposed with `NEXT_PUBLIC_` because this code
+		 * runs in the browser.
+		 */
+		baseUrl: env.API_URL,
 
-	/**
-	 * Ensures cookies (e.g. session, refresh tokens)
-	 * are sent with every request.
-	 */
-	credentials: 'include',
+		/**
+		 * Ensures cookies (e.g. session, refresh tokens)
+		 * are sent with every request.
+		 */
+		credentials: 'include',
 
-	/**
-	 * Prepare default headers for every request.
-	 *
-	 * Note:
-	 * - Do NOT set `Content-Type` globally
-	 *   (fetchBaseQuery handles it automatically for JSON)
-	 * - Auth headers (if any) can be added later here
-	 */
-	prepareHeaders: (headers) => {
-		headers.set('Accept', 'application/json');
-		return headers;
-	},
-});
+		/**
+		 * Prepare default headers for every request.
+		 *
+		 * Note:
+		 * - Do NOT set `Content-Type` globally
+		 *   (fetchBaseQuery handles it automatically for JSON)
+		 * - Auth headers (if any) can be added later here
+		 */
+		prepareHeaders: (headers) => {
+			headers.set('Accept', 'application/json');
+			return headers;
+		},
+	});
 
 /**
  * Application-level base query.
@@ -74,6 +79,8 @@ export const baseQuery: BaseQueryFn<
 	unknown,
 	FetchBaseQueryError
 > = async (args, api, extraOptions) => {
+	const rawBaseQuery = createRawBaseQuery();
+
 	const result = await rawBaseQuery(args, api, extraOptions);
 
 	/**

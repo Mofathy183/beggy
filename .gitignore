@@ -90,6 +90,8 @@ storybook-static/
 *.cache/
 .cache-loader/
 
+*storybook.log
+
 # CRA-specific
 build/
 
