@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef } from 'react';
 import { useAppSelector } from '@shared/store';
 import { AppAbility, defineAbilityForUser } from '@shared/store/ability';
