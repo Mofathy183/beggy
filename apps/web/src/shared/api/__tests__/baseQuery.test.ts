@@ -20,13 +20,12 @@ vi.mock('@/env', () => ({
 		API_URL: 'https://api.example.com',
 	},
 }));
-
-describe('baseQuery', () => {
+describe('baseQuery()', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('returns data when request succeeds', async () => {
+	it('returns data when the request succeeds', async () => {
 		mockRawBaseQuery.mockResolvedValueOnce({
 			data: { id: 1, name: 'Test' },
 		});
@@ -38,7 +37,7 @@ describe('baseQuery', () => {
 		});
 	});
 
-	it('returns error when request fails', async () => {
+	it('returns an error when the request fails', async () => {
 		const error: FetchBaseQueryError = {
 			status: 400,
 			data: { message: 'Bad request' },

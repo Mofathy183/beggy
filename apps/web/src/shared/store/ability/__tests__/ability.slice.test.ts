@@ -7,11 +7,11 @@ describe('abilitySlice', () => {
 		permissions: [],
 	};
 
-	it('should return initial state', () => {
+	it('returns the initial state', () => {
 		expect(reducer(undefined, { type: 'unknown' })).toEqual(initialState);
 	});
 
-	it('should set permissions from backend', () => {
+	it('sets permissions from the api', () => {
 		const permissions: Permissions = [
 			{ action: Action.READ, subject: Subject.USER, scope: Scope.OWN },
 		];
@@ -24,7 +24,7 @@ describe('abilitySlice', () => {
 		expect(nextState.permissions).toEqual(permissions);
 	});
 
-	it('should clear permissions', () => {
+	it('clears all permissions', () => {
 		const stateWithPermissions = {
 			permissions: [
 				{

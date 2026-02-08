@@ -8,7 +8,7 @@ import { renderHook, type RenderHookResult } from '@testing-library/react';
 import abilityReducer from '@shared/store/ability/ability.slice';
 import type { RootState } from '@shared/store';
 
-const mockApiReducer = (state = {}) => state;
+export const mockApiReducer = (state = {}) => state;
 
 export function renderWithStore(
 	ui: ReactElement,

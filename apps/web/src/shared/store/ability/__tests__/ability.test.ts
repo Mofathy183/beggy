@@ -3,8 +3,8 @@ import { defineAbilityForUser } from '../ability';
 import { Action, Scope, Subject } from '@beggy/shared/constants';
 import type { Permissions } from '@beggy/shared/types';
 
-describe('defineAbilityForUser', () => {
-	it('returns an ability with no rules when permissions are empty', () => {
+describe('defineAbilityForUser()', () => {
+	it('returns an ability with no rules for empty permissions', () => {
 		const ability = defineAbilityForUser([]);
 
 		expect(ability.rules).toHaveLength(0);
@@ -30,7 +30,7 @@ describe('defineAbilityForUser', () => {
 		expect(ability.can(Action.UPDATE, Subject.PROFILE)).toBe(true);
 	});
 
-	it('does not grant permissions that were not provided', () => {
+	it('does not grant abilities that were not provided', () => {
 		const permissions: Permissions = [
 			{
 				action: Action.READ,
@@ -45,7 +45,7 @@ describe('defineAbilityForUser', () => {
 		expect(ability.can(Action.READ, Subject.PROFILE)).toBe(false);
 	});
 
-	it('rejects object-based subject checks to enforce tuple-only usage', () => {
+	it('throws when subject checks are not tuple-based', () => {
 		const permissions: Permissions = [
 			{
 				action: Action.READ,
