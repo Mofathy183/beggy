@@ -28,7 +28,9 @@
 			"@/*": ["./src/*"],
 			"@shared/*": ["./src/shared/*"],
 			"@features/*": ["./src/features/*"],
-			"@shadcn-ui/*": ["./src/shared/components/ui/*"]
+			"@shadcn-ui/*": ["./src/shared/components/ui/*"],
+
+			"@tests/*": ["tests/*"]
 		}
 	},
 	"include": [

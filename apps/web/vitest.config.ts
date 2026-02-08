@@ -23,7 +23,7 @@ export default mergeConfig(vitestBaseConfig, {
 				extends: true,
 				test: {
 					environment: 'jsdom',
-					setupFiles: './vitest.setup.ts',
+					setupFiles: './tests/vitest.setup.ts',
 				},
 			},
 			{
