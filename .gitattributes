@@ -1,7 +1,7 @@
 # --------------------------------------------------
 # Core line ending normalization
 # --------------------------------------------------
-* text=auto eol=lf
+* text=auto
 
 # --------------------------------------------------
 # Source code files
@@ -22,34 +22,35 @@
 # --------------------------------------------------
 # Config & tooling
 # --------------------------------------------------
-*.env.example text eol=lf
-*.editorconfig text eol=lf
-*.prettierrc text eol=lf
-*.eslintrc text eol=lf
+*.env*          text eol=lf
+*.editorconfig  text eol=lf
+*.prettierrc    text eol=lf
+*.eslintrc      text eol=lf
 
 # --------------------------------------------------
 # Shell scripts (must be LF!)
 # --------------------------------------------------
 *.prisma text eol=lf
-*.sh text eol=lf
+*.sh     text eol=lf
+
 # --------------------------------------------------
 # Lockfiles (prevent platform noise)
 # --------------------------------------------------
-pnpm-lock.yaml text eol=lf
+pnpm-lock.yaml   text eol=lf
 package-lock.json text eol=lf
-yarn.lock text eol=lf
+yarn.lock        text eol=lf
 
 # --------------------------------------------------
 # Binary files (never touch line endings)
 # --------------------------------------------------
-*.png binary
-*.jpg binary
+*.png  binary
+*.jpg  binary
 *.jpeg binary
-*.gif binary
+*.gif  binary
 *.webp binary
-*.ico binary
-*.pdf binary
-*.zip binary
-*.gz binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
 *.woff binary
 *.woff2 binary

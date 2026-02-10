@@ -2,54 +2,41 @@
 
 import { mergeConfig } from 'vitest/config';
 import vitestBaseConfig from '../../vitest.base.config';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import { playwright } from '@vitest/browser-playwright';
-const dirname =
-	typeof __dirname !== 'undefined'
-		? __dirname
-		: path.dirname(fileURLToPath(import.meta.url));
 
-// More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default mergeConfig(vitestBaseConfig, {
 	test: {
+		name: 'unit',
+		environment: 'jsdom',
+		setupFiles: './tests/vitest.setup.ts',
+
+		include: ['src/**/*.{test}.{ts,tsx}', 'src/**/__tests__/**/*.{ts,tsx}'],
+
+		fileParallelism: false,
+
+		exclude: [
+			// Default Vitest excludes (explicit is better than implicit)
+			'**/node_modules/**',
+			'**/.git/**',
+
+			// Build outputs
+			'**/dist/**',
+			'**/build/**',
+			'**/.next/**',
+			'**/out/**',
+
+			// Storybook
+			'**/*.stories.{ts,tsx,js,jsx}',
+			'**/.storybook/**',
+			'**/storybook-static/**',
+
+			// Tests you don’t want here
+			'**/*.storybook.{ts,tsx}',
+			'**/*.spec.{e2e,cy}.{ts,tsx}',
+		],
+
 		coverage: {
 			reportsDirectory: 'coverage/vitest/web',
 			include: ['src/**/*.{ts,tsx}'],
 		},
-		projects: [
-			{
-				extends: true,
-				test: {
-					environment: 'jsdom',
-					setupFiles: './tests/vitest.setup.ts',
-				},
-			},
-			{
-				extends: true,
-				plugins: [
-					// The plugin will run tests for the stories defined in your Storybook config
-					// See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-					storybookTest({
-						configDir: path.join(dirname, '.storybook'),
-					}),
-				],
-				test: {
-					name: 'storybook',
-					browser: {
-						enabled: true,
-						headless: true,
-						provider: playwright({}),
-						instances: [
-							{
-								browser: 'chromium',
-							},
-						],
-					},
-					setupFiles: ['.storybook/vitest.setup.ts'],
-				},
-			},
-		],
 	},
 });
