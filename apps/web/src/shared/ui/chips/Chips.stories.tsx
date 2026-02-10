@@ -20,7 +20,7 @@ const options = [
 ];
 
 const meta: Meta<typeof Chips> = {
-	title: 'UI/Chips',
+	title: 'UI/Chips/Chips',
 	component: Chips,
 	tags: ['autodocs'],
 	parameters: {

@@ -1,4 +1,4 @@
-import { cn } from '@shared/lib';
+import { cn } from '@shadcn-lib';
 import { ButtonHTMLAttributes } from 'react';
 
 type ChipProps = ButtonHTMLAttributes<HTMLButtonElement> & {

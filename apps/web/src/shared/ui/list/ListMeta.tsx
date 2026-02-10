@@ -1,5 +1,6 @@
 import { Card } from '@shadcn-ui/card';
 import { Skeleton } from '@shadcn-ui/skeleton';
+import { Badge } from '@shadcn-ui/badge';
 import type { PaginationMeta } from '@beggy/shared/types';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { InformationCircleIcon } from '@hugeicons/core-free-icons';
@@ -49,30 +50,37 @@ const ListMeta = ({ meta, isLoading, label = 'results' }: ListMetaProps) => {
 					className="h-4 w-4"
 				/>
 
-				<p>
-					{count === 0 ? (
-						<span>No {label} found</span>
-					) : (
-						<>
-							Showing{' '}
-							<strong className="text-foreground">
-								{start}–{end}
-							</strong>{' '}
-							of{' '}
-							<strong className="text-foreground">
-								{totalItems ?? end}
-							</strong>{' '}
-							{label}
-						</>
-					)}
-				</p>
+				{count === 0 ? (
+					<span>No {label} found</span>
+				) : (
+					<div className="flex flex-wrap items-center gap-2">
+						<span>Showing</span>
+
+						<Badge variant="secondary">
+							{start}–{end}
+						</Badge>
+
+						<span>of</span>
+
+						<Badge variant="outline">{totalItems ?? end}</Badge>
+
+						<span>{label}</span>
+					</div>
+				)}
 			</div>
 
 			{totalPages != null && totalPages > 1 && (
-				<p className="text-sm text-muted-foreground">
-					Page <strong className="text-foreground">{page}</strong> of{' '}
-					<strong className="text-foreground">{totalPages}</strong>
-				</p>
+				<Badge
+					variant="outline"
+					className="text-xs font-normal text-muted-foreground"
+				>
+					Page{' '}
+					<strong className="mx-1 text-foreground">{page}</strong>
+					of{' '}
+					<strong className="ml-1 text-foreground">
+						{totalPages}
+					</strong>
+				</Badge>
 			)}
 		</Card>
 	);

@@ -3,7 +3,7 @@ import ListMeta from './ListMeta';
 import type { PaginationMeta } from '@beggy/shared/types';
 
 const meta: Meta<typeof ListMeta> = {
-	title: 'UI/ListMeta',
+	title: 'UI/List/ListMeta',
 	component: ListMeta,
 	tags: ['autodocs'],
 	parameters: {
@@ -20,6 +20,18 @@ It explains:
 It should not be rendered during errors or before the first request.
 				`,
 			},
+		},
+	},
+	argTypes: {
+		label: {
+			control: 'text',
+			description: 'Entity label displayed to the user',
+		},
+		isLoading: {
+			control: 'boolean',
+		},
+		meta: {
+			control: false,
 		},
 	},
 };
@@ -50,12 +62,12 @@ export const Loading: StoryObj = {
 };
 
 /**
- * NoResults
+ * Empty
  *
  * @remarks
  * Used when the query succeeds but returns zero items.
  */
-export const NoResults: StoryObj = {
+export const Empty: StoryObj = {
 	args: {
 		meta: {
 			...baseMeta,
@@ -68,12 +80,12 @@ export const NoResults: StoryObj = {
 };
 
 /**
- * WithResults
+ * FirstPage
  *
  * @remarks
  * Standard list state with visible results.
  */
-export const WithResults: StoryObj = {
+export const FirstPage: StoryObj = {
 	args: {
 		meta: baseMeta,
 		label: 'items',

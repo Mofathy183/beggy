@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import ListEmptyState from './ListEmptyState';
 
 const meta: Meta<typeof ListEmptyState> = {
-	title: 'UI/ListEmptyState',
+	title: 'UI/List/ListEmptyState',
 	component: ListEmptyState,
 	tags: ['autodocs'],
 	parameters: {
@@ -15,6 +15,20 @@ It is used *after loading completes* and should not be shown
 during skeleton or loading states.
 				`,
 			},
+		},
+	},
+	argTypes: {
+		title: {
+			control: 'text',
+			description: 'Primary empty state message',
+		},
+		description: {
+			control: 'text',
+			description: 'Secondary guidance text',
+		},
+		action: {
+			control: false,
+			description: 'Optional call to action (label + handler)',
 		},
 	},
 };
@@ -35,13 +49,13 @@ export const NoResults: StoryObj = {
 };
 
 /**
- * FilteredOutResults
+ * FilteredEmpty
  *
  * @remarks
  * Shown when filters are applied and exclude all items.
  * Usually paired with a "Reset filters" action.
  */
-export const FilteredOutResults: StoryObj = {
+export const FilteredEmpty: StoryObj = {
 	args: {
 		title: 'Nothing matches your filters',
 		description: 'Reset filters to see all available items.',
@@ -53,13 +67,13 @@ export const FilteredOutResults: StoryObj = {
 };
 
 /**
- * FirstTimeEmpty
+ * NoDataYet
  *
  * @remarks
  * Used when no data exists yet (empty system state).
  * Common in onboarding or fresh accounts.
  */
-export const FirstTimeEmpty: StoryObj = {
+export const NoDataYet: StoryObj = {
 	args: {
 		title: 'No items yet',
 		description: 'Get started by creating your first item.',
@@ -71,12 +85,12 @@ export const FirstTimeEmpty: StoryObj = {
 };
 
 /**
- * NoPermission
+ * NoAccess
  *
  * @remarks
  * Used when the user cannot see any items due to access restrictions.
  */
-export const NoPermission: StoryObj = {
+export const NoAccess: StoryObj = {
 	args: {
 		title: 'Nothing to show',
 		description: 'You do not have access to any items in this list.',

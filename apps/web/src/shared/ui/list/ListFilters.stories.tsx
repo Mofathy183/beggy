@@ -12,31 +12,27 @@ import {
 } from '@shadcn-ui/select';
 import { Label } from '@shadcn-ui/label';
 
-type SearchStatusFilters = {
+type SearchAndStatus = {
 	search?: string;
 	status?: 'all' | 'active' | 'archived';
 };
 
 type NumberRange = {
-	min?: number;
-	max?: number;
-};
-
-type NumericRangeFilters = {
-	weight?: NumberRange;
+	weight?: {
+		min?: number;
+		max?: number;
+	};
 };
 
 type DateRange = {
-	from?: string;
-	to?: string;
-};
-
-type DateRangeFilters = {
-	createdAt?: DateRange;
+	createdAt?: {
+		from?: string;
+		to?: string;
+	};
 };
 
 const meta: Meta<typeof ListFilters<any>> = {
-	title: 'UI/ListFilters',
+	title: 'UI/List/ListFilters',
 	component: ListFilters,
 	tags: ['autodocs'],
 	parameters: {
@@ -61,16 +57,16 @@ State, validation, and mapping live outside this component.
 export default meta;
 
 /**
- * SearchAndStatusFilters
+ * SearchAndStatus
  *
  * @remarks
  * - Common list filtering pattern
  * - Mirrors simple text + enum Zod schemas
  * - Typical for admin tables and dashboards
  */
-export const SearchAndStatusFilters: StoryObj = {
+export const SearchAndStatus: StoryObj = {
 	render: () => {
-		const [filters, setFilters] = useState<SearchStatusFilters>({
+		const [filters, setFilters] = useState<SearchAndStatus>({
 			search: '',
 			status: 'all',
 		});
@@ -99,7 +95,7 @@ export const SearchAndStatusFilters: StoryObj = {
 						onValueChange={(value) =>
 							setFilters({
 								...filters,
-								status: value as SearchStatusFilters['status'],
+								status: value as SearchAndStatus['status'],
 							})
 						}
 					>
@@ -119,16 +115,16 @@ export const SearchAndStatusFilters: StoryObj = {
 };
 
 /**
- * NumericRangeFilters
+ * NumberRange
  *
  * @remarks
  * - Mirrors numberRangeSchema from Zod
  * - Supports optional min / max boundaries
  * - Common for weight, capacity, volume, price
  */
-export const NumericRangeFilters: StoryObj = {
+export const NumberRange: StoryObj = {
 	render: () => {
-		const [filters, setFilters] = useState<NumericRangeFilters>({
+		const [filters, setFilters] = useState<NumberRange>({
 			weight: {},
 		});
 
@@ -176,16 +172,16 @@ export const NumericRangeFilters: StoryObj = {
 };
 
 /**
- * DateRangeFilters
+ * DateRange
  *
  * @remarks
  * - Mirrors dateRangeSchema used in query filters
  * - Common for createdAt / updatedAt filtering
  * - Works with ISO strings or Date adapters
  */
-export const DateRangeFilters: StoryObj = {
+export const DateRange: StoryObj = {
 	render: () => {
-		const [filters, setFilters] = useState<DateRangeFilters>({
+		const [filters, setFilters] = useState<DateRange>({
 			createdAt: {},
 		});
 
@@ -227,13 +223,13 @@ export const DateRangeFilters: StoryObj = {
 };
 
 /**
- * NoAvailableFilters
+ * NoFilters
  *
  * @remarks
  * - Used when a list has no filterable fields
  * - Important UX edge case for permissions or feature flags
  */
-export const NoAvailableFilters: StoryObj = {
+export const NoFilters: StoryObj = {
 	render: () => (
 		<ListFilters value={{}} onApply={() => {}} onReset={() => {}}>
 			<p className="text-sm text-muted-foreground">
