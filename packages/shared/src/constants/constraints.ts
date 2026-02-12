@@ -314,7 +314,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 		},
 		weight: {
 			gte: 1,
-			lte: 50,
+			lte: 32,
 			decimals: 2,
 			messages: {
 				number: 'That doesn’t seem like a valid number — double-check your units before we lift off.',
@@ -344,7 +344,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 		},
 		weight: {
 			gte: 5,
-			lte: 70,
+			lte: 32,
 			decimals: 2,
 			messages: {
 				number: 'Hmm, that weight doesn’t read as a number — try entering it as digits, not words.',
@@ -386,7 +386,7 @@ export const NUMBER_CONFIG: NumberConfigMap = {
 		},
 		quantity: {
 			gte: 1,
-			lte: 10_000,
+			lte: 100,
 			decimals: 0,
 			messages: {
 				number: 'That doesn’t look like a valid quantity — numbers only, so we can count what’s packed.',

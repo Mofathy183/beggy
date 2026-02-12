@@ -18,9 +18,10 @@ const config: StorybookConfig = {
 		getAbsolutePath('@storybook/addon-vitest'),
 		getAbsolutePath('@storybook/addon-a11y'),
 		getAbsolutePath('@storybook/addon-docs'),
-		getAbsolutePath('@storybook/addon-onboarding'),
+		// getAbsolutePath('@storybook/addon-onboarding'),
+		getAbsolutePath('@storybook/addon-themes'),
 	],
 	framework: getAbsolutePath('@storybook/nextjs-vite'),
-	staticDirs: ['..\\public'],
+	staticDirs: ['../public'],
 };
 export default config;

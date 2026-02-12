@@ -3,6 +3,7 @@ build
 dist
 generated/client
 prisma/migrations
+apps\web\src\shared\components\ui
 *.min.js
 *.prisma
 *.yaml
