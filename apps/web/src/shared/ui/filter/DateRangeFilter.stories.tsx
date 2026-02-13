@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 
-import DateRangeFilter, { DateRangeValue } from './DateRangeFilter';
+import DateRangeFilter from './DateRangeFilter';
 
 const meta: Meta<typeof DateRangeFilter> = {
 	title: 'UI/Filters/DateRangeFilter',
@@ -96,6 +96,12 @@ Do not use for single-date selection (use a DatePicker instead).
 export default meta;
 
 type Story = StoryObj<typeof DateRangeFilter>;
+
+type DateRangeValue = {
+	from: Date | undefined;
+
+	to?: Date;
+};
 
 /**
  * Default inactive state.

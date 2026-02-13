@@ -9,7 +9,7 @@ export default mergeConfig(vitestBaseConfig, {
 		environment: 'jsdom',
 		setupFiles: './tests/vitest.setup.ts',
 
-		include: ['src/**/*.{test}.{ts,tsx}', 'src/**/__tests__/**/*.{ts,tsx}'],
+		include: ['src/**/*.test.{ts,tsx}', 'src/**/__tests__/**/*.{ts,tsx}'],
 
 		fileParallelism: false,
 

@@ -83,7 +83,7 @@ export const bagFactory = (
 
 	maxWeight:
 		overrides.maxWeight ??
-		faker.number.float({ min: 5, max: 40, fractionDigits: 2 }),
+		faker.number.float({ min: 5, max: 32, fractionDigits: 2 }),
 
 	bagWeight:
 		overrides.bagWeight ??

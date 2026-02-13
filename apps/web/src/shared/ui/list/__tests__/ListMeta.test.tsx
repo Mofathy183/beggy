@@ -1,113 +1,109 @@
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import ListMeta from '../ListMeta';
 import type { PaginationMeta } from '@beggy/shared/types';
 
 describe('ListMeta', () => {
-	it('shows loading state', () => {
-		const { container } = render(<ListMeta meta={null} isLoading />);
+	it('returns loading state when isLoading is true', () => {
+		const { container } = render(
+			<ListMeta meta={null} isLoading label="users" />
+		);
 
-		// Skeleton renders divs, so we assert container is not empty
 		expect(container.firstChild).toBeTruthy();
+		expect(screen.queryByText(/showing/i)).not.toBeInTheDocument();
 	});
 
-	it('renders nothing when no metadata is provided', () => {
-		const { container } = render(<ListMeta meta={null} />);
+	it('returns null when meta is null and not loading', () => {
+		const { container } = render(
+			<ListMeta meta={null} isLoading={false} label="users" />
+		);
 
 		expect(container.firstChild).toBeNull();
 	});
 
-	it('shows empty state when there are no results', () => {
-		render(
-			<ListMeta
-				meta={
-					{
-						page: 1,
-						limit: 10,
-						count: 0,
-						totalItems: 0,
-						totalPages: 0,
-					} as PaginationMeta
-				}
-				label="users"
-			/>
-		);
+	it('returns empty message when count is 0', () => {
+		const meta: PaginationMeta = {
+			page: 1,
+			limit: 10,
+			count: 0,
+			totalItems: 0,
+			totalPages: 0,
+			hasNextPage: false,
+			hasPreviousPage: false,
+		};
 
-		expect(screen.getByText(/no users found/i)).toBeInTheDocument();
+		render(<ListMeta meta={meta} label="users" />);
+
+		expect(screen.getByText('No users found')).toBeInTheDocument();
 	});
 
-	it('shows result range and total count', () => {
-		render(
-			<ListMeta
-				meta={
-					{
-						page: 2,
-						limit: 10,
-						count: 5,
-						totalItems: 25,
-						totalPages: 3,
-					} as PaginationMeta
-				}
-				label="items"
-			/>
-		);
+	it('returns visible range and total when data exists', () => {
+		const meta: PaginationMeta = {
+			page: 2,
+			limit: 10,
+			count: 10,
+			totalItems: 100,
+			totalPages: 10,
+			hasNextPage: false,
+			hasPreviousPage: false,
+		};
+
+		render(<ListMeta meta={meta} label="users" />);
 
 		expect(screen.getByText(/showing/i)).toBeInTheDocument();
+		expect(screen.getByText('11–20')).toBeInTheDocument();
+		expect(screen.getByText('100')).toBeInTheDocument();
+		expect(screen.getByText('users')).toBeInTheDocument();
+	});
+
+	it('returns end value when totalItems is undefined', () => {
+		const meta: PaginationMeta = {
+			page: 2,
+			limit: 10,
+			count: 5,
+			totalItems: undefined,
+			totalPages: 2,
+			hasNextPage: false,
+			hasPreviousPage: false,
+		};
+
+		render(<ListMeta meta={meta} label="orders" />);
+
 		expect(screen.getByText('11–15')).toBeInTheDocument();
-		expect(screen.getByText('25')).toBeInTheDocument();
-		expect(screen.getByText(/items/i)).toBeInTheDocument();
+		expect(screen.getByText('15')).toBeInTheDocument();
 	});
 
-	it('shows a valid range when total count is missing', () => {
-		render(
-			<ListMeta
-				meta={
-					{
-						page: 1,
-						limit: 10,
-						count: 7,
-						totalPages: 1,
-					} as PaginationMeta
-				}
-			/>
-		);
+	it('returns page indicator when multiple pages exist', () => {
+		const meta: PaginationMeta = {
+			page: 3,
+			limit: 10,
+			count: 10,
+			totalItems: 50,
+			totalPages: 5,
+			hasNextPage: false,
+			hasPreviousPage: false,
+		};
 
-		expect(screen.getByText('1–7')).toBeInTheDocument();
+		render(<ListMeta meta={meta} label="products" />);
+
+		expect(screen.getByText(/page/i)).toBeInTheDocument();
+		expect(screen.getByText('3')).toBeInTheDocument();
+		expect(screen.getByText('5')).toBeInTheDocument();
 	});
 
-	it('shows page information only when multiple pages exist', () => {
-		const { rerender } = render(
-			<ListMeta
-				meta={
-					{
-						page: 1,
-						limit: 10,
-						count: 10,
-						totalPages: 1,
-					} as PaginationMeta
-				}
-			/>
-		);
+	it('does not return page indicator when only one page exists', () => {
+		const meta: PaginationMeta = {
+			page: 1,
+			limit: 10,
+			count: 10,
+			totalItems: 10,
+			totalPages: 1,
+			hasNextPage: false,
+			hasPreviousPage: false,
+		};
+
+		render(<ListMeta meta={meta} label="products" />);
 
 		expect(screen.queryByText(/page/i)).not.toBeInTheDocument();
-
-		rerender(
-			<ListMeta
-				meta={
-					{
-						page: 2,
-						limit: 10,
-						count: 10,
-						totalPages: 3,
-					} as PaginationMeta
-				}
-			/>
-		);
-
-		expect(
-			screen.getByText(
-				(_content, element) =>
-					element?.textContent?.toLowerCase() === 'page 2 of 3'
-			)
-		).toBeInTheDocument();
 	});
 });

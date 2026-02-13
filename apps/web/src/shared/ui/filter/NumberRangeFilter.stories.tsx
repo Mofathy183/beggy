@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
-import NumberRangeFilter, { type NumberRangeValue } from './NumberRangeFilter';
+import NumberRangeFilter from './NumberRangeFilter';
 
 const meta: Meta<typeof NumberRangeFilter> = {
 	title: 'UI/Filters/NumberRangeFilter',
@@ -82,6 +82,11 @@ Do not use for:
 
 export default meta;
 type Story = StoryObj<typeof NumberRangeFilter>;
+
+type NumberRangeValue = {
+	min?: number;
+	max?: number;
+};
 
 /**
  * Inactive filter state.

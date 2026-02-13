@@ -29,7 +29,7 @@ import { WEIGHT_UNIT_META, VOLUME_UNIT_META } from '@shared/ui/mappers';
  * - If both are `undefined`, the filter is considered inactive.
  * - Designed to mirror backend filter DTO structure.
  */
-export type NumberRangeValue = {
+type NumberRangeValue = {
 	min?: number;
 	max?: number;
 };
@@ -44,7 +44,7 @@ export type NumberRangeValue = {
  * - Fully controlled component.
  * - Emits normalized + clamped values only.
  */
-export type NumberRangeFilterProps<E extends NumericEntity> = {
+type NumberRangeFilterProps<E extends NumericEntity> = {
 	/** Visible label displayed above the filter */
 	label: string;
 

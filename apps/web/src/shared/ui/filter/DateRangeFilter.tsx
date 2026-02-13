@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-ui/popover';
  * - `undefined` represents an unbounded side.
  * - If both `from` and `to` are undefined, the filter is considered inactive.
  */
-export type DateRangeValue = {
+type DateRangeValue = {
 	/**
 	 * Start date (inclusive).
 	 */
@@ -53,7 +53,7 @@ export type DateRangeValue = {
  * />
  * ```
  */
-export interface DateRangeFilterProps {
+interface DateRangeFilterProps {
 	/**
 	 * Accessible label displayed above the control.
 	 */
