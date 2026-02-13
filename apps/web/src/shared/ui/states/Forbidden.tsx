@@ -1,6 +1,12 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ShieldAlert } from '@hugeicons/core-free-icons';
-import { Card, CardContent } from '@shadcn-ui/card';
+import {
+	Card,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@shadcn-ui/card';
 import { Button } from '@shadcn-ui/button';
 
 /**
@@ -75,39 +81,39 @@ type ForbiddenProps = {
  * - Does NOT infer user roles or abilities
  */
 const Forbidden = ({
-	title = '',
-	description = '',
+	title = 'This stop isn’t on your itinerary just yet',
+	description = 'Looks like this area requires a different level of access. If you think you should be here, a quick check with your admin should set things straight.',
 	onBack,
 	action,
 }: ForbiddenProps) => (
 	// Centered layout suitable for page-level or section-level usage
 	<section className="flex min-h-[60vh] items-center justify-center px-4">
 		<Card className="w-full max-w-md text-center shadow-sm">
-			<CardContent className="flex flex-col items-center gap-4 py-8">
-				<div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+			<CardHeader className="items-center text-center">
+				<div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
 					<HugeiconsIcon
 						icon={ShieldAlert}
 						className="h-6 w-6 text-muted-foreground"
 					/>
 				</div>
 
-				<div className="space-y-1">
-					<h2 className="text-lg font-semibold">{title}</h2>
-					<p className="text-sm text-muted-foreground">
-						{description}
-					</p>
-				</div>
+				<CardTitle className="text-xl tracking-tight">
+					{title}
+				</CardTitle>
 
-				<div className="flex gap-2 pt-2">
+				<CardDescription>{description}</CardDescription>
+			</CardHeader>
+
+			{(onBack || action) && (
+				<CardFooter className="flex justify-center gap-2">
 					{onBack && (
 						<Button variant="outline" onClick={onBack}>
 							Go back
 						</Button>
 					)}
-
 					{action}
-				</div>
-			</CardContent>
+				</CardFooter>
+			)}
 		</Card>
 	</section>
 );
