@@ -234,6 +234,15 @@ const NumberRangeFilter = <E extends NumericEntity>({
 		const normalizedMin = normalize(clampedMin);
 		const normalizedMax = normalize(clampedMax);
 
+		// Prevent emitting invalid range
+		if (
+			normalizedMin != null &&
+			normalizedMax != null &&
+			normalizedMin > normalizedMax
+		) {
+			return;
+		}
+
 		if (normalizedMin == null && normalizedMax == null) {
 			onChange(undefined);
 			return;
@@ -252,6 +261,15 @@ const NumberRangeFilter = <E extends NumericEntity>({
 	 */
 	const safeMin = min ?? config.gte;
 	const safeMax = max ?? config.lte;
+
+	/**
+	 * Indicates whether the current range is logically invalid.
+	 *
+	 * True when:
+	 * - Both min and max exist
+	 * - min > max
+	 */
+	const isRangeInvalid = min != null && max != null && min > max;
 
 	//* UI */
 	return (
@@ -336,7 +354,10 @@ const NumberRangeFilter = <E extends NumericEntity>({
 					inputMode={isInteger ? 'numeric' : 'decimal'}
 					value={min ?? ''}
 					placeholder="Min"
-					className={cn(error && 'border-destructive')}
+					className={cn(
+						error && 'border-destructive',
+						isRangeInvalid && 'border-destructive'
+					)}
 					onChange={(e) => {
 						const val =
 							e.target.value === ''
@@ -354,7 +375,10 @@ const NumberRangeFilter = <E extends NumericEntity>({
 					inputMode={isInteger ? 'numeric' : 'decimal'}
 					value={max ?? ''}
 					placeholder="Max"
-					className={cn(error && 'border-destructive')}
+					className={cn(
+						error && 'border-destructive',
+						isRangeInvalid && 'border-destructive'
+					)}
 					onChange={(e) => {
 						const val =
 							e.target.value === ''
@@ -372,6 +396,7 @@ const NumberRangeFilter = <E extends NumericEntity>({
 				min={config.gte}
 				max={config.lte}
 				step={step}
+				disabled={isRangeInvalid}
 				value={[safeMin, safeMax]}
 				onValueChange={(vals) => {
 					setMin(vals[0]);

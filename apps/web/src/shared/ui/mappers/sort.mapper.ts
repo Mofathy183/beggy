@@ -1,15 +1,24 @@
-import type { UiOption } from './types';
-import {
-	OrderDirection,
-	UserOrderByField,
-	ProfileOrderByField,
-} from '@beggy/shared/constants';
+import { OrderDirection } from '@beggy/shared/constants';
+
+import { UserOrderByField, ProfileOrderByField } from '@beggy/shared/constants';
+
+type SortValue<E extends string> = {
+	orderBy: E;
+	direction: OrderDirection;
+};
+
+export type UiOrderByOption<T extends string> = {
+	value: SortValue<T>;
+	label: string;
+	icon?: React.ComponentType<{ className?: string }>;
+	disabled?: boolean;
+};
 
 export function createBaseSortOptions<E extends string>(fields: {
 	createdAt?: E;
 	updatedAt?: E;
-}): UiOption<E>[] {
-	const options: UiOption<E>[] = [];
+}): UiOrderByOption<E>[] {
+	const options: UiOrderByOption<E>[] = [];
 
 	if (fields.createdAt) {
 		options.push(
@@ -43,7 +52,7 @@ export function createBaseSortOptions<E extends string>(fields: {
 	return options;
 }
 
-export const USER_SORT_OPTIONS: UiOption<UserOrderByField>[] = [
+export const USER_SORT_OPTIONS: UiOrderByOption<UserOrderByField>[] = [
 	//* only Admins
 	{
 		value: {
@@ -61,7 +70,7 @@ export const USER_SORT_OPTIONS: UiOption<UserOrderByField>[] = [
 	},
 ];
 
-export const PROFILE_SORT_OPTIONS: UiOption<ProfileOrderByField>[] = [
+export const PROFILE_SORT_OPTIONS: UiOrderByOption<ProfileOrderByField>[] = [
 	{
 		value: {
 			orderBy: ProfileOrderByField.FIRST_NAME,

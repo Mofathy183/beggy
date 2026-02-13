@@ -221,3 +221,75 @@ export const Empty: MultipleStory = {
 		return <Chips {...args} value={value} onChange={setValue} />;
 	},
 };
+
+/**
+ * Narrow container layout.
+ *
+ * Ensures chips wrap correctly and spacing remains consistent
+ * when placed inside constrained layouts such as sidebars
+ * or filter panels.
+ *
+ * Verifies:
+ * - Proper wrapping behavior
+ * - Consistent gap spacing
+ * - Max selection hint remains readable
+ */
+export const NarrowContainer: MultipleStory = {
+	args: {
+		options,
+		mode: 'multiple',
+		maxSelected: 4,
+		value: [BagType.BACKPACK, BagType.DUFFEL],
+	},
+	render: (args) => {
+		const [value, setValue] = useState<BagType[]>(args.value);
+
+		return (
+			<div className="w-[260px] border p-4">
+				<Chips {...args} value={value} onChange={setValue} />
+			</div>
+		);
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Demonstrates chip wrapping and spacing behavior inside narrow containers such as filter sidebars.',
+			},
+		},
+	},
+};
+
+/**
+ * Dark mode verification.
+ *
+ * Ensures selected, unselected, disabled,
+ * and max-limited states remain accessible
+ * and visually distinct in dark theme.
+ */
+export const DarkMode: MultipleStory = {
+	args: {
+		options,
+		mode: 'multiple',
+		maxSelected: 4,
+		value: [BagType.BACKPACK, BagType.DUFFEL],
+	},
+	render: (args) => {
+		const [value, setValue] = useState<BagType[]>(args.value);
+
+		return (
+			<div className="dark bg-background p-6">
+				<Chips {...args} value={value} onChange={setValue} />
+			</div>
+		);
+	},
+	parameters: {
+		themes: {
+			default: 'dark',
+		},
+		docs: {
+			description: {
+				story: 'Validates chip color tokens, hover states, focus ring, and disabled appearance in dark mode.',
+			},
+		},
+	},
+};

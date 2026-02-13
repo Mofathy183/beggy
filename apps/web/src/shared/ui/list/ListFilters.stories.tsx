@@ -42,12 +42,13 @@ const meta: Meta<typeof ListFilters<any>> = {
 **ListFilters** is a stateless layout container that frames filter inputs
 and exposes clear **Apply / Reset** user intent.
 
-It is intentionally schema-agnostic and works with:
-- Zod query schemas
-- REST filters
-- Prisma where conditions
+It:
+- Does not own fetching logic
+- Does not perform validation
+- Does not transform schemas
+- Does not decide empty-state behavior
 
-State, validation, and mapping live outside this component.
+It simply communicates filter intent upward.
 				`,
 			},
 		},
@@ -237,4 +238,86 @@ export const NoFilters: StoryObj = {
 			</p>
 		</ListFilters>
 	),
+};
+
+/**
+ * Dark mode verification.
+ *
+ * Ensures card surface, ghost button,
+ * primary button, and muted tokens
+ * remain accessible in dark theme.
+ */
+export const DarkMode: StoryObj = {
+	render: () => {
+		const [filters, setFilters] = useState<SearchAndStatus>({
+			search: '',
+			status: 'all',
+		});
+
+		return (
+			<div className="dark bg-background p-6">
+				<ListFilters
+					value={filters}
+					onApply={(f) => console.log('apply', f)}
+					onReset={() => setFilters({ search: '', status: 'all' })}
+				>
+					<div className="grid gap-1">
+						<Label>Search</Label>
+						<Input
+							value={filters.search ?? ''}
+							onChange={(e) =>
+								setFilters({
+									...filters,
+									search: e.target.value,
+								})
+							}
+						/>
+					</div>
+				</ListFilters>
+			</div>
+		);
+	},
+	parameters: {
+		themes: {
+			default: 'dark',
+		},
+	},
+};
+
+/**
+ * Narrow container layout.
+ *
+ * Validates layout stability when used
+ * inside sidebars or constrained panels.
+ */
+export const NarrowContainer: StoryObj = {
+	render: () => {
+		const [filters, setFilters] = useState<SearchAndStatus>({
+			search: '',
+			status: 'all',
+		});
+
+		return (
+			<div className="w-[320px] border p-4">
+				<ListFilters
+					value={filters}
+					onApply={(f) => console.log('apply', f)}
+					onReset={() => setFilters({ search: '', status: 'all' })}
+				>
+					<div className="grid gap-1">
+						<Label>Search</Label>
+						<Input
+							value={filters.search ?? ''}
+							onChange={(e) =>
+								setFilters({
+									...filters,
+									search: e.target.value,
+								})
+							}
+						/>
+					</div>
+				</ListFilters>
+			</div>
+		);
+	},
 };

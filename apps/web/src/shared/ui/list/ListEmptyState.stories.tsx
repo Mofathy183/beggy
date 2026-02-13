@@ -11,8 +11,13 @@ const meta: Meta<typeof ListEmptyState> = {
 				component: `
 **ListEmptyState** communicates that a list has no visible results.
 
-It is used *after loading completes* and should not be shown
-during skeleton or loading states.
+It should be shown only when:
+- Loading has completed
+- No error is present
+- The resulting item set is empty
+
+It represents data state, not filter configuration.
+
 				`,
 			},
 		},
@@ -95,4 +100,56 @@ export const NoAccess: StoryObj = {
 		title: 'Nothing to show',
 		description: 'You do not have access to any items in this list.',
 	},
+};
+
+/**
+ * Dark mode verification.
+ *
+ * Ensures muted tokens, icon color,
+ * and outline button remain accessible
+ * in dark theme.
+ */
+export const DarkMode: StoryObj = {
+	args: {
+		title: 'No results found',
+		description: 'Try adjusting your filters or search terms.',
+		action: {
+			label: 'Reset filters',
+			onClick: () => console.log('reset filters'),
+		},
+	},
+	render: (args) => (
+		<div className="dark bg-background p-6">
+			<ListEmptyState {...args} />
+		</div>
+	),
+	parameters: {
+		themes: {
+			default: 'dark',
+		},
+	},
+};
+
+/**
+ * Narrow container layout.
+ *
+ * Verifies proper centering and text wrapping
+ * inside constrained layouts such as sidebars
+ * or mobile screens.
+ */
+export const NarrowContainer: StoryObj = {
+	args: {
+		title: 'No results found',
+		description:
+			'Try adjusting your filters or search terms to find what you are looking for.',
+		action: {
+			label: 'Reset filters',
+			onClick: () => console.log('reset filters'),
+		},
+	},
+	render: (args) => (
+		<div className="w-[320px] border p-4">
+			<ListEmptyState {...args} />
+		</div>
+	),
 };

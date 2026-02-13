@@ -1,19 +1,31 @@
-import { Input } from '@shadcn-ui/input';
+'use client';
+
+import { useState, useMemo } from 'react';
+import { format } from 'date-fns';
+
+import { cn } from '@shadcn-lib';
+import { CalendarIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { Label } from '@shadcn-ui/label';
+import { Button } from '@shadcn-ui/button';
+import { Badge } from '@shadcn-ui/badge';
+import { Separator } from '@shadcn-ui/separator';
+import { Calendar } from '@shadcn-ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-ui/popover';
 
 /**
- * Value shape for a date range filter.
+ * Represents a selectable date range.
  *
  * @remarks
- * - Matches `dateRangeSchema` exactly
- * - Both boundaries are optional
- * - `undefined` represents an unbounded side
+ * - Both boundaries are optional.
+ * - `undefined` represents an unbounded side.
+ * - If both `from` and `to` are undefined, the filter is considered inactive.
  */
-type DateRangeValue = {
+export type DateRangeValue = {
 	/**
 	 * Start date (inclusive).
 	 */
-	from?: Date;
+	from: Date | undefined;
 
 	/**
 	 * End date (inclusive).
@@ -22,77 +34,80 @@ type DateRangeValue = {
 };
 
 /**
- * Props for the DateRangeFilter component.
+ * Props for {@link DateRangeFilter}.
  *
  * @remarks
- * - Designed to be schema-driven (Zod-compatible)
- * - Emits `undefined` when the filter is effectively empty
- * - Error messaging is handled externally (form-level validation)
- */
-type DateRangeFilterProps = {
-	/**
-	 * Visible label for the filter.
-	 */
-	label: string;
-
-	/**
-	 * Current value of the date range.
-	 *
-	 * @remarks
-	 * - `undefined` means no filter applied
-	 * - Partial ranges are allowed (from-only / to-only)
-	 */
-	value?: DateRangeValue;
-
-	/**
-	 * Change handler.
-	 *
-	 * @remarks
-	 * - Receives `undefined` when both dates are cleared
-	 * - Keeps query params and form state clean
-	 */
-	onChange: (value?: DateRangeValue) => void;
-
-	/**
-	 * Optional helper text shown below the inputs.
-	 */
-	description?: string;
-
-	/**
-	 * Optional validation error message.
-	 *
-	 * @remarks
-	 * - Typically populated from Zod / server-side validation
-	 * - Displayed under the description for clear hierarchy
-	 */
-	error?: string;
-};
-
-/**
- * Converts a Date object into a YYYY-MM-DD string
- * suitable for native `<input type="date" />`.
+ * A controlled component designed for filtering data by date range.
  *
- * @param date - Optional Date value
- */
-const toInputValue = (date?: Date) =>
-	date ? date.toISOString().slice(0, 10) : '';
-
-/**
- * Date range filter component.
- *
- * @remarks
- * - UI representation of `dateRangeSchema`
- * - Uses native date inputs for accessibility & mobile UX
- * - Prevents emitting empty objects by normalizing to `undefined`
+ * - Fully controlled via `value` and `onChange`
+ * - Emits `undefined` when cleared
+ * - Supports partial ranges
+ * - Designed for schema-driven forms (Zod-compatible)
  *
  * @example
  * ```tsx
  * <DateRangeFilter
- *   label="Created At"
+ *   label="Created Between"
  *   value={filters.createdAt}
- *   onChange={(val) => setFilters({ ...filters, createdAt: val })}
+ *   onChange={(v) => setFilters({ ...filters, createdAt: v })}
  * />
  * ```
+ */
+export interface DateRangeFilterProps {
+	/**
+	 * Accessible label displayed above the control.
+	 */
+	label: string;
+
+	/**
+	 * Currently selected range.
+	 *
+	 * @remarks
+	 * - `undefined` means no filter applied
+	 * - Partial ranges are allowed
+	 */
+	value?: DateRangeValue;
+
+	/**
+	 * Called whenever the selection changes.
+	 *
+	 * @param value - The selected date range or `undefined` if cleared.
+	 */
+	onChange: (value?: DateRangeValue) => void;
+
+	/**
+	 * Helper text displayed below the control.
+	 */
+	description?: string;
+
+	/**
+	 * Validation error message.
+	 */
+	error?: string;
+
+	/**
+	 * Disables user interaction.
+	 */
+	disabled?: boolean;
+
+	/**
+	 * Additional container classes.
+	 */
+	className?: string;
+}
+
+const MIN_DATE = new Date('1900-01-01');
+const MAX_DATE = new Date();
+
+/**
+ * DateRangeFilter
+ *
+ * @description
+ * A reusable popover-based date range selector with:
+ * - Active state styling
+ * - Selected range preview
+ * - Clear & apply controls
+ * - Accessible behavior
  */
 const DateRangeFilter = ({
 	label,
@@ -100,67 +115,135 @@ const DateRangeFilter = ({
 	onChange,
 	description,
 	error,
+	disabled,
+	className,
 }: DateRangeFilterProps) => {
-	const from = value?.from;
-	const to = value?.to;
+	const [open, setOpen] = useState(false);
 
 	/**
-	 * Normalizes outgoing values.
-	 *
-	 * @remarks
-	 * - If both dates are cleared, emit `undefined`
-	 * - Keeps query params minimal and avoids empty objects
+	 * Whether the filter is currently active.
 	 */
-	const update = (next: DateRangeValue) => {
-		if (!next.from && !next.to) {
+	const isActive = Boolean(value?.from || value?.to);
+
+	/**
+	 * Formats the button label based on selected dates.
+	 */
+	const formattedLabel = useMemo(() => {
+		if (!value?.from && !value?.to) return label;
+
+		if (value.from && !value.to)
+			return `From ${format(value.from, 'MMM dd, yyyy')}`;
+
+		if (!value.from && value.to)
+			return `Until ${format(value.to, 'MMM dd, yyyy')}`;
+
+		return `${format(value.from!, 'MMM dd')} – ${format(
+			value.to!,
+			'MMM dd, yyyy'
+		)}`;
+	}, [value, label]);
+
+	/**
+	 * Handles calendar selection changes.
+	 * Automatically closes when full range is selected.
+	 */
+	const handleSelect = (range: DateRangeValue | undefined) => {
+		if (!range?.from && !range?.to) {
 			onChange(undefined);
-		} else {
-			onChange(next);
+			return;
+		}
+
+		onChange(range);
+
+		// Auto-close when both dates are selected
+		if (range?.from && range?.to) {
+			setOpen(false);
 		}
 	};
 
+	/**
+	 * Clears the filter.
+	 */
+	const handleClear = () => {
+		onChange(undefined);
+		setOpen(false);
+	};
+
 	return (
-		<div className="space-y-1">
-			<Label className="text-sm">{label}</Label>
+		<div className={cn('space-y-2', className)}>
+			<Label>{label}</Label>
 
-			{/* Date inputs laid out side-by-side for quick comparison */}
-			<div className="grid grid-cols-2 gap-2">
-				<Input
-					type="date"
-					aria-label="Start date"
-					value={toInputValue(from)}
-					onChange={(e) =>
-						update({
-							from: e.target.value
-								? new Date(e.target.value)
-								: undefined,
-							to,
-						})
-					}
-				/>
+			<Popover open={open} onOpenChange={setOpen}>
+				<PopoverTrigger asChild>
+					<Button
+						type="button"
+						variant={isActive ? 'secondary' : 'outline'}
+						disabled={disabled}
+						aria-expanded={open}
+						className="w-full justify-between text-left font-normal"
+					>
+						<span className="flex items-center gap-2 truncate">
+							<HugeiconsIcon
+								icon={CalendarIcon}
+								className="h-4 w-4"
+							/>
+							{formattedLabel}
+						</span>
+					</Button>
+				</PopoverTrigger>
 
-				<Input
-					type="date"
-					aria-label="End date"
-					value={toInputValue(to)}
-					onChange={(e) =>
-						update({
-							from,
-							to: e.target.value
-								? new Date(e.target.value)
-								: undefined,
-						})
-					}
-				/>
-			</div>
+				<PopoverContent className="w-auto p-4 space-y-4">
+					{/* Selected Preview */}
+					{isActive && (
+						<div className="flex flex-wrap items-center gap-2">
+							{value?.from && (
+								<Badge variant="secondary">
+									From: {format(value.from, 'MMM dd, yyyy')}
+								</Badge>
+							)}
+							{value?.to && (
+								<Badge variant="secondary">
+									To: {format(value.to, 'MMM dd, yyyy')}
+								</Badge>
+							)}
+						</div>
+					)}
 
-			{/* Helper text */}
-			{description && (
-				<p className="text-xs text-muted-foreground">{description}</p>
+					{isActive && <Separator />}
+
+					{/* Calendar */}
+					<Calendar
+						mode="range"
+						selected={value}
+						onSelect={handleSelect}
+						disabled={(date) => date < MIN_DATE || date > MAX_DATE}
+					/>
+
+					<Separator />
+
+					{/* Footer Actions */}
+					<div className="flex items-center justify-between">
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={handleClear}
+							disabled={!isActive}
+						>
+							Clear
+						</Button>
+
+						<Button size="sm" onClick={() => setOpen(false)}>
+							Apply
+						</Button>
+					</div>
+				</PopoverContent>
+			</Popover>
+
+			{description && !error && (
+				<p className="text-sm text-muted-foreground">{description}</p>
 			)}
 
-			{/* Validation error */}
-			{error && <p className="text-xs text-destructive">{error}</p>}
+			{error && <p className="text-sm text-destructive">{error}</p>}
 		</div>
 	);
 };

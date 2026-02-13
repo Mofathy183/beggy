@@ -2,55 +2,81 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import NumberRangeFilter, { type NumberRangeValue } from './NumberRangeFilter';
 
-/**
- * NumberRangeFilter
- *
- * A config-driven numeric range filter primitive.
- *
- * Boundaries, precision rules, and slider limits
- * are derived directly from NUMBER_CONFIG.
- *
- * Storybook documents:
- * - Inactive vs active filter states
- * - Partial boundaries
- * - Integer vs decimal precision
- * - Unit-aware mode
- * - Error state
- *
- * Logic correctness (clamping, normalization)
- * is validated in Vitest.
- */
 const meta: Meta<typeof NumberRangeFilter> = {
-	title: 'Filters/NumberRangeFilter',
+	title: 'UI/Filters/NumberRangeFilter',
 	component: NumberRangeFilter,
 	tags: ['autodocs'],
 	parameters: {
 		docs: {
 			description: {
 				component: `
-This component derives its numeric boundaries and precision rules
-from NUMBER_CONFIG.
+A config-driven numeric range filter used in filter panels across the application.
 
-The slider and inputs always reflect:
-- Minimum (gte)
-- Maximum (lte)
-- Decimal precision
+## What it is
+A controlled numeric range selector combining:
+- Two numeric inputs
+- A synchronized range slider
+- Optional unit selector (for item weight & volume)
 
-Storybook demonstrates user-visible behavior,
-not domain constants.
+## When to use
+Use when filtering datasets by numeric thresholds (weight, volume, quantity, capacity, etc).
+
+## When not to use
+Do not use for:
+- Single numeric input
+- Free-form calculations
+- Unit conversion logic
+
+## Interaction model
+- Inputs and slider stay synchronized.
+- Empty values represent an inactive filter.
+- Partial ranges are allowed.
+- Values are clamped and normalized before emission.
+
+## Constraints
+- Boundaries derive from NUMBER_CONFIG.
+- Decimal precision follows domain rules.
+- Units are visual-only (no conversion).
+
+## Accessibility guarantees
+- Inputs use correct numeric inputMode.
+- Slider is keyboard accessible.
+- Error state uses destructive token.
+- Unit selector uses semantic dropdown patterns.
+
+## Design-system notes
+- Token-driven styling.
+- Layout adapts when unit selector is present.
+- No hardcoded numeric limits.
+- Chromatic-stable.
         `,
 			},
 		},
 	},
 	argTypes: {
-		label: { control: 'text' },
-		description: { control: 'text' },
-		error: { control: 'text' },
-		value: { control: false },
-		onChange: { control: false },
-		entity: { control: false },
-		metric: { control: false },
-		className: { control: false },
+		label: {
+			description: 'Visible label describing the metric being filtered.',
+			control: 'text',
+			table: { type: { summary: 'string' } },
+		},
+		description: {
+			description: 'Optional helper text displayed below the header.',
+			control: 'text',
+			table: { type: { summary: 'string' } },
+		},
+		error: {
+			description:
+				'Validation error message. Triggers destructive styling.',
+			control: 'text',
+			table: { type: { summary: 'string' } },
+		},
+
+		// Hide controlled & domain props
+		value: { table: { disable: true } },
+		onChange: { table: { disable: true } },
+		entity: { table: { disable: true } },
+		metric: { table: { disable: true } },
+		className: { table: { disable: true } },
 	},
 };
 
@@ -58,56 +84,68 @@ export default meta;
 type Story = StoryObj<typeof NumberRangeFilter>;
 
 /**
- * Default
+ * Inactive filter state.
  *
- * Represents the baseline, inactive filter state.
+ * Occurs before the user sets any numeric boundaries.
+ * The filter is visually neutral and emits undefined.
  *
- * - No minimum or maximum selected
- * - Filter is considered "not applied"
- * - Slider reflects full domain range
- *
- * This state is important to validate that:
- * - Placeholder UI renders correctly
- * - No badge/active styling is applied
- * - No accidental normalization occurs
+ * This verifies:
+ * - Slider spans full domain
+ * - Inputs show placeholders
+ * - No active constraints applied
  */
-export const Default: Story = {
+export const Inactive: Story = {
+	args: {
+		label: 'Item Weight',
+		entity: 'item',
+		metric: 'weight',
+		description: 'Filter items by weight range.',
+	},
 	render: (args) => {
-		const [value, setValue] = useState<NumberRangeValue | undefined>(
-			undefined
+		const [value, setValue] = useState<NumberRangeValue | undefined>();
+		return (
+			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
+	},
+};
+
+/**
+ * Partial range: minimum only.
+ *
+ * Represents "greater than or equal" filtering.
+ * Common in search refinement panels.
+ */
+export const MinOnly: Story = {
+	args: {
+		label: 'Item Weight',
+		entity: 'item',
+		metric: 'weight',
+	},
+	render: (args) => {
+		const [value, setValue] = useState<NumberRangeValue | undefined>({
+			min: 2,
+		});
 
 		return (
 			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
 	},
+};
+
+/**
+ * Fully active range.
+ *
+ * Both boundaries selected.
+ * Slider handles reflect constrained range.
+ *
+ * Most common filtering scenario.
+ */
+export const FullRange: Story = {
 	args: {
 		label: 'Item Weight',
 		entity: 'item',
 		metric: 'weight',
-		description: 'Filter items within a weight range.',
 	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Baseline inactive state. No boundaries are selected and the filter is considered inactive.',
-			},
-		},
-	},
-};
-
-/**
- * WithRangeSelected
- *
- * Fully active filter state with both boundaries selected.
- *
- * - Minimum and maximum defined
- * - Slider handles reflect constrained range
- * - Component is considered active
- *
- * This is the most common real-world usage scenario.
- */
-export const WithRangeSelected: Story = {
 	render: (args) => {
 		const [value, setValue] = useState<NumberRangeValue | undefined>({
 			min: 1,
@@ -118,71 +156,22 @@ export const WithRangeSelected: Story = {
 			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
 	},
-	args: {
-		label: 'Item Weight',
-		entity: 'item',
-		metric: 'weight',
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Active filter state where both minimum and maximum values are selected.',
-			},
-		},
-	},
 };
 
 /**
- * MinOnly
+ * Integer-only metric.
  *
- * Partial boundary state.
- *
- * - Only minimum is applied
- * - Maximum remains undefined
- * - Filter behaves as "greater than or equal"
- *
- * Validates:
- * - Correct badge state
- * - Slider lower bound constraint
- * - No forced max normalization
- */
-export const MinOnly: Story = {
-	render: (args) => {
-		const [value, setValue] = useState<NumberRangeValue | undefined>({
-			min: 2,
-		});
-
-		return (
-			<NumberRangeFilter {...args} value={value} onChange={setValue} />
-		);
-	},
-	args: {
-		label: 'Item Weight',
-		entity: 'item',
-		metric: 'weight',
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Partial boundary state where only a minimum value is applied.',
-			},
-		},
-	},
-};
-
-/**
- * IntegerPrecision
- *
- * Demonstrates a metric configured with 0 decimal precision.
- *
- * - Inputs enforce integer-only values
- * - Slider step equals 1
- * - Decimal entry is disallowed
- *
- * Ensures NUMBER_CONFIG precision rules are respected
- * in both slider and input fields.
+ * Demonstrates precision rule where decimals = 0.
+ * Slider step = 1.
+ * Input mode = numeric.
  */
 export const IntegerPrecision: Story = {
+	args: {
+		label: 'Item Quantity',
+		entity: 'item',
+		metric: 'quantity',
+		description: 'Integer-only metric.',
+	},
 	render: (args) => {
 		const [value, setValue] = useState<NumberRangeValue | undefined>({
 			min: 5,
@@ -193,73 +182,45 @@ export const IntegerPrecision: Story = {
 			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
 	},
-	args: {
-		label: 'Item Quantity',
-		entity: 'item',
-		metric: 'quantity', // decimals: 0
-		description: 'Integer-only metric. Decimal input is not allowed.',
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Demonstrates integer-only precision. Inputs enforce numeric mode and step = 1.',
-			},
-		},
-	},
 };
 
 /**
- * WithUnits
+ * Unit-aware metric.
  *
- * Demonstrates unit-aware behavior for supported metrics.
- *
- * - Unit badge is displayed
- * - Dropdown selector is available
- * - Unit switching currently affects UI only
- *
- * Validates:
- * - Conditional rendering logic
- * - Layout consistency with extra controls
+ * Displays unit badge and dropdown selector.
+ * Unit switching affects UI only.
  */
 export const WithUnits: Story = {
+	args: {
+		label: 'Item Volume',
+		entity: 'item',
+		metric: 'volume',
+		description: 'Supports unit selection.',
+	},
 	render: (args) => {
 		const [value, setValue] = useState<NumberRangeValue | undefined>({
-			min: 0.1,
-			max: 2,
+			min: 0.5,
+			max: 3,
 		});
 
 		return (
 			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
 	},
-	args: {
-		label: 'Item Volume',
-		entity: 'item',
-		metric: 'volume',
-		description: 'Unit selector is available for item weight and volume.',
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Shows unit badge and dropdown selector. Unit switching is currently visual-only.',
-			},
-		},
-	},
 };
 
 /**
- * DifferentEntity
+ * Non-item entity.
  *
- * Demonstrates behavior for a different domain entity.
- *
- * - Uses "bag" instead of "item"
- * - No unit selector rendered
- * - Decimal precision still respected
- *
- * Ensures cross-entity configuration remains isolated
- * and does not leak item-specific logic.
+ * Verifies that unit selector does not render.
+ * Ensures config isolation.
  */
-export const DifferentEntity: Story = {
+export const BagCapacity: Story = {
+	args: {
+		label: 'Bag Capacity',
+		entity: 'bag',
+		metric: 'capacity',
+	},
 	render: (args) => {
 		const [value, setValue] = useState<NumberRangeValue | undefined>({
 			min: 20,
@@ -270,39 +231,31 @@ export const DifferentEntity: Story = {
 			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
 	},
-	args: {
-		label: 'Bag Capacity',
-		entity: 'bag',
-		metric: 'capacity',
-		description: 'Non-item entity. No unit selector is displayed.',
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Demonstrates a decimal metric without unit support.',
-			},
-		},
-	},
 };
 
 /**
- * ErrorState
+ * LocalInvalidRange
  *
- * Demonstrates validation feedback.
+ * Represents a temporary invalid input state
+ * where minimum > maximum.
  *
- * - Artificially invalid range (min > max)
- * - Error message injected manually
- * - Destructive styling applied
+ * What happens:
+ * - Inputs display destructive styling
+ * - Slider becomes disabled
+ * - No value is emitted
  *
- * Storybook intentionally does NOT test validation logic —
- * that is covered in unit tests.
+ * This is NOT server validation.
+ * This is an interaction safety guard.
  *
- * This story verifies:
- * - Error UI rendering
- * - Accessibility feedback
- * - Visual consistency
+ * It prevents accidental invalid filtering
+ * while allowing the user to correct the range.
  */
-export const ErrorState: Story = {
+export const LocalInvalidRange: Story = {
+	args: {
+		label: 'Item Weight',
+		entity: 'item',
+		metric: 'weight',
+	},
 	render: (args) => {
 		const [value, setValue] = useState<NumberRangeValue | undefined>({
 			min: 10,
@@ -313,17 +266,97 @@ export const ErrorState: Story = {
 			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
 	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Demonstrates temporary invalid state where minimum exceeds maximum. Slider is disabled and inputs show destructive styling.',
+			},
+		},
+	},
+};
+
+/**
+ * Validation error state.
+ *
+ * Error message provided externally.
+ * Destructive styling applied to inputs.
+ */
+export const ErrorState: Story = {
 	args: {
 		label: 'Item Weight',
 		entity: 'item',
 		metric: 'weight',
 		error: 'Maximum must be greater than minimum.',
 	},
+	render: (args) => {
+		const [value, setValue] = useState<NumberRangeValue | undefined>({
+			min: 10,
+			max: 5,
+		});
+
+		return (
+			<NumberRangeFilter {...args} value={value} onChange={setValue} />
+		);
+	},
+};
+/**
+ * Dark mode verification.
+ *
+ * Ensures:
+ * - Slider track contrast
+ * - Badge visibility
+ * - Error token contrast
+ * - Dropdown legibility
+ */
+export const DarkMode: Story = {
+	args: {
+		label: 'Item Weight',
+		entity: 'item',
+		metric: 'weight',
+	},
+	render: (args) => {
+		const [value, setValue] = useState<NumberRangeValue | undefined>({
+			min: 1,
+			max: 5,
+		});
+
+		return (
+			<div className="dark bg-background p-6">
+				<NumberRangeFilter
+					{...args}
+					value={value}
+					onChange={setValue}
+				/>
+			</div>
+		);
+	},
 	parameters: {
-		docs: {
-			description: {
-				story: 'Displays validation error state. Inputs show destructive styling and message.',
-			},
-		},
+		themes: { default: 'dark' },
+	},
+};
+
+/**
+ * Constrained container.
+ *
+ * Verifies layout integrity inside narrow filter sidebars.
+ */
+export const NarrowContainer: Story = {
+	args: {
+		label: 'Item Weight',
+		entity: 'item',
+		metric: 'weight',
+	},
+	render: (args) => {
+		const [value, setValue] = useState<NumberRangeValue | undefined>();
+
+		return (
+			<div className="w-[280px] border p-4">
+				<NumberRangeFilter
+					{...args}
+					value={value}
+					onChange={setValue}
+				/>
+			</div>
+		);
 	},
 };

@@ -12,12 +12,20 @@ const meta: Meta<typeof ListMeta> = {
 				component: `
 **ListMeta** provides contextual feedback about a list query.
 
-It explains:
+It translates pagination metadata into clear, human-readable context.
+
+It communicates:
 - How many results are visible
 - How many exist in total
 - Which page the user is on
 
+It is a presentation component only:
+- It does not control pagination
+- It does not trigger navigation
+- It does not fetch data
+
 It should not be rendered during errors or before the first request.
+
 				`,
 			},
 		},
@@ -107,5 +115,22 @@ export const MiddlePage: StoryObj = {
 			hasPreviousPage: true,
 		},
 		label: 'bags',
+	},
+};
+
+export const DarkMode: StoryObj<typeof ListMeta> = {
+	args: {
+		meta: baseMeta,
+		label: 'items',
+	},
+	render: (args) => (
+		<div className="dark bg-background p-6">
+			<ListMeta {...args} />
+		</div>
+	),
+	parameters: {
+		themes: {
+			default: 'dark',
+		},
 	},
 };
