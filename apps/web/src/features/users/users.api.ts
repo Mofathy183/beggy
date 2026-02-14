@@ -48,7 +48,16 @@ export const userApi = apiSlice.injectEndpoints({
 				url: `/users/`,
 				params,
 			}),
-			providesTags: ['User'],
+			providesTags: (result) =>
+				result
+					? [
+							...result.data.map(({ id }) => ({
+								type: 'User' as const,
+								id,
+							})),
+							{ type: 'User' as const, id: 'LIST' },
+						]
+					: [{ type: 'User' as const, id: 'LIST' }],
 		}),
 
 		/**
