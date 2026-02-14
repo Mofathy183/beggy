@@ -1,10 +1,20 @@
 import { Badge } from '@shadcn-ui/badge';
 import { cn } from '@shadcn-lib';
 
-type UserStatusBadgeProps = {
+/**
+ * Props for `UserStatusBadge`.
+ */
+export type UserStatusBadgeProps = {
+	/** Indicates whether the user account is active. */
 	isActive: boolean;
 };
 
+/**
+ * Displays the user's account status as a styled badge.
+ *
+ * Pure presentation component that maps a boolean
+ * active state to a contextual visual variant.
+ */
 const UserStatusBadge = ({ isActive }: UserStatusBadgeProps) => {
 	return (
 		<Badge

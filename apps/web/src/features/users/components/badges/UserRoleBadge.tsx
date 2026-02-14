@@ -2,10 +2,12 @@ import { Badge } from '@shadcn-ui/badge';
 import type { Role } from '@beggy/shared/constants';
 import { cn } from '@shadcn-lib';
 
-type UserRoleBadgeProps = {
-	role: Role;
-};
-
+/**
+ * Visual style mapping for each role.
+ *
+ * Centralizes role-to-style association to avoid
+ * conditional styling inside the component body.
+ */
 const roleStyles: Record<Role, string> = {
 	ADMIN: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
 
@@ -17,6 +19,20 @@ const roleStyles: Record<Role, string> = {
 	USER: 'bg-muted text-muted-foreground border-border',
 };
 
+/**
+ * Props for `UserRoleBadge`.
+ */
+export type UserRoleBadgeProps = {
+	/** User role value. */
+	role: Role;
+};
+
+/**
+ * Displays a role label with contextual styling.
+ *
+ * Maps domain role values to visual variants while
+ * keeping presentation logic isolated from consumers.
+ */
 const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
 	return (
 		<Badge

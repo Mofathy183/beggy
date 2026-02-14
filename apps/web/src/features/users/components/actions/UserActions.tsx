@@ -4,13 +4,32 @@ import { Pencil, UserCheck, UserX, Trash2 } from '@hugeicons/core-free-icons';
 import { type ActionsMenuItem, ActionsMenu } from '@shared/ui/actions';
 import { useUserActions } from '@features/users';
 
-type UserActionsProps = {
+/**
+ * Props for `UserActions`.
+ */
+export type UserActionsProps = {
+	/** Target user identifier. */
 	userId: string;
+
+	/** Current active status of the user. */
 	isActive: boolean;
+
+	/** Indicates whether the row represents the authenticated user. */
 	isCurrentUser?: boolean;
+
+	/** Optional edit handler. When provided, the edit action is displayed. */
 	onEdit?: () => void;
 };
 
+/**
+ * Users domain actions menu.
+ *
+ * Composes shared `ActionsMenu` with user-specific operations
+ * such as edit, activate/deactivate, and delete.
+ *
+ * Delegates mutation logic to `useUserActions` and enforces
+ * UI-level constraints (e.g., preventing self-deletion).
+ */
 const UserActions = ({
 	userId,
 	isActive,
@@ -20,6 +39,9 @@ const UserActions = ({
 	const { activate, deactivate, remove, isUpdatingStatus, isDeleting } =
 		useUserActions();
 
+	/**
+	 * Toggles the user's active status.
+	 */
 	const handleToggleStatus = async () => {
 		if (isActive) {
 			await deactivate(userId);
@@ -28,6 +50,9 @@ const UserActions = ({
 		}
 	};
 
+	/**
+	 * Deletes the user.
+	 */
 	const handleDelete = async () => {
 		await remove(userId);
 	};
