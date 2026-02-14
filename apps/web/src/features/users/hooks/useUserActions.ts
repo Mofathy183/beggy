@@ -1,54 +1,27 @@
-import {
-	useCreateUserMutation,
-	useUpdateUserProfileMutation,
-	useUpdateUserStatusMutation,
-	useChangeUserRoleMutation,
-	useDeleteUserByIdMutation,
-	useDeleteUsersMutation,
-} from '../users.api';
-
-import type {
-	CreateUserInput,
-	EditProfileInput,
-	UpdateStatusInput,
-	ChangeRoleInput,
-	UserFilterInput,
-} from '@beggy/shared/types';
+import useUserMutations from './useUserMutations';
 
 const useUserActions = () => {
-	const [createUser, createState] = useCreateUserMutation();
-	const [updateProfile, updateProfileState] = useUpdateUserProfileMutation();
-	const [updateStatus, updateStatusState] = useUpdateUserStatusMutation();
-	const [changeRole, changeRoleState] = useChangeUserRoleMutation();
-	const [deleteUser, deleteUserState] = useDeleteUserByIdMutation();
-	const [deleteUsers, deleteUsersState] = useDeleteUsersMutation();
+	const { updateStatus, deleteUser, states } = useUserMutations();
+
+	const activate = async (id: string) => {
+		return updateStatus(id, { isActive: true }).unwrap();
+	};
+
+	const deactivate = async (id: string) => {
+		return updateStatus(id, { isActive: false }).unwrap();
+	};
+
+	const remove = async (id: string) => {
+		return deleteUser(id).unwrap();
+	};
 
 	return {
-		//* actions
-		createUser: (body: CreateUserInput) => createUser(body),
+		activate,
+		deactivate,
+		remove,
 
-		updateProfile: (id: string, body: EditProfileInput) =>
-			updateProfile({ id, body }),
-
-		updateStatus: (id: string, body: UpdateStatusInput) =>
-			updateStatus({ id, body }),
-
-		changeRole: (id: string, body: ChangeRoleInput) =>
-			changeRole({ id, body }),
-
-		deleteUser: (id: string) => deleteUser(id),
-
-		deleteUsers: (filters: UserFilterInput) => deleteUsers(filters),
-
-		//* states
-		states: {
-			create: createState,
-			updateProfile: updateProfileState,
-			updateStatus: updateStatusState,
-			changeRole: changeRoleState,
-			deleteUser: deleteUserState,
-			deleteUsers: deleteUsersState,
-		},
+		isUpdatingStatus: states.updateStatus.isLoading,
+		isDeleting: states.deleteUser.isLoading,
 	};
 };
 
