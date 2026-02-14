@@ -101,7 +101,7 @@
 	},
 	"dependencies": {
 		"@beggy/shared": "workspace:*",
-		"@casl/ability": "^6.7.3",
+		"@casl/ability": "^6.7.5",
 		"@prisma/adapter-pg": "^7.3.0",
 		"@prisma/client": "^7.3.0",
 		"axios": "^1.8.4",
