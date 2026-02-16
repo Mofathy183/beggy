@@ -12,21 +12,49 @@ import { MoreVertical } from '@hugeicons/core-free-icons';
 import { Fragment, type ReactNode } from 'react';
 import { cn } from '@shared/lib/utils';
 
+/**
+ * Represents a single action inside the `ActionsMenu`.
+ */
 export type ActionsMenuItem = {
+	/** Unique identifier for stable rendering. */
 	id: string;
+
+	/** Display label for the action. */
 	label: string;
+
+	/** Optional icon rendered before the label. */
 	icon?: ReactNode;
+
+	/** Invoked when the action is selected. */
 	onSelect: () => void;
+
+	/** Visual intent of the action. */
 	variant?: 'default' | 'destructive';
+
+	/** Whether to render a separator before this item. */
 	showSeparatorBefore?: boolean;
+
+	/** Disables the action. */
 	disabled?: boolean;
+
+	/** Indicates loading state (disables interaction). */
 	loading?: boolean;
 };
 
-type ActionsMenuProps = {
+export type ActionsMenuProps = {
+	/** List of actions rendered in the menu. */
 	items: ActionsMenuItem[];
 };
 
+/**
+ * Generic contextual actions dropdown.
+ *
+ * Presentation-only component that renders a standardized
+ * “more actions” menu using shadcn primitives.
+ *
+ * Designed to be reusable across domains (users, posts, etc.)
+ * while keeping business logic outside the component.
+ */
 const ActionsMenu = ({ items }: ActionsMenuProps) => {
 	return (
 		<DropdownMenu>

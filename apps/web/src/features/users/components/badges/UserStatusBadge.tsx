@@ -1,5 +1,4 @@
 import { Badge } from '@shadcn-ui/badge';
-import { cn } from '@shadcn-lib';
 
 /**
  * Props for `UserStatusBadge`.
@@ -10,23 +9,21 @@ export type UserStatusBadgeProps = {
 };
 
 /**
- * Displays the user's account status as a styled badge.
+ * Displays the user's account status.
  *
- * Pure presentation component that maps a boolean
- * active state to a contextual visual variant.
+ * Domain → intent → UI mapping.
  */
 const UserStatusBadge = ({ isActive }: UserStatusBadgeProps) => {
+	const label = isActive ? 'Active' : 'Inactive';
+	const variant = isActive ? 'default' : 'secondary';
+
 	return (
 		<Badge
-			variant="outline"
-			className={cn(
-				'text-xs font-medium',
-				isActive
-					? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
-					: 'bg-muted text-muted-foreground border-border'
-			)}
+			variant={variant}
+			className="text-xs font-medium"
+			aria-label={`User account status: ${label}`}
 		>
-			{isActive ? 'Active' : 'Inactive'}
+			{label}
 		</Badge>
 	);
 };

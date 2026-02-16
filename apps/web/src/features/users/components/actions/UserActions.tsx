@@ -57,46 +57,51 @@ const UserActions = ({
 		await remove(userId);
 	};
 
-	const items: ActionsMenuItem[] = [
-		...(onEdit
-			? [
-					{
-						id: 'edit',
-						label: 'Edit',
-						icon: (
-							<HugeiconsIcon icon={Pencil} className="h-4 w-4" />
-						),
-						onSelect: onEdit,
-					},
-				]
-			: []),
+	const buildUserActions = (): ActionsMenuItem[] => {
+		return [
+			...(onEdit
+				? [
+						{
+							id: 'edit',
+							label: 'Edit',
+							icon: (
+								<HugeiconsIcon
+									icon={Pencil}
+									className="h-4 w-4"
+								/>
+							),
+							onSelect: onEdit,
+						},
+					]
+				: []),
 
-		{
-			id: 'toggle-status',
-			label: isActive ? 'Deactivate' : 'Activate',
-			icon: (
-				<HugeiconsIcon
-					icon={isActive ? UserX : UserCheck}
-					className="h-4 w-4"
-				/>
-			),
-			onSelect: handleToggleStatus,
-			loading: isUpdatingStatus,
-		},
+			{
+				id: 'toggle-status',
+				label: isActive ? 'Deactivate' : 'Activate',
+				icon: (
+					<HugeiconsIcon
+						icon={isActive ? UserX : UserCheck}
+						className="h-4 w-4"
+					/>
+				),
+				onSelect: handleToggleStatus,
+				loading: isUpdatingStatus,
+			},
 
-		{
-			id: 'delete',
-			label: 'Delete',
-			icon: <HugeiconsIcon icon={Trash2} className="h-4 w-4" />,
-			onSelect: handleDelete,
-			variant: 'destructive',
-			showSeparatorBefore: true,
-			disabled: isCurrentUser,
-			loading: isDeleting,
-		},
-	];
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: <HugeiconsIcon icon={Trash2} className="h-4 w-4" />,
+				onSelect: handleDelete,
+				variant: 'destructive',
+				showSeparatorBefore: true,
+				disabled: isCurrentUser,
+				loading: isDeleting,
+			},
+		];
+	};
 
-	return <ActionsMenu items={items} />;
+	return <ActionsMenu items={buildUserActions()} />;
 };
 
 export default UserActions;

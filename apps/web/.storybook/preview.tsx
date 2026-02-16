@@ -1,3 +1,6 @@
+import React from 'react';
+import { AppProvider } from '../src/shared/store';
+import { ThemeProvider } from '../src/shared/components';
 import type { Preview } from '@storybook/nextjs-vite';
 import '../src/app/globals.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
@@ -19,6 +22,13 @@ const preview: Preview = {
 		},
 	},
 	decorators: [
+		(Story) => (
+			<ThemeProvider>
+				<AppProvider>
+					<Story />
+				</AppProvider>
+			</ThemeProvider>
+		),
 		withThemeByClassName({
 			themes: {
 				light: '',

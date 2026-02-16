@@ -3,7 +3,7 @@ import UserRoleBadge from './UserRoleBadge';
 import { Role } from '@beggy/shared/constants';
 
 const meta: Meta<typeof UserRoleBadge> = {
-	title: 'Features/Users/UserRoleBadge',
+	title: 'Features/Users/Badges/UserRoleBadge',
 	component: UserRoleBadge,
 	tags: ['autodocs'],
 	parameters: {
