@@ -2,12 +2,15 @@ import { Badge } from '@shadcn-ui/badge';
 import type { Role } from '@beggy/shared/constants';
 
 /**
- * Maps domain roles → semantic badge variants.
+ * Semantic intent mapping for each role.
+ *
+ * Maps domain role → UI semantic intent,
+ * not to specific colors.
  */
-const roleVariantMap: Record<Role, 'default' | 'secondary' | 'outline'> = {
+const roleIntent: Record<Role, 'default' | 'secondary' | 'outline'> = {
 	ADMIN: 'default',
 	MODERATOR: 'secondary',
-	MEMBER: 'outline',
+	MEMBER: 'secondary',
 	USER: 'outline',
 };
 
@@ -16,14 +19,14 @@ export type UserRoleBadgeProps = {
 };
 
 /**
- * Displays a user role with semantic styling.
+ * Displays a role label with semantic styling.
  *
- * Domain → intent → UI mapping.
+ * Domain → semantic intent → design token.
  */
 const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
 	return (
 		<Badge
-			variant={roleVariantMap[role]}
+			variant={roleIntent[role]}
 			className="text-xs font-medium tracking-wide uppercase"
 			aria-label={`User role: ${role}`}
 		>

@@ -9,8 +9,9 @@ import {
 import { Button } from '@shadcn-ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { MoreVertical } from '@hugeicons/core-free-icons';
-import { Fragment, type ReactNode } from 'react';
+import { Fragment } from 'react';
 import { cn } from '@shared/lib/utils';
+import type { IconSvgElement } from '@hugeicons/react';
 
 /**
  * Represents a single action inside the `ActionsMenu`.
@@ -23,7 +24,7 @@ export type ActionsMenuItem = {
 	label: string;
 
 	/** Optional icon rendered before the label. */
-	icon?: ReactNode;
+	icon?: IconSvgElement;
 
 	/** Invoked when the action is selected. */
 	onSelect: () => void;
@@ -50,7 +51,7 @@ export type ActionsMenuProps = {
  * Generic contextual actions dropdown.
  *
  * Presentation-only component that renders a standardized
- * “more actions” menu using shadcn primitives.
+ * "more actions" menu using shadcn primitives.
  *
  * Designed to be reusable across domains (users, posts, etc.)
  * while keeping business logic outside the component.
@@ -62,10 +63,9 @@ const ActionsMenu = ({ items }: ActionsMenuProps) => {
 				<Button
 					variant="ghost"
 					size="icon"
-					className="h-8 w-8"
 					aria-label="Open actions menu"
 				>
-					<HugeiconsIcon icon={MoreVertical} className="h-4 w-4" />
+					<HugeiconsIcon icon={MoreVertical} className="size-4" />
 				</Button>
 			</DropdownMenuTrigger>
 
@@ -82,13 +82,14 @@ const ActionsMenu = ({ items }: ActionsMenuProps) => {
 							}}
 							className={cn(
 								item.variant === 'destructive' &&
-									'text-destructive data-[highlighted]:bg-destructive/10'
+									'text-destructive focus:text-destructive focus:bg-destructive/10'
 							)}
 						>
 							{item.icon && (
-								<span className="mr-2 h-4 w-4">
-									{item.icon}
-								</span>
+								<HugeiconsIcon
+									icon={item.icon}
+									className="mr-2 size-4"
+								/>
 							)}
 							{item.label}
 						</DropdownMenuItem>

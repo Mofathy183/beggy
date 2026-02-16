@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import ActionsMenu, { type ActionsMenuItem } from './ActionsMenu';
-import { HugeiconsIcon } from '@hugeicons/react';
+
 import {
 	PencilEdit01Icon,
 	Delete02Icon,
@@ -76,19 +76,19 @@ const baseItems: ActionsMenuItem[] = [
 	{
 		id: 'edit',
 		label: 'Edit',
-		icon: <HugeiconsIcon icon={PencilEdit01Icon} className="h-4 w-4" />,
+		icon: PencilEdit01Icon,
 		onSelect: () => {},
 	},
 	{
 		id: 'share',
 		label: 'Share',
-		icon: <HugeiconsIcon icon={Share08Icon} className="h-4 w-4" />,
+		icon: Share08Icon,
 		onSelect: () => {},
 	},
 	{
 		id: 'delete',
 		label: 'Delete',
-		icon: <HugeiconsIcon icon={Delete02Icon} className="h-4 w-4" />,
+		icon: Delete02Icon,
 		variant: 'destructive',
 		showSeparatorBefore: true,
 		onSelect: () => {},

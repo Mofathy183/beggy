@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from '@hugeicons/react';
 import { Pencil, UserCheck, UserX, Trash2 } from '@hugeicons/core-free-icons';
 
 import { type ActionsMenuItem, ActionsMenu } from '@shared/ui/actions';
@@ -64,12 +63,7 @@ const UserActions = ({
 						{
 							id: 'edit',
 							label: 'Edit',
-							icon: (
-								<HugeiconsIcon
-									icon={Pencil}
-									className="h-4 w-4"
-								/>
-							),
+							icon: Pencil,
 							onSelect: onEdit,
 						},
 					]
@@ -78,12 +72,7 @@ const UserActions = ({
 			{
 				id: 'toggle-status',
 				label: isActive ? 'Deactivate' : 'Activate',
-				icon: (
-					<HugeiconsIcon
-						icon={isActive ? UserX : UserCheck}
-						className="h-4 w-4"
-					/>
-				),
+				icon: isActive ? UserX : UserCheck,
 				onSelect: handleToggleStatus,
 				loading: isUpdatingStatus,
 			},
@@ -91,7 +80,7 @@ const UserActions = ({
 			{
 				id: 'delete',
 				label: 'Delete',
-				icon: <HugeiconsIcon icon={Trash2} className="h-4 w-4" />,
+				icon: Trash2,
 				onSelect: handleDelete,
 				variant: 'destructive',
 				showSeparatorBefore: true,

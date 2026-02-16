@@ -1,11 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import {
+	Backpack01Icon,
+	Briefcase01Icon,
+	ShoppingBag01Icon,
+} from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import Chips from './Chips';
+import Chips, { type ChipsProps } from './Chips';
 import { BagType } from '@beggy/shared/constants';
 
 /**
- * Example bag type options used across stories.
- * In real usage, these often represent filters or category selectors.
+ * Example filter options used across stories.
+ * These simulate real-world product filtering scenarios.
  */
 const options = [
 	{ label: 'Backpack', value: BagType.BACKPACK },
@@ -20,33 +25,64 @@ const options = [
 ];
 
 const meta: Meta<typeof Chips> = {
-	title: 'UI/Chips/Chips',
+	title: 'UI/Chips',
 	component: Chips,
 	tags: ['autodocs'],
 	parameters: {
 		docs: {
 			description: {
 				component: `
-**Chips** represent a set of compact, selectable options.
+**Chips** provide compact, selectable options for filtering, tagging, or category selection.
 
-They are best suited for:
-- Filtering lists or search results
-- Tag-style selection
-- Category pickers with quick feedback
+---
 
-### Selection modes
-- **multiple**: behaves like checkboxes (0..n selected)
-- **single**: behaves like radio buttons (0..1 selected)
+### What it is
+A grouped selection control rendered as compact buttons.
 
-### Selection limits
-In **multiple** mode, selection can be constrained using \`maxSelected\`.
+### When to use
+- Product filters
+- Tag selection
+- Multi-category classification
+- Lightweight alternative to checkbox groups
 
-- Once the limit is reached, remaining unselected chips become disabled
-- Selected chips can always be deselected
-- A helper hint is shown when a limit is active
+### When not to use
+- Large datasets (use searchable select)
+- Hierarchical selection
+- Complex multi-step logic
 
-> Use \`mode="single"\` when the choice is mutually exclusive.  
-> Use the default \`multiple\` mode when users may select more than one option.
+---
+
+### Interaction Model
+- Multiple mode: behaves like checkboxes
+- Single mode: behaves like radio buttons
+- Clicking toggles selection
+- Selection limits visually disable blocked options
+
+---
+
+### Constraints
+- Optional max/min selection limits
+- Disabled options respected
+- Entire group can be disabled
+- Shows helper hint when limits apply
+
+---
+
+### Accessibility
+- Uses radiogroup in single mode
+- Uses group in multiple mode
+- aria-required and aria-invalid supported
+- Keyboard navigable
+- Visible focus ring
+- Disabled semantics preserved
+
+---
+
+### Design System Notes
+- Token-driven color system
+- Variant-based selected styling
+- Dark mode supported
+- Chromatic-stable states only
 `,
 			},
 		},
@@ -55,62 +91,56 @@ In **multiple** mode, selection can be constrained using \`maxSelected\`.
 		mode: {
 			control: 'radio',
 			options: ['multiple', 'single'],
-			description:
-				'Controls whether one or multiple chips can be selected.',
+			description: 'Selection behavior pattern.',
+			table: { type: { summary: '"multiple" | "single"' } },
+		},
+		variant: {
+			control: 'radio',
+			options: ['default', 'primary', 'accent', 'destructive'],
+			description: 'Visual emphasis for selected chips.',
+			table: { type: { summary: 'ChipVariant' } },
 		},
 		disabled: {
 			control: 'boolean',
-			description: 'Disables all chip interactions.',
+			description: 'Disables all interaction.',
+			table: { type: { summary: 'boolean' } },
 		},
 		maxSelected: {
 			control: { type: 'number', min: 1 },
-			description:
-				'Maximum number of chips that can be selected in multiple mode. Defaults to 5.',
-			table: {
-				type: { summary: 'number' },
-				defaultValue: { summary: '5' },
-			},
+			description: 'Maximum allowed selections (multiple mode only).',
+			table: { type: { summary: 'number' } },
 		},
-		value: {
-			control: false,
-			description:
-				'Controlled selection value. Shape depends on the selected mode.',
-		},
-		onChange: {
-			action: 'change',
-			description: 'Called whenever the selection changes.',
+		minSelected: {
+			control: { type: 'number', min: 0 },
+			description: 'Minimum required selections (multiple mode only).',
+			table: { type: { summary: 'number' } },
 		},
 	},
 };
 
 export default meta;
 
-type MultipleStory = StoryObj<{
-	options: typeof options;
-	mode?: 'multiple';
-	value: BagType[];
-	disabled?: boolean;
-	maxSelected?: number;
-}>;
+type ChipsBagTypeProps = ChipsProps<BagType>;
 
-type SingleStory = StoryObj<{
-	options: typeof options;
-	mode: 'single';
-	value: BagType | null;
-	disabled?: boolean;
-}>;
+type MultipleArgs = Extract<ChipsBagTypeProps, { mode?: 'multiple' }>;
 
+type SingleArgs = Extract<ChipsBagTypeProps, { mode: 'single' }>;
+
+type MultipleStory = StoryObj<MultipleArgs>;
+type SingleStory = StoryObj<SingleArgs>;
 /**
- * Default multiple-selection behavior.
+ * Default filter state.
  *
- * Allows users to select zero or more options.
- * Ideal for filters, tags, or category selection.
+ * No selections yet.
+ * Users may select zero or more bag types.
  */
 export const Default: MultipleStory = {
 	args: {
 		options,
 		mode: 'multiple',
 		value: [],
+		label: 'Bag Types',
+		description: 'Select one or more bag types.',
 	},
 	render: (args) => {
 		const [value, setValue] = useState<BagType[]>(args.value);
@@ -120,17 +150,18 @@ export const Default: MultipleStory = {
 };
 
 /**
- * Multiple chips pre-selected.
+ * Applied filters state.
  *
- * Demonstrates a common "applied filters" state
- * where some options are already active.
+ * Demonstrates a realistic scenario where
+ * some filters are already active.
  */
 export const WithSelection: MultipleStory = {
 	args: {
 		options,
 		mode: 'multiple',
-		maxSelected: 5,
 		value: [BagType.BACKPACK, BagType.DUFFEL],
+		maxSelected: 5,
+		variant: 'primary',
 	},
 	render: (args) => {
 		const [value, setValue] = useState<BagType[]>(args.value);
@@ -140,10 +171,10 @@ export const WithSelection: MultipleStory = {
 };
 
 /**
- * Multiple selection with maximum reached.
+ * Maximum selection reached.
  *
- * Demonstrates behavior when the selection
- * limit is reached and remaining options are disabled.
+ * Remaining unselected chips become disabled.
+ * Selected chips remain interactive.
  */
 export const MaxReached: MultipleStory = {
 	args: {
@@ -160,18 +191,59 @@ export const MaxReached: MultipleStory = {
 };
 
 /**
- * Single-selection (radio-like) behavior.
+ * Minimum constraint enforced.
  *
- * Only one chip can be selected at a time.
- * Selecting an active chip will deselect it.
+ * Selected chips cannot be deselected
+ * once the minimum threshold is reached.
+ */
+export const MinReached: MultipleStory = {
+	args: {
+		options,
+		mode: 'multiple',
+		minSelected: 2,
+		value: [BagType.BACKPACK, BagType.DUFFEL],
+	},
+	render: (args) => {
+		const [value, setValue] = useState<BagType[]>(args.value);
+
+		return <Chips {...args} value={value} onChange={setValue} />;
+	},
+};
+
+/**
+ * Validation error state.
  *
- * Use this when the options are mutually exclusive.
+ * Communicates unmet requirement visually
+ * and via aria-invalid.
+ */
+export const ErrorState: MultipleStory = {
+	args: {
+		options,
+		mode: 'multiple',
+		value: [],
+		error: 'Please select at least one bag type.',
+		required: true,
+		label: 'Bag Types',
+	},
+	render: (args) => {
+		const [value, setValue] = useState<BagType[]>(args.value);
+
+		return <Chips {...args} value={value} onChange={setValue} />;
+	},
+};
+
+/**
+ * Single-selection mode.
+ *
+ * Only one chip may be active at a time.
+ * Behaves like a radio group.
  */
 export const SingleSelection: SingleStory = {
 	args: {
 		options,
 		mode: 'single',
 		value: BagType.BACKPACK,
+		label: 'Primary Bag Type',
 	},
 	render: (args) => {
 		const [value, setValue] = useState<BagType | null>(args.value);
@@ -181,10 +253,51 @@ export const SingleSelection: SingleStory = {
 };
 
 /**
+ * Chips with icons.
+ *
+ * Demonstrates alignment, spacing, and truncation
+ * when leading icons are present.
+ *
+ * Ensures:
+ * - Proper gap spacing
+ * - Icon does not shrink unexpectedly
+ * - Label truncation remains intact
+ * - Selected styling applies consistently
+ */
+export const WithIcons: MultipleStory = {
+	args: {
+		options: [
+			{
+				label: 'Backpack',
+				value: BagType.BACKPACK,
+				icon: Backpack01Icon,
+			},
+			{
+				label: 'Duffel Bag',
+				value: BagType.DUFFEL,
+				icon: Briefcase01Icon,
+			},
+			{
+				label: 'Travel Bag',
+				value: BagType.TRAVEL_BAG,
+				icon: ShoppingBag01Icon,
+			},
+		],
+		mode: 'multiple',
+		value: [BagType.BACKPACK],
+		variant: 'primary',
+	},
+	render: (args) => {
+		const [value, setValue] = useState<BagType[]>(args.value);
+
+		return <Chips {...args} value={value} onChange={setValue} />;
+	},
+};
+
+/**
  * Entire group disabled.
  *
- * Used when selection is read-only, loading,
- * or controlled by external conditions.
+ * Used in read-only or loading states.
  */
 export const Disabled: MultipleStory = {
 	args: {
@@ -194,15 +307,10 @@ export const Disabled: MultipleStory = {
 		disabled: true,
 	},
 	render: (args) => (
-		<Chips
-			options={args.options}
-			mode="multiple"
-			value={args.value}
-			onChange={() => {}}
-			disabled
-		/>
+		<Chips {...args} value={args.value} onChange={() => {}} disabled />
 	),
 };
+
 /**
  * No chip selected.
  *
@@ -223,16 +331,10 @@ export const Empty: MultipleStory = {
 };
 
 /**
- * Narrow container layout.
+ * Layout constraint verification.
  *
- * Ensures chips wrap correctly and spacing remains consistent
- * when placed inside constrained layouts such as sidebars
- * or filter panels.
- *
- * Verifies:
- * - Proper wrapping behavior
- * - Consistent gap spacing
- * - Max selection hint remains readable
+ * Ensures wrapping and spacing
+ * remain stable in narrow containers.
  */
 export const NarrowContainer: MultipleStory = {
 	args: {
@@ -250,46 +352,27 @@ export const NarrowContainer: MultipleStory = {
 			</div>
 		);
 	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Demonstrates chip wrapping and spacing behavior inside narrow containers such as filter sidebars.',
-			},
-		},
-	},
 };
 
 /**
- * Dark mode verification.
+ * Dark theme verification.
  *
- * Ensures selected, unselected, disabled,
- * and max-limited states remain accessible
- * and visually distinct in dark theme.
+ * Confirms token-based contrast and
+ * selected styling remain accessible.
  */
 export const DarkMode: MultipleStory = {
 	args: {
 		options,
 		mode: 'multiple',
-		maxSelected: 4,
-		value: [BagType.BACKPACK, BagType.DUFFEL],
+		variant: 'accent',
+		value: [BagType.BACKPACK],
 	},
 	render: (args) => {
 		const [value, setValue] = useState<BagType[]>(args.value);
 
-		return (
-			<div className="dark bg-background p-6">
-				<Chips {...args} value={value} onChange={setValue} />
-			</div>
-		);
+		return <Chips {...args} value={value} onChange={setValue} />;
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
-		docs: {
-			description: {
-				story: 'Validates chip color tokens, hover states, focus ring, and disabled appearance in dark mode.',
-			},
-		},
+		themes: { default: 'dark' },
 	},
 };

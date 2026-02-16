@@ -1,26 +1,25 @@
 import { Badge } from '@shadcn-ui/badge';
 
-/**
- * Props for `UserStatusBadge`.
- */
 export type UserStatusBadgeProps = {
-	/** Indicates whether the user account is active. */
 	isActive: boolean;
 };
 
 /**
  * Displays the user's account status.
  *
- * Domain → intent → UI mapping.
+ * Domain → semantic state → token.
  */
 const UserStatusBadge = ({ isActive }: UserStatusBadgeProps) => {
 	const label = isActive ? 'Active' : 'Inactive';
-	const variant = isActive ? 'default' : 'secondary';
+
+	const semanticClasses = isActive
+		? 'bg-success/10 text-success border-success/30'
+		: 'bg-muted text-muted-foreground border-border';
 
 	return (
 		<Badge
-			variant={variant}
-			className="text-xs font-medium"
+			variant="outline"
+			className={`text-xs font-medium tracking-wide ${semanticClasses}`}
 			aria-label={`User account status: ${label}`}
 		>
 			{label}

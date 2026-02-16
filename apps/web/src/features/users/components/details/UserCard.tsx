@@ -47,19 +47,17 @@ const UserCard = ({
 	showActions = true,
 }: UserCardProps) => {
 	return (
-		<Card className="transition-shadow hover:shadow-md">
-			<CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+		<Card className="transition-shadow hover:shadow-sm">
+			<CardHeader className="flex flex-row items-start justify-between pb-3">
 				<div className="flex items-start gap-3">
 					<Avatar className="h-10 w-10">
-						<AvatarFallback>
+						<AvatarFallback className="bg-muted text-muted-foreground">
 							{getInitial(user.email)}
 						</AvatarFallback>
 					</Avatar>
 
 					<div className="space-y-1">
-						<p className="text-sm font-semibold leading-none">
-							{user.email}
-						</p>
+						<p className="text-sm font-semibold">{user.email}</p>
 
 						<UserRoleBadge role={user.role} />
 					</div>
