@@ -51,18 +51,19 @@ function PaginationLink({
 }: PaginationLinkProps) {
 	return (
 		<Button
-			asChild
 			variant={isActive ? 'outline' : 'ghost'}
 			size={size}
 			className={cn(className)}
-		>
-			<a
-				aria-current={isActive ? 'page' : undefined}
-				data-slot="pagination-link"
-				data-active={isActive}
-				{...props}
-			/>
-		</Button>
+			nativeButton={false}
+			render={
+				<a
+					aria-current={isActive ? 'page' : undefined}
+					data-slot="pagination-link"
+					data-active={isActive}
+					{...props}
+				/>
+			}
+		/>
 	);
 }
 
@@ -75,13 +76,14 @@ function PaginationPrevious({
 		<PaginationLink
 			aria-label="Go to previous page"
 			size="default"
-			className={cn('pl-1.5!', className)}
+			className={cn('ps-1.5!', className)}
 			{...props}
 		>
 			<HugeiconsIcon
 				icon={ArrowLeft01Icon}
 				strokeWidth={2}
 				data-icon="inline-start"
+				className="rtl:rotate-180"
 			/>
 			<span className="hidden sm:block">{text}</span>
 		</PaginationLink>
@@ -97,7 +99,7 @@ function PaginationNext({
 		<PaginationLink
 			aria-label="Go to next page"
 			size="default"
-			className={cn('pr-1.5!', className)}
+			className={cn('pe-1.5!', className)}
 			{...props}
 		>
 			<span className="hidden sm:block">{text}</span>
@@ -105,6 +107,7 @@ function PaginationNext({
 				icon={ArrowRight01Icon}
 				strokeWidth={2}
 				data-icon="inline-end"
+				className="rtl:rotate-180"
 			/>
 		</PaginationLink>
 	);

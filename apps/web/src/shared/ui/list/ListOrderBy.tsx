@@ -54,7 +54,7 @@ const ListOrderBy = <Field extends string>({
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
+			<DropdownMenuTrigger>
 				<Button variant="outline" size="sm" className="gap-2">
 					<HugeiconsIcon icon={ArrowUpDownIcon} className="h-4 w-4" />
 					Sort

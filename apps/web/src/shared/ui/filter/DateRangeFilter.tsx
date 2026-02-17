@@ -174,7 +174,7 @@ const DateRangeFilter = ({
 			<Label>{label}</Label>
 
 			<Popover open={open} onOpenChange={setOpen}>
-				<PopoverTrigger asChild>
+				<PopoverTrigger>
 					<Button
 						type="button"
 						variant={isActive ? 'secondary' : 'outline'}

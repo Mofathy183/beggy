@@ -2,7 +2,6 @@ import type { IconSvgElement } from '@hugeicons/react';
 import Chip from './Chip';
 import { cn } from '@shadcn-lib';
 
-// type ChipsMode = 'single' | 'multiple';
 type ChipVariant = 'default' | 'primary' | 'accent' | 'destructive';
 
 type ChipOption<T = string> = {

@@ -42,7 +42,7 @@ const ThemeToggle = () => {
 	return (
 		<DropdownMenu>
 			{/* The trigger button that opens the dropdown */}
-			<DropdownMenuTrigger asChild>
+			<DropdownMenuTrigger>
 				<Button variant="outline" size="icon">
 					{/* Light icon (visible in light mode) */}
 					<HugeiconsIcon

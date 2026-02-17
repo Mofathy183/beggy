@@ -289,7 +289,7 @@ const NumberRangeFilter = <E extends NumericEntity>({
 
 				{hasUnit && selectedUnitMeta && (
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
+						<DropdownMenuTrigger>
 							<Button
 								variant="outline"
 								size="sm"
@@ -399,9 +399,13 @@ const NumberRangeFilter = <E extends NumericEntity>({
 				disabled={isRangeInvalid}
 				value={[safeMin, safeMax]}
 				onValueChange={(vals) => {
-					setMin(vals[0]);
-					setMax(vals[1]);
-					emit(vals[0], vals[1]);
+					if (!Array.isArray(vals)) return;
+
+					const [nextMin, nextMax] = vals;
+
+					setMin(nextMin);
+					setMax(nextMax);
+					emit(nextMin, nextMax);
 				}}
 			/>
 

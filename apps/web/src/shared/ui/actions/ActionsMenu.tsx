@@ -59,7 +59,7 @@ export type ActionsMenuProps = {
 const ActionsMenu = ({ items }: ActionsMenuProps) => {
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
+			<DropdownMenuTrigger>
 				<Button
 					variant="ghost"
 					size="icon"

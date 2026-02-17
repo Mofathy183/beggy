@@ -130,9 +130,9 @@ const ToggleFilter = ({
 			)}
 
 			<ToggleGroup
-				type="single"
-				value={mapToString(value)}
-				onValueChange={(val) => {
+				value={[mapToString(value)]}
+				onValueChange={(groupValue) => {
+					const val = groupValue?.[0];
 					if (!val) return;
 					onChange(mapToBoolean(val));
 				}}

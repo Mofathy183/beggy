@@ -28,10 +28,9 @@
 			"@/*": ["./src/*"],
 			"@shared/*": ["./src/shared/*"],
 			"@features/*": ["./src/features/*"],
-			"@shadcn-ui/*": ["./src/shared/components/ui/*"],
-			"@shadcn-components": ["./src/shared/components"],
+			"@shadcn-ui/*": ["src/shared/components/ui/*"],
+			"@shadcn-components": ["src/shared/components"],
 			"@shadcn-lib": ["./src/shared/lib/utils.ts"],
-
 			"@tests/*": ["tests/*"]
 		}
 	},
