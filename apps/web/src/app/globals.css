@@ -1,8 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,125 +10,138 @@
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
 	--radius-xl: calc(var(--radius) + 4px);
-
-	/* ── Base surfaces ── */
-	--color-background: hsl(var(--background));
-	--color-foreground: hsl(var(--foreground));
-	--color-card: hsl(var(--card));
-	--color-card-foreground: hsl(var(--card-foreground));
-	--color-popover: hsl(var(--popover));
-	--color-popover-foreground: hsl(var(--popover-foreground));
-
-	/* ── Muted / subtle ── */
-	--color-muted: hsl(var(--muted));
-	--color-muted-foreground: hsl(var(--muted-foreground));
-
-	/* ── Borders & inputs ── */
-	--color-border: hsl(var(--border));
-	--color-input: hsl(var(--input));
-	--color-ring: hsl(var(--ring));
-
-	/* ── Primary (Teal — Beggy's voice) ── */
-	--color-primary: hsl(var(--primary));
-	--color-primary-foreground: hsl(var(--primary-foreground));
-
-	/* ── Secondary ── */
-	--color-secondary: hsl(var(--secondary));
-	--color-secondary-foreground: hsl(var(--secondary-foreground));
-
-	/* ── Accent (Teal — hover states, highlights) ── */
-	--color-accent: hsl(var(--accent));
-	--color-accent-foreground: hsl(var(--accent-foreground));
-
-	/* ── Semantic: Success (Emerald — "we're good to go") ── */
-	--color-success: hsl(var(--success));
-	--color-success-foreground: hsl(var(--success-foreground));
-
-	/* ── Semantic: Warning (warm yellow — "hey, don't forget your adaptor") ── */
-	--color-warning: hsl(var(--warning));
-	--color-warning-foreground: hsl(var(--warning-foreground));
-
-	/* ── Semantic: Destructive (Rose — honest, not scary) ── */
-	--color-destructive: hsl(var(--destructive));
-	--color-destructive-foreground: hsl(var(--destructive-foreground));
-
-	/* ── Sidebar ── */
-	--color-sidebar: hsl(var(--sidebar));
-	--color-sidebar-foreground: hsl(var(--sidebar-foreground));
-	--color-sidebar-primary: hsl(var(--sidebar-primary));
-	--color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
-	--color-sidebar-accent: hsl(var(--sidebar-accent));
-	--color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
-	--color-sidebar-border: hsl(var(--sidebar-border));
-	--color-sidebar-ring: hsl(var(--sidebar-ring));
-	--font-sans: var(--font-sans);
-	--color-chart-5: var(--chart-5);
-	--color-chart-4: var(--chart-4);
-	--color-chart-3: var(--chart-3);
-	--color-chart-2: var(--chart-2);
-	--color-chart-1: var(--chart-1);
 	--radius-2xl: calc(var(--radius) + 8px);
 	--radius-3xl: calc(var(--radius) + 12px);
 	--radius-4xl: calc(var(--radius) + 16px);
+
+	/* ── Font ── */
+	--font-sans: var(--font-sans);
+
+	/* ── Base surfaces ── */
+	--color-background: oklch(var(--background));
+	--color-foreground: oklch(var(--foreground));
+	--color-card: oklch(var(--card));
+	--color-card-foreground: oklch(var(--card-foreground));
+	--color-popover: oklch(var(--popover));
+	--color-popover-foreground: oklch(var(--popover-foreground));
+
+	/* ── Muted / subtle ── */
+	--color-muted: oklch(var(--muted));
+	--color-muted-foreground: oklch(var(--muted-foreground));
+
+	/* ── Borders & inputs ── */
+	--color-border: oklch(var(--border));
+	--color-input: oklch(var(--input));
+	--color-ring: oklch(var(--ring));
+
+	/* ── Primary (Teal — Beggy's voice) ── */
+	--color-primary: oklch(var(--primary));
+	--color-primary-foreground: oklch(var(--primary-foreground));
+
+	/* ── Secondary ── */
+	--color-secondary: oklch(var(--secondary));
+	--color-secondary-foreground: oklch(var(--secondary-foreground));
+
+	/* ── Accent (Teal tint — hover states, highlights) ── */
+	--color-accent: oklch(var(--accent));
+	--color-accent-foreground: oklch(var(--accent-foreground));
+
+	/* ── Semantic: Success (Emerald — "we're good to go") ── */
+	--color-success: oklch(var(--success));
+	--color-success-foreground: oklch(var(--success-foreground));
+
+	/* ── Semantic: Warning (warm yellow — "hey, don't forget your adaptor") ── */
+	--color-warning: oklch(var(--warning));
+	--color-warning-foreground: oklch(var(--warning-foreground));
+
+	/* ── Semantic: Destructive (Rose — honest, not scary) ── */
+	--color-destructive: oklch(var(--destructive));
+	--color-destructive-foreground: oklch(var(--destructive-foreground));
+
+	/* ── Sidebar ── */
+	--color-sidebar: oklch(var(--sidebar));
+	--color-sidebar-foreground: oklch(var(--sidebar-foreground));
+	--color-sidebar-primary: oklch(var(--sidebar-primary));
+	--color-sidebar-primary-foreground: oklch(
+		var(--sidebar-primary-foreground)
+	);
+	--color-sidebar-accent: oklch(var(--sidebar-accent));
+	--color-sidebar-accent-foreground: oklch(var(--sidebar-accent-foreground));
+	--color-sidebar-border: oklch(var(--sidebar-border));
+	--color-sidebar-ring: oklch(var(--sidebar-ring));
+
+	/* ── Charts (Teal gradient scale — great for packing progress) ── */
+	--color-chart-1: var(--chart-1);
+	--color-chart-2: var(--chart-2);
+	--color-chart-3: var(--chart-3);
+	--color-chart-4: var(--chart-4);
+	--color-chart-5: var(--chart-5);
 }
 
 /* ─────────────────────────────────────────────
 LIGHT MODE
+Raw oklch components only (no wrapper) —
+@theme inline wraps them with oklch()
 ───────────────────────────────────────────── */
 :root {
 	/* Softer radius — approachable, like a worn-in travel notebook */
 	--radius: 0.625rem;
 
-	/* Zinc base */
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.141 0.005 285.823);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.141 0.005 285.823);
-	--muted: oklch(0.967 0.001 286.375);
-	--muted-foreground: oklch(0.552 0.016 285.938);
-	--border: oklch(0.92 0.004 286.32);
-	--input: oklch(0.92 0.004 286.32);
-	--ring: oklch(0.705 0.015 286.067); /* ring matches primary */
+	/* ── Zinc base ── */
+	--background: 1 0 0;
+	--foreground: 0.141 0.005 285.823;
+	--card: 1 0 0;
+	--card-foreground: 0.141 0.005 285.823;
+	--popover: 1 0 0;
+	--popover-foreground: 0.141 0.005 285.823;
+	--muted: 0.967 0.001 286.375;
+	--muted-foreground: 0.552 0.016 285.938;
+	--border: 0.92 0.004 286.32;
+	--input: 0.92 0.004 286.32;
 
-	/* Secondary */
-	--secondary: oklch(0.967 0.001 286.375);
-	--secondary-foreground: oklch(0.21 0.006 285.885);
+	/* ── Secondary ── */
+	--secondary: 0.967 0.001 286.375;
+	--secondary-foreground: 0.21 0.006 285.885;
+
+	/* ── FIX: ring now matches Teal primary ── */
+	--ring: 0.6 0.1 185;
 
 	/* ── Teal 600 — the heart of Beggy ── */
-	--primary: oklch(0.60 0.10 185);
-	--primary-foreground: oklch(0.98 0.01 181);
+	--primary: 0.6 0.1 185;
+	--primary-foreground: 0.98 0.01 181;
 
-	/* ── Teal 50 — soft hover, selected states ── */
-	--accent: oklch(0.967 0.001 286.375);
-	--accent-foreground: oklch(0.21 0.006 285.885);
+	/* ── FIX: accent is now a real Teal tint, not Zinc grey ── */
+	/* Teal 95 — very light wash, used for hover bg, selected rows  */
+	--accent: 0.96 0.025 185;
+	--accent-foreground: 0.32 0.07 185;
 
-	/* ── Emerald — success, item added, bag complete ── */
-	--success: 152 60% 36%;
-	--success-foreground: 0 0% 100%;
+	/* ── FIX: Success in oklch (Emerald) ── */
+	--success: 0.53 0.14 162;
+	--success-foreground: 0.98 0 0;
 
-	/* ── Warm Yellow — warnings, weight limits, reminders ── */
-	--warning: 38 92% 48%;
-	--warning-foreground: 0 0% 100%;
+	/* ── FIX: Warning in oklch (Warm Yellow) ── */
+	--warning: 0.78 0.17 75;
+	--warning-foreground: 0.2 0.02 75;
 
-	/* ── Rose — errors, honest not alarming ── */
-	--destructive: oklch(0.577 0.245 27.325);
-	--destructive-foreground: 0 0% 100%;
+	/* ── Destructive (Rose) — shadcn generated, correct ── */
+	--destructive: 0.577 0.245 27.325;
+	--destructive-foreground: 0.98 0 0;
 
-	/* Sidebar — slightly tinted with teal identity */
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.141 0.005 285.823);
-	--sidebar-primary: oklch(0.60 0.10 185);
-	--sidebar-primary-foreground: oklch(0.98 0.01 181);
-	--sidebar-accent: oklch(0.967 0.001 286.375);
-	--sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-	--sidebar-border: oklch(0.92 0.004 286.32);
-	--sidebar-ring: oklch(0.705 0.015 286.067);
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.141 0.005 285.823);
+	/* ── Sidebar — teal-tinted identity ── */
+	--sidebar: 0.985 0.008 185;
+	--sidebar-foreground: 0.141 0.005 285.823;
+	--sidebar-primary: 0.6 0.1 185;
+	--sidebar-primary-foreground: 0.98 0.01 181;
+	--sidebar-accent: 0.94 0.03 185;
+	--sidebar-accent-foreground: 0.32 0.07 185;
+	--sidebar-border: 0.92 0.004 286.32;
+	--sidebar-ring: 0.6 0.1 185;
+
+	/* ── Charts — Teal gradient scale ── */
 	--chart-1: oklch(0.85 0.13 181);
 	--chart-2: oklch(0.78 0.13 182);
-	--chart-3: oklch(0.70 0.12 183);
-	--chart-4: oklch(0.60 0.10 185);
+	--chart-3: oklch(0.7 0.12 183);
+	--chart-4: oklch(0.6 0.1 185);
 	--chart-5: oklch(0.51 0.09 186);
 }
 
@@ -138,62 +149,68 @@ LIGHT MODE
 DARK MODE
 ───────────────────────────────────────────── */
 .dark {
-	/* Zinc dark — deep but not pure black */
-	--background: oklch(0.141 0.005 285.823);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.21 0.006 285.885);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.21 0.006 285.885);
-	--popover-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.274 0.006 286.033);
-	--muted-foreground: oklch(0.705 0.015 286.067);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.552 0.016 285.938);
+	/* ── Zinc dark — deep but not pure black ── */
+	--background: 0.141 0.005 285.823;
+	--foreground: 0.985 0 0;
+	--card: 0.21 0.006 285.885;
+	--card-foreground: 0.985 0 0;
+	--popover: 0.21 0.006 285.885;
+	--popover-foreground: 0.985 0 0;
+	--muted: 0.274 0.006 286.033;
+	--muted-foreground: 0.705 0.015 286.067;
+	--border: 0.985 0 0 / 10%;
+	--input: 0.985 0 0 / 15%;
 
-	/* Secondary */
-	--secondary: oklch(0.274 0.006 286.033);
-	--secondary-foreground: oklch(0.985 0 0);
+	/* ── Secondary ── */
+	--secondary: 0.274 0.006 286.033;
+	--secondary-foreground: 0.985 0 0;
 
-	/* ── Teal — slightly lighter in dark for contrast ── */
-	--primary: oklch(0.70 0.12 183);
-	--primary-foreground: oklch(0.28 0.04 193);
+	/* ── FIX: ring now matches Teal primary in dark ── */
+	--ring: 0.7 0.12 183;
 
-	/* ── Teal accent — dark mode ── */
-	--accent: oklch(0.274 0.006 286.033);
-	--accent-foreground: oklch(0.985 0 0);
+	/* ── Teal — lighter in dark for contrast ── */
+	--primary: 0.7 0.12 183;
+	--primary-foreground: 0.28 0.04 193;
 
-	/* ── Semantic — dark mode adjusted ── */
-	--success: 152 55% 44%;
-	--success-foreground: 240 10% 3.9%;
+	/* ── FIX: accent is Teal tint in dark, not Zinc grey ── */
+	--accent: 0.26 0.04 185;
+	--accent-foreground: 0.82 0.08 183;
 
-	--warning: 38 85% 55%;
-	--warning-foreground: 240 10% 3.9%;
+	/* ── FIX: Success in oklch — dark adjusted ── */
+	--success: 0.62 0.14 162;
+	--success-foreground: 0.15 0.01 162;
 
-	--destructive: oklch(0.704 0.191 22.216);
-	--destructive-foreground: 240 10% 3.9%;
+	/* ── FIX: Warning in oklch — dark adjusted ── */
+	--warning: 0.82 0.17 75;
+	--warning-foreground: 0.2 0.02 75;
 
-	/* Sidebar dark */
-	--sidebar: oklch(0.21 0.006 285.885);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.78 0.13 182);
-	--sidebar-primary-foreground: oklch(0.28 0.04 193);
-	--sidebar-accent: oklch(0.274 0.006 286.033);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.552 0.016 285.938);
+	/* ── Destructive dark — shadcn generated, correct ── */
+	--destructive: 0.704 0.191 22.216;
+	--destructive-foreground: 0.985 0 0;
+
+	/* ── Sidebar dark ── */
+	--sidebar: 0.21 0.006 285.885;
+	--sidebar-foreground: 0.985 0 0;
+	--sidebar-primary: 0.7 0.12 183;
+	--sidebar-primary-foreground: 0.28 0.04 193;
+	--sidebar-accent: 0.26 0.04 185;
+	--sidebar-accent-foreground: 0.82 0.08 183;
+	--sidebar-border: 0.985 0 0 / 10%;
+	--sidebar-ring: 0.7 0.12 183;
+
+	/* ── Charts — same teal scale works in dark ── */
 	--chart-1: oklch(0.85 0.13 181);
 	--chart-2: oklch(0.78 0.13 182);
-	--chart-3: oklch(0.70 0.12 183);
-	--chart-4: oklch(0.60 0.10 185);
+	--chart-3: oklch(0.7 0.12 183);
+	--chart-4: oklch(0.6 0.1 185);
 	--chart-5: oklch(0.51 0.09 186);
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+	* {
+		@apply border-border outline-ring/50;
 	}
-  body {
-    @apply bg-background text-foreground;
+	body {
+		@apply bg-background text-foreground;
 	}
 }

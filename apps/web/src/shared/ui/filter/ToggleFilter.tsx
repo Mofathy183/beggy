@@ -89,6 +89,16 @@ const mapToBoolean = (value: string): ToggleFilterValue => {
 	return value === 'true';
 };
 
+const toggleItemClasses = `  
+flex items-center gap-1
+rounded-full px-3 py-1
+text-xs font-medium
+text-muted-foreground
+transition-colors
+hover:bg-muted/80
+aria-pressed:bg-accent
+aria-pressed:text-accent-foreground`;
+
 /**
  * ToggleFilter
  *
@@ -119,6 +129,17 @@ const ToggleFilter = ({
 	className,
 	showIcons = false,
 }: ToggleFilterProps) => {
+	const handleOnValueChange = (groupValue: string[]) => {
+		if (!groupValue.length) {
+			// If everything was deselected, default to "all"
+			onChange(undefined);
+			return;
+		}
+
+		const next = groupValue[groupValue.length - 1];
+		onChange(mapToBoolean(next ?? ''));
+	};
+
 	return (
 		<div
 			className={cn('flex items-center justify-between gap-4', className)}
@@ -131,37 +152,30 @@ const ToggleFilter = ({
 
 			<ToggleGroup
 				value={[mapToString(value)]}
-				onValueChange={(groupValue) => {
-					const val = groupValue?.[0];
-					if (!val) return;
-					onChange(mapToBoolean(val));
-				}}
-				className="inline-flex items-center rounded-full bg-muted/60 p-1 shadow-sm backdrop-blur-sm"
+				onValueChange={handleOnValueChange}
+				className="
+                    inline-flex items-center
+                    rounded-full
+                    bg-muted
+                    border border-border
+                    p-1
+                "
 			>
-				<ToggleGroupItem
-					value="all"
-					className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-				>
+				<ToggleGroupItem value="all" className={toggleItemClasses}>
 					{showIcons && (
 						<HugeiconsIcon icon={List} className="h-3 w-3" />
 					)}
 					All
 				</ToggleGroupItem>
 
-				<ToggleGroupItem
-					value="true"
-					className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-				>
+				<ToggleGroupItem value="true" className={toggleItemClasses}>
 					{showIcons && (
 						<HugeiconsIcon icon={Check} className="h-3 w-3" />
 					)}
 					Yes
 				</ToggleGroupItem>
 
-				<ToggleGroupItem
-					value="false"
-					className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-				>
+				<ToggleGroupItem value="false" className={toggleItemClasses}>
 					{showIcons && (
 						<HugeiconsIcon icon={X} className="h-3 w-3" />
 					)}

@@ -153,6 +153,11 @@ const DateRangeFilter = ({
 			return;
 		}
 
+		// Prevent invalid range
+		if (range.from && range.to && range.from > range.to) {
+			return; // ignore invalid selection
+		}
+
 		onChange(range);
 
 		// Auto-close when both dates are selected
@@ -168,6 +173,8 @@ const DateRangeFilter = ({
 		onChange(undefined);
 		setOpen(false);
 	};
+
+	const isInvalid = value?.from && value?.to && value.from > value.to;
 
 	return (
 		<div className={cn('space-y-2', className)}>
@@ -232,7 +239,11 @@ const DateRangeFilter = ({
 							Clear
 						</Button>
 
-						<Button size="sm" onClick={() => setOpen(false)}>
+						<Button
+							size="sm"
+							disabled={isInvalid}
+							onClick={() => setOpen(false)}
+						>
 							Apply
 						</Button>
 					</div>

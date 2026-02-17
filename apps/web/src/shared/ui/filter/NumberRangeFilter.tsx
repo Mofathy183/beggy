@@ -263,13 +263,82 @@ const NumberRangeFilter = <E extends NumericEntity>({
 	const safeMax = max ?? config.lte;
 
 	/**
-	 * Indicates whether the current range is logically invalid.
+	 * Handles manual changes to the minimum input field.
 	 *
-	 * True when:
-	 * - Both min and max exist
-	 * - min > max
+	 * @remarks
+	 * - Converts empty string to `undefined` to represent an unset boundary.
+	 * - Prevents invalid state where `min > max`.
+	 * - Emits the updated range immediately to keep parent state in sync.
+	 *
+	 * @param e - The change event from the minimum input field.
 	 */
-	const isRangeInvalid = min != null && max != null && min > max;
+	const handleMinOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		// Convert input value:
+		// - "" → undefined (represents no boundary)
+		// - string number → numeric value
+		const val = e.target.value === '' ? undefined : Number(e.target.value);
+
+		// 🚫 Guard against invalid range:
+		// Prevent setting min greater than current max
+		if (val != null && max != null && val > max) {
+			return;
+		}
+
+		setMin(val);
+		emit(val, max);
+	};
+
+	/**
+	 * Handles manual changes to the maximum input field.
+	 *
+	 * @remarks
+	 * - Converts empty string to `undefined` to represent an unset boundary.
+	 * - Prevents invalid state where `min > max`.
+	 * - Emits the updated range immediately to keep parent state in sync.
+	 *
+	 * @param e - The change event from the maximum input field.
+	 */
+	const handleMaxOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		// Convert input value:
+		// - "" → undefined (represents no boundary)
+		// - string number → numeric value
+		const val = e.target.value === '' ? undefined : Number(e.target.value);
+
+		// 🚫 Guard against invalid range:
+		// Prevent setting max smaller than current min
+		if (min != null && val != null && min > val) {
+			return;
+		}
+
+		setMax(val);
+		emit(min, val);
+	};
+
+	/**
+	 * Handles slider range updates.
+	 *
+	 * @remarks
+	 * - Accepts both single-value and range modes (Slider API contract).
+	 * - Safely narrows to range mode (`[min, max]`).
+	 * - Prevents invalid state where `min > max`.
+	 * - Synchronizes local state and emits normalized values.
+	 *
+	 * @param value - The value emitted by the Slider component.
+	 * May be a single number or a readonly number tuple.
+	 */
+	const handleSliderOnValueChange = (value: number | readonly number[]) => {
+		// Ensure slider is operating in range mode
+		if (!Array.isArray(value) || value.length !== 2) return;
+
+		const [nextMin, nextMax] = value;
+
+		// 🚫 Guard against impossible slider state
+		if (nextMin > nextMax) return;
+
+		setMin(nextMin);
+		setMax(nextMax);
+		emit(nextMin, nextMax);
+	};
 
 	//* UI */
 	return (
@@ -354,19 +423,8 @@ const NumberRangeFilter = <E extends NumericEntity>({
 					inputMode={isInteger ? 'numeric' : 'decimal'}
 					value={min ?? ''}
 					placeholder="Min"
-					className={cn(
-						error && 'border-destructive',
-						isRangeInvalid && 'border-destructive'
-					)}
-					onChange={(e) => {
-						const val =
-							e.target.value === ''
-								? undefined
-								: Number(e.target.value);
-
-						setMin(val);
-						emit(val, max);
-					}}
+					className={cn(error && 'border-destructive')}
+					onChange={handleMinOnChange}
 				/>
 
 				<Input
@@ -375,19 +433,8 @@ const NumberRangeFilter = <E extends NumericEntity>({
 					inputMode={isInteger ? 'numeric' : 'decimal'}
 					value={max ?? ''}
 					placeholder="Max"
-					className={cn(
-						error && 'border-destructive',
-						isRangeInvalid && 'border-destructive'
-					)}
-					onChange={(e) => {
-						const val =
-							e.target.value === ''
-								? undefined
-								: Number(e.target.value);
-
-						setMax(val);
-						emit(min, val);
-					}}
+					className={cn(error && 'border-destructive')}
+					onChange={handleMaxOnChange}
 				/>
 			</div>
 
@@ -396,17 +443,8 @@ const NumberRangeFilter = <E extends NumericEntity>({
 				min={config.gte}
 				max={config.lte}
 				step={step}
-				disabled={isRangeInvalid}
 				value={[safeMin, safeMax]}
-				onValueChange={(vals) => {
-					if (!Array.isArray(vals)) return;
-
-					const [nextMin, nextMax] = vals;
-
-					setMin(nextMin);
-					setMax(nextMax);
-					emit(nextMin, nextMax);
-				}}
+				onValueChange={handleSliderOnValueChange}
 			/>
 
 			{error && <p className="text-xs text-destructive">{error}</p>}

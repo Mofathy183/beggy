@@ -5,7 +5,9 @@ import ToggleFilter from './ToggleFilter';
 /**
  * Storybook configuration for ToggleFilter.
  *
- * Tri-state boolean filter component aligned with backend schemas.
+ * A tri-state segmented control used for boolean filtering in
+ * data-heavy interfaces. Designed to align with backend query
+ * schemas expecting `boolean | undefined`.
  */
 const meta: Meta<typeof ToggleFilter> = {
 	title: 'UI/Filters/ToggleFilter',
@@ -17,15 +19,71 @@ const meta: Meta<typeof ToggleFilter> = {
 				component: `
 Tri-state segmented toggle for boolean filtering.
 
-### Domain Model
+---
 
-\`boolean | undefined\`
+## What it is
 
-- \`undefined\` → All
-- \`true\` → Yes
-- \`false\` → No
+A compact segmented control representing:
 
-Designed for data-heavy interfaces where filters must align with backend query schemas.
+- **All** → no filtering (undefined)
+- **Yes** → true
+- **No** → false
+
+It visually communicates filter state while maintaining alignment
+with backend schemas that expect \`boolean | undefined\`.
+
+---
+
+## When to use it
+
+- Admin dashboards
+- Data tables
+- Filtering toolbars
+- Boolean query parameters
+
+---
+
+## When not to use it
+
+- Binary toggles that represent immediate state mutation (use Switch instead)
+- Multi-select filtering
+- Non-boolean domain modeling
+
+---
+
+## Interaction model
+
+- Single selection at a time
+- Keyboard navigable (arrow keys + tab)
+- Clicking an option updates the selected state
+- Always one value active
+
+---
+
+## Constraints
+
+- Exactly three states
+- Must remain horizontally grouped
+- Designed for compact toolbar usage
+
+---
+
+## Accessibility guarantees
+
+- Built on Radix ToggleGroup
+- Fully keyboard navigable
+- Visible focus states
+- Semantic pressed state
+- No color-only meaning
+
+---
+
+## Design-system notes
+
+- Token-driven colors (bg-muted, bg-accent, border-border)
+- Variant-free: fixed compact density
+- Dark-mode compatible
+- Chromatic-stable
         `,
 			},
 		},
@@ -34,36 +92,30 @@ Designed for data-heavy interfaces where filters must align with backend query s
 		label: {
 			description: 'Optional label displayed above the toggle group.',
 			control: 'text',
-		},
-		value: {
-			description: `
-Current filter value.
-
-- true → Yes
-- false → No
-- undefined → All
-      `,
-			control: {
-				type: 'select',
-			},
-			options: [undefined, true, false],
-		},
-		onChange: {
-			description: 'Triggered when filter value changes.',
-			action: 'filterChanged',
 			table: {
-				category: 'Events',
+				type: { summary: 'string' },
+			},
+		},
+		showIcons: {
+			description:
+				'Displays contextual icons inside each segment. Recommended for dashboard contexts.',
+			control: 'boolean',
+			table: {
+				type: { summary: 'boolean' },
+				defaultValue: { summary: 'false' },
 			},
 		},
 		className: {
 			description: 'Optional additional class names.',
 			control: false,
+			table: {
+				type: { summary: 'string' },
+			},
 		},
-		showIcons: {
-			description: 'Displays a icon when value is not undefined.',
-			control: 'boolean',
-			defaultValue: false,
-		},
+
+		// Controlled props are intentionally hidden
+		value: { table: { disable: true } },
+		onChange: { table: { disable: true } },
 	},
 };
 
@@ -71,84 +123,181 @@ export default meta;
 type Story = StoryObj<typeof ToggleFilter>;
 
 /**
- * Default state (All selected).
+ * Default filtering state.
+ *
+ * Occurs when no filter is applied and the dataset
+ * is shown without boolean restriction.
  */
 export const Default: Story = {
 	args: {
 		label: 'Active Status',
-		value: undefined,
 		showIcons: false,
 	},
-	render: () => {
-		const [value, setValue] = useState<boolean | undefined>();
+	render: (args) => {
+		const [value, setValue] = useState<boolean | undefined>(undefined);
 
-		return (
-			<ToggleFilter
-				label="Active Status"
-				value={value}
-				onChange={setValue}
-				showIcons
-			/>
-		);
+		return <ToggleFilter {...args} value={value} onChange={setValue} />;
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Represents the neutral filtering state where no boolean constraint is applied.',
+			},
+		},
 	},
 };
 
 /**
- * Yes selected.
+ * Filtering by true values.
+ *
+ * Occurs when the user restricts the dataset
+ * to only positive/active entries.
  */
 export const YesSelected: Story = {
 	args: {
 		label: 'Active Status',
-		value: true,
+		showIcons: false,
+	},
+	render: (args) => {
+		const [value, setValue] = useState<boolean | undefined>(true);
+
+		return <ToggleFilter {...args} value={value} onChange={setValue} />;
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Represents the state where only records with true values are shown.',
+			},
+		},
 	},
 };
 
 /**
- * No selected.
+ * Filtering by false values.
+ *
+ * Occurs when the user restricts the dataset
+ * to only negative/inactive entries.
  */
 export const NoSelected: Story = {
 	args: {
 		label: 'Active Status',
-		value: false,
-	},
-};
-
-/**
- * With Icon enabled.
- */
-export const WithIcon: Story = {
-	args: {
-		label: 'Verified',
-		value: true,
 		showIcons: false,
 	},
+	render: (args) => {
+		const [value, setValue] = useState<boolean | undefined>(false);
+
+		return <ToggleFilter {...args} value={value} onChange={setValue} />;
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Represents the state where only records with false values are shown.',
+			},
+		},
+	},
 };
 
 /**
- * Without label.
+ * Icon-enhanced variant.
+ *
+ * Recommended for dense admin dashboards where
+ * quick visual scanning improves recognition.
+ */
+export const WithIcons: Story = {
+	args: {
+		label: 'Verified',
+		showIcons: true,
+	},
+	render: (args) => {
+		const [value, setValue] = useState<boolean | undefined>(undefined);
+
+		return <ToggleFilter {...args} value={value} onChange={setValue} />;
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Enhances visual scanning by adding contextual icons to each state.',
+			},
+		},
+	},
+};
+
+/**
+ * Label-less usage.
+ *
+ * Used inside compact filter bars where
+ * surrounding UI already provides context.
  */
 export const WithoutLabel: Story = {
 	args: {
-		value: undefined,
+		showIcons: false,
+	},
+	render: (args) => {
+		const [value, setValue] = useState<boolean | undefined>(undefined);
+
+		return <ToggleFilter {...args} value={value} onChange={setValue} />;
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Used when context is provided by surrounding layout and an explicit label is unnecessary.',
+			},
+		},
 	},
 };
 
 /**
- * Interactive controlled example.
+ * Interactive example.
  *
- * Demonstrates real tri-state behavior.
+ * Demonstrates real tri-state behavior:
+ * - Only one segment can be active
+ * - Selection updates immediately
+ * - Fully keyboard navigable
+ *
+ * This story simulates real usage and exists
+ * to visualize interaction behavior.
  */
 export const Interactive: Story = {
-	render: () => {
-		const [value, setValue] = useState<boolean | undefined>();
+	args: {
+		label: 'Active Status',
+		showIcons: true,
+	},
+	render: (args) => {
+		const [value, setValue] = useState<boolean | undefined>(undefined);
 
-		return (
-			<ToggleFilter
-				label="Active Status"
-				value={value}
-				onChange={setValue}
-				showIcons
-			/>
-		);
+		return <ToggleFilter {...args} value={value} onChange={setValue} />;
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Demonstrates real-time interaction behavior and tri-state selection constraints.',
+			},
+		},
+	},
+};
+
+/**
+ * Dark mode rendering.
+ *
+ * Verifies token contrast, border visibility,
+ * and active-state clarity in dark theme.
+ */
+export const DarkMode: Story = {
+	args: {
+		label: 'Active Status',
+		showIcons: true,
+	},
+	render: (args) => {
+		const [value, setValue] = useState<boolean | undefined>(undefined);
+
+		return <ToggleFilter {...args} value={value} onChange={setValue} />;
+	},
+	parameters: {
+		themes: { themeOverride: 'dark' },
+		docs: {
+			description: {
+				story: 'Validates visual parity, contrast ratios, and token consistency in dark mode.',
+			},
+		},
 	},
 };
