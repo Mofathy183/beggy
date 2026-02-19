@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Input } from '@shadcn-ui/input';
 import { Label } from '@shadcn-ui/label';
 import { Button } from '@shadcn-ui/button';
+import { cn } from '@shadcn-lib';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CancelCircleIcon, SearchIcon } from '@hugeicons/core-free-icons';
 
@@ -91,6 +92,7 @@ const SearchInput = ({
 	isLoading = false,
 	autoFocus = false,
 }: SearchInputProps) => {
+	const id = useId();
 	const [local, setLocal] = useState(value ?? '');
 
 	/**
@@ -122,31 +124,44 @@ const SearchInput = ({
 
 	return (
 		<div className="space-y-1">
-			<Label className="text-sm">{label}</Label>
+			{/* Accessible label */}
+			<Label htmlFor={id} className="text-sm text-foreground">
+				{label}
+			</Label>
 
 			<div className="relative group">
 				{/* Leading search icon */}
 				<HugeiconsIcon
 					icon={SearchIcon}
-					className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+					className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/60"
 				/>
 
 				<Input
+					id={id}
 					value={local}
 					autoFocus={autoFocus}
 					placeholder={placeholder}
+					aria-invalid={!!error}
+					aria-describedby={
+						error
+							? `${id}-error`
+							: description
+								? `${id}-description`
+								: undefined
+					}
 					onChange={(e) => setLocal(e.target.value)}
 					onKeyDown={(e) => {
-						if (e.key === 'Escape') {
-							handleClear();
-						}
+						if (e.key === 'Escape') handleClear();
 					}}
-					className="pl-9 pr-9"
+					className={cn(
+						'pl-9 pr-9',
+						error &&
+							'border-destructive focus-visible:ring-destructive'
+					)}
 				/>
-
-				{/* Right-side state (loading or clear) */}
+				{/* Right-side state */}
 				{isLoading ? (
-					<div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+					<div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin rounded-full border-2 border-foreground/40 border-t-transparent" />
 				) : (
 					local && (
 						<Button
@@ -159,20 +174,29 @@ const SearchInput = ({
 						>
 							<HugeiconsIcon
 								icon={CancelCircleIcon}
-								className="h-4 w-4"
+								className="h-4 w-4 text-foreground/60 hover:text-foreground"
 							/>
 						</Button>
 					)
 				)}
 			</div>
 
-			{/* Helper text */}
-			{description && (
-				<p className="text-xs text-muted-foreground">{description}</p>
+			{/* Description */}
+			{description && !error && (
+				<p
+					id={`${id}-description`}
+					className="text-xs text-foreground/70"
+				>
+					{description}
+				</p>
 			)}
 
 			{/* Error */}
-			{error && <p className="text-xs text-destructive">{error}</p>}
+			{error && (
+				<p id={`${id}-error`} className="text-xs text-destructive">
+					{error}
+				</p>
+			)}
 		</div>
 	);
 };

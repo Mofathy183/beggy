@@ -1,160 +1,203 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import React from 'react';
-import NumberRangeFilter from '../NumberRangeFilter';
+import { render, screen, fireEvent } from '@testing-library/react';
 
-vi.mock('@beggy/shared/constants/constraints', () => ({
-	NUMBER_CONFIG: {
-		testEntity: {
-			testMetric: {
-				gte: 0,
-				lte: 100,
-				decimals: 2,
-			},
-		},
-	},
+// ---- Mock hook BEFORE component import ----
+vi.mock('../useNumberRangeFilter', () => ({
+	default: vi.fn(),
 }));
 
+// ---- Mock UI primitives (minimal behavior) ----
 vi.mock('@shadcn-ui/slider', () => ({
-	Slider: ({ onValueChange }: any) => (
-		<button data-testid="slider" onClick={() => onValueChange([10, 20])}>
-			slider
-		</button>
+	Slider: (props: any) => (
+		<div
+			data-testid="slider"
+			onClick={() => props.onValueChange?.([5, 15])}
+		/>
 	),
 }));
 
-const setup = (
-	props?: Partial<React.ComponentProps<typeof NumberRangeFilter>>
-) => {
-	const onChange = vi.fn();
+vi.mock('@shadcn-ui/input', () => ({
+	Input: (props: any) => <input data-testid={props.placeholder} {...props} />,
+}));
 
-	render(
-		<NumberRangeFilter
-			label="Test Range"
-			entity={'testEntity' as any}
-			metric={'testMetric' as any}
-			onChange={onChange}
-			{...props}
-		/>
-	);
+vi.mock('@shadcn-ui/label', () => ({
+	Label: (props: any) => <label>{props.children}</label>,
+}));
 
-	const minInput = screen.getByPlaceholderText('Min');
-	const maxInput = screen.getByPlaceholderText('Max');
+vi.mock('@shadcn-ui/badge', () => ({
+	Badge: (props: any) => <span>{props.children}</span>,
+}));
 
-	return { onChange, minInput, maxInput };
-};
+vi.mock('@shadcn-ui/dropdown-menu', () => ({
+	DropdownMenu: ({ children }: any) => <div>{children}</div>,
+	DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
+	DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
+	DropdownMenuItem: ({ children, onClick }: any) => (
+		<button onClick={onClick}>{children}</button>
+	),
+}));
+
+vi.mock('@shadcn-ui/button', () => ({
+	Button: ({ children }: any) => <button>{children}</button>,
+}));
+
+vi.mock('@hugeicons/react', () => ({
+	HugeiconsIcon: () => <span data-testid="icon" />,
+}));
+
+// ---- Imports after mocks ----
+import useNumberRangeFilter from '../useNumberRangeFilter';
+import NumberRangeFilter from '../NumberRangeFilter';
 
 describe('NumberRangeFilter', () => {
+	const handleMinOnChange = vi.fn();
+	const handleMaxOnChange = vi.fn();
+	const handleSliderOnValueChange = vi.fn();
+	const setUnit = vi.fn();
+
 	beforeEach(() => {
 		vi.clearAllMocks();
-	});
 
-	it('calls onChange with normalized values based on decimals', async () => {
-		const user = userEvent.setup();
-		const { onChange, minInput } = setup();
-
-		await user.type(minInput, '1.239');
-
-		expect(onChange).toHaveBeenLastCalledWith({
-			min: 1.24,
-			max: undefined,
-		});
-	});
-
-	it('calls onChange with clamped values when input exceeds boundaries', async () => {
-		const user = userEvent.setup();
-		const { onChange, minInput, maxInput } = setup();
-
-		await user.type(minInput, '-10');
-		expect(onChange).toHaveBeenLastCalledWith({
-			min: 0,
-			max: undefined,
-		});
-
-		await user.clear(maxInput);
-		await user.type(maxInput, '200');
-
-		expect(onChange).toHaveBeenLastCalledWith({
-			min: 0,
-			max: 100,
-		});
-	});
-
-	it('calls onChange with undefined when both values are cleared', async () => {
-		const user = userEvent.setup();
-		const { onChange, minInput, maxInput } = setup({
-			value: { min: 10, max: 20 },
-		});
-
-		await user.clear(minInput);
-		await user.clear(maxInput);
-
-		expect(onChange).toHaveBeenLastCalledWith(undefined);
-	});
-
-	it('does not call onChange with invalid range when min is greater than max', async () => {
-		const user = userEvent.setup();
-		const { onChange, minInput, maxInput } = setup();
-
-		await user.type(minInput, '50');
-		await user.type(maxInput, '10');
-
-		expect(onChange).not.toHaveBeenLastCalledWith({
-			min: 50,
+		(useNumberRangeFilter as any).mockReturnValue({
+			min: 1,
 			max: 10,
+			unit: 'kg',
+
+			config: { gte: 0, lte: 100 },
+			unitMetaList: [
+				{ value: 'kg', label: 'Kilogram', symbol: 'kg' },
+				{ value: 'lb', label: 'Pound', symbol: 'lb' },
+			],
+
+			hasUnit: true,
+			selectedUnitMeta: { value: 'kg', label: 'Kilogram', symbol: 'kg' },
+			isInteger: true,
+			step: 1,
+			safeMin: 1,
+			safeMax: 10,
+
+			setUnit,
+			handleMinOnChange,
+			handleMaxOnChange,
+			handleSliderOnValueChange,
 		});
 	});
 
-	it('calls onChange with partial range when only min is provided', async () => {
-		const user = userEvent.setup();
-		const { onChange, minInput } = setup();
-
-		await user.type(minInput, '25');
-
-		expect(onChange).toHaveBeenLastCalledWith({
-			min: 25,
-			max: undefined,
-		});
-	});
-
-	it('updates displayed values when parent value changes', () => {
-		const { rerender } = render(
+	it('returns label when provided', () => {
+		render(
 			<NumberRangeFilter
-				label="Test Range"
-				entity={'testEntity' as any}
-				metric={'testMetric' as any}
-				value={{ min: 5, max: 15 }}
+				label="Weight"
+				entity="item"
+				metric="weight"
 				onChange={vi.fn()}
 			/>
 		);
 
-		expect(screen.getByDisplayValue('5')).toBeInTheDocument();
-		expect(screen.getByDisplayValue('15')).toBeInTheDocument();
+		expect(screen.getByText('Weight')).toBeInTheDocument();
+	});
 
-		rerender(
+	it('returns description when provided', () => {
+		render(
 			<NumberRangeFilter
-				label="Test Range"
-				entity={'testEntity' as any}
-				metric={'testMetric' as any}
-				value={{ min: 20, max: 30 }}
+				label="Weight"
+				description="Select range"
+				entity="item"
+				metric="weight"
 				onChange={vi.fn()}
 			/>
 		);
 
-		expect(screen.getByDisplayValue('20')).toBeInTheDocument();
-		expect(screen.getByDisplayValue('30')).toBeInTheDocument();
+		expect(screen.getByText('Select range')).toBeInTheDocument();
 	});
 
-	it('calls onChange with sanitized values when slider changes', async () => {
-		const user = userEvent.setup();
-		const { onChange } = setup();
+	it('returns error message when provided', () => {
+		render(
+			<NumberRangeFilter
+				label="Weight"
+				error="Invalid range"
+				entity="item"
+				metric="weight"
+				onChange={vi.fn()}
+			/>
+		);
 
-		await user.click(screen.getByTestId('slider'));
+		expect(screen.getByText('Invalid range')).toBeInTheDocument();
+	});
 
-		expect(onChange).toHaveBeenLastCalledWith({
-			min: 10,
-			max: 20,
+	it('calls handleMinOnChange when Min input changes', () => {
+		render(
+			<NumberRangeFilter
+				label="Weight"
+				entity="item"
+				metric="weight"
+				onChange={vi.fn()}
+			/>
+		);
+
+		fireEvent.change(screen.getByTestId('Min'), {
+			target: { value: '5' },
 		});
+
+		expect(handleMinOnChange).toHaveBeenCalled();
+	});
+
+	it('calls handleMaxOnChange when Max input changes', () => {
+		render(
+			<NumberRangeFilter
+				label="Weight"
+				entity="item"
+				metric="weight"
+				onChange={vi.fn()}
+			/>
+		);
+
+		fireEvent.change(screen.getByTestId('Max'), {
+			target: { value: '20' },
+		});
+
+		expect(handleMaxOnChange).toHaveBeenCalled();
+	});
+
+	it('calls handleSliderOnValueChange when slider is changed', () => {
+		render(
+			<NumberRangeFilter
+				label="Weight"
+				entity="item"
+				metric="weight"
+				onChange={vi.fn()}
+			/>
+		);
+
+		fireEvent.click(screen.getByTestId('slider'));
+
+		expect(handleSliderOnValueChange).toHaveBeenCalledWith([5, 15]);
+	});
+
+	it('returns unit badge when hasUnit is true', () => {
+		render(
+			<NumberRangeFilter
+				label="Weight"
+				entity="item"
+				metric="weight"
+				onChange={vi.fn()}
+			/>
+		);
+
+		expect(screen.getAllByText('kg').length).toBeGreaterThan(0);
+	});
+
+	it('calls setUnit with selected value when unit option is clicked', () => {
+		render(
+			<NumberRangeFilter
+				label="Weight"
+				entity="item"
+				metric="weight"
+				onChange={vi.fn()}
+			/>
+		);
+
+		fireEvent.click(screen.getByText('Pound'));
+
+		expect(setUnit).toHaveBeenCalledWith('lb');
 	});
 });

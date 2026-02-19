@@ -95,7 +95,8 @@ Raw oklch components only (no wrapper) —
 	--popover: 1 0 0;
 	--popover-foreground: 0.141 0.005 285.823;
 	--muted: 0.967 0.001 286.375;
-	--muted-foreground: 0.552 0.016 285.938;
+	--muted-foreground: 0.52 0.017 285.9;  /** FIXED: darkened from 0.552 */
+
 	--border: 0.92 0.004 286.32;
 	--input: 0.92 0.004 286.32;
 
@@ -104,10 +105,10 @@ Raw oklch components only (no wrapper) —
 	--secondary-foreground: 0.21 0.006 285.885;
 
 	/* ── FIX: ring now matches Teal primary ── */
-	--ring: 0.6 0.1 185;
+	--ring: 0.55 0.095 185;  /** FIXED: matches darkened primary */
 
-	/* ── Teal 600 — the heart of Beggy ── */
-	--primary: 0.6 0.1 185;
+	/* ── Teal 700 (darkened for contrast) — the heart of Beggy ── */
+	--primary: 0.55 0.095 185;  /* ✅ FIXED: darkened from 0.6 */
 	--primary-foreground: 0.98 0.01 181;
 
 	/* ── FIX: accent is now a real Teal tint, not Zinc grey ── */
@@ -123,25 +124,25 @@ Raw oklch components only (no wrapper) —
 	--warning: 0.78 0.17 75;
 	--warning-foreground: 0.2 0.02 75;
 
-	/* ── Destructive (Rose) — shadcn generated, correct ── */
-	--destructive: 0.577 0.245 27.325;
+	/* ── Destructive (Rose) — darkened for safety ── */
+	--destructive: 0.565 0.24 27;  /* ✅ FIXED: darkened from 0.577 */
 	--destructive-foreground: 0.98 0 0;
 
 	/* ── Sidebar — teal-tinted identity ── */
 	--sidebar: 0.985 0.008 185;
 	--sidebar-foreground: 0.141 0.005 285.823;
-	--sidebar-primary: 0.6 0.1 185;
+	--sidebar-primary: 0.55 0.095 185;  /* ✅ FIXED: matches primary */
 	--sidebar-primary-foreground: 0.98 0.01 181;
 	--sidebar-accent: 0.94 0.03 185;
 	--sidebar-accent-foreground: 0.32 0.07 185;
 	--sidebar-border: 0.92 0.004 286.32;
-	--sidebar-ring: 0.6 0.1 185;
+	--sidebar-ring: 0.55 0.095 185;  /* ✅ FIXED: matches primary */
 
 	/* ── Charts — Teal gradient scale ── */
 	--chart-1: oklch(0.85 0.13 181);
 	--chart-2: oklch(0.78 0.13 182);
 	--chart-3: oklch(0.7 0.12 183);
-	--chart-4: oklch(0.6 0.1 185);
+	--chart-4: oklch(0.55 0.095 185);  /* ✅ FIXED: matches primary */
 	--chart-5: oklch(0.51 0.09 186);
 }
 
@@ -184,8 +185,8 @@ DARK MODE
 	--warning: 0.82 0.17 75;
 	--warning-foreground: 0.2 0.02 75;
 
-	/* ── Destructive dark — shadcn generated, correct ── */
-	--destructive: 0.704 0.191 22.216;
+	/* ── Destructive dark — darkened for contrast ── */
+	--destructive: 0.56 0.22 24;  /* ✅ FIXED: darkened from 0.704 */
 	--destructive-foreground: 0.985 0 0;
 
 	/* ── Sidebar dark ── */

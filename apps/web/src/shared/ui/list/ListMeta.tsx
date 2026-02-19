@@ -121,7 +121,10 @@ const ListMeta = ({ meta, isLoading, label = 'results' }: ListMetaProps) => {
 				Main informational section.
 				Muted color reduces visual weight while still providing clarity.
 			*/}
-			<div className="flex items-center gap-2 text-sm text-muted-foreground">
+			<div
+				className="flex items-center gap-2 text-sm text-muted-foreground"
+				aria-live="polite"
+			>
 				<HugeiconsIcon
 					icon={InformationCircleIcon}
 					className="h-4 w-4"
@@ -129,7 +132,9 @@ const ListMeta = ({ meta, isLoading, label = 'results' }: ListMetaProps) => {
 
 				{/* Empty State */}
 				{count === 0 ? (
-					<span>No {label} found</span>
+					<Badge variant="secondary" className="font-normal">
+						No {label} found
+					</Badge>
 				) : (
 					<div className="flex flex-wrap items-center gap-2">
 						<span>Showing</span>

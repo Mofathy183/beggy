@@ -53,7 +53,7 @@ describe('ListOrderBy', () => {
 		expect(container.firstChild).toBeNull();
 	});
 
-	it('returns selected sort label', () => {
+	it('returns label of selected sort option', () => {
 		render(
 			<ListOrderBy
 				options={options}
@@ -68,7 +68,7 @@ describe('ListOrderBy', () => {
 		expect(screen.getByText('Newest')).toBeInTheDocument();
 	});
 
-	it('calls onChange with selected sort value', async () => {
+	it('calls onChange with selected sort value when option is selected', async () => {
 		const user = userEvent.setup();
 		const handleChange = vi.fn();
 
@@ -83,8 +83,15 @@ describe('ListOrderBy', () => {
 			/>
 		);
 
-		await user.click(screen.getByRole('button', { name: /sort/i }));
-		await user.click(screen.getByText('Oldest'));
+		await user.click(
+			screen.getByRole('button', { name: /change sorting order/i })
+		);
+
+		const oldest = await screen.findByRole('menuitemradio', {
+			name: 'Oldest',
+		});
+
+		await user.click(oldest);
 
 		expect(handleChange).toHaveBeenCalledWith({
 			orderBy: 'createdAt',

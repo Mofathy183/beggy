@@ -46,20 +46,32 @@ const ListOrderBy = <Field extends string>({
 	if (!value || options.length === 0) return null;
 
 	// Find currently selected option
-	const selectedOption = options.find(
-		(opt) =>
-			opt.value.orderBy === value.orderBy &&
-			opt.value.direction === value.direction
-	);
+	const selectedOption =
+		options.find(
+			(opt) =>
+				opt.value.orderBy === value.orderBy &&
+				opt.value.direction === value.direction
+		) ?? options[0];
+
+	const toKey = (v: { orderBy: Field; direction: OrderDirection }) =>
+		`${v.orderBy}:${v.direction}`;
 
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger>
-				<Button variant="outline" size="sm" className="gap-2">
+				<Button
+					variant="outline"
+					size="sm"
+					className="gap-2"
+					aria-label="Change sorting order"
+				>
 					<HugeiconsIcon icon={ArrowUpDownIcon} className="h-4 w-4" />
 					Sort
 					{selectedOption && (
-						<Badge variant="secondary" className="ml-1">
+						<Badge
+							variant="secondary"
+							className="ml-1 text-xs font-normal"
+						>
 							{selectedOption.label}
 						</Badge>
 					)}
@@ -68,16 +80,18 @@ const ListOrderBy = <Field extends string>({
 
 			<DropdownMenuContent align="start">
 				<DropdownMenuRadioGroup
-					value={JSON.stringify(value)}
+					value={toKey(value)}
 					onValueChange={(val) => {
-						const parsed = JSON.parse(val);
-						onChange(parsed);
+						const next = options.find(
+							(opt) => toKey(opt.value) === val
+						);
+						if (next) onChange(next.value);
 					}}
 				>
 					{options.map((opt) => (
 						<DropdownMenuRadioItem
 							key={`${opt.value.orderBy}-${opt.value.direction}`}
-							value={JSON.stringify(opt.value)}
+							value={toKey(opt.value)}
 							disabled={opt.disabled}
 						>
 							{opt.icon && <opt.icon className="mr-2 h-4 w-4" />}

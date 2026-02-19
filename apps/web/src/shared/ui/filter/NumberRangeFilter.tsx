@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { Slider } from '@shadcn-ui/slider';
 import { Input } from '@shadcn-ui/input';
 import { Label } from '@shadcn-ui/label';
@@ -16,10 +15,10 @@ import { ChevronDown, Check } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@shadcn-lib';
 
-import { NUMBER_CONFIG, WeightUnit, VolumeUnit } from '@beggy/shared/constants';
+import { WeightUnit, VolumeUnit } from '@beggy/shared/constants';
 import { NumericEntity, NumericMetric } from '@beggy/shared/types';
 
-import { WEIGHT_UNIT_META, VOLUME_UNIT_META } from '@shared/ui/mappers';
+import useNumberRangeFilter from './useNumberRangeFilter';
 
 /**
  * Represents a numeric range filter value.
@@ -103,243 +102,34 @@ const NumberRangeFilter = <E extends NumericEntity>({
 	error,
 	className,
 }: NumberRangeFilterProps<E>) => {
-	/**
-	 * Retrieve numeric configuration from the single source of truth.
-	 *
-	 * This ensures:
-	 * - UI boundaries always match backend validation
-	 * - Decimals are consistent across app
-	 */
-	const config = NUMBER_CONFIG[entity][metric];
+	const {
+		// state
+		min,
+		max,
+		unit,
 
-	//* Units */
-	/**
-	 * Units are only supported for:
-	 * - item.weight
-	 * - item.volume
-	 *
-	 * Domain-driven decision:
-	 * Bag and suitcase values are assumed fixed base units.
-	 */
-	const isItem = entity === 'item';
-	const isWeight = isItem && metric === 'weight';
-	const isVolume = isItem && metric === 'volume';
-	const hasUnit = isWeight || isVolume;
+		config,
+		unitMetaList,
 
-	/**
-	 * Derive available unit metadata.
-	 *
-	 * Memoized for performance stability.
-	 */
-	const unitMetaList = useMemo(() => {
-		if (isWeight) return WEIGHT_UNIT_META;
-		if (isVolume) return VOLUME_UNIT_META;
-		return [];
-	}, [isWeight, isVolume]);
+		// derived
+		hasUnit,
+		selectedUnitMeta,
+		isInteger,
+		step,
+		safeMin,
+		safeMax,
 
-	/**
-	 * Default unit selection.
-	 *
-	 * Note:
-	 * Currently visual only (no conversion logic).
-	 */
-	const defaultUnit = unitMetaList[0]?.value;
-
-	const [unit, setUnit] = useState<WeightUnit | VolumeUnit | undefined>(
-		defaultUnit
-	);
-
-	const selectedUnitMeta = useMemo(
-		() => unitMetaList.find((u) => u.value === unit),
-		[unitMetaList, unit]
-	);
-
-	//* Range State */
-	/**
-	 * Internal state mirrors controlled value.
-	 *
-	 * Why?
-	 * - Allows smooth slider + input typing
-	 * - Prevents jitter during parent updates
-	 */
-	const [min, setMin] = useState<number | undefined>(value?.min);
-	const [max, setMax] = useState<number | undefined>(value?.max);
-
-	/**
-	 * Sync internal state when parent value changes.
-	 */
-	useEffect(() => {
-		setMin(value?.min);
-		setMax(value?.max);
-	}, [value]);
-
-	//* Precision Logic */
-
-	/**
-	 * Determine if this metric is integer-only.
-	 *
-	 * Used to:
-	 * - Control inputMode (better mobile UX)
-	 * - Ensure step is 1
-	 */
-	const isInteger = config.decimals === 0;
-
-	/**
-	 * Slider/Input step derived from config decimals.
-	 *
-	 * decimals = 0 → 1
-	 * decimals = 2 → 0.01
-	 */
-	const step = useMemo(() => {
-		if (config.decimals === 0) return 1;
-		return 1 / 10 ** config.decimals;
-	}, [config.decimals]);
-
-	/**
-	 * Clamp value within allowed domain boundaries.
-	 *
-	 * Prevents UI from drifting outside backend validation.
-	 */
-	const clamp = (val?: number) => {
-		if (val == null) return undefined;
-		return Math.min(Math.max(val, config.gte), config.lte);
-	};
-
-	/**
-	 * Normalize value to allowed decimal precision.
-	 *
-	 * Ensures:
-	 * - Clean values
-	 * - No floating point drift
-	 * - Predictable filter payload
-	 */
-	const normalize = (val?: number) => {
-		if (val == null) return undefined;
-		const factor = 10 ** config.decimals;
-		return Math.round(val * factor) / factor;
-	};
-
-	/**
-	 * Emit sanitized value to parent.
-	 *
-	 * Processing order:
-	 * 1. Clamp
-	 * 2. Normalize
-	 * 3. Emit undefined if empty
-	 */
-	const emit = (nextMin?: number, nextMax?: number) => {
-		const clampedMin = clamp(nextMin);
-		const clampedMax = clamp(nextMax);
-
-		const normalizedMin = normalize(clampedMin);
-		const normalizedMax = normalize(clampedMax);
-
-		// Prevent emitting invalid range
-		if (
-			normalizedMin != null &&
-			normalizedMax != null &&
-			normalizedMin > normalizedMax
-		) {
-			return;
-		}
-
-		if (normalizedMin == null && normalizedMax == null) {
-			onChange(undefined);
-			return;
-		}
-
-		onChange({
-			min: normalizedMin,
-			max: normalizedMax,
-		});
-	};
-
-	/**
-	 * Safe slider fallback values.
-	 *
-	 * Slider must always be controlled.
-	 */
-	const safeMin = min ?? config.gte;
-	const safeMax = max ?? config.lte;
-
-	/**
-	 * Handles manual changes to the minimum input field.
-	 *
-	 * @remarks
-	 * - Converts empty string to `undefined` to represent an unset boundary.
-	 * - Prevents invalid state where `min > max`.
-	 * - Emits the updated range immediately to keep parent state in sync.
-	 *
-	 * @param e - The change event from the minimum input field.
-	 */
-	const handleMinOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		// Convert input value:
-		// - "" → undefined (represents no boundary)
-		// - string number → numeric value
-		const val = e.target.value === '' ? undefined : Number(e.target.value);
-
-		// 🚫 Guard against invalid range:
-		// Prevent setting min greater than current max
-		if (val != null && max != null && val > max) {
-			return;
-		}
-
-		setMin(val);
-		emit(val, max);
-	};
-
-	/**
-	 * Handles manual changes to the maximum input field.
-	 *
-	 * @remarks
-	 * - Converts empty string to `undefined` to represent an unset boundary.
-	 * - Prevents invalid state where `min > max`.
-	 * - Emits the updated range immediately to keep parent state in sync.
-	 *
-	 * @param e - The change event from the maximum input field.
-	 */
-	const handleMaxOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		// Convert input value:
-		// - "" → undefined (represents no boundary)
-		// - string number → numeric value
-		const val = e.target.value === '' ? undefined : Number(e.target.value);
-
-		// 🚫 Guard against invalid range:
-		// Prevent setting max smaller than current min
-		if (min != null && val != null && min > val) {
-			return;
-		}
-
-		setMax(val);
-		emit(min, val);
-	};
-
-	/**
-	 * Handles slider range updates.
-	 *
-	 * @remarks
-	 * - Accepts both single-value and range modes (Slider API contract).
-	 * - Safely narrows to range mode (`[min, max]`).
-	 * - Prevents invalid state where `min > max`.
-	 * - Synchronizes local state and emits normalized values.
-	 *
-	 * @param value - The value emitted by the Slider component.
-	 * May be a single number or a readonly number tuple.
-	 */
-	const handleSliderOnValueChange = (value: number | readonly number[]) => {
-		// Ensure slider is operating in range mode
-		if (!Array.isArray(value) || value.length !== 2) return;
-
-		const [nextMin, nextMax] = value;
-
-		// 🚫 Guard against impossible slider state
-		if (nextMin > nextMax) return;
-
-		setMin(nextMin);
-		setMax(nextMax);
-		emit(nextMin, nextMax);
-	};
-
+		// actions
+		setUnit,
+		handleMinOnChange,
+		handleMaxOnChange,
+		handleSliderOnValueChange,
+	} = useNumberRangeFilter<E>({
+		value,
+		entity,
+		metric,
+		onChange,
+	});
 	//* UI */
 	return (
 		<div className={cn('space-y-3', className)}>
@@ -350,7 +140,10 @@ const NumberRangeFilter = <E extends NumericEntity>({
 
 					{/* Visual unit indicator (UX clarity) */}
 					{hasUnit && selectedUnitMeta && (
-						<Badge variant="secondary" className="text-xs">
+						<Badge
+							variant="secondary"
+							className="text-sm font-medium"
+						>
 							{selectedUnitMeta.symbol}
 						</Badge>
 					)}
@@ -364,12 +157,12 @@ const NumberRangeFilter = <E extends NumericEntity>({
 								size="sm"
 								className="h-8 px-3 gap-2"
 							>
-								<span className="text-sm">
+								<span className="text-sm font-medium">
 									{selectedUnitMeta.symbol}
 								</span>
 								<HugeiconsIcon
 									icon={ChevronDown}
-									className="h-4 w-4 opacity-60"
+									className="h-4 w-4 text-muted-foreground"
 								/>
 							</Button>
 						</DropdownMenuTrigger>
@@ -391,8 +184,10 @@ const NumberRangeFilter = <E extends NumericEntity>({
 										className="flex items-center justify-between"
 									>
 										<div className="flex flex-col">
-											<span>{meta.label}</span>
-											<span className="text-xs text-muted-foreground">
+											<span className="text-sm">
+												{meta.label}
+											</span>
+											<span className="text-sm text-muted-foreground">
 												{meta.symbol}
 											</span>
 										</div>
@@ -400,7 +195,7 @@ const NumberRangeFilter = <E extends NumericEntity>({
 										{isActive && (
 											<HugeiconsIcon
 												icon={Check}
-												className="h-4 w-4 opacity-70"
+												className="h-4 w-4 text-foreground"
 											/>
 										)}
 									</DropdownMenuItem>
@@ -412,7 +207,7 @@ const NumberRangeFilter = <E extends NumericEntity>({
 			</div>
 
 			{description && (
-				<p className="text-xs text-muted-foreground">{description}</p>
+				<p className="text-sm text-muted-foreground">{description}</p>
 			)}
 
 			{/* Inputs */}
@@ -447,7 +242,9 @@ const NumberRangeFilter = <E extends NumericEntity>({
 				onValueChange={handleSliderOnValueChange}
 			/>
 
-			{error && <p className="text-xs text-destructive">{error}</p>}
+			{error && (
+				<p className="text-sm font-medium text-destructive">{error}</p>
+			)}
 		</div>
 	);
 };

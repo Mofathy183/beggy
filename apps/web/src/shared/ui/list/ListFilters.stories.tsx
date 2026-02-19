@@ -12,25 +12,6 @@ import {
 } from '@shadcn-ui/select';
 import { Label } from '@shadcn-ui/label';
 
-type SearchAndStatus = {
-	search?: string;
-	status?: 'all' | 'active' | 'archived';
-};
-
-type NumberRange = {
-	weight?: {
-		min?: number;
-		max?: number;
-	};
-};
-
-type DateRange = {
-	createdAt?: {
-		from?: string;
-		to?: string;
-	};
-};
-
 const meta: Meta<typeof ListFilters<any>> = {
 	title: 'UI/List/ListFilters',
 	component: ListFilters,
@@ -39,35 +20,113 @@ const meta: Meta<typeof ListFilters<any>> = {
 		docs: {
 			description: {
 				component: `
-**ListFilters** is a stateless layout container that frames filter inputs
-and exposes clear **Apply / Reset** user intent.
+A stateless filter layout container that communicates user filter intent.
 
-It:
-- Does not own fetching logic
-- Does not perform validation
-- Does not transform schemas
-- Does not decide empty-state behavior
+---
 
-It simply communicates filter intent upward.
-				`,
+## What it is
+
+A structured card surface that:
+
+- Frames filter inputs
+- Communicates filter intent
+- Exposes **Apply** and **Reset** actions
+- Delegates state and validation upward
+
+It does not own business logic.
+
+---
+
+## When to use it
+
+- Admin dashboards
+- Data tables
+- Search/filter panels
+- Sidebars
+- Advanced query builders
+
+---
+
+## When NOT to use it
+
+- For inline filtering inside table headers
+- For simple single-input filtering
+- When no explicit Apply/Reset intent is required
+
+---
+
+## Interaction model
+
+- Users adjust filter inputs
+- Reset clears filter values
+- Apply confirms intent explicitly
+- No auto-submission
+
+---
+
+## Constraints
+
+- Always renders Apply and Reset actions
+- Does not validate inputs
+- Does not fetch data
+- Layout must remain stable in narrow containers
+
+---
+
+## Accessibility guarantees
+
+- Buttons are keyboard accessible
+- Header icon is decorative
+- Clear visual hierarchy
+- No color-only meaning
+
+---
+
+## Design-system notes
+
+- Built on shadcn Card
+- Token-driven styling
+- Dark-mode compatible
+- Deterministic rendering
+        `,
 			},
 		},
+	},
+	argTypes: {
+		title: {
+			description: 'Optional header title. Defaults to "Filters".',
+			control: 'text',
+			table: {
+				type: { summary: 'string' },
+				defaultValue: { summary: '"Filters"' },
+			},
+		},
+		className: {
+			description: 'Optional additional class names.',
+			control: false,
+			table: {
+				type: { summary: 'string' },
+			},
+		},
+		value: { table: { disable: true } },
+		onApply: { table: { disable: true } },
+		onReset: { table: { disable: true } },
+		children: { table: { disable: true } },
 	},
 };
 
 export default meta;
+type Story = StoryObj<typeof ListFilters<any>>;
 
 /**
  * SearchAndStatus
  *
- * @remarks
- * - Common list filtering pattern
- * - Mirrors simple text + enum Zod schemas
- * - Typical for admin tables and dashboards
+ * Common dashboard filtering pattern combining
+ * text search and enum-based selection.
  */
-export const SearchAndStatus: StoryObj = {
+export const SearchAndStatus: Story = {
 	render: () => {
-		const [filters, setFilters] = useState<SearchAndStatus>({
+		const [filters, setFilters] = useState({
 			search: '',
 			status: 'all',
 		});
@@ -82,7 +141,7 @@ export const SearchAndStatus: StoryObj = {
 					<Label>Search</Label>
 					<Input
 						placeholder="Search by name or keyword"
-						value={filters.search ?? ''}
+						value={filters.search}
 						onChange={(e) =>
 							setFilters({ ...filters, search: e.target.value })
 						}
@@ -93,12 +152,9 @@ export const SearchAndStatus: StoryObj = {
 					<Label>Status</Label>
 					<Select
 						value={filters.status}
-						onValueChange={(value) =>
-							setFilters({
-								...filters,
-								status: value as SearchAndStatus['status'],
-							})
-						}
+						onValueChange={(value: string | null) => {
+							setFilters({ ...filters, status: value ?? '' });
+						}}
 					>
 						<SelectTrigger>
 							<SelectValue placeholder="Select status" />
@@ -113,19 +169,24 @@ export const SearchAndStatus: StoryObj = {
 			</ListFilters>
 		);
 	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Represents a typical admin filtering experience combining search and status selection.',
+			},
+		},
+	},
 };
 
 /**
  * NumberRange
  *
- * @remarks
- * - Mirrors numberRangeSchema from Zod
- * - Supports optional min / max boundaries
- * - Common for weight, capacity, volume, price
+ * Used for numeric filtering such as weight,
+ * price, capacity, or quantity ranges.
  */
-export const NumberRange: StoryObj = {
+export const NumberRange: Story = {
 	render: () => {
-		const [filters, setFilters] = useState<NumberRange>({
+		const [filters, setFilters] = useState({
 			weight: {},
 		});
 
@@ -139,7 +200,6 @@ export const NumberRange: StoryObj = {
 					<Input
 						type="number"
 						placeholder="Min weight"
-						value={filters.weight?.min ?? ''}
 						onChange={(e) =>
 							setFilters({
 								weight: {
@@ -154,7 +214,6 @@ export const NumberRange: StoryObj = {
 					<Input
 						type="number"
 						placeholder="Max weight"
-						value={filters.weight?.max ?? ''}
 						onChange={(e) =>
 							setFilters({
 								weight: {
@@ -173,64 +232,12 @@ export const NumberRange: StoryObj = {
 };
 
 /**
- * DateRange
- *
- * @remarks
- * - Mirrors dateRangeSchema used in query filters
- * - Common for createdAt / updatedAt filtering
- * - Works with ISO strings or Date adapters
- */
-export const DateRange: StoryObj = {
-	render: () => {
-		const [filters, setFilters] = useState<DateRange>({
-			createdAt: {},
-		});
-
-		return (
-			<ListFilters
-				value={filters}
-				onApply={(f) => console.log('apply', f)}
-				onReset={() => setFilters({ createdAt: {} })}
-			>
-				<div className="grid grid-cols-2 gap-2">
-					<Input
-						type="date"
-						value={filters.createdAt?.from ?? ''}
-						onChange={(e) =>
-							setFilters({
-								createdAt: {
-									...filters.createdAt,
-									from: e.target.value || undefined,
-								},
-							})
-						}
-					/>
-					<Input
-						type="date"
-						value={filters.createdAt?.to ?? ''}
-						onChange={(e) =>
-							setFilters({
-								createdAt: {
-									...filters.createdAt,
-									to: e.target.value || undefined,
-								},
-							})
-						}
-					/>
-				</div>
-			</ListFilters>
-		);
-	},
-};
-
-/**
  * NoFilters
  *
- * @remarks
- * - Used when a list has no filterable fields
- * - Important UX edge case for permissions or feature flags
+ * Occurs when a list supports no filtering.
+ * Important edge case for permissions or feature flags.
  */
-export const NoFilters: StoryObj = {
+export const NoFilters: Story = {
 	render: () => (
 		<ListFilters value={{}} onApply={() => {}} onReset={() => {}}>
 			<p className="text-sm text-muted-foreground">
@@ -241,78 +248,63 @@ export const NoFilters: StoryObj = {
 };
 
 /**
- * Dark mode verification.
+ * DarkMode
  *
- * Ensures card surface, ghost button,
- * primary button, and muted tokens
+ * Ensures token contrast and button hierarchy
  * remain accessible in dark theme.
  */
-export const DarkMode: StoryObj = {
+export const DarkMode: Story = {
 	render: () => {
-		const [filters, setFilters] = useState<SearchAndStatus>({
+		const [filters, setFilters] = useState({
 			search: '',
-			status: 'all',
 		});
 
 		return (
-			<div className="dark bg-background p-6">
-				<ListFilters
-					value={filters}
-					onApply={(f) => console.log('apply', f)}
-					onReset={() => setFilters({ search: '', status: 'all' })}
-				>
-					<div className="grid gap-1">
-						<Label>Search</Label>
-						<Input
-							value={filters.search ?? ''}
-							onChange={(e) =>
-								setFilters({
-									...filters,
-									search: e.target.value,
-								})
-							}
-						/>
-					</div>
-				</ListFilters>
-			</div>
+			<ListFilters
+				value={filters}
+				onApply={() => {}}
+				onReset={() => setFilters({ search: '' })}
+			>
+				<div className="grid gap-1">
+					<Label>Search</Label>
+					<Input
+						value={filters.search}
+						onChange={(e) => setFilters({ search: e.target.value })}
+					/>
+				</div>
+			</ListFilters>
 		);
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
+		themes: { themeOverride: 'dark' },
 	},
 };
 
 /**
- * Narrow container layout.
+ * NarrowContainer
  *
- * Validates layout stability when used
- * inside sidebars or constrained panels.
+ * Verifies layout stability in constrained panels
+ * such as sidebars or mobile drawers.
  */
-export const NarrowContainer: StoryObj = {
+export const NarrowContainer: Story = {
 	render: () => {
-		const [filters, setFilters] = useState<SearchAndStatus>({
+		const [filters, setFilters] = useState({
 			search: '',
-			status: 'all',
 		});
 
 		return (
 			<div className="w-[320px] border p-4">
 				<ListFilters
 					value={filters}
-					onApply={(f) => console.log('apply', f)}
-					onReset={() => setFilters({ search: '', status: 'all' })}
+					onApply={() => {}}
+					onReset={() => setFilters({ search: '' })}
 				>
 					<div className="grid gap-1">
 						<Label>Search</Label>
 						<Input
-							value={filters.search ?? ''}
+							value={filters.search}
 							onChange={(e) =>
-								setFilters({
-									...filters,
-									search: e.target.value,
-								})
+								setFilters({ search: e.target.value })
 							}
 						/>
 					</div>

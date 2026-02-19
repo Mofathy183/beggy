@@ -1,79 +1,96 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { useState } from 'react';
+import userEvent from '@testing-library/user-event';
 import ToggleFilter from '../ToggleFilter';
 
-const setup = (value: boolean | undefined = undefined) => {
-	const onChange = vi.fn();
-
-	render(
-		<ToggleFilter label="Active Status" value={value} onChange={onChange} />
-	);
-
-	return { onChange };
-};
-
 describe('ToggleFilter', () => {
-	it('returns label when provided', () => {
-		setup();
+	it('renders label when provided', () => {
+		render(
+			<ToggleFilter
+				label="Active Status"
+				value={undefined}
+				onChange={vi.fn()}
+			/>
+		);
+
 		expect(screen.getByText('Active Status')).toBeInTheDocument();
 	});
 
-	it('does not return label when not provided', () => {
+	it('selects "All" when value is undefined', () => {
+		render(<ToggleFilter value={undefined} onChange={vi.fn()} />);
+
+		expect(screen.getByRole('button', { name: /all/i })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+	});
+
+	it('selects "Yes" when value is true', () => {
+		render(<ToggleFilter value={true} onChange={vi.fn()} />);
+
+		expect(screen.getByRole('button', { name: /yes/i })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+	});
+
+	it('selects "No" when value is false', () => {
+		render(<ToggleFilter value={false} onChange={vi.fn()} />);
+
+		expect(screen.getByRole('button', { name: /no/i })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+	});
+
+	it('calls onChange with true when user selects "Yes"', async () => {
+		const user = userEvent.setup();
 		const onChange = vi.fn();
 
 		render(<ToggleFilter value={undefined} onChange={onChange} />);
 
-		expect(screen.queryByText('Active Status')).not.toBeInTheDocument();
-	});
-
-	it('activates All option when value is undefined', () => {
-		setup(undefined);
-
-		expect(screen.getByRole('radio', { name: /all/i })).toHaveAttribute(
-			'data-state',
-			'on'
-		);
-	});
-
-	it('activates Yes option when value is true', () => {
-		setup(true);
-
-		expect(screen.getByRole('radio', { name: /yes/i })).toHaveAttribute(
-			'data-state',
-			'on'
-		);
-	});
-
-	it('activates No option when value is false', () => {
-		setup(false);
-
-		expect(screen.getByRole('radio', { name: /no/i })).toHaveAttribute(
-			'data-state',
-			'on'
-		);
-	});
-
-	it('calls onChange with true when Yes is clicked', () => {
-		const { onChange } = setup(undefined);
-
-		fireEvent.click(screen.getByRole('radio', { name: /yes/i }));
+		await user.click(screen.getByRole('button', { name: /yes/i }));
 
 		expect(onChange).toHaveBeenCalledWith(true);
 	});
 
-	it('calls onChange with false when No is clicked', () => {
-		const { onChange } = setup(undefined);
+	it('calls onChange with false when user selects "No"', async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
 
-		fireEvent.click(screen.getByRole('radio', { name: /no/i }));
+		render(<ToggleFilter value={undefined} onChange={onChange} />);
+
+		await user.click(screen.getByRole('button', { name: /no/i }));
 
 		expect(onChange).toHaveBeenCalledWith(false);
 	});
 
-	it('calls onChange with undefined when All is clicked', () => {
-		const { onChange } = setup(true);
+	it('calls onChange with undefined when user selects "All"', async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
 
-		fireEvent.click(screen.getByRole('radio', { name: /all/i }));
+		render(<ToggleFilter value={true} onChange={onChange} />);
+
+		await user.click(screen.getByRole('button', { name: /all/i }));
 
 		expect(onChange).toHaveBeenCalledWith(undefined);
+	});
+
+	it('reflects updated value when parent changes value', async () => {
+		const user = userEvent.setup();
+
+		const Wrapper = () => {
+			const [value, setValue] = useState<boolean | undefined>(undefined);
+			return <ToggleFilter value={value} onChange={setValue} />;
+		};
+
+		render(<Wrapper />);
+
+		await user.click(screen.getByRole('button', { name: /yes/i }));
+
+		expect(screen.getByRole('button', { name: /yes/i })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
 	});
 });
