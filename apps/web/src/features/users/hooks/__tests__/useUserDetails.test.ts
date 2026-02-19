@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 
 vi.mock('../../users.api');
 
-import { useGetUserByIdQuery } from '../../users.api';
+import { useGetUserByIdQuery } from '../../api/users.api';
 import useUserDetails from '../useUserDetails';
 
 describe('useUserDetails', () => {

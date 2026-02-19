@@ -27,6 +27,7 @@
 			"@beggy/shared/*": ["../../packages/shared/src/*"],
 			"@/*": ["./src/*"],
 			"@shared/*": ["./src/shared/*"],
+			"@shared-ui/*": ["./src/shared/ui/*"],
 			"@features/*": ["./src/features/*"],
 			"@shadcn-ui/*": ["src/shared/components/ui/*"],
 			"@shadcn-components": ["src/shared/components"],

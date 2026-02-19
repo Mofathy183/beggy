@@ -1,4 +1,4 @@
-import { useGetUserByIdQuery } from '../users.api';
+import { useGetUserByIdQuery } from '@features/users/api';
 import type { UserDTO } from '@beggy/shared/types';
 
 /**

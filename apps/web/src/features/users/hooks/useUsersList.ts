@@ -1,5 +1,5 @@
 import { useListQuery } from '@shared/hooks';
-import { useGetUsersQuery } from '../users.api';
+import { useGetUsersQuery } from '@features/users/api';
 import type {
 	UserDTO,
 	UserFilterInput,

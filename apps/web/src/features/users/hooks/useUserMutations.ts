@@ -5,7 +5,7 @@ import {
 	useChangeUserRoleMutation,
 	useDeleteUserByIdMutation,
 	useDeleteUsersMutation,
-} from '../users.api';
+} from '@features/users/api';
 
 import type {
 	CreateUserInput,
