@@ -2,7 +2,7 @@
 
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { CreateUserInput } from '@beggy/shared/types';
 import { AdminSchema } from '@beggy/shared/schemas';
@@ -56,10 +56,16 @@ const CreateUserForm = () => {
 			email: '',
 			password: '',
 			confirmPassword: '',
-			avatarUrl: '',
 		},
 		mode: 'onSubmit',
 	});
+
+	useEffect(() => {
+		const subscription = form.watch(() => {
+			if (serverError) setServerError(null);
+		});
+		return () => subscription.unsubscribe();
+	}, [form, serverError]);
 
 	/**
 	 * Handles form submission.
@@ -73,6 +79,8 @@ const CreateUserForm = () => {
 	const onSubmit: SubmitHandler<CreateUserInput> = async (
 		values: CreateUserInput
 	) => {
+		if (states.create.isLoading) return;
+
 		try {
 			// Clear any previous server error before new attempt
 			setServerError(null);

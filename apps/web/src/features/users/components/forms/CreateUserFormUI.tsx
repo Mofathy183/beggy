@@ -76,30 +76,30 @@ const CreateUserFormUI = ({
 	serverError,
 }: CreateUserFormUIProps) => {
 	return (
-		<Card className="w-full sm:max-w-lg">
-			{/* Header establishes form intent */}
-			<CardHeader>
-				<CardTitle>Create User</CardTitle>
-				<CardDescription id="create-user-description">
-					Add a new user to the Beggy platform.
-				</CardDescription>
-			</CardHeader>
+		<form
+			onSubmit={form.handleSubmit(onSubmit)}
+			noValidate
+			aria-describedby="create-user-description"
+		>
+			<Card className="w-full sm:max-w-lg">
+				{/* Header establishes form intent */}
+				<CardHeader>
+					<CardTitle>Create User</CardTitle>
+					<CardDescription id="create-user-description">
+						Add a new user to the Beggy platform.
+					</CardDescription>
+				</CardHeader>
 
-			<CardContent>
-				{/* 
-					noValidate disables native browser validation
-					so Zod + RHF fully control validation messaging.
-				*/}
-				<form
-					id="form-create-user"
-					onSubmit={form.handleSubmit(onSubmit)}
-					noValidate
-					aria-describedby="create-user-description"
-				>
+				<CardContent>
+					{/* 
+            noValidate disables native browser validation
+            so Zod + RHF fully control validation messaging.
+        */}
+
 					<FieldGroup>
 						{/* =========================
-						   First Name
-						   ========================= */}
+                   First Name
+                   ========================= */}
 						<Controller
 							name="firstName"
 							control={form.control}
@@ -142,8 +142,8 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-						   Last Name
-						   ========================= */}
+                   Last Name
+                   ========================= */}
 						<Controller
 							name="lastName"
 							control={form.control}
@@ -185,8 +185,8 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-						   Email
-						   ========================= */}
+                   Email
+                   ========================= */}
 						<Controller
 							name="email"
 							control={form.control}
@@ -237,8 +237,8 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-						   Password
-						   ========================= */}
+                   Password
+                   ========================= */}
 						<Controller
 							name="password"
 							control={form.control}
@@ -289,8 +289,8 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-						   Confirm Password
-						   ========================= */}
+                   Confirm Password
+                   ========================= */}
 						<Controller
 							name="confirmPassword"
 							control={form.control}
@@ -333,8 +333,8 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-						   Avatar URL (Optional)
-						   ========================= */}
+                   Avatar URL (Optional)
+                   ========================= */}
 						<Controller
 							name="avatarUrl"
 							control={form.control}
@@ -352,7 +352,7 @@ const CreateUserFormUI = ({
 											{...field}
 											id="form-avatar-url"
 											type="url"
-											value={field.value ?? ''}
+											value={field.value ?? undefined}
 											placeholder="https://example.com/avatar.png"
 											autoComplete="off"
 											aria-invalid={fieldState.invalid}
@@ -385,8 +385,8 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-						   Server-Level Error
-						   ========================= */}
+                   Server-Level Error
+                   ========================= */}
 						{serverError && (
 							<Field data-invalid>
 								<FieldError
@@ -397,31 +397,27 @@ const CreateUserFormUI = ({
 							</Field>
 						)}
 					</FieldGroup>
-				</form>
-			</CardContent>
+				</CardContent>
 
-			{/* Footer actions separated for layout clarity */}
-			<CardFooter>
-				<Field orientation="horizontal">
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => form.reset()}
-						disabled={isSubmitting}
-					>
-						Reset
-					</Button>
+				{/* Footer actions separated for layout clarity */}
+				<CardFooter>
+					<Field orientation="horizontal">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => form.reset()}
+							disabled={isSubmitting}
+						>
+							Reset
+						</Button>
 
-					<Button
-						type="submit"
-						form="form-create-user"
-						disabled={isSubmitting}
-					>
-						{isSubmitting ? 'Creating...' : 'Create User'}
-					</Button>
-				</Field>
-			</CardFooter>
-		</Card>
+						<Button type="submit" disabled={isSubmitting}>
+							{isSubmitting ? 'Creating...' : 'Create User'}
+						</Button>
+					</Field>
+				</CardFooter>
+			</Card>
+		</form>
 	);
 };
 

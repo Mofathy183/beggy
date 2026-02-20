@@ -80,6 +80,8 @@ const ChangeUserRoleForm = ({ userId, currentRole }: Props) => {
 	const onSubmit: SubmitHandler<ChangeRoleInput> = async (
 		values: ChangeRoleInput
 	) => {
+		if (states.changeRole.isLoading) return;
+
 		try {
 			// Reset previous server error before new attempt
 			setServerError(null);
