@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@shadcn-ui/button';
 import { Card, CardContent } from '@shadcn-ui/card';
 import {
 	UsersEmptyState,
@@ -9,6 +8,7 @@ import {
 	UsersGrid,
 	UsersOrderBy,
 } from '@features/users/components/list';
+import { CreateUserDialog } from '@features/users/components/dialogs';
 import { ListMeta, ListPagination } from '@shared-ui/list';
 import { useUsersList } from '@features/users/hooks';
 
@@ -51,11 +51,6 @@ const UsersPage = () => {
 			{/* ── 1. Page header ──────────────────────────────────────── */}
 			<header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div className="flex flex-col gap-1">
-					{/*
-					 * text-foreground → primary heading token
-					 * text-muted-foreground → supporting subtitle token
-					 * Both from §12.6 muted text hierarchy
-					 */}
 					<h1 className="text-2xl font-semibold tracking-tight text-foreground">
 						Users
 					</h1>
@@ -64,13 +59,7 @@ const UsersPage = () => {
 					</p>
 				</div>
 
-				{/*
-				 * variant="default" → bg-primary text-primary-foreground
-				 * This is the primary CTA on the page — highest visual weight
-				 */}
-				<Button variant="default" size="sm">
-					Create User
-				</Button>
+				<CreateUserDialog />
 			</header>
 
 			{/* ── 2. Control surface ──────────────────────────────────── */}

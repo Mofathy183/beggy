@@ -232,7 +232,7 @@ const useListQuery = <Data, Filter, OrderBy>(
 		reset: () => {
 			setPagination(resolvedInitialPagination);
 			setFilters(initialFilters ?? ({} as Filter));
-            setOrderBy(initialOrderBy ?? ({} as OrderBy));
+			setOrderBy(initialOrderBy ?? ({} as OrderBy));
 		},
 
 		refetch: query.refetch,

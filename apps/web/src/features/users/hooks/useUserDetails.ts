@@ -1,12 +1,12 @@
 import { useGetUserByIdQuery } from '@features/users/api';
-import type { UserDTO } from '@beggy/shared/types';
+import type { AdminUserDTO } from '@beggy/shared/types';
 
 /**
  * Result contract for `useUserDetails`.
  */
 export type UseUserDetailsResult = {
 	/** Retrieved user entity. */
-	user: UserDTO | undefined;
+	user: AdminUserDTO | undefined;
 
 	/** Indicates initial loading state. */
 	isLoading: boolean;

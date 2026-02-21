@@ -19,10 +19,12 @@ type Props = {
 	 * Used to initialize the select field for better UX clarity.
 	 */
 	currentRole?: ChangeRoleInput['role'];
+
+	onCancel?: () => void;
 };
 
 /**
- * ChangeUserRoleForm
+ * ChangeRoleForm
  *
  * Container component responsible for:
  * - Managing form state via React Hook Form
@@ -37,7 +39,7 @@ type Props = {
  * This ensures the UI remains reusable and testable,
  * while domain logic stays centralized and predictable.
  */
-const ChangeUserRoleForm = ({ userId, currentRole }: Props) => {
+const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 	/**
 	 * Infrastructure-level user mutations.
 	 * changeRole performs the API call.
@@ -107,8 +109,9 @@ const ChangeUserRoleForm = ({ userId, currentRole }: Props) => {
 			onSubmit={form.handleSubmit(onSubmit)}
 			isSubmitting={states.changeRole.isLoading}
 			serverError={serverError}
+			onCancel={onCancel}
 		/>
 	);
 };
 
-export default ChangeUserRoleForm;
+export default ChangeRoleForm;

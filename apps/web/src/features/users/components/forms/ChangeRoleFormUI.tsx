@@ -64,6 +64,8 @@ type ChangeRoleFormUIProps = {
 	 * Displayed as a form-level error message.
 	 */
 	serverError?: unknown;
+
+	onCancel?: () => void;
 };
 
 /**
@@ -83,6 +85,7 @@ const ChangeRoleFormUI = ({
 	onSubmit,
 	isSubmitting,
 	serverError,
+	onCancel,
 }: ChangeRoleFormUIProps) => {
 	return (
 		<Card className="w-full sm:max-w-md">
@@ -217,7 +220,10 @@ const ChangeRoleFormUI = ({
 					<Button
 						type="button"
 						variant="outline"
-						onClick={() => form.reset()}
+						onClick={() => {
+							form.reset();
+							onCancel?.();
+						}}
 					>
 						Cancel
 					</Button>

@@ -10,6 +10,10 @@ import { AdminSchema } from '@beggy/shared/schemas';
 import CreateUserFormUI from './CreateUserFormUI';
 import { useUserMutations } from '@features/users/hooks';
 
+type CreateUserFormProps = {
+	onCancel?: () => void;
+};
+
 /**
  * CreateUserForm
  *
@@ -27,7 +31,7 @@ import { useUserMutations } from '@features/users/hooks';
  * ← Container (CreateUserForm)
  * ← Infrastructure (useUserMutations)
  */
-const CreateUserForm = () => {
+const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 	/**
 	 * Infrastructure-level mutation hooks.
 	 * Exposes grouped mutation states and action methods.
@@ -106,6 +110,7 @@ const CreateUserForm = () => {
 			onSubmit={onSubmit}
 			isSubmitting={states.create.isLoading}
 			serverError={serverError}
+			onCancel={onCancel}
 		/>
 	);
 };

@@ -55,6 +55,8 @@ type CreateUserFormUIProps = {
 	 * Displayed as a form-level error block.
 	 */
 	serverError?: string | null;
+
+	onCancel?: () => void;
 };
 
 /**
@@ -74,6 +76,7 @@ const CreateUserFormUI = ({
 	onSubmit,
 	isSubmitting,
 	serverError,
+	onCancel,
 }: CreateUserFormUIProps) => {
 	return (
 		<form
@@ -405,7 +408,10 @@ const CreateUserFormUI = ({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => form.reset()}
+							onClick={() => {
+								form.reset();
+								onCancel?.();
+							}}
 							disabled={isSubmitting}
 						>
 							Reset

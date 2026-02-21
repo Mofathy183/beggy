@@ -16,7 +16,7 @@ const baseUser: AdminUserDTO = {
 };
 
 const meta: Meta<typeof UserCard> = {
-	title: 'Features/Users/Card/UserCard',
+	title: 'Features/Users/Details/UserCard',
 	component: UserCard,
 	tags: ['autodocs'],
 	parameters: {
