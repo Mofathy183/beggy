@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { type UserService, UserMapper } from '@modules/users';
 import { ProfileMapper } from '@modules/profiles';
 import type {
-	UserDTO,
+	AdminUserDTO,
 	UserOrderByInput,
 	ProfileDTO,
 } from '@beggy/shared/types';
@@ -47,10 +47,14 @@ export class UserController {
 		);
 
 		//* Map domain models to transport-safe DTOs
-		const usersResponse = users.map(UserMapper.toDTO);
+		const usersResponse = users.map((user) => UserMapper.toAdminDTO(user));
 
 		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<UserDTO[]>(usersResponse, 'USERS_FETCHED', meta)
+			apiResponseMap.ok<AdminUserDTO[]>(
+				usersResponse,
+				'USERS_FETCHED',
+				meta
+			)
 		);
 	};
 
@@ -69,7 +73,10 @@ export class UserController {
 		const user = await this.userService.getById(id as string);
 
 		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<UserDTO>(UserMapper.toDTO(user), 'USER_RETRIEVED')
+			apiResponseMap.ok<AdminUserDTO>(
+				UserMapper.toAdminDTO(user),
+				'USER_RETRIEVED'
+			)
 		);
 	};
 
@@ -88,8 +95,8 @@ export class UserController {
 		const newUser = await this.userService.createUser(body);
 
 		res.status(STATUS_CODE.CREATED).json(
-			apiResponseMap.created<UserDTO>(
-				UserMapper.toDTO(newUser),
+			apiResponseMap.created<AdminUserDTO>(
+				UserMapper.toAdminDTO(newUser),
 				'USER_CREATED'
 			)
 		);
@@ -145,7 +152,7 @@ export class UserController {
 		);
 
 		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<UserDTO>(
+			apiResponseMap.ok<AdminUserDTO>(
 				UserMapper.toAdminDTO(updatedUser),
 				'USER_STATUS_UPDATED'
 			)
@@ -173,8 +180,8 @@ export class UserController {
 		);
 
 		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<UserDTO>(
-				UserMapper.toDTO(updatedUser),
+			apiResponseMap.ok<AdminUserDTO>(
+				UserMapper.toAdminDTO(updatedUser),
 				'USER_ROLE_UPDATED'
 			)
 		);

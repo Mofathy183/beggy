@@ -122,7 +122,14 @@ describe('Users API', () => {
 		it('returns a paginated list', async () => {
 			// Arrange
 			const users = buildUsers(2);
-			const meta = { total: 2, page: 1, limit: 10 };
+
+			const meta = {
+				count: 2,
+				page: 1,
+				limit: 10,
+				hasNextPage: false,
+				hasPreviousPage: false,
+			};
 
 			(userService.listUsers as any).mockResolvedValue({ users, meta });
 
@@ -131,8 +138,11 @@ describe('Users API', () => {
 			// Act
 			const response = await request(app).get('/users');
 
+			console.log(response.error);
+
 			// Assert
 			expect(response.status).toBe(STATUS_CODE.OK);
+
 			expect(response.body).toMatchObject({
 				data: expect.any(Array),
 				meta,

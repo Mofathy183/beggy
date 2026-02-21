@@ -9,9 +9,11 @@ import { Role } from '@prisma-generated/enums.js';
  * - This intentionally excludes relations and system-managed fields.
  * - A factory should only allow overrides for fields it actually owns.
  */
-type UserFactoryOverrides = Partial<Pick<UserModel, 'email' | 'role'>>;
+type UserFactoryOverrides = Partial<
+	Pick<UserModel, 'email' | 'role' | 'isActive' | 'isEmailVerified'>
+>;
 
-type UserBuild = Omit<UserModel, 'isActive' | 'isEmailVerified'>;
+type UserBuild = UserModel;
 
 /**
  * Optional configuration for factory-generated values.
@@ -45,6 +47,10 @@ export const userFactory = (
 	email: overrides.email ?? faker.internet.email(options.email),
 
 	role: overrides.role ?? Role.USER,
+
+	// Domain defaults (do NOT randomize)
+	isActive: overrides.isActive ?? true,
+	isEmailVerified: overrides.isEmailVerified ?? false,
 });
 
 /**
