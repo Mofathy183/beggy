@@ -1,7 +1,7 @@
 import { useListQuery } from '@shared/hooks';
 import { useGetUsersQuery } from '@features/users/api';
 import type {
-	UserDTO,
+	AdminUserDTO,
 	UserFilterInput,
 	UserOrderByInput,
 } from '@beggy/shared/types';
@@ -16,7 +16,7 @@ import type {
  * through a consistent list abstraction.
  */
 const useUsersList = () => {
-	return useListQuery<UserDTO, UserFilterInput, UserOrderByInput>({
+	return useListQuery<AdminUserDTO, UserFilterInput, UserOrderByInput>({
 		useQuery: useGetUsersQuery,
 	});
 };

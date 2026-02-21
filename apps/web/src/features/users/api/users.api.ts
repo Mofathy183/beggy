@@ -1,7 +1,7 @@
 import { apiSlice } from '@shared/api';
 import type {
 	SuccessResponse,
-	UserDTO,
+	AdminUserDTO,
 	ProfileDTO,
 	UserFilterInput,
 	CreateUserInput,
@@ -43,9 +43,12 @@ export const userApi = apiSlice.injectEndpoints({
 		 * - Backend returns pagination metadata via SuccessResponse.meta
 		 * - Cache is tagged as `User` to support broad invalidation
 		 */
-		getUsers: builder.query<SuccessResponse<UserDTO[]>, UserFilterInput>({
+		getUsers: builder.query<
+			SuccessResponse<AdminUserDTO[]>,
+			UserFilterInput
+		>({
 			query: (params) => ({
-				url: `/users/`,
+				url: `/users`,
 				params,
 			}),
 			providesTags: (result) =>
@@ -71,7 +74,7 @@ export const userApi = apiSlice.injectEndpoints({
 		 * - Used by admin detail views
 		 * - Returns private/system-level user data
 		 */
-		getUserById: builder.query<SuccessResponse<UserDTO>, string>({
+		getUserById: builder.query<SuccessResponse<AdminUserDTO>, string>({
 			query: (id) => ({
 				url: `/users/${id}`,
 			}),
@@ -90,16 +93,17 @@ export const userApi = apiSlice.injectEndpoints({
 		 * - Returns the created user DTO
 		 * - Invalidates User cache to refresh listings
 		 */
-		createUser: builder.mutation<SuccessResponse<UserDTO>, CreateUserInput>(
-			{
-				query: (body) => ({
-					url: `/users`,
-					method: 'POST',
-					body,
-				}),
-				invalidatesTags: ['User'],
-			}
-		),
+		createUser: builder.mutation<
+			SuccessResponse<AdminUserDTO>,
+			CreateUserInput
+		>({
+			query: (body) => ({
+				url: `/users`,
+				method: 'POST',
+				body,
+			}),
+			invalidatesTags: ['User'],
+		}),
 
 		/**
 		 * Update a user's profile information.
@@ -112,7 +116,7 @@ export const userApi = apiSlice.injectEndpoints({
 		 * @remarks
 		 * - Operates strictly on Profile domain data
 		 * - Does NOT affect authentication, role, or status
-		 * - Returns ProfileDTO, not UserDTO
+		 * - Returns ProfileDTO, not AdminUserDTO
 		 */
 		updateUserProfile: builder.mutation<
 			SuccessResponse<ProfileDTO>,
@@ -140,7 +144,7 @@ export const userApi = apiSlice.injectEndpoints({
 		 * - Invalidates User cache to refresh admin views
 		 */
 		updateUserStatus: builder.mutation<
-			SuccessResponse<UserDTO>,
+			SuccessResponse<AdminUserDTO>,
 			{ id: string; body: UpdateStatusInput }
 		>({
 			query: ({ id, body }) => ({
@@ -164,7 +168,7 @@ export const userApi = apiSlice.injectEndpoints({
 		 * - Role-based access control enforced server-side
 		 */
 		changeUserRole: builder.mutation<
-			SuccessResponse<UserDTO>,
+			SuccessResponse<AdminUserDTO>,
 			{ id: string; body: ChangeRoleInput }
 		>({
 			query: ({ id, body }) => ({

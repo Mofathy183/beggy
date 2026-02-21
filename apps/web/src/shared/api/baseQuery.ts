@@ -54,6 +54,35 @@ const createRawBaseQuery = () =>
 		},
 	});
 
+const serializeParams = (args: string | FetchArgs): string | FetchArgs => {
+	if (typeof args === 'string') return args;
+	if (!args.params) return args;
+
+	const { filters, orderBy, pagination, ...rest } = args.params as any;
+
+	return {
+		...args,
+		params: {
+			...rest,
+
+			// ✅ flatten filters
+			...(filters ?? {}),
+
+			// ✅ flatten orderBy
+			...(orderBy && {
+				orderBy: orderBy.orderBy,
+				direction: orderBy.direction,
+			}),
+
+			// ✅ flatten pagination
+			...(pagination && {
+				page: pagination.page,
+				limit: pagination.limit,
+			}),
+		},
+	};
+};
+
 /**
  * Application-level base query.
  *
@@ -81,7 +110,8 @@ export const baseQuery: BaseQueryFn<
 > = async (args, api, extraOptions) => {
 	const rawBaseQuery = createRawBaseQuery();
 
-	const result = await rawBaseQuery(args, api, extraOptions);
+	const serializedArgs = serializeParams(args);
+	const result = await rawBaseQuery(serializedArgs, api, extraOptions);
 
 	/**
 	 * If an error occurred, forward it as-is.

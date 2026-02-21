@@ -48,5 +48,27 @@ export default function ProtectedLayout({
 	 * - Blocks unauthenticated access
 	 * - Handles redirects or fallback UI
 	 */
-	return <AuthGate>{children}</AuthGate>;
+	return (
+		// <AuthGate>
+		<div className="min-h-screen bg-background text-foreground">
+			<div className="flex">
+				{/* Sidebar */}
+				{/* <aside className="hidden lg:flex w-72 flex-col bg-sidebar border-r border-sidebar-border">
+						<AppSidebar />
+					</aside> */}
+
+				{/* Main Area */}
+				<div className="flex-1 flex flex-col min-h-screen">
+					{/* <AppTopbar /> */}
+
+					<main className="flex-1 px-8 py-6">
+						<div className="mx-auto max-w-7xl space-y-8">
+							{children}
+						</div>
+					</main>
+				</div>
+			</div>
+		</div>
+		// </AuthGate>
+	);
 }

@@ -32,24 +32,14 @@ export type UsersOrderByProps = {
  * ensure a valid sorting structure.
  */
 const UsersOrderBy = ({ value, onChange }: UsersOrderByProps) => {
-	if (!value) return null;
-
-	// Guard against malformed orderBy input
-	if (
-		typeof value.orderBy !== 'string' ||
-		typeof value.direction !== 'string'
-	) {
-		return null;
-	}
-
 	return (
 		<ListOrderBy<UserOrderByField>
 			options={options}
 			value={
-				value as {
+				(value as {
 					orderBy: UserOrderByField;
 					direction: OrderDirection;
-				}
+				}) ?? options[0]?.value
 			}
 			onChange={onChange}
 		/>

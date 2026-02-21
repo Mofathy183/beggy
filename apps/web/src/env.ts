@@ -4,16 +4,14 @@
  * This file runs in the browser bundle, so only
  * NEXT_PUBLIC_* vars are allowed here.
  */
-const required = (key: `NEXT_PUBLIC_${string}`): string => {
-	const value = process.env[key];
-	if (!value) {
-		throw new Error(`Missing required environment variable: ${key}`);
-	}
-	return value;
-};
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+	throw new Error(
+		'Missing required environment variable: NEXT_PUBLIC_API_URL'
+	);
+}
 
 export const env = {
-	get API_URL() {
-		return required('NEXT_PUBLIC_API_URL');
-	},
+	API_URL,
 } as const;

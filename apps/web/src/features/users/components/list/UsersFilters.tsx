@@ -1,4 +1,4 @@
-import ListFilters from '@shared/ui/list/ListFilters';
+import { ListFilters } from '@shared/ui/list';
 import { SearchInput, ToggleFilter, DateRangeFilter } from '@shared/ui/filter';
 import type { UserFilterInput } from '@beggy/shared/types';
 
