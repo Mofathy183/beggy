@@ -25,7 +25,7 @@ import { apiSlice } from '@shared/api';
  * - Private endpoints rely on HTTP-only cookies
  * - Authorization is fully enforced server-side
  */
-export const profileApi = apiSlice.injectEndpoints({
+export const profilesApi = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
 		/**
 		 * Fetch a public profile by user ID.
@@ -114,4 +114,4 @@ export const {
 	useEditProfileMutation,
 	useGetPrivateProfileQuery,
 	useGetPublicProfileQuery,
-} = profileApi;
+} = profilesApi;

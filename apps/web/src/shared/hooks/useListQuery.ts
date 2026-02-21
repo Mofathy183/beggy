@@ -64,7 +64,7 @@ type UseListQueryResult<Data, Filter, OrderBy> = {
 	filters: Filter;
 
 	/** Current ordering configuration */
-	orderBy: OrderBy | null;
+	orderBy: OrderBy;
 
 	/** True when list contains at least one item */
 	hasData: boolean;
@@ -146,7 +146,9 @@ const useListQuery = <Data, Filter, OrderBy>(
 	 * Ordering state.
 	 * Undefined internally, normalized to `null` when exposed.
 	 */
-	const [orderBy, setOrderBy] = useState<OrderBy | undefined>(initialOrderBy);
+	const [orderBy, setOrderBy] = useState<OrderBy>(
+		initialOrderBy ?? ({} as OrderBy)
+	);
 
 	/**
 	 * Update pagination with UX-aware rules.
@@ -214,7 +216,7 @@ const useListQuery = <Data, Filter, OrderBy>(
 
 		pagination,
 		filters,
-		orderBy: orderBy ?? null,
+		orderBy: orderBy,
 
 		hasData,
 		isEmpty: !query.isLoading && !hasData,
@@ -230,7 +232,7 @@ const useListQuery = <Data, Filter, OrderBy>(
 		reset: () => {
 			setPagination(resolvedInitialPagination);
 			setFilters(initialFilters ?? ({} as Filter));
-			setOrderBy(initialOrderBy);
+            setOrderBy(initialOrderBy ?? ({} as OrderBy));
 		},
 
 		refetch: query.refetch,

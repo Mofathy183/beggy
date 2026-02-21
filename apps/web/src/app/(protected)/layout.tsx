@@ -1,74 +1,50 @@
 import type { Metadata } from 'next';
 import { AuthGate } from '@shared/guards';
-import '../globals.css';
+import { AppShell } from '@shared/layouts';
 
 /**
  * Metadata for all protected routes.
- *
- * @remarks
- * - Applied to every route under `(protected)`
- * - Signals that this section of the app requires authentication
- * - Useful for debugging, SEO clarity, and developer intent
+ * Pages inside can override this via their own `export const metadata`.
  */
 export const metadata: Metadata = {
-	title: 'Beggy – Protected Area',
-	description: 'Authenticated and authorized application routes',
+	title: 'Dashboard',
+	description:
+		'Your Beggy dashboard — manage trips, bags, and packing lists.',
 };
 
 /**
  * ProtectedLayout
  *
- * Root layout for all **authenticated** application routes.
+ * Auth boundary for all authenticated routes.
  *
- * @remarks
- * Responsibilities:
- * - Acts as the first auth boundary for protected routes
- * - Ensures a valid session exists before rendering any child pages
+ * Responsibilities — and ONLY these:
+ *  ✅ Wraps children in AuthGate (verifies session, redirects if not authenticated)
  *
- * Design decisions:
- * - Delegates authentication logic entirely to `AuthGate`
- * - Does NOT perform authorization (abilities/permissions)
- * - Does NOT fetch user data directly
+ * Does NOT:
+ *  ✗ Import globals.css — that only happens in RootLayout (double import = bugs)
+ *  ✗ Render AppShell (Header + Sidebar) — that is the DashboardLayout's job
+ *  ✗ Perform authorization (roles, abilities) — that is ProtectedRoute + Can
  *
- * Authorization is handled at:
- * - Route level → `ProtectedRoute`
- * - Component level → `Can`
+ * Why separate from DashboardLayout?
  *
- * This keeps concerns clean and composable.
+ * Some future authenticated pages may not want the dashboard shell —
+ * a full-screen onboarding wizard, an OAuth callback handler, a printer-
+ * friendly view. Keeping the auth gate and the chrome (Header + Sidebar)
+ * in separate layout files preserves that flexibility with zero cost now.
+ *
+ * Layout tree (this node):
+ *  (protected)/layout.tsx  ← YOU ARE HERE (auth gate only)
+ *    └── (dashboard)/layout.tsx → AppShell (Header + Sidebar)
+ *          └── users/page.tsx, dashboard/page.tsx, etc.
  */
 export default function ProtectedLayout({
 	children,
 }: {
-	/** Protected route content */
 	children: React.ReactNode;
 }) {
-	/**
-	 * AuthGate:
-	 * - Verifies authentication state
-	 * - Blocks unauthenticated access
-	 * - Handles redirects or fallback UI
-	 */
 	return (
 		// <AuthGate>
-		<div className="min-h-screen bg-background text-foreground">
-			<div className="flex">
-				{/* Sidebar */}
-				{/* <aside className="hidden lg:flex w-72 flex-col bg-sidebar border-r border-sidebar-border">
-						<AppSidebar />
-					</aside> */}
-
-				{/* Main Area */}
-				<div className="flex-1 flex flex-col min-h-screen">
-					{/* <AppTopbar /> */}
-
-					<main className="flex-1 px-8 py-6">
-						<div className="mx-auto max-w-7xl space-y-8">
-							{children}
-						</div>
-					</main>
-				</div>
-			</div>
-		</div>
+		<AppShell>{children}</AppShell>
 		// </AuthGate>
 	);
 }

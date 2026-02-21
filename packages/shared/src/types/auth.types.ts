@@ -6,11 +6,13 @@ import type { Action, Scope, Subject } from '../constants/auth.enums';
 /**
  * A list of permissions assigned to a role or user.
  */
-export type Permissions = {
+export type Permission = {
 	action: Action;
 	scope: Scope;
 	subject: Subject;
-}[];
+};
+
+export type Permissions = Permission[];
 
 // ─────────────────────────────────────────────
 // Schemas with identical input & output
