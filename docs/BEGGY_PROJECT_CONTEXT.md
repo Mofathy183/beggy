@@ -1056,7 +1056,7 @@ export const createUserRouter = (controller: UserController) => {
 
 ---
 
-Here's the updated **Section 10. Design System & UI Architecture** with the correct Tailwind CSS v4 implementation details:
+Here's the updated **Section 12. Design System & UI Architecture** with the correct Tailwind CSS v4 implementation details:
 
 ---
 
@@ -1919,7 +1919,7 @@ export const Accessible: Story = {
 
 ---
 
-**END OF SECTION 10**
+**END OF SECTION 12**
 
 ---
 
