@@ -1,6 +1,6 @@
 {
 	"name": "@beggy/mcp",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Beggy MCP Server - Model Context Protocol tools for automated development tasks including TypeScript conversion, component scaffolding, and API testing",
 	"keywords": [
 		"mcp",
@@ -63,6 +63,7 @@
 		"@modelcontextprotocol/sdk": "^1.24.3",
 		"axios": "^1.7.9",
 		"dotenv": "^16.4.5",
+		"ollama": "^0.6.3",
 		"zod": "^4.1.13"
 	},
 	"devDependencies": {
