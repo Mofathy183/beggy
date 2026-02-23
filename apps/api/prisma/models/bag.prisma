@@ -3,13 +3,13 @@
 /// Stores identity, appearance, and feature metadata.
 /// All physical constraints and packing logic are
 /// delegated to the linked container.
-model Bags {
+model Bag {
     /// Primary identifier for the bag.
     id String @id @default(uuid())
 
     /// Linked container providing physical constraints.
-    containerId String     @unique @map("container_id")
-    container   Containers @relation(fields: [containerId], references: [id], onDelete: Cascade)
+    containerId String    @unique @map("container_id")
+    container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
     /// Display name of the bag.
     name String

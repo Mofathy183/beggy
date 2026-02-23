@@ -5,11 +5,13 @@ import {
 	UserController,
 	UserService,
 } from './src/modules/users';
+
 import {
 	createProfileRouter,
 	ProfileController,
 	ProfileService,
 } from './src/modules/profiles';
+
 import {
 	createAuthRouter,
 	AuthController,

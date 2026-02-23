@@ -14,7 +14,7 @@ CREATE TYPE "Scope" AS ENUM ('OWN', 'ANY');
 CREATE TYPE "Subject" AS ENUM ('BAG', 'ITEM', 'SUITCASE', 'USER', 'ROLE', 'PERMISSION');
 
 -- CreateEnum
-CREATE TYPE "TokenType" AS ENUM ('EMAIL_VERIFICATION', 'PASSWORD_RESET', 'CHANGE_EMAIL', 'TWO_FACTOR');
+CREATE TYPE "TokenType" AS ENUM ('EMAIL_VERIFICATION', 'PASSWORD_RESET', 'CHANGE_EMAIL');
 
 -- CreateEnum
 CREATE TYPE "Material" AS ENUM ('LEATHER', 'SYNTHETIC', 'FABRIC', 'POLYESTER', 'NYLON', 'CANVAS', 'HARD_SHELL', 'METAL');
@@ -39,6 +39,9 @@ CREATE TYPE "Size" AS ENUM ('SMALL', 'MEDIUM', 'LARGE', 'EXTRA_LARGE');
 
 -- CreateEnum
 CREATE TYPE "WheelType" AS ENUM ('NONE', 'TWO_WHEEL', 'FOUR_WHEEL', 'SPINNER');
+
+-- CreateEnum
+CREATE TYPE "ContainerType" AS ENUM ('BAG', 'SUITCASE');
 
 -- CreateEnum
 CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
@@ -66,13 +69,11 @@ CREATE TABLE "accounts" (
 -- CreateTable
 CREATE TABLE "bags" (
     "id" TEXT NOT NULL,
+    "container_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "type" "BagType" NOT NULL,
     "color" TEXT DEFAULT 'black',
     "size" "Size" NOT NULL,
-    "maxCapacity" DOUBLE PRECISION NOT NULL,
-    "maxWeight" DOUBLE PRECISION NOT NULL,
-    "bagWeight" DOUBLE PRECISION NOT NULL,
     "material" "Material",
     "features" "BagFeature"[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -83,13 +84,28 @@ CREATE TABLE "bags" (
 );
 
 -- CreateTable
-CREATE TABLE "bag_items" (
-    "bag_id" TEXT NOT NULL,
-    "item_id" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
+CREATE TABLE "containers" (
+    "id" TEXT NOT NULL,
+    "type" "ContainerType" NOT NULL,
+    "maxCapacity" DOUBLE PRECISION NOT NULL,
+    "maxWeight" DOUBLE PRECISION NOT NULL,
+    "emptyWeight" DOUBLE PRECISION NOT NULL,
+    "userId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "bag_items_pkey" PRIMARY KEY ("bag_id","item_id")
+    CONSTRAINT "containers_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "container_items" (
+    "containerId" TEXT NOT NULL,
+    "itemId" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "container_items_pkey" PRIMARY KEY ("containerId","itemId")
 );
 
 -- CreateTable
@@ -97,7 +113,6 @@ CREATE TABLE "items" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "category" "ItemCategory" NOT NULL,
-    "quantity" INTEGER NOT NULL,
     "weight" DOUBLE PRECISION NOT NULL,
     "weightUnit" "WeightUnit" NOT NULL DEFAULT 'KILOGRAM',
     "volume" DOUBLE PRECISION NOT NULL,
@@ -131,14 +146,12 @@ CREATE TABLE "profiles" (
 -- CreateTable
 CREATE TABLE "suitcases" (
     "id" TEXT NOT NULL,
+    "container_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "brand" TEXT,
     "type" "SuitcaseType" NOT NULL,
     "color" TEXT DEFAULT 'black',
     "size" "Size" NOT NULL,
-    "maxCapacity" DOUBLE PRECISION NOT NULL,
-    "maxWeight" DOUBLE PRECISION NOT NULL,
-    "suitcaseWeight" DOUBLE PRECISION NOT NULL,
     "material" "Material",
     "features" "SuitcaseFeature"[],
     "wheels" "WheelType",
@@ -147,16 +160,6 @@ CREATE TABLE "suitcases" (
     "user_id" TEXT,
 
     CONSTRAINT "suitcases_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "suitcase_items" (
-    "suitcase_id" TEXT NOT NULL,
-    "item_id" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "suitcase_items_pkey" PRIMARY KEY ("suitcase_id","item_id")
 );
 
 -- CreateTable
@@ -176,7 +179,7 @@ CREATE TABLE "users" (
 CREATE TABLE "user_tokens" (
     "id" TEXT NOT NULL,
     "type" "TokenType" NOT NULL,
-    "hashToken" TEXT NOT NULL,
+    "hashToken" VARCHAR(255) NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" TEXT NOT NULL,
@@ -204,13 +207,19 @@ CREATE TABLE "role_on_permissions" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "accounts_provider_id_key" ON "accounts"("provider_id");
+CREATE UNIQUE INDEX "accounts_user_id_authProvider_key" ON "accounts"("user_id", "authProvider");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "accounts_user_id_key" ON "accounts"("user_id");
+CREATE UNIQUE INDEX "accounts_authProvider_provider_id_key" ON "accounts"("authProvider", "provider_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "bags_container_id_key" ON "bags"("container_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "profiles_user_id_key" ON "profiles"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "suitcases_container_id_key" ON "suitcases"("container_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
@@ -225,31 +234,34 @@ CREATE UNIQUE INDEX "permissions_action_scope_subject_key" ON "permissions"("act
 CREATE UNIQUE INDEX "role_on_permissions_role_permissionId_key" ON "role_on_permissions"("role", "permissionId");
 
 -- AddForeignKey
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "bags" ADD CONSTRAINT "bags_container_id_fkey" FOREIGN KEY ("container_id") REFERENCES "containers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "bags" ADD CONSTRAINT "bags_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bag_items" ADD CONSTRAINT "bag_items_bag_id_fkey" FOREIGN KEY ("bag_id") REFERENCES "bags"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "containers" ADD CONSTRAINT "containers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bag_items" ADD CONSTRAINT "bag_items_item_id_fkey" FOREIGN KEY ("item_id") REFERENCES "items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "container_items" ADD CONSTRAINT "container_items_containerId_fkey" FOREIGN KEY ("containerId") REFERENCES "containers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "container_items" ADD CONSTRAINT "container_items_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "items" ADD CONSTRAINT "items_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "profiles" ADD CONSTRAINT "profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "profiles" ADD CONSTRAINT "profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "suitcases" ADD CONSTRAINT "suitcases_container_id_fkey" FOREIGN KEY ("container_id") REFERENCES "containers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "suitcases" ADD CONSTRAINT "suitcases_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "suitcase_items" ADD CONSTRAINT "suitcase_items_suitcase_id_fkey" FOREIGN KEY ("suitcase_id") REFERENCES "suitcases"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "suitcase_items" ADD CONSTRAINT "suitcase_items_item_id_fkey" FOREIGN KEY ("item_id") REFERENCES "items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "user_tokens" ADD CONSTRAINT "user_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

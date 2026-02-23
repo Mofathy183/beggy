@@ -1,4 +1,4 @@
-export * from './profiles.service';
+export * from './profile.service';
 export * from './profile.mapper';
-export * from './profiles.controller';
-export * from './profiles.route';
+export * from './profile.controller';
+export * from './profile.route';

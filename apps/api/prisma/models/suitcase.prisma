@@ -4,13 +4,13 @@
 /// details. Physical constraints such as capacity
 /// and weight limits are delegated to the linked
 /// container.
-model Suitcases {
+model Suitcase {
     /// Primary identifier for the suitcase.
     id String @id @default(uuid())
 
     /// Linked container providing physical constraints.
-    containerId String     @unique @map("container_id")
-    container   Containers @relation(fields: [containerId], references: [id], onDelete: Cascade)
+    containerId String    @unique @map("container_id")
+    container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
     /// Display name of the suitcase.
     name String

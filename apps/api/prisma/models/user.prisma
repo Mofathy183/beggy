@@ -34,23 +34,23 @@ model User {
     userToken UserToken[]
 
     /// Containers owned by the user
-    containers Containers[]
+    containers Container[]
 
     /// Domain-owned resources.
-    bags      Bags[]
-    suitcases Suitcases[]
-    items     Items[]
+    bags      Bag[]
+    suitcases Suitcase[]
+    items     Item[]
 
     /// Database table name.
     @@map("users")
 }
 
 model UserToken {
-    id         String    @id @default(uuid())
-    type       TokenType
-    hashToken  String    @unique @db.VarChar(255)
-    expiresAt  DateTime
-    createdAt  DateTime  @default(now()) @map("created_at")
+    id        String    @id @default(uuid())
+    type      TokenType
+    hashToken String    @unique @db.VarChar(255)
+    expiresAt DateTime
+    createdAt DateTime  @default(now()) @map("created_at")
 
     userId String
     user   User   @relation(fields: [userId], references: [id])

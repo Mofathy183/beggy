@@ -6,7 +6,7 @@
 ///
 /// Bags and Suitcases reference this model instead of
 /// duplicating physical properties.
-model Containers {
+model Container {
     /// Primary identifier for the container.
     id String @id @default(uuid())
 
@@ -42,8 +42,8 @@ model Containers {
     ///
     /// A container is specialized as either a Bag or a Suitcase.
     /// Exactly one of these should exist, enforced at the service layer.
-    bags      Bags?
-    suitcases Suitcases?
+    bags      Bag?
+    suitcases Suitcase?
 
     /// Items currently packed into this container.
     containerItems ContainerItems[]
@@ -71,10 +71,10 @@ model ContainerItems {
     itemId String
 
     /// Relation to the owning container.
-    container Containers @relation(fields: [containerId], references: [id], onDelete: Cascade)
+    container Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
     /// Relation to the packed item.
-    item Items @relation(fields: [itemId], references: [id], onDelete: Cascade)
+    item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
     /// Quantity of this item inside the container.
     ///

@@ -3,7 +3,7 @@
 /// Stores physical characteristics used for volume
 /// and weight calculations, as well as classification
 /// and display metadata.
-model Items {
+model Item {
     /// Primary identifier for the item.
     id String @id @default(uuid())
 
