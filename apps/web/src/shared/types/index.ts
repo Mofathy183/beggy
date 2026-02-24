@@ -1,1 +1,1 @@
-export type * from './api-error.types';
+export type * from './error.types';

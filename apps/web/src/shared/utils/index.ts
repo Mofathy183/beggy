@@ -1,2 +1,2 @@
-export * from './api-error.utils';
+export * from './error.utils';
 export * from './listQuery.utils';

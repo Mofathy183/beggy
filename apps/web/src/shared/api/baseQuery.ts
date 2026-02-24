@@ -5,7 +5,6 @@ import type {
 	FetchBaseQueryError,
 } from '@reduxjs/toolkit/query/react';
 import { env } from '@/env';
-import { isApiError, isValidationError } from '@shared/utils';
 
 /**
  * Low-level fetch base query.
@@ -125,17 +124,17 @@ export const baseQuery: BaseQueryFn<
 		/**
 		 * Stage 1: Observe only
 		 */
-		if (isApiError(result.error)) {
-			// Validation errors → handled by forms
-			if (isValidationError(result.error)) {
-				// intentionally empty
-			}
+		// if (isApiError(result.error)) {
+		// 	// Validation errors → handled by forms
+		// 	if (isValidationError(result.error)) {
+		// 		// intentionally empty
+		// 	}
 
-			// Unauthorized → future auth handling
-			if (result.error.status === 401) {
-				// later: logout / refresh
-			}
-		}
+		// 	// Unauthorized → future auth handling
+		// 	if (result.error.status === 401) {
+		// 		// later: logout / refresh
+		// 	}
+		// }
 
 		return { error: result.error };
 	}
