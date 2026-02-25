@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMeQuery } from '../../features/auth/auth.api';
+import { useMeQuery } from '@features/auth/api';
 import { useAppDispatch } from '@shared/store';
 import { setPermissions, clearPermissions } from '@shared/store/ability';
 

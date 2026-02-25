@@ -1,4 +1,36 @@
 import { PaginationParams } from '@beggy/shared/types';
+import type { FetchArgs } from '@reduxjs/toolkit/query/react';
+
+export const serializeParams = (
+	args: string | FetchArgs
+): string | FetchArgs => {
+	if (typeof args === 'string') return args;
+	if (!args.params) return args;
+
+	const { filters, orderBy, pagination, ...rest } = args.params as any;
+
+	return {
+		...args,
+		params: {
+			...rest,
+
+			// ✅ flatten filters
+			...(filters ?? {}),
+
+			// ✅ flatten orderBy
+			...(orderBy && {
+				orderBy: orderBy.orderBy,
+				direction: orderBy.direction,
+			}),
+
+			// ✅ flatten pagination
+			...(pagination && {
+				page: pagination.page,
+				limit: pagination.limit,
+			}),
+		},
+	};
+};
 
 type FilterInput = Record<string, any>;
 

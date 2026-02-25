@@ -20,6 +20,7 @@ vi.mock('@/env', () => ({
 		API_URL: 'https://api.example.com',
 	},
 }));
+
 describe('baseQuery()', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

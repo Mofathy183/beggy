@@ -12,11 +12,11 @@ vi.mock('next/navigation', () => ({
 	}),
 }));
 
-vi.mock('@features/auth/auth.api', () => ({
+vi.mock('@features/auth/api/auth.api', () => ({
 	useMeQuery: vi.fn(),
 }));
 
-import { useMeQuery } from '@features/auth/auth.api';
+import { useMeQuery } from '@features/auth/api/auth.api';
 
 describe('AuthGate', () => {
 	beforeEach(() => {

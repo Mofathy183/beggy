@@ -1,4 +1,6 @@
 import { apiSlice } from '@shared/api';
+import { clearPermissions, setPermissions } from '@shared/store/ability';
+import { setAuthenticated, setUnauthenticated } from '../store/auth.slice';
 import type {
 	SuccessResponse,
 	SignUpInput,
@@ -74,17 +76,54 @@ export const authApi = apiSlice.injectEndpoints({
 		 * @route GET /auth/me
 		 *
 		 * @remarks
-		 * - Primary source of truth for auth state
-		 * - Called on:
-		 *   - App bootstrap
-		 *   - After login/signup
-		 *   - After token refresh
+		 * Fetches the currently authenticated user.
 		 *
-		 * - Returns minimal auth-scoped user data
+		 * Responsibilities:
+		 * - Hydrate auth slice
+		 * - Hydrate ability slice
+		 * - Transition auth status
+		 *
+		 * This endpoint is called:
+		 * - On app bootstrap
+		 * - After login/signup
+		 * - After refresh token rotation
 		 */
 		me: builder.query<SuccessResponse<AuthMeDTO>, void>({
 			query: () => '/auth/me',
 			providesTags: ['Auth'],
+
+			/**
+			 * onQueryStarted
+			 *
+			 * This is where we synchronize
+			 * RTK Query server state → Redux UI state.
+			 *
+			 * Why here?
+			 * - Centralized
+			 * - No duplication
+			 * - No manual fetch
+			 * - No bootstrap thunk
+			 */
+			async onQueryStarted(_, { dispatch, queryFulfilled }) {
+				try {
+					const { data } = await queryFulfilled;
+					const payload = data.data;
+
+					// Hydrate identity
+					dispatch(setAuthenticated(payload));
+
+					// Hydrate authorization
+					dispatch(
+						setPermissions({
+							permissions: payload.permissions,
+						})
+					);
+				} catch {
+					// 401 or network failure
+					dispatch(setUnauthenticated());
+					dispatch(clearPermissions());
+				}
+			},
 		}),
 
 		/**

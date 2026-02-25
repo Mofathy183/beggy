@@ -2,14 +2,16 @@
 
 import { AlertTriangle, Lightbulb } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { Badge } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
+import { Alert, AlertDescription } from '@shadcn-ui/alert';
+import { Badge } from '@shadcn-ui/badge';
+import { Button } from '@shadcn-ui/button';
 import type { HttpClientError } from '@shared/types';
+import { ErrorCode } from '@beggy/shared/constants';
 import {
 	isHttpClientError,
-	titleFromStatus,
-	descriptionFromStatus,
+	suggestionFromCode,
+	fallbackCodeFromStatus,
+	messageFromCode,
 } from '@shared/utils';
 import { TearLine, TicketField, TicketCodeValue } from './ticket.primitives';
 
@@ -67,18 +69,28 @@ const ErrorState = ({
 	// statusCode comes from the wrapper, not the body — no bracket access needed
 	const statusCode = httpError?.statusCode ?? null;
 
-	// Title: prop → Beggy body message → status fallback
+	// Resolve the ErrorCode — from the API body if available,
+	// otherwise derive from status code, otherwise UNKNOWN_ERROR.
+	const errorCode: ErrorCode =
+		httpError?.body.code ??
+		(statusCode
+			? fallbackCodeFromStatus(statusCode)
+			: ErrorCode.UNKNOWN_ERROR);
+
+	// Title: prop → API body message → ErrorMessages lookup by code
 	const resolvedTitle =
-		title ?? httpError?.body.message ?? titleFromStatus(statusCode);
+		title ?? httpError?.body.message ?? messageFromCode(errorCode);
 
-	// Description: prop → status copy
-	const resolvedDescription =
-		description ?? descriptionFromStatus(statusCode);
+	// Description: prop → ErrorMessages lookup by code (same source as API)
+	// When we have a real API error, body.message IS already from ErrorMessages.
+	// For native JS errors we fall through to the code lookup.
+	const resolvedDescription = description ?? messageFromCode(errorCode);
 
-	// Suggestion: prop → Beggy body suggestion
-	const resolvedSuggestion = suggestion ?? httpError?.body.suggestion ?? null;
-
-	const errorCode = httpError?.body.code ?? null;
+	// Suggestion: prop → API body suggestion → ErrorSuggestions lookup by code
+	const resolvedSuggestion =
+		suggestion ??
+		httpError?.body.suggestion ??
+		suggestionFromCode(errorCode);
 
 	return (
 		<div

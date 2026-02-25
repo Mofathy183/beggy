@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@shared/store';
-import { authApi } from '@features/auth';
+import { useLogoutMutation, authApi } from '@features/auth/api';
 import { clearPermissions } from '@shared/store/ability';
 
 /**
@@ -23,7 +23,7 @@ import { clearPermissions } from '@shared/store/ability';
 const useLogout = () => {
 	const router = useRouter();
 	const dispatch = useAppDispatch();
-	const [logout] = authApi.useLogoutMutation();
+	const [logout] = useLogoutMutation();
 
 	return async () => {
 		try {

@@ -34,7 +34,7 @@ describe('useListQuery()', () => {
 
 		expect(result.current.pagination).toEqual({ page: 1, limit: 10 });
 		expect(result.current.filters).toEqual({});
-		expect(result.current.orderBy).toBeNull();
+		expect(result.current.orderBy).toEqual({});
 		expect(useQuery).toHaveBeenCalledTimes(1);
 	});
 

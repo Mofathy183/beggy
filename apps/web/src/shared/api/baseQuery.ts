@@ -1,9 +1,7 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type {
-	BaseQueryFn,
-	FetchArgs,
-	FetchBaseQueryError,
-} from '@reduxjs/toolkit/query/react';
+import type { BaseQueryFn, FetchArgs } from '@reduxjs/toolkit/query/react';
+import type { HttpClientError } from '@shared/types';
+import { normalizeError, serializeParams } from '@shared/utils';
 import { env } from '@/env';
 
 /**
@@ -53,35 +51,6 @@ const createRawBaseQuery = () =>
 		},
 	});
 
-const serializeParams = (args: string | FetchArgs): string | FetchArgs => {
-	if (typeof args === 'string') return args;
-	if (!args.params) return args;
-
-	const { filters, orderBy, pagination, ...rest } = args.params as any;
-
-	return {
-		...args,
-		params: {
-			...rest,
-
-			// ✅ flatten filters
-			...(filters ?? {}),
-
-			// ✅ flatten orderBy
-			...(orderBy && {
-				orderBy: orderBy.orderBy,
-				direction: orderBy.direction,
-			}),
-
-			// ✅ flatten pagination
-			...(pagination && {
-				page: pagination.page,
-				limit: pagination.limit,
-			}),
-		},
-	};
-};
-
 /**
  * Application-level base query.
  *
@@ -105,7 +74,7 @@ const serializeParams = (args: string | FetchArgs): string | FetchArgs => {
 export const baseQuery: BaseQueryFn<
 	string | FetchArgs,
 	unknown,
-	FetchBaseQueryError
+	HttpClientError
 > = async (args, api, extraOptions) => {
 	const rawBaseQuery = createRawBaseQuery();
 
@@ -121,6 +90,7 @@ export const baseQuery: BaseQueryFn<
 	 * - manage retries and caching
 	 */
 	if (result.error) {
+		const normalized = normalizeError(result.error);
 		/**
 		 * Stage 1: Observe only
 		 */
@@ -136,7 +106,7 @@ export const baseQuery: BaseQueryFn<
 		// 	}
 		// }
 
-		return { error: result.error };
+		return { error: normalized };
 	}
 
 	/**

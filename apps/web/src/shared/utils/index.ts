@@ -1,2 +1,2 @@
 export * from './error.utils';
-export * from './listQuery.utils';
+export * from './query.utils';
