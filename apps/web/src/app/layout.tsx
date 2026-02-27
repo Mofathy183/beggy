@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { AppProvider } from '@shared/store';
 import { ThemeProvider } from '@shadcn-components';
+import { AuthBootstrap } from '@features/auth/components';
 import './globals.css';
 
 const geistSans = Geist({
@@ -76,7 +77,10 @@ export default function RootLayout({
 					 * AppProvider mounts the Redux store and CASL AbilityProvider.
 					 * It must be inside ThemeProvider (ThemeToggle uses both).
 					 */}
-					<AppProvider>{children}</AppProvider>
+					<AppProvider>
+						<AuthBootstrap />
+						{children}
+					</AppProvider>
 				</ThemeProvider>
 			</body>
 		</html>
