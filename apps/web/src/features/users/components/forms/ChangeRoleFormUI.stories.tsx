@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useForm } from 'react-hook-form';
 import type { ChangeRoleInput } from '@beggy/shared/types';
-import { ChangeRoleFormUI } from './ChangeRoleFormUI';
+import ChangeRoleFormUI from './ChangeRoleFormUI';
 import { Role } from '@beggy/shared/constants';
 
 const meta: Meta<typeof ChangeRoleFormUI> = {

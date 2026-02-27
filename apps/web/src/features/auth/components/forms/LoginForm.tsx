@@ -7,19 +7,17 @@ import type { LoginInput } from '@beggy/shared/types';
 import { useLogin } from '@features/auth/hooks';
 import LoginFormUI from './LoginFormUI';
 
-/**
- * LoginForm
- *
- * Smart container — owns form instance and delegates
- * behavior to useLogin. Renders nothing itself.
- */
 const LoginForm = () => {
 	const form = useForm<LoginInput>({
 		resolver: zodResolver(AuthSchema.login as any),
-		defaultValues: { email: '', password: '' },
+		defaultValues: {
+			email: '',
+			password: '',
+			rememberMe: false,
+		},
 	});
 
-	const { login, isLoading, serverError } = useLogin(form);
+	const { login, isLoading, serverError } = useLogin();
 
 	return (
 		<LoginFormUI
