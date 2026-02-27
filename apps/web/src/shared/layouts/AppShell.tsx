@@ -68,8 +68,8 @@ const AppShell = ({
 					'flex-1 overflow-y-auto',
 					// Consistent inner padding — pages can override via className
 					'p-6',
-					// Background matches page surface
-					'bg-background text-foreground',
+					// // Background matches page surface
+					// 'bg-background text-foreground',
 					className
 				)}
 			>

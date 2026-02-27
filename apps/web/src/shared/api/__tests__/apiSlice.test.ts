@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { apiSlice } from '@shared/api';
 
+vi.mock('@/env', () => ({
+	env: {
+		API_URL: 'https://api.example.com',
+	},
+}));
+
 describe('apiSlice', () => {
 	it('uses "api" as the reducer path', () => {
 		expect(apiSlice.reducerPath).toBe('api');

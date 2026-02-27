@@ -22,7 +22,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { cn } from '@/shared/lib/utils';
-import type { PublicProfileDTO } from '@beggy/shared/types';
+import type { AuthMeProfileDTO } from '@beggy/shared/types';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -33,11 +33,11 @@ export interface HeaderUIProps {
 	 * `null`  → guest mode: renders "Log in" + "Sign up" CTAs.
 	 * non-null → authenticated mode: renders user avatar dropdown.
 	 *
-	 * We use PublicProfileDTO — not the full ProfileDTO — because the header
+	 * We use AuthMeProfileDTO — not the full ProfileDTO — because the header
 	 * only needs: firstName, lastName, avatarUrl, displayName, city, country.
 	 * Sensitive fields (birthDate, gender, timestamps) never reach this component.
 	 */
-	profile: PublicProfileDTO | null;
+	profile: AuthMeProfileDTO | null;
 
 	/** Fires when "My Profile" in the user dropdown is clicked. */
 	onProfileClick?: () => void;
@@ -80,7 +80,7 @@ export interface HeaderUIProps {
  *  2. firstName + lastName            → "MF"
  *  3. firstName only                  → "M"
  */
-const getAvatarFallback = (profile: PublicProfileDTO): string => {
+const getAvatarFallback = (profile: AuthMeProfileDTO): string => {
 	const source =
 		profile.displayName?.trim() ||
 		`${profile.firstName} ${profile.lastName}`.trim();
@@ -101,7 +101,7 @@ const getAvatarFallback = (profile: PublicProfileDTO): string => {
  *  1. displayName (if trimmed and non-empty)
  *  2. firstName
  */
-const getShortName = (profile: PublicProfileDTO): string =>
+const getShortName = (profile: AuthMeProfileDTO): string =>
 	profile.displayName?.trim() || profile.firstName;
 
 // ─── UserMenu ─────────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ interface UserMenuProps extends Pick<
 	HeaderUIProps,
 	'onProfileClick' | 'onSettingsClick' | 'onLogout'
 > {
-	profile: PublicProfileDTO;
+	profile: AuthMeProfileDTO;
 }
 
 /**

@@ -4,36 +4,8 @@ import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLogout } from '@shared/hooks';
 import { ThemeToggle } from '@shadcn-components';
-import { useGetPrivateProfileQuery } from '@features/profiles';
+import { useAppSelector } from '@shared/store';
 import HeaderUI from './HeaderUI';
-import type { ProfileDTO, PublicProfileDTO } from '@beggy/shared/types';
-
-// ─── Profile mapping ──────────────────────────────────────────────────────────
-
-/**
- * Maps the full ProfileDTO returned by the API into the subset
- * that HeaderUI needs (PublicProfileDTO).
- *
- * This keeps HeaderUI decoupled from the full ProfileDTO shape.
- * If ProfileDTO gains new fields in the future, nothing here breaks.
- *
- * Returns null when the profile query has not resolved yet or the
- * user is not authenticated — HeaderUI will render in guest mode.
- */
-const toPublicProfile = (data: ProfileDTO): PublicProfileDTO | null => {
-	if (!data) return null;
-
-	return {
-		id: data.id,
-		firstName: data.firstName,
-		lastName: data.lastName,
-		avatarUrl: data.avatarUrl ?? null,
-		country: data.country ?? null,
-		city: data.city ?? null,
-		displayName: data.displayName ?? null,
-		age: data.age ?? null,
-	};
-};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -75,9 +47,7 @@ const Header = () => {
 	//
 	// Adjust the hook name to match your profilesApi endpoint name.
 	// Common patterns: useGetMyProfileQuery, useGetMeQuery, useGetCurrentProfileQuery
-	const { data: profileData } = useGetPrivateProfileQuery();
-
-	const profile = toPublicProfile(profileData?.data as ProfileDTO);
+	const profile = useAppSelector((s) => s.auth.profile);
 
 	// ── useLogout ────────────────────────────────────────────────────────
 	//

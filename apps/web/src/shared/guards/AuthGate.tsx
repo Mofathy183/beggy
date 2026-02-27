@@ -2,9 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMeQuery } from '@features/auth/api';
-import { useAppDispatch } from '@shared/store';
-import { setPermissions, clearPermissions } from '@shared/store/ability';
+import { useAppSelector } from '@shared/store';
 
 type AuthGateProps = {
 	/** UI rendered only when the user is authenticated */
@@ -34,47 +32,20 @@ type AuthGateProps = {
  */
 const AuthGate = ({ children }: AuthGateProps) => {
 	const router = useRouter();
-	const dispatch = useAppDispatch();
 
-	const { data, isLoading, isError } = useMeQuery();
+	const { status, initialized } = useAppSelector((s) => s.auth);
 
-	/**
-	 * Synchronize permissions into Redux when auth state changes.
-	 */
 	useEffect(() => {
-		if (data?.data?.permissions) {
-			dispatch(
-				setPermissions({
-					permissions: data.data.permissions,
-				})
-			);
-		}
-	}, [data, dispatch]);
-
-	/**
-	 * Handle unauthenticated state.
-	 *
-	 * Any error from `/auth/me` is treated as:
-	 * - no active session
-	 * - user must re-authenticate
-	 */
-	useEffect(() => {
-		if (!isLoading && isError) {
-			dispatch(clearPermissions());
+		if (initialized && status === 'unauthenticated') {
 			router.replace('/login');
 		}
-	}, [isLoading, isError, dispatch, router]);
+	}, [initialized, status, router]);
 
-	/**
-	 * While authentication state is resolving,
-	 * avoid rendering protected content.
-	 *
-	 * Replace this with a skeleton or spinner if desired.
-	 */
-	if (isLoading) {
-		return null;
-	}
+	// Still resolving — don't flash protected content or redirect prematurely
+	if (!initialized) return null; // swap null with <FullScreenSkeleton /> later
 
+	// Unauthenticated — redirect is in flight, render nothing
+	if (status === 'unauthenticated') return null;
 	/**
 	 * If authenticated, render protected children.
 	 */
