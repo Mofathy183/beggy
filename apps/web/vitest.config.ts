@@ -1,7 +1,10 @@
 /// <reference types="vitest" />
 
 import { mergeConfig } from 'vitest/config';
+import { loadEnvConfig } from '@next/env';
 import vitestBaseConfig from '../../vitest.base.config';
+
+loadEnvConfig(process.cwd());
 
 export default mergeConfig(vitestBaseConfig, {
 	test: {

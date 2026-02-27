@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react';
 
 import AuthGate from '../AuthGate';
 import { renderWithStore } from '@tests/utils';
+import { Role } from '@beggy/shared/constants';
 
 const replaceMock = vi.fn();
 
@@ -12,74 +13,82 @@ vi.mock('next/navigation', () => ({
 	}),
 }));
 
-vi.mock('@features/auth/api/auth.api', () => ({
-	useMeQuery: vi.fn(),
-}));
-
-import { useMeQuery } from '@features/auth/api/auth.api';
-
 describe('AuthGate', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('blocks rendering while authentication is loading', () => {
-		(useMeQuery as any).mockReturnValue({
-			isLoading: true,
-			isError: false,
-			data: undefined,
-		});
-
+	it('renders nothing while auth is not initialized', () => {
 		renderWithStore(
 			<AuthGate>
-				<div>Protected Content</div>
-			</AuthGate>
+				<div>Protected</div>
+			</AuthGate>,
+			{
+				preloadedState: {
+					auth: {
+						status: 'loading',
+						initialized: false,
+						user: null,
+						profile: null,
+						auth: null,
+						error: null,
+					},
+				} as any,
+			}
 		);
 
-		expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+		expect(screen.queryByText('Protected')).not.toBeInTheDocument();
+		expect(replaceMock).not.toHaveBeenCalled();
 	});
 
-	it('renders children and initializes permissions for authenticated users', () => {
-		(useMeQuery as any).mockReturnValue({
-			isLoading: false,
-			isError: false,
-			data: {
-				data: {
-					permissions: ['read:dashboard'],
-				},
-			},
-		});
-
-		const { store } = renderWithStore(
+	it('redirects unauthenticated users to login', () => {
+		renderWithStore(
 			<AuthGate>
-				<div>Protected Content</div>
-			</AuthGate>
-		);
-
-		expect(screen.getByText('Protected Content')).toBeInTheDocument();
-
-		const abilityState = (store as any).getState().ability;
-
-		expect(abilityState.permissions).toEqual(['read:dashboard']);
-	});
-
-	it('clears permissions and redirects to login when authentication fails', () => {
-		(useMeQuery as any).mockReturnValue({
-			isLoading: false,
-			isError: true,
-			data: undefined,
-		});
-
-		const { store } = renderWithStore(
-			<AuthGate>
-				<div>Protected Content</div>
-			</AuthGate>
+				<div>Protected</div>
+			</AuthGate>,
+			{
+				preloadedState: {
+					auth: {
+						status: 'unauthenticated',
+						initialized: true,
+						user: null,
+						profile: null,
+						auth: null,
+						error: null,
+					},
+				} as any,
+			}
 		);
 
 		expect(replaceMock).toHaveBeenCalledWith('/login');
+		expect(screen.queryByText('Protected')).not.toBeInTheDocument();
+	});
 
-		const abilityState = (store as any).getState().ability;
+	it('renders children when user is authenticated', () => {
+		renderWithStore(
+			<AuthGate>
+				<div>Protected</div>
+			</AuthGate>,
+			{
+				preloadedState: {
+					auth: {
+						status: 'authenticated',
+						initialized: true,
+						user: {
+							id: '1',
+							email: 'a@a.com',
+							role: Role.USER,
+							createdAt: '',
+						},
+						profile: null,
+						auth: null,
+						error: null,
+					},
+				} as any,
+			}
+		);
 
-		expect(abilityState.permissions).toEqual([]);
+		expect(screen.getByText('Protected')).toBeInTheDocument();
+		expect(replaceMock).not.toHaveBeenCalled();
 	});
 });

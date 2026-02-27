@@ -8,7 +8,8 @@ import { renderHook, type RenderHookResult } from '@testing-library/react';
 import abilityReducer from '@shared/store/ability/ability.slice';
 import type { RootState } from '@shared/store';
 
-export const mockApiReducer = (state = {}) => state;
+export const mockApiReducer = (state = {} as RootState['api']) => state;
+export const mockAuthReducer = (state = {} as RootState['auth']) => state;
 
 export function renderWithStore(
 	ui: ReactElement,
@@ -22,6 +23,7 @@ export function renderWithStore(
 		reducer: {
 			api: mockApiReducer,
 			ability: abilityReducer,
+			auth: mockAuthReducer,
 		},
 		preloadedState,
 	});
@@ -46,6 +48,7 @@ export function renderHookWithStore<T>(
 		reducer: {
 			api: mockApiReducer,
 			ability: abilityReducer,
+			auth: mockAuthReducer,
 		},
 		preloadedState,
 	});

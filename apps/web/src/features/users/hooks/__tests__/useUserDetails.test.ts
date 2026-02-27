@@ -1,19 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
-vi.mock('../../users.api');
+vi.mock('../../api/users.api');
 
 import { useGetUserByIdQuery } from '../../api/users.api';
 import useUserDetails from '../useUserDetails';
 
-describe('useUserDetails', () => {
+describe('useUserDetails()', () => {
 	const mockRefetch = vi.fn();
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('skips query when id is undefined', () => {
+	it('skips the query when id is undefined', () => {
 		(useGetUserByIdQuery as any).mockReturnValue({
 			data: undefined,
 			isLoading: false,
@@ -29,7 +29,7 @@ describe('useUserDetails', () => {
 		});
 	});
 
-	it('calls query with id when provided', () => {
+	it('calls the query with id when provided', () => {
 		(useGetUserByIdQuery as any).mockReturnValue({
 			data: undefined,
 			isLoading: false,
@@ -45,7 +45,21 @@ describe('useUserDetails', () => {
 		});
 	});
 
-	it('maps query data to user field', () => {
+	it('returns undefined user when data is undefined', () => {
+		(useGetUserByIdQuery as any).mockReturnValue({
+			data: undefined,
+			isLoading: false,
+			isFetching: false,
+			error: undefined,
+			refetch: mockRefetch,
+		});
+
+		const { result } = renderHook(() => useUserDetails('user-1'));
+
+		expect(result.current.user).toBeUndefined();
+	});
+
+	it('returns user when query data is available', () => {
 		const mockUser = { id: 'user-1' };
 
 		(useGetUserByIdQuery as any).mockReturnValue({
@@ -61,7 +75,7 @@ describe('useUserDetails', () => {
 		expect(result.current.user).toEqual(mockUser);
 	});
 
-	it('exposes loading and fetching state', () => {
+	it('returns loading and fetching state', () => {
 		(useGetUserByIdQuery as any).mockReturnValue({
 			data: undefined,
 			isLoading: true,
@@ -76,7 +90,7 @@ describe('useUserDetails', () => {
 		expect(result.current.isFetching).toBe(true);
 	});
 
-	it('exposes error state', () => {
+	it('returns error when query fails', () => {
 		const mockError = new Error('failed');
 
 		(useGetUserByIdQuery as any).mockReturnValue({
@@ -92,7 +106,7 @@ describe('useUserDetails', () => {
 		expect(result.current.error).toBe(mockError);
 	});
 
-	it('exposes refetch function', () => {
+	it('returns refetch function', () => {
 		(useGetUserByIdQuery as any).mockReturnValue({
 			data: undefined,
 			isLoading: false,

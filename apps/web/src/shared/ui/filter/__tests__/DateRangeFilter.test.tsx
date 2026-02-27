@@ -4,25 +4,35 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import DateRangeFilter from '../DateRangeFilter';
 
+let calendarMockImpl: any = null;
+
 vi.mock('@shadcn-ui/calendar', () => ({
-	Calendar: ({ onSelect }: any) => (
-		<button
-			data-testid="calendar-select"
-			onClick={() =>
-				onSelect({
-					from: new Date('2024-01-01'),
-					to: new Date('2024-01-10'),
-				})
-			}
-		>
-			select-range
-		</button>
-	),
+	Calendar: (props: any) => {
+		if (calendarMockImpl) {
+			return calendarMockImpl(props);
+		}
+
+		return (
+			<button
+				data-testid="calendar-select"
+				onClick={() =>
+					props.onSelect({
+						from: new Date('2024-01-01'),
+						to: new Date('2024-01-10'),
+					})
+				}
+			>
+				select-range
+			</button>
+		);
+	},
 }));
 
 vi.mock('@shadcn-ui/popover', () => ({
 	Popover: ({ children }: any) => <div>{children}</div>,
-	PopoverTrigger: ({ children }: any) => <div>{children}</div>,
+	PopoverTrigger: ({ children, ...props }: any) => (
+		<button {...props}>{children}</button>
+	),
 	PopoverContent: ({ children }: any) => <div>{children}</div>,
 }));
 
@@ -47,7 +57,7 @@ describe('DateRangeFilter', () => {
 		vi.clearAllMocks();
 	});
 
-	it('returns base label when value is undefined', () => {
+	it('shows base label when value is undefined', () => {
 		setup();
 
 		expect(
@@ -55,7 +65,7 @@ describe('DateRangeFilter', () => {
 		).toBeInTheDocument();
 	});
 
-	it('returns formatted label when only from date exists', () => {
+	it('shows formatted label when only from date exists', () => {
 		setup({
 			value: {
 				from: new Date('2024-01-01'),
@@ -65,7 +75,7 @@ describe('DateRangeFilter', () => {
 		expect(screen.getByText(/from jan 01, 2024/i)).toBeInTheDocument();
 	});
 
-	it('returns formatted label when only to date exists', () => {
+	it('shows formatted label when only to date exists', () => {
 		setup({
 			value: {
 				from: undefined,
@@ -76,7 +86,52 @@ describe('DateRangeFilter', () => {
 		expect(screen.getByText(/until jan 10, 2024/i)).toBeInTheDocument();
 	});
 
-	it('returns formatted label when full range exists', () => {
+	it('ignores selection when from date is after to date', async () => {
+		calendarMockImpl = ({ onSelect }: any) => (
+			<button
+				data-testid="calendar-invalid"
+				onClick={() =>
+					onSelect({
+						from: new Date('2024-01-10'),
+						to: new Date('2024-01-01'),
+					})
+				}
+			>
+				invalid-range
+			</button>
+		);
+
+		const user = userEvent.setup();
+		const { onChange } = setup();
+
+		await user.click(screen.getByTestId('calendar-invalid'));
+
+		expect(onChange).not.toHaveBeenCalled();
+
+		calendarMockImpl = null;
+	});
+
+	it('calls onChange with undefined when calendar clears selection', async () => {
+		calendarMockImpl = ({ onSelect }: any) => (
+			<button
+				data-testid="calendar-clear"
+				onClick={() => onSelect({ from: undefined, to: undefined })}
+			>
+				clear-range
+			</button>
+		);
+
+		const user = userEvent.setup();
+		const { onChange } = setup();
+
+		await user.click(screen.getByTestId('calendar-clear'));
+
+		expect(onChange).toHaveBeenCalledWith(undefined);
+
+		calendarMockImpl = null;
+	});
+
+	it('shows formatted label when full range exists', () => {
 		setup({
 			value: {
 				from: new Date('2024-01-01'),
@@ -85,6 +140,16 @@ describe('DateRangeFilter', () => {
 		});
 
 		expect(screen.getByText(/jan 01 – jan 10, 2024/i)).toBeInTheDocument();
+	});
+
+	it('shows error instead of description when both are provided', () => {
+		setup({
+			description: 'Helper text',
+			error: 'Something went wrong',
+		});
+
+		expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+		expect(screen.queryByText(/helper text/i)).not.toBeInTheDocument();
 	});
 
 	it('calls onChange with selected range when calendar selects full range', async () => {
@@ -97,6 +162,17 @@ describe('DateRangeFilter', () => {
 			from: new Date('2024-01-01'),
 			to: new Date('2024-01-10'),
 		});
+	});
+
+	it('disables apply button when range is invalid', () => {
+		setup({
+			value: {
+				from: new Date('2024-01-10'),
+				to: new Date('2024-01-01'),
+			},
+		});
+
+		expect(screen.getByRole('button', { name: /apply/i })).toBeDisabled();
 	});
 
 	it('calls onChange with undefined when clear button is clicked', async () => {
@@ -113,7 +189,7 @@ describe('DateRangeFilter', () => {
 		expect(onChange).toHaveBeenCalledWith(undefined);
 	});
 
-	it('does not allow interaction when disabled is true', () => {
+	it('disables interaction when disabled is true', () => {
 		setup({ disabled: true });
 
 		expect(

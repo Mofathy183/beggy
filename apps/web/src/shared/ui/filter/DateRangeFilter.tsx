@@ -181,23 +181,6 @@ const DateRangeFilter = ({
 			<Label>{label}</Label>
 
 			<Popover open={open} onOpenChange={setOpen}>
-				{/* <PopoverTrigger>
-					<Button
-						type="button"
-						variant={isActive ? 'secondary' : 'outline'}
-						disabled={disabled}
-						aria-expanded={open}
-						className="w-full justify-between text-left font-normal"
-					>
-						<span className="flex items-center gap-2 truncate">
-							<HugeiconsIcon
-								icon={CalendarIcon}
-								className="h-4 w-4"
-							/>
-							{formattedLabel}
-						</span>
-					</Button>
-				</PopoverTrigger> */}
 				<PopoverTrigger
 					type="button"
 					disabled={disabled}
