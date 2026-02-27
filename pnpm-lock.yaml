@@ -344,6 +344,9 @@ importers:
       '@chromatic-com/storybook':
         specifier: ^5.0.1
         version: 5.0.1(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.7.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
+      '@next/env':
+        specifier: ^16.1.6
+        version: 16.1.6
       '@storybook/addon-a11y':
         specifier: ^10.2.8
         version: 10.2.8(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.7.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
