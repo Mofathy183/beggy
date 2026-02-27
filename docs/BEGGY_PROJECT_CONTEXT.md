@@ -25,7 +25,7 @@
 
 - **Package manager**: `pnpm` (>= 8.0.0), workspace root at repo root
 - **Orchestration**: **Turborepo** (`turbo.json`) for task orchestration and caching
-- **Package manager version**: `pnpm@10.30.0` (root), individual apps may use different versions
+- **Package manager version**: `pnpm@10.30.x` at root (see `packageManager` in root `package.json`); individual apps may pin different versions
 
 ### 2.2 Workspaces (`pnpm-workspace.yaml`)
 
@@ -234,7 +234,7 @@
 
 **Base Path**: All API routes are mounted under `/api/beggy`
 
-**Route Modules** (`app.route.ts`):
+**Route Modules** (`app.route.ts`) — **currently mounted**:
 
 - `/users` – User management (create, list, get, update, delete, etc.)
 - `/profiles` – Profile management (`GET/PATCH /profiles/me`, `GET /profiles/:id`)
@@ -251,18 +251,10 @@ Each module follows a consistent pattern:
 - `{module}.validator.ts` – Route-level validation (optional)
 - `__tests__/` or `__test__/` – Test files
 
-**Available Modules**:
+**Modules present in codebase**:
 
-- **auth** – Authentication, OAuth strategies (Google, Facebook), JWT, CSRF
-- **users** – User CRUD, user management
-- **profiles** – User profile management
-- **bags** – Bag management
-- **bag-items** – Bag-item relationships
-- **items** – Item management
-- **suitcases** – Suitcase management
-- **suitcase-items** – Suitcase-item relationships
-- **weather** – Weather API integration
-- **gemini** – Google Gemini AI integration
+- **Mounted in router**: **auth**, **users**, **profiles** (see `app.route.ts`).
+- **Implemented but not mounted** (routes exist in code and Swagger/docs; add to `app.route.ts` when needed): **bags**, **bag-items**, **items**, **suitcases**, **suitcase-items**, **weather**, **gemini**.
 
 **Shared Infrastructure** (`src/shared/`):
 
@@ -289,7 +281,7 @@ Each module follows a consistent pattern:
 - `passport.config.ts` – Passport strategies configuration (when enabled)
 - `index.ts` – Config exports
 
-**Path Aliases** (`tsconfig.json` / `.swcrc`):
+**Path Aliases** (API `tsconfig.json` / `.swcrc`):
 
 - `@beggy/shared` → `../../packages/shared/src`
 - `@beggy/shared/*` → `../../packages/shared/src/*`
@@ -485,9 +477,17 @@ Feature-based organization. Each feature contains:
     - `DataGrid.tsx` – Data grid layout
 - **states/** – State components:
     - `Forbidden.tsx` – 403 forbidden state
+    - `ErrorState.tsx` – Error state
+    - `NotFoundState.tsx` – 404 not found state
 
 **Shared Infrastructure** (`src/shared/`):
 
+- **api/** – API client layer:
+    - `baseQuery.ts` – Base fetch/query setup
+    - `api.slice.ts` – Redux API slice
+- **layouts/** – App shell and navigation:
+    - `AppShell.tsx` – Header + Sidebar wrapper for dashboard pages
+    - `HeaderUI.tsx`, `Sidebar.tsx`, `SidebarUI.tsx` – Layout components
 - **store/** – Redux store:
     - `store.ts` – Store configuration
     - `Provider.tsx` – Redux Provider component
@@ -503,15 +503,17 @@ Feature-based organization. Each feature contains:
 - **guards/** – Route guards:
     - `ProtectedRoute.tsx` – Protected route wrapper
     - `AuthGate.tsx` – Authentication gate
-- **components/ui/** – shadcn-style UI primitives (button, input, select, etc.)
-- **lib/** – Utilities (e.g., `utils.ts`)
+- **components/ui/** – shadcn-style UI primitives (button, input, select, card, dialog, etc.)
+- **lib/** – Utilities (e.g., `utils.ts` for `cn()`)
 - **types/** – Shared TypeScript types
 - **mappers/** – Data mappers:
     - `sort.mapper.ts` – Sort parameter mapping
     - `filters.mapper.ts` – Filter parameter mapping
 - **utils/** – Shared utilities:
-    - `listQuery.utils.ts` – List query utilities
-    - `api-error.utils.ts` – API error handling
+    - `query.utils.ts` – List/query utilities
+    - `error.utils.ts` – API error handling
+
+**Web path aliases** (`apps/web/tsconfig.json`): `@/*` → `./src/*`, `@shared/*` → `./src/shared/*`, `@features/*` → `./src/features/*`, `@shadcn-ui/*` → `src/shared/components/ui/*`, `@shared-ui/*` → `./src/shared/ui/*`, `@beggy/shared` and `@beggy/shared/*` for the shared package.
 
 ### 5.3 Web Tests
 
@@ -596,6 +598,55 @@ Feature-based organization. Each feature contains:
 - `lint` – ESLint
 - `test` / `test:watch` / `test:coverage` / `test:ui` / `test:storybook` – Tests
 - `storybook` / `build-storybook` – Storybook
+
+### 5.6 Key Screens & Flows (Current Web UI)
+
+**High-level UX**: A small but production-style admin UI for managing Beggy users, built to showcase the **design system, layout shell, RBAC patterns, and data-fetching patterns** that future bags/suitcases/packing features will follow.
+
+- **Public Landing (`/`)**
+    - Simple marketing-style entry point rendered from `src/app/page.tsx`.
+    - Uses the shared `ThemeToggle` and shadcn `Button` components.
+    - Copy: "Beggy – Discover the perfect bag for your journey", with primary calls-to-action like **"Browse Bags"** and **"Add New Bag"** (currently stubbed – wiring into real flows is future work).
+
+- **Protected Area Layout (`src/app/(protected)/layout.tsx`)**
+    - Wraps all authenticated routes and renders the `AppShell` from `@shared/layouts` (Header + Sidebar). `AuthGate` is available but currently commented out in the layout.
+    - Intended responsibilities:
+        - **Auth boundary** via `AuthGate` (`@shared/guards`) to check session and redirect if unauthenticated.
+        - Provide a consistent dashboard chrome (header/sidebar) for admin-style pages.
+    - Future-proofed so that some authenticated pages can opt out of the dashboard shell if needed (e.g., wizards, print views).
+
+- **Users List (`/users`)**
+    - Implemented as a protected route at `src/app/(protected)/users/page.tsx` which delegates to `UsersPage` from `@features/users/pages`.
+    - Provides:
+        - Paginated grid of users (`UsersGrid`) wrapped in shared list components (`ListPagination`, `ListMeta`, `ListEmptyState`, filters, order-by).
+        - **Filters** and **sorting** via `UsersFilters` and `UsersOrderBy`, powered by the shared `useListQuery` utilities.
+        - **Actions** such as viewing details, opening dialogs, and invoking mutations via `UserActions` and `useUserActions`.
+
+- **User Details (`/users/[id]`)**
+    - Dynamic route in `src/app/(protected)/users/[id]/page.tsx` that renders `UserDetailsPage`.
+    - `UserDetailsPage`:
+        - Reads the user id from `useParams`.
+        - Fetches data via `useUserDetails` (feature hook that talks to `features/users/api/users.api.ts`).
+        - Renders:
+            - `UserDetailsHeader` (title, metadata, back button).
+            - `UserCard` with badges for **status**, **role**, and **email verification** (using semantic design tokens for visual state).
+        - Handles **loading**, **error**, and **empty** states:
+            - Skeleton loaders while fetching.
+            - Error card with destructive-colored icon and "Try Again" button (retry via `refetch`).
+
+- **Users CRUD & Role Management (Component-Level Flows)**
+    - **Create User**:
+        - `CreateUserForm` (container) + `CreateUserFormUI` (presentational) follow the **form pattern**:
+            - React Hook Form + Zod schemas from `@beggy/shared`.
+            - Server/API error surfaced at form level.
+            - Tested via `CreateUserForm.test.tsx`.
+        - `CreateUserDialog` wires the form into a modal flow.
+    - **Change Role**:
+        - `ChangeRoleForm` + `ChangeRoleFormUI` for updating roles.
+        - `ChangeRoleDialog` wraps the form in a dialog for inline admin actions.
+    - All of these flows are designed to be **copy-paste-ready blueprints** for future domain features (bags, suitcases, items, packing lists) while reusing the same shared list, filters, and badge patterns.
+
+**Takeaway**: The current web app is a **thin but fully structured frontend slice**: landing page, protected dashboard shell, and a complete user-management feature wired to the API. New features (bags, suitcases, packing flows) should follow the same **feature structure, list/detail patterns, forms pattern, and design system rules** documented here.
 
 ---
 
