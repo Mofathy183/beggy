@@ -1,4 +1,4 @@
-import { type ZodType } from 'zod';
+import type { ZodType } from 'zod';
 
 /**
  * Validation schema definition used by `validateRequest` middleware.

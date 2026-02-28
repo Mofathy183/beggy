@@ -244,7 +244,7 @@ import { Router } from 'express';
 
 import { Action, Subject } from '@beggy/shared/constants';
 import { AuthSchema } from '@beggy/shared/schemas';
-
+import { oauthConfig, passport } from '@config';
 import { type AuthController } from '@modules/auth';
 import {
 	requireAuth,
@@ -306,6 +306,62 @@ export const createAuthRouter = (authController: AuthController): Router => {
 		requireAuth,
 		requirePermission(Action.READ, Subject.USER),
 		authController.authMe
+	);
+
+	// --- Google OAuth ---
+
+	/**
+	 * Initiate Google OAuth flow.
+	 * Passport redirects to Google's consent screen.
+	 */
+	router.get(
+		'/google',
+		passport.authenticate('google', {
+			session: false,
+			scope: oauthConfig.google.scope,
+		})
+	);
+
+	/**
+	 * Google OAuth callback.
+	 *
+	 * Passport verifies the code, calls the strategy, and populates req.user
+	 * with the normalized OAuthProfile before calling the controller.
+	 *
+	 * On failure → redirect to frontend failure URL.
+	 */
+	router.get(
+		'/google/callback',
+		passport.authenticate('google', {
+			session: false,
+			failureRedirect: oauthConfig.frontend.failed,
+		}),
+		authController.googleCallback
+	);
+
+	// --- Facebook OAuth ---
+
+	/**
+	 * Initiate Facebook OAuth flow.
+	 */
+	router.get(
+		'/facebook',
+		passport.authenticate('facebook', {
+			session: false,
+			scope: ['email', 'public_profile'],
+		})
+	);
+
+	/**
+	 * Facebook OAuth callback.
+	 */
+	router.get(
+		'/facebook/callback',
+		passport.authenticate('facebook', {
+			session: false,
+			failureRedirect: oauthConfig.frontend.failed,
+		}),
+		authController.facebookCallback
 	);
 
 	/**

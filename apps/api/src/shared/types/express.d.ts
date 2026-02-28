@@ -4,6 +4,7 @@ import type {
 	AuthUser,
 	AppAbility,
 	OrderBy,
+	OAuthProfile,
 } from '@shared/types';
 
 /**
@@ -78,12 +79,19 @@ declare global {
 		/**
 		 * Authenticated user representation attached to `req.user`.
 		 *
+		 * @description
+		 * User can be either:
+		 * - AuthUser: JWT-verified identity (set by requireAuth)
+		 * - OAuthProfile: OAuth profile (set by Passport during OAuth callback)
+		 *
+		 * Use discriminated checks (e.g. 'providerId' in req.user)
+		 * to distinguish between the two at runtime.
+		 *
 		 * @remarks
 		 * - Populated after access token verification
 		 * - Represents the minimum trusted identity payload
 		 * - Should remain lightweight and free of database entities
 		 */
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		interface User extends AuthUser {}
+		interface User extends AuthUser, OAuthProfile {}
 	}
 }

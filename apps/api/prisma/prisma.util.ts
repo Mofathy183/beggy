@@ -51,9 +51,9 @@ export async function truncateAllTables(
 	prisma: PrismaClientType
 ): Promise<void> {
 	// Leaf tables (depend on User)
-	await prisma.items.deleteMany();
-	await prisma.bags.deleteMany();
-	await prisma.suitcases.deleteMany();
+	await prisma.item.deleteMany();
+	await prisma.bag.deleteMany();
+	await prisma.suitcase.deleteMany();
 
 	// 1:1 relations
 	await prisma.account.deleteMany();

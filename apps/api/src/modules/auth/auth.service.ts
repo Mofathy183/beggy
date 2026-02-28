@@ -8,7 +8,7 @@ import type {
 import { ErrorCode, RolePermissions } from '@beggy/shared/constants';
 import { appErrorMap, hashPassword, verifyPassword } from '@shared/utils';
 import { logger } from '@shared/middlewares';
-import { type AuthMe } from '@shared/types';
+import type { OAuthProfile, AuthMe } from '@shared/types';
 
 /**
  * AuthService
@@ -183,6 +183,109 @@ export class AuthService {
 			user,
 			permissions: RolePermissions[user.role],
 		};
+	}
+
+	/**
+	 * Logs in or registers a user from an OAuth provider.
+	 *
+	 * @remarks
+	 * Strategy (find-or-create):
+	 * 1. Look up an existing Account by providerId + provider
+	 * 2. If found → return the linked user (login)
+	 * 3. If not found by account → check if email already exists
+	 *    a. Email exists → link the new OAuth account to the existing user
+	 *    b. Email not found → create a brand-new user + account + profile
+	 *
+	 * This approach handles:
+	 * - First-time OAuth sign-in (new user)
+	 * - Returning OAuth user (login)
+	 * - Merging accounts when a LOCAL user signs in via OAuth with same email
+	 *
+	 * @param oauthProfile - Normalized profile from a Passport strategy
+	 * @throws OAUTH_NO_EMAIL if the provider did not return an email
+	 * @returns Minimal session identity { id, role }
+	 */
+	async oauthUser(
+		oauthProfile: OAuthProfile
+	): Promise<{ id: string; role: Role }> {
+		const { providerId, provider, email, firstName, lastName, avatarUrl } =
+			oauthProfile;
+
+		// --- 1. Find existing OAuth account ---
+		const existingAccount = await this.prisma.account.findFirst({
+			where: { providerId, authProvider: provider },
+			include: { user: true },
+		});
+
+		if (existingAccount) {
+			this.authLogger.info(
+				{ userId: existingAccount.user.id, provider },
+				'OAuth login: returning user'
+			);
+			return {
+				id: existingAccount.user.id,
+				role: existingAccount.user.role,
+			};
+		}
+
+		// --- 2. Guard: email is required to find or create a user ---
+		if (!email) {
+			this.authLogger.warn(
+				{ provider, providerId },
+				'OAuth login failed: no email returned from provider'
+			);
+			throw appErrorMap.badRequest(ErrorCode.OAUTH_NO_EMAIL);
+		}
+
+		// --- 3. Check if a user already exists with this email ---
+		const existingUser = await this.prisma.user.findUnique({
+			where: { email },
+		});
+
+		if (existingUser) {
+			// Link the new OAuth provider to the existing user account
+			await this.prisma.account.create({
+				data: {
+					userId: existingUser.id,
+					authProvider: provider,
+					providerId,
+				},
+			});
+
+			this.authLogger.info(
+				{ userId: existingUser.id, provider },
+				'OAuth login: linked new provider to existing user'
+			);
+
+			return { id: existingUser.id, role: existingUser.role };
+		}
+
+		// --- 4. Create a brand-new user with OAuth account + profile ---
+		const newUser = await this.prisma.user.create({
+			data: {
+				email,
+				account: {
+					create: {
+						authProvider: provider,
+						providerId,
+					},
+				},
+				profile: {
+					create: {
+						firstName: firstName ?? '',
+						lastName: lastName ?? '',
+						avatarUrl,
+					},
+				},
+			},
+		});
+
+		this.authLogger.info(
+			{ userId: newUser.id, provider },
+			'OAuth login: new user created'
+		);
+
+		return { id: newUser.id, role: newUser.role };
 	}
 }
 

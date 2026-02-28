@@ -1,2 +1,2 @@
 export * from './env.config';
-// export * from './passport.config';
+export { default as passport } from './passport.config';

@@ -1,62 +1,16 @@
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as FacebookStrategy } from 'passport-facebook';
+// src/config/passport.config.ts
 import passport from 'passport';
-import { oauthConfig } from '@config';
+import { googleStrategy, facebookStrategy } from '@modules/auth/strategies';
 
-import type {
-	Strategy as GoogleStrategyType,
-	Profile as GoogleProfileType,
-} from 'passport-google-oauth20';
-import type {
-	Strategy as FacebookStrategyType,
-	Profile as FacebookProfileType,
-} from 'passport-facebook';
+passport.use(googleStrategy);
+passport.use(facebookStrategy);
 
-const googleProvider: GoogleStrategyType = new GoogleStrategy(
-	oauthConfig.google,
-	(
-		_accessToken: string,
-		_refreshToken: string,
-		profile: GoogleProfileType,
-		done: (error: any, user?: any, info?: any) => void
-	) => {
-		const user = {
-			profile,
-		};
-
-		return done(null, user);
-	}
-);
-
-const facebookProvider: FacebookStrategyType = new FacebookStrategy(
-	{
-		...oauthConfig.facebook,
-		callbackURL: oauthConfig.facebook.callbackURL, // Ensure callbackURL is always string, not undefined
-	},
-	(
-		_accessToken: string,
-		_refreshToken: string,
-		profile: FacebookProfileType,
-		done: (error: any, user?: any, info?: any) => void
-	) => {
-		const user = {
-			profile,
-		};
-
-		return done(null, user);
-	}
-);
-
-passport.use(googleProvider);
-passport.use(facebookProvider);
-
-//* to store user id in session
-passport.serializeUser((user, done) => {
-	done(null, user);
-});
-
-passport.deserializeUser((user, done) => {
-	return done(null, user as any);
-});
+/**
+ * serialize/deserializeUser intentionally omitted.
+ *
+ * All OAuth callback routes use `session: false` in passport.authenticate().
+ * Passport never writes req.user to the session, so these hooks are never called.
+ * JWT cookies handle all session state after the OAuth handshake completes.
+ */
 
 export default passport;

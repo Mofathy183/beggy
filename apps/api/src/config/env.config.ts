@@ -4,7 +4,7 @@ import type { DoubleCsrfConfig, CsrfIgnoredRequestMethods } from 'csrf-csrf';
 import type { SessionOptions } from 'express-session';
 import type { Secret, SignOptions } from 'jsonwebtoken';
 import type { StrategyOptions as FacebookStrategyOptions } from 'passport-facebook';
-import type { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth20';
+import type { StrategyOptionsWithRequest as GoogleStrategyOptions } from 'passport-google-oauth20';
 import { STATUS_CODE } from '@shared/constants';
 
 // ============================================
@@ -484,15 +484,16 @@ export const oauthConfig = {
 		clientID: env.GOOGLE_CLIENT_ID,
 		clientSecret: env.GOOGLE_CLIENT_SECRET,
 		callbackURL: env.GOOGLE_CALLBACK_URL,
+		passReqToCallback: true as const,
 		scope: ['https://www.googleapis.com/auth/userinfo.profile', 'email'],
-	} as GoogleStrategyOptions,
+	} satisfies GoogleStrategyOptions,
 
 	facebook: {
 		clientID: env.FACEBOOK_CLIENT_ID,
 		clientSecret: env.FACEBOOK_CLIENT_SECRET,
 		callbackURL: env.FACEBOOK_CALLBACK_URL,
 		profileFields: ['id', 'email', 'name', 'photos', 'gender'],
-	} as FacebookStrategyOptions,
+	} satisfies FacebookStrategyOptions,
 
 	frontend: {
 		success: env.FRONTEND_OAUTH_SUCCESS_URL,

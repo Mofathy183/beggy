@@ -3,6 +3,7 @@ import type { AuthMeDTO, LoginInput } from '@beggy/shared/types';
 import { type AuthService, AuthMapper } from '@modules/auth';
 import { type UserService } from '@modules/users';
 import { STATUS_CODE } from '@shared/constants';
+import { oauthConfig } from '@config';
 import { apiResponseMap, AuthCookies, appErrorMap } from '@shared/utils';
 import { generateCsrfToken, logger } from '@shared/middlewares';
 import { ErrorCode } from '@beggy/shared/constants';
@@ -161,6 +162,64 @@ export class AuthController {
 				'AUTH_USER_RETRIEVED'
 			)
 		);
+	};
+
+	/**
+	 * Initiates the Google OAuth flow.
+	 * Passport redirects to Google — no body/response needed here.
+	 *
+	 * @route GET /auth/google
+	 */
+	googleAuth = (_req: Request, res: Response): void => {
+		// Handled entirely by passport.authenticate() middleware in the router
+		res.status(STATUS_CODE.OK).end();
+	};
+
+	/**
+	 * Google OAuth callback — called after Google redirects back.
+	 *
+	 * @remarks
+	 * - `req.user` is the normalized OAuthProfile set by the Passport strategy
+	 * - Delegates find-or-create logic to authService.oauthUser()
+	 * - Issues auth cookies and redirects to the frontend success URL
+	 * - On failure, redirects to the frontend failure URL
+	 *
+	 * @route GET /auth/google/callback
+	 */
+	googleCallback = async (req: Request, res: Response): Promise<void> => {
+		if (!req.user || !('providerId' in req.user)) {
+			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
+		}
+
+		const { id, role } = await this.authService.oauthUser(req.user);
+
+		AuthCookies.setCookies(res, id, role);
+		res.redirect(oauthConfig.frontend.success);
+	};
+
+	/**
+	 * Initiates the Facebook OAuth flow.
+	 *
+	 * @route GET /auth/facebook
+	 */
+	facebookAuth = (_req: Request, res: Response): void => {
+		res.status(STATUS_CODE.OK).end();
+	};
+
+	/**
+	 * Facebook OAuth callback — called after Facebook redirects back.
+	 *
+	 * @route GET /auth/facebook/callback
+	 */
+	facebookCallback = async (req: Request, res: Response): Promise<void> => {
+		if (!req.user || !('providerId' in req.user)) {
+			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
+		}
+
+		const { id, role } = await this.authService.oauthUser(req.user);
+
+		AuthCookies.setCookies(res, id, role);
+		res.redirect(oauthConfig.frontend.success);
 	};
 }
 
