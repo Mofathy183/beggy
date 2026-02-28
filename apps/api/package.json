@@ -101,17 +101,10 @@
 	},
 	"dependencies": {
 		"@beggy/shared": "workspace:*",
-<<<<<<< HEAD
 		"@casl/ability": "^6.8.0",
 		"@prisma/adapter-pg": "^7.4.2",
 		"@prisma/client": "^7.4.2",
 		"axios": "^1.13.6",
-=======
-		"@casl/ability": "^6.7.5",
-		"@prisma/adapter-pg": "^7.3.0",
-		"@prisma/client": "^7.3.0",
-		"axios": "^1.8.4",
->>>>>>> f1e7f83dcf058adaa9e1a2f624b83811fbb4e8b4
 		"bcryptjs": "^3.0.3",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.6",
