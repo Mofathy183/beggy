@@ -35,6 +35,7 @@ vi.mock('@prisma/prisma.client', () => ({
 			update: vi.fn(),
 		},
 		account: {
+			findFirst: vi.fn(),
 			create: vi.fn(),
 		},
 	},
@@ -218,6 +219,154 @@ describe('AuthService', () => {
 
 			expect(result.user).toEqual(user);
 			expect(result.permissions).toBeDefined();
+		});
+	});
+
+	describe('oauthUser()', () => {
+		it('returns user when OAuth account exists', async () => {
+			// Arrange
+			const dbUser = buildUser();
+			const oauthProfile = {
+				provider: AuthProvider.GOOGLE,
+				providerId: 'google-123',
+				email: dbUser.email,
+				firstName: 'John',
+				lastName: 'Doe',
+				avatarUrl: 'avatar.png',
+			};
+
+			(prismaMock.account.findFirst as any).mockResolvedValue({
+				user: dbUser,
+			});
+
+			// Act
+			const result = await service.oauthUser(oauthProfile as any);
+
+			// Assert
+			expect(prismaMock.account.findFirst).toHaveBeenCalledWith({
+				where: {
+					providerId: 'google-123',
+					authProvider: AuthProvider.GOOGLE,
+				},
+				include: { user: true },
+			});
+
+			expect(result).toEqual({
+				id: dbUser.id,
+				role: dbUser.role,
+			});
+
+			expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+			expect(prismaMock.user.create).not.toHaveBeenCalled();
+		});
+
+		it('throws when email is missing', async () => {
+			// Arrange
+			const oauthProfile = {
+				provider: AuthProvider.GOOGLE,
+				providerId: 'google-456',
+				email: null,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				avatarUrl: null,
+			};
+
+			(prismaMock.account.findFirst as any).mockResolvedValue(null);
+
+			// Act + Assert
+			await expect(
+				service.oauthUser(oauthProfile as any)
+			).rejects.toMatchObject({
+				code: ErrorCode.OAUTH_EMAIL_CONFLICT,
+			});
+
+			expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+			expect(prismaMock.user.create).not.toHaveBeenCalled();
+		});
+
+		it('links account when email already exists', async () => {
+			// Arrange
+			const existingUser = buildUser();
+			const oauthProfile = {
+				provider: AuthProvider.GOOGLE,
+				providerId: 'google-789',
+				email: existingUser.email,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				avatarUrl: null,
+			};
+
+			(prismaMock.account.findFirst as any).mockResolvedValue(null);
+			(prismaMock.user.findUnique as any).mockResolvedValue(existingUser);
+			(prismaMock.account.create as any).mockResolvedValue({});
+
+			// Act
+			const result = await service.oauthUser(oauthProfile as any);
+
+			// Assert
+			expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+				where: { email: existingUser.email },
+			});
+
+			expect(prismaMock.account.create).toHaveBeenCalledWith({
+				data: {
+					userId: existingUser.id,
+					authProvider: AuthProvider.GOOGLE,
+					providerId: 'google-789',
+				},
+			});
+
+			expect(result).toEqual({
+				id: existingUser.id,
+				role: existingUser.role,
+			});
+
+			expect(prismaMock.user.create).not.toHaveBeenCalled();
+		});
+
+		it('creates user when email does not exist', async () => {
+			// Arrange
+			const createdUser = buildUser();
+			const oauthProfile = {
+				provider: AuthProvider.GOOGLE,
+				providerId: 'google-999',
+				email: createdUser.email,
+				firstName: 'New',
+				lastName: 'User',
+				avatarUrl: 'avatar.png',
+			};
+
+			(prismaMock.account.findFirst as any).mockResolvedValue(null);
+			(prismaMock.user.findUnique as any).mockResolvedValue(null);
+			(prismaMock.user.create as any).mockResolvedValue(createdUser);
+
+			// Act
+			const result = await service.oauthUser(oauthProfile as any);
+
+			// Assert
+			expect(prismaMock.user.create).toHaveBeenCalledWith({
+				data: {
+					email: createdUser.email,
+					account: {
+						create: {
+							authProvider: AuthProvider.GOOGLE,
+							providerId: 'google-999',
+						},
+					},
+					profile: {
+						create: {
+							firstName: 'New',
+							lastName: 'User',
+							avatarUrl: 'avatar.png',
+						},
+					},
+				},
+			});
+
+			expect(result).toEqual({
+				id: createdUser.id,
+				role: createdUser.role,
+			});
 		});
 	});
 });

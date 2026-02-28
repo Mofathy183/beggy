@@ -234,7 +234,7 @@ export class AuthService {
 				{ provider, providerId },
 				'OAuth login failed: no email returned from provider'
 			);
-			throw appErrorMap.badRequest(ErrorCode.OAUTH_NO_EMAIL);
+			throw appErrorMap.badRequest(ErrorCode.OAUTH_EMAIL_CONFLICT);
 		}
 
 		// --- 3. Check if a user already exists with this email ---

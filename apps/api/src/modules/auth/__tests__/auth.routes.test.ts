@@ -41,6 +41,34 @@ vi.mock('@prisma/prisma.client', () => ({
 }));
 
 let injectUser = true;
+let injectOAuthProfile = true;
+
+// ---- Mock passport.authenticate to pass-through ----
+vi.mock('@config', async () => {
+	const actual = await vi.importActual<any>('@config');
+
+	return {
+		...actual,
+		passport: {
+			authenticate: () => (req: any, _res: any, next: any) => {
+				// simulate Passport attaching normalized OAuthProfile
+				if (injectOAuthProfile) {
+					req.user = {
+						providerId: 'google-123',
+						provider: 'GOOGLE',
+						email: 'oauth@test.com',
+						firstName: 'OAuth',
+						lastName: 'User',
+						avatarUrl: 'avatar.png',
+					};
+				}
+				next();
+			},
+		},
+	};
+});
+
+import { oauthConfig } from '@config';
 
 // ---- Middleware pass-through mocks ----
 vi.mock('@shared/middlewares/auth.middleware', async () => {
@@ -149,10 +177,12 @@ describe('Auth API', () => {
 
 	beforeEach(() => {
 		injectUser = true;
+		injectOAuthProfile = true;
 		authService = {
 			signupUser: vi.fn(),
 			loginUser: vi.fn(),
 			authUser: vi.fn(),
+			oauthUser: vi.fn(),
 		} as unknown as AuthService;
 
 		userService = {
@@ -363,6 +393,82 @@ describe('Auth API', () => {
 			// Assert
 			expect(response.status).toBe(STATUS_CODE.OK);
 			expect(response.body.data.permissions).toEqual(permissions);
+		});
+	});
+
+	describe('GET /auth/google/callback', () => {
+		it('calls oauth service and redirects to success url', async () => {
+			// Arrange
+			const app = setupApp(authService, userService);
+
+			(authService.oauthUser as any).mockResolvedValue({
+				id: 'user-123',
+				role: 'USER',
+			});
+
+			// Act
+			const response = await request(app).get('/auth/google/callback');
+
+			// Assert
+			expect(authService.oauthUser).toHaveBeenCalledTimes(1);
+
+			expect(authService.oauthUser).toHaveBeenCalledWith(
+				expect.objectContaining({
+					providerId: 'google-123',
+					provider: 'GOOGLE',
+				})
+			);
+
+			expect(response.status).toBe(302);
+			expect(decodeURIComponent((response.headers as any).location)).toBe(
+				oauthConfig.frontend.success
+			);
+		});
+
+		it('returns unauthorized when oauth profile is missing', async () => {
+			// Arrange
+			injectOAuthProfile = false;
+			const app = setupApp(authService, userService);
+
+			const controller = new AuthController(authService, userService);
+
+			app.use('/auth', createAuthRouter(controller));
+
+			// Act
+			const response = await request(app).get('/auth/google/callback');
+
+			// Assert
+			expect(response.status).toBe(STATUS_CODE.UNAUTHORIZED);
+			expect(authService.oauthUser).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('GET /auth/facebook/callback', () => {
+		it('calls oauth service and redirects to success url', async () => {
+			// Arrange
+			const app = setupApp(authService, userService);
+
+			(authService.oauthUser as any).mockResolvedValue({
+				id: 'user-456',
+				role: 'USER',
+			});
+
+			// Act
+			const response = await request(app).get('/auth/facebook/callback');
+
+			// Assert
+			expect(authService.oauthUser).toHaveBeenCalledTimes(1);
+
+			expect(authService.oauthUser).toHaveBeenCalledWith(
+				expect.objectContaining({
+					providerId: expect.any(String),
+				})
+			);
+
+			expect(response.status).toBe(302);
+			expect(decodeURIComponent((response.headers as any).location)).toBe(
+				oauthConfig.frontend.success
+			);
 		});
 	});
 });
