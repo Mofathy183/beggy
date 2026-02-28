@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import AuthPageLayout from './AuthPageLayout';
+import { AuthPageLayout } from '@features/auth/components/layouts';
 import { OAuthButtons, AuthDivider } from '@features/auth/components';
 import { SignupForm } from '@features/auth/components/forms';
 

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { AppProvider } from '@shared/store';
 import { ThemeProvider } from '@shadcn-components';
-import { AuthBootstrap } from '@features/auth/components';
+import { AuthBootstrap } from '@features/auth/components/ui';
 import './globals.css';
 
 const geistSans = Geist({
