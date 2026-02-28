@@ -4,11 +4,14 @@ import {
 	Weather,
 	AiMagicIcon,
 	CheckmarkSquare01Icon,
+	AlertCircleIcon,
 } from '@hugeicons/core-free-icons';
+import { ErrorCode, ErrorMessages } from '@beggy/shared/constants';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Badge } from '@shadcn-ui/badge';
 import { Card, CardContent } from '@shadcn-ui/card';
 import { Separator } from '@shadcn-ui/separator';
+import { Alert, AlertDescription } from '@shadcn-ui/alert';
 import { cn } from '@shared/lib/utils';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -22,6 +25,8 @@ type AuthPageLayoutProps = {
 	subtitle: string;
 	/** Footer navigation (e.g., login ↔ signup switch link) */
 	footer: React.ReactNode;
+
+	isOauthError: boolean;
 };
 
 // ─── Brand features data ──────────────────────────────────────────────────────
@@ -201,6 +206,7 @@ const AuthPageLayout = ({
 	title,
 	subtitle,
 	footer,
+	isOauthError = false,
 }: AuthPageLayoutProps) => (
 	<div className="flex min-h-screen bg-background">
 		{/* ── Left: Brand panel — desktop only ─────────────────────── */}
@@ -256,6 +262,19 @@ const AuthPageLayout = ({
 						{subtitle}
 					</p>
 				</div>
+
+				{/* OAuth error — only renders when redirected back from failed OAuth */}
+				{isOauthError && (
+					<Alert variant="destructive">
+						<HugeiconsIcon
+							icon={AlertCircleIcon}
+							className="h-4 w-4"
+						/>
+						<AlertDescription>
+							{ErrorMessages[ErrorCode.OAUTH_FAILED]}
+						</AlertDescription>
+					</Alert>
+				)}
 
 				{/* Injected content — OAuthButtons + AuthDivider + Form */}
 				<div className="flex flex-col gap-5">{children}</div>

@@ -3,6 +3,10 @@ import { OAuthButtons, AuthDivider } from '@features/auth/components';
 import { AuthPageLayout } from '@features/auth/components/layouts';
 import { LoginForm } from '@features/auth/components/forms';
 
+type LoginPageProps = {
+	isOauthError: boolean;
+};
+
 /**
  * Login page composer.
  *
@@ -15,10 +19,11 @@ import { LoginForm } from '@features/auth/components/forms';
  * - Business logic lives inside `LoginForm` and auth hooks.
  * - Intended for usage within the Next.js App Router.
  */
-const LoginPage = () => (
+const LoginPage = ({ isOauthError = false }: LoginPageProps) => (
 	<AuthPageLayout
 		title="Welcome back"
 		subtitle="Sign in to continue packing smarter"
+		isOauthError={isOauthError}
 		footer={
 			<>
 				Don&apos;t have an account?{' '}
