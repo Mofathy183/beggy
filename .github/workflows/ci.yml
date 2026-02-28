@@ -39,6 +39,8 @@ jobs:
             JWT_REFRESH_REMEMBER_EXPIRES_IN: 30d
             JWT_REFRESH_TOKEN_NAME: test_refresh_token
 
+            NEXT_PUBLIC_API_URL: http://localhost:3000
+
             # Safe dummy values
             GOOGLE_CLIENT_ID: dummy
             GOOGLE_CLIENT_SECRET: dummy
