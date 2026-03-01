@@ -15,15 +15,16 @@ vi.mock('@shared/store', () => ({
 	useAppSelector: (selector: any) => useAppSelectorMock(selector),
 }));
 
-describe('useAuthRedirect()', () => {
+describe('useAuthRedirect', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('denies redirect when auth is not initialized', () => {
+	it('does not redirect when auth is not initialized', () => {
 		useAppSelectorMock.mockReturnValue({
 			status: 'authenticated',
 			initialized: false,
+			profile: null,
 		});
 
 		renderHook(() => useAuthRedirect());
@@ -31,10 +32,11 @@ describe('useAuthRedirect()', () => {
 		expect(replaceMock).not.toHaveBeenCalled();
 	});
 
-	it('denies redirect when user is unauthenticated', () => {
+	it('does not redirect when user is unauthenticated', () => {
 		useAppSelectorMock.mockReturnValue({
 			status: 'unauthenticated',
 			initialized: true,
+			profile: null,
 		});
 
 		renderHook(() => useAuthRedirect());
@@ -42,15 +44,27 @@ describe('useAuthRedirect()', () => {
 		expect(replaceMock).not.toHaveBeenCalled();
 	});
 
-	it('allows redirect when authenticated and initialized', () => {
+	it('redirects to onboarding when authenticated without profile', () => {
 		useAppSelectorMock.mockReturnValue({
 			status: 'authenticated',
 			initialized: true,
+			profile: null,
 		});
 
 		renderHook(() => useAuthRedirect());
 
-		expect(replaceMock).toHaveBeenCalledTimes(1);
+		expect(replaceMock).toHaveBeenCalledWith('/onboarding');
+	});
+
+	it('redirects to dashboard when authenticated with profile', () => {
+		useAppSelectorMock.mockReturnValue({
+			status: 'authenticated',
+			initialized: true,
+			profile: { id: '1' },
+		});
+
+		renderHook(() => useAuthRedirect());
+
 		expect(replaceMock).toHaveBeenCalledWith('/dashboard');
 	});
 });
