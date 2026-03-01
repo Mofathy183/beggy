@@ -1,4 +1,3 @@
-// src/app/onboarding/layout.tsx
 'use client';
 
 import { useEffect } from 'react';

@@ -1,1 +1,2 @@
-export * from './profiles.api';
+export * from './api';
+export * from './components';

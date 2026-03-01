@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { AppProvider } from '@shared/store';
 import { ThemeProvider } from '@shadcn-components';
+import { TooltipProvider } from '@shadcn-ui/tooltip';
 import { AuthBootstrap } from '@features/auth/components/ui';
 import './globals.css';
 
@@ -79,7 +80,9 @@ export default function RootLayout({
 					 */}
 					<AppProvider>
 						<AuthBootstrap />
-						{children}
+						<TooltipProvider delay={400}>
+							{children}
+						</TooltipProvider>
 					</AppProvider>
 				</ThemeProvider>
 			</body>

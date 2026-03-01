@@ -8,34 +8,40 @@ import { useAppSelector } from '@shared/store';
  * useAuthRedirect
  *
  * Watches authSlice for authentication state changes and redirects
- * the user to the appropriate destination.
+ * the user to the correct destination after login or signup.
  *
  * Redirect logic:
- *  - profile === null → /onboarding  (new user or OAuth first login)
- *  - profile !== null → /dashboard   (returning user)
+ *  - Not initialized          → wait  (bootstrap still in progress)
+ *  - Not authenticated        → wait  (AuthGate handles unauthenticated routes)
+ *  - Authenticated, no profile → /onboarding  (new user / OAuth first login)
+ *  - Authenticated, has profile → /dashboard  (returning user)
  *
- * Called inside useLogin and useSignup — not in components directly.
- * This keeps routing logic out of forms entirely.
+ * @remarks
+ * Called inside `useLogin` and `useSignup` — NOT directly in components.
+ * Keeping redirect logic here prevents forms from owning routing decisions.
  *
- * NOTE: profile check is stubbed until profiles feature is built.
- * When profiles exist, uncomment the profile === null branch.
+ * The `profile` field in authSlice is `AuthMeProfileDTO | null` — it is null
+ * when the user has never completed onboarding. `useOnboarding` re-fetches
+ * /auth/me after saving the profile, setting this field to non-null so
+ * subsequent logins land on /dashboard directly.
  */
 const useAuthRedirect = () => {
 	const router = useRouter();
-	const { status, initialized } = useAppSelector((s) => s.auth);
-	// const profile = useAppSelector((s) => s.auth.profile);
+	const { status, initialized, profile } = useAppSelector((s) => s.auth);
 
 	useEffect(() => {
+		// Wait until bootstrap has completed at least once
 		if (!initialized || status !== 'authenticated') return;
 
-		// TODO: uncomment when profiles feature exists
-		// if (profile === null) {
-		//   router.replace('/onboarding');
-		//   return;
-		// }
+		if (profile === null) {
+			// New user or OAuth first login — profile not yet created
+			router.replace('/onboarding');
+			return;
+		}
 
+		// Returning user with a complete profile
 		router.replace('/dashboard');
-	}, [initialized, status, router]);
+	}, [initialized, status, profile, router]);
 };
 
 export default useAuthRedirect;
