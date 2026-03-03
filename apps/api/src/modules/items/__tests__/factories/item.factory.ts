@@ -1,17 +1,12 @@
 import { faker } from '@faker-js/faker';
-import type { ItemDTO } from '../../src/types/item.types';
-import {
-	ItemCategory,
-	WeightUnit,
-	VolumeUnit,
-} from '../../src/constants/item.enums';
+import type { Item } from '@prisma-generated/client';
+import { ItemCategory, WeightUnit, VolumeUnit } from '@prisma-generated/enums';
 
 export type ItemFactoryOverrides = Partial<
 	Pick<
-		ItemDTO,
+		Item,
 		| 'name'
 		| 'category'
-		// | 'quantity'
 		| 'weight'
 		| 'weightUnit'
 		| 'volume'
@@ -21,7 +16,7 @@ export type ItemFactoryOverrides = Partial<
 	>
 >;
 
-type ItemFactoryOmitFields = Omit<ItemDTO, 'id' | 'createdAt' | 'updatedAt'>;
+type ItemFactoryOmitFields = Omit<Item, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * Optional configuration flags for Item factories.
@@ -59,8 +54,6 @@ export const itemFactory = (
 	category:
 		overrides.category ??
 		faker.helpers.arrayElement(Object.values(ItemCategory)),
-
-	// quantity: overrides.quantity ?? faker.number.int({ min: 1, max: 10 }),
 
 	weight:
 		overrides.weight ??
@@ -104,14 +97,17 @@ export const itemFactory = (
 export const buildItem = (
 	userId: string,
 	overrides: ItemFactoryOverrides = {}
-): Omit<ItemDTO, 'createdAt' | 'updatedAt'> => {
-	// const createdAt = faker.date.past().toISOString();
-	// const updatedAt = faker.date.between({ from: createdAt, to: new Date() }).toISOString();
+): Item => {
+	const createdAt = faker.date.past();
+	const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
 
 	return {
 		id: faker.string.uuid(),
 
 		...itemFactory(userId, overrides),
+
+		createdAt,
+		updatedAt,
 	};
 };
 
@@ -127,5 +123,4 @@ export const buildItems = (
 	count: number,
 	userId: string,
 	overrides: ItemFactoryOverrides = {}
-): Omit<ItemDTO, 'createdAt' | 'updatedAt'>[] =>
-	Array.from({ length: count }, () => buildItem(userId, overrides));
+): Item[] => Array.from({ length: count }, () => buildItem(userId, overrides));

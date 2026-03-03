@@ -12,7 +12,12 @@ import type {
 import { ErrorCode } from '@beggy/shared/constants';
 import { logger } from '@shared/middlewares';
 import type { PaginationPayload } from '@shared/types';
-import { appErrorMap, buildUserQuery, hashPassword } from '@shared/utils';
+import {
+	appErrorMap,
+	buildMeta,
+	buildUserQuery,
+	hashPassword,
+} from '@shared/utils';
 import { type BatchPayload as DeletePayload } from '@prisma/generated/prisma/internal/prismaNamespace';
 
 /**
@@ -84,21 +89,7 @@ export class UserService {
 			take: limit + 1,
 		});
 
-		const hasNextPage = users.length > limit;
-		const hasPreviousPage = page > 1;
-
-		// Remove the extra record before returning the response
-		if (hasNextPage) {
-			users.pop();
-		}
-
-		const meta: PaginationMeta = {
-			count: users.length, // count of records in the current page
-			page,
-			limit,
-			hasNextPage,
-			hasPreviousPage,
-		};
+		const meta = buildMeta<User>(users, limit, page);
 
 		return { users, meta };
 	}

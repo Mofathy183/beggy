@@ -153,16 +153,14 @@ export const buildMeta = <T>(
 	limit: number,
 	page: number
 ): PaginationMeta => {
+	// Remove the extra record fetched for next-page detection
 	const hasNextPage = data.length > limit;
 	const hasPreviousPage = page > 1;
 
-	// Remove the extra record fetched for next-page detection
-	if (hasNextPage) {
-		data.pop();
-	}
+	const trimmed = hasNextPage ? data.slice(0, limit) : data;
 
 	return {
-		count: data.length,
+		count: trimmed.length,
 		page,
 		limit,
 		hasNextPage,

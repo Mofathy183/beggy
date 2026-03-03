@@ -65,7 +65,7 @@ export class ItemService {
 				...where,
 			},
 			orderBy: prismaOrderBy,
-			take: limit,
+			take: limit + 1,
 			skip: offset,
 		});
 
@@ -113,8 +113,10 @@ export class ItemService {
 	 * - `userId` is trusted and provided by the application layer.
 	 */
 	async createItem(input: CreateItemInput): Promise<Item> {
+		const { quantity: _q, ...itemInput } = input;
+
 		const item = await this.prisma.item.create({
-			data: input,
+			data: itemInput,
 		});
 
 		this.itemLogger.info(
@@ -146,8 +148,10 @@ export class ItemService {
 		id: string,
 		input: UpdateItemInput
 	): Promise<Item> {
+		const { quantity: _q, ...itemInput } = input;
+
 		const data = Object.fromEntries(
-			Object.entries(input).filter(
+			Object.entries(itemInput).filter(
 				([, value]) => value !== undefined && value !== null
 			)
 		);

@@ -6,6 +6,7 @@ import {
 	buildItemQuery,
 	buildSuitcaseQuery,
 	formatValidationError,
+	buildMeta,
 } from '@shared/utils';
 import {
 	BagType,
@@ -79,6 +80,78 @@ describe('formatValidationError()', () => {
 				'0': ['Invalid value'],
 			},
 		});
+	});
+});
+
+describe('buildMeta()', () => {
+	it('returns correct meta when data length is equal to limit', () => {
+		/* Arrange */
+		const data = [1, 2, 3];
+		const limit = 3;
+		const page = 1;
+
+		/* Act */
+		const result = buildMeta(data, limit, page);
+
+		/* Assert */
+		expect(result).toEqual({
+			count: 3,
+			page: 1,
+			limit: 3,
+			hasNextPage: false,
+			hasPreviousPage: false,
+		});
+	});
+
+	it('returns hasNextPage true when data length exceeds limit', () => {
+		/* Arrange */
+		const data = [1, 2, 3, 4]; // limit + 1
+		const limit = 3;
+		const page = 1;
+
+		/* Act */
+		const result = buildMeta(data, limit, page);
+
+		/* Assert */
+		expect(result).toEqual({
+			count: 3,
+			page: 1,
+			limit: 3,
+			hasNextPage: true,
+			hasPreviousPage: false,
+		});
+	});
+
+	it('returns hasPreviousPage true when page is greater than 1', () => {
+		/* Arrange */
+		const data = [1, 2, 3];
+		const limit = 3;
+		const page = 2;
+
+		/* Act */
+		const result = buildMeta(data, limit, page);
+
+		/* Assert */
+		expect(result).toEqual({
+			count: 3,
+			page: 2,
+			limit: 3,
+			hasNextPage: false,
+			hasPreviousPage: true,
+		});
+	});
+
+	it('returns trimmed count when data length exceeds limit', () => {
+		/* Arrange */
+		const data = [1, 2, 3, 4, 5];
+		const limit = 3;
+		const page = 1;
+
+		/* Act */
+		const result = buildMeta(data, limit, page);
+
+		/* Assert */
+		expect(result.count).toBe(3);
 	});
 });
 
