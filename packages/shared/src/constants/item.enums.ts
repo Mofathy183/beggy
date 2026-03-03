@@ -13,6 +13,9 @@ export enum ItemCategory {
 	CLOTHING = 'CLOTHING',
 	BOOKS = 'BOOKS',
 	FOOD = 'FOOD',
+	TOILETRIES = 'TOILETRIES',
+	DOCUMENTS = 'DOCUMENTS',
+	SPORTS = 'SPORTS',
 }
 
 /**

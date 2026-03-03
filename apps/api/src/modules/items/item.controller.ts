@@ -1,3 +1,24 @@
+// import type { Request, Response } from 'express';
+// import { type ItemService, ItemMapper } from '@modules/items';
+// import type { ItemDTO, ItemOrderByInput } from '@beggy/shared/types';
+// import { apiResponseMap } from '@shared/utils';
+// import type { PaginationPayload } from '@shared/types';
+// import { STATUS_CODE } from '@shared/constants';
+
+// export class ItemController {
+// 	constructor(private readonly itemService: ItemService) {}
+
+// 	getItems = async (req: Request, res: Response): Promise<void> => {};
+
+// 	getItemById = async (req: Request, res: Response): Promise<void> => {};
+
+// 	createItem = async (req: Request, res: Response): Promise<void> => {};
+
+// 	updateItem = async (req: Request, res: Response): Promise<void> => {};
+
+// 	deleteItemById = async (req: Request, res: Response): Promise<void> => {};
+// }
+
 // import {
 // 	findItemsUserHas,
 // 	findItemUserHas,

@@ -1,6 +1,6 @@
 import { type z } from 'zod';
 import type {
-	ItemsOrderByWithAggregationInput,
+	ItemOrderByWithAggregationInput,
 	SortOrder,
 } from '@prisma-generated/internal/prismaNamespace';
 import type {
@@ -16,20 +16,25 @@ import type {
 	SuitcaseOrderByInput,
 	ISODateString,
 	FieldErrorsTree,
+	PaginationMeta,
 } from '@beggy/shared/types';
 import {
 	type UserWhereInput,
 	type UserOrderByWithAggregationInput,
 	type ProfileWhereInput,
 	type ProfileOrderByWithAggregationInput,
-	type BagsWhereInput,
-	type SuitcasesWhereInput,
-	type ItemsWhereInput,
-	type ContainersWhereInput,
-	type BagsOrderByWithRelationInput,
-	type SuitcasesOrderByWithRelationInput,
+	type BagWhereInput,
+	type SuitcaseWhereInput,
+	type ItemWhereInput,
+	type ContainerWhereInput,
+	type BagOrderByWithRelationInput,
+	type SuitcaseOrderByWithRelationInput,
 } from '@prisma-generated/models';
 import type { ZodErrorTree } from '@shared/types';
+
+//*========================================================================
+//*#################### Zod Error builder #################################
+//*========================================================================
 
 /**
  * Recursively formats a single Zod error tree node into a FieldErrorsTree structure.
@@ -117,6 +122,57 @@ export const formatValidationError = (
 	// produced by `z.treeifyError()`
 	return formatNode(tree as ZodErrorTree);
 };
+
+//*========================================================================
+//*######################## Meta builder #################################
+//*========================================================================
+
+/**
+ * Builds pagination metadata using the "limit + 1" strategy.
+ *
+ * @description
+ * Determines whether a next page exists by checking if the
+ * fetched dataset exceeds the requested `limit`. If so,
+ * the extra record is removed before returning metadata.
+ *
+ * @template T
+ * @param data Array of records fetched using `limit + 1`.
+ * @param limit Maximum number of records requested per page.
+ * @param page Current page number (1-based).
+ *
+ * @returns Pagination metadata for the current page.
+ *
+ * @remarks
+ * - Mutates the provided `data` array by removing the extra record
+ *   when `hasNextPage` is true.
+ * - Callers must pass a mutable array and should not rely on the
+ *   original length after invocation.
+ */
+export const buildMeta = <T>(
+	data: T[],
+	limit: number,
+	page: number
+): PaginationMeta => {
+	const hasNextPage = data.length > limit;
+	const hasPreviousPage = page > 1;
+
+	// Remove the extra record fetched for next-page detection
+	if (hasNextPage) {
+		data.pop();
+	}
+
+	return {
+		count: data.length,
+		page,
+		limit,
+		hasNextPage,
+		hasPreviousPage,
+	};
+};
+
+//*========================================================================
+//*######################## Query builder #################################
+//*========================================================================
 
 /**
  * Represents a numeric range filter used in queries.
@@ -234,10 +290,8 @@ const applyContainerOrderBy = (
  * Uses shared container-aware ordering logic while
  * preserving Bag-specific Prisma typing.
  */
-const buildBagOrderBy = (
-	input: BagOrderByInput
-): BagsOrderByWithRelationInput =>
-	applyContainerOrderBy(input) as BagsOrderByWithRelationInput;
+const buildBagOrderBy = (input: BagOrderByInput): BagOrderByWithRelationInput =>
+	applyContainerOrderBy(input) as BagOrderByWithRelationInput;
 
 /**
  * Builds a Prisma `orderBy` object for suitcases.
@@ -248,8 +302,8 @@ const buildBagOrderBy = (
  */
 const buildSuitcaseOrderBy = (
 	input: SuitcaseOrderByInput
-): SuitcasesOrderByWithRelationInput =>
-	applyContainerOrderBy(input) as SuitcasesOrderByWithRelationInput;
+): SuitcaseOrderByWithRelationInput =>
+	applyContainerOrderBy(input) as SuitcaseOrderByWithRelationInput;
 
 /**
  * Applies container-related numeric range filters
@@ -262,11 +316,11 @@ const buildSuitcaseOrderBy = (
  * @param where - Prisma where clause to enhance
  * @param filter - Filter input containing optional ranges
  */
-const applyContainerRanges = <T extends { container?: ContainersWhereInput }>(
+const applyContainerRanges = <T extends { container?: ContainerWhereInput }>(
 	where: T,
 	filter: { maxCapacity?: NumberRange; maxWeight?: NumberRange }
 ) => {
-	const container: ContainersWhereInput = {};
+	const container: ContainerWhereInput = {};
 
 	if (filter.maxCapacity)
 		container.maxCapacity = buildNumberRange(filter.maxCapacity);
@@ -422,7 +476,7 @@ export const buildProfileQuery = (
  * - Enums are matched exactly
  * - Color uses partial, case-insensitive search
  */
-const applyBagBasics = (where: BagsWhereInput, filter: BagFilterInput) => {
+const applyBagBasics = (where: BagWhereInput, filter: BagFilterInput) => {
 	if (filter.type) where.type = filter.type;
 
 	if (filter.size) where.size = filter.size;
@@ -446,8 +500,8 @@ const applyBagBasics = (where: BagsWhereInput, filter: BagFilterInput) => {
 export const buildBagQuery = (
 	filter: BagFilterInput,
 	orderBy: BagOrderByInput
-): BuildQuery<BagsWhereInput, BagsOrderByWithRelationInput> => {
-	const where: BagsWhereInput = {};
+): BuildQuery<BagWhereInput, BagOrderByWithRelationInput> => {
+	const where: BagWhereInput = {};
 
 	applyBagBasics(where, filter);
 	applyContainerRanges(where, filter);
@@ -474,7 +528,7 @@ export const buildBagQuery = (
  * - Boolean fields are checked explicitly to allow `false`
  * - Color search is case-insensitive and partial
  */
-const applyItemBasics = (where: ItemsWhereInput, filter: ItemFilterInput) => {
+const applyItemBasics = (where: ItemWhereInput, filter: ItemFilterInput) => {
 	if (filter.category) where.category = filter.category;
 
 	if (filter.color)
@@ -498,8 +552,8 @@ const applyItemBasics = (where: ItemsWhereInput, filter: ItemFilterInput) => {
 export const buildItemQuery = (
 	filter: ItemFilterInput,
 	orderBy: ItemOrderByInput
-): BuildQuery<ItemsWhereInput, ItemsOrderByWithAggregationInput> => {
-	const where: ItemsWhereInput = {};
+): BuildQuery<ItemWhereInput, ItemOrderByWithAggregationInput> => {
+	const where: ItemWhereInput = {};
 
 	applyItemBasics(where, filter);
 
@@ -512,7 +566,7 @@ export const buildItemQuery = (
 
 	return {
 		where,
-		orderBy: buildOrderBy<keyof ItemsOrderByWithAggregationInput>(
+		orderBy: buildOrderBy<keyof ItemOrderByWithAggregationInput>(
 			orderBy.orderBy ?? 'createdAt',
 			orderBy.direction as SortOrder
 		),
@@ -531,7 +585,7 @@ export const buildItemQuery = (
  * - Wheel type is treated as a discrete enum filter
  */
 const applySuitcaseBasics = (
-	where: SuitcasesWhereInput,
+	where: SuitcaseWhereInput,
 	filter: SuitcaseFilterInput
 ) => {
 	if (filter.type) where.type = filter.type;
@@ -559,8 +613,8 @@ const applySuitcaseBasics = (
 export const buildSuitcaseQuery = (
 	filter: SuitcaseFilterInput,
 	orderBy: SuitcaseOrderByInput
-): BuildQuery<SuitcasesWhereInput, SuitcasesOrderByWithRelationInput> => {
-	const where: SuitcasesWhereInput = {};
+): BuildQuery<SuitcaseWhereInput, SuitcaseOrderByWithRelationInput> => {
+	const where: SuitcaseWhereInput = {};
 
 	applySuitcaseBasics(where, filter);
 	applyContainerRanges(where, filter);

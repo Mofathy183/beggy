@@ -21,7 +21,6 @@ export interface ItemDTO {
 	id: string;
 	name: string;
 	category: ItemCategory;
-	quantity: number;
 	weight: number;
 	weightUnit: WeightUnit;
 	volume: number;
