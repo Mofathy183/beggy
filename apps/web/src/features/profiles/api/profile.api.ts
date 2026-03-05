@@ -4,7 +4,7 @@ import type {
 	SuccessResponse,
 	EditProfileInput,
 } from '@beggy/shared/types';
-import { apiSlice } from '@shared/api';
+import { apiSlice, TagTypes } from '@shared/api';
 
 /**
  * profileApi
@@ -49,7 +49,9 @@ export const profilesApi = apiSlice.injectEndpoints({
 			query: (userId) => ({
 				url: `/profiles/${userId}`,
 			}),
-			providesTags: ['Profile'],
+			providesTags: (_result, _error, id) => [
+				{ type: TagTypes.PROFILE, id },
+			],
 		}),
 
 		/**
@@ -68,7 +70,7 @@ export const profilesApi = apiSlice.injectEndpoints({
 			query: () => ({
 				url: '/profiles/me',
 			}),
-			providesTags: ['Profile'],
+			providesTags: [TagTypes.PROFILE],
 		}),
 
 		/**
@@ -96,7 +98,7 @@ export const profilesApi = apiSlice.injectEndpoints({
 				method: 'PATCH',
 				body,
 			}),
-			invalidatesTags: ['Profile'],
+			invalidatesTags: [TagTypes.PROFILE],
 		}),
 	}),
 	overrideExisting: false,

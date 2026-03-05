@@ -1,4 +1,4 @@
-import { apiSlice } from '@shared/api';
+import { apiSlice, TagTypes } from '@shared/api';
 import type {
 	SuccessResponse,
 	AdminUserDTO,
@@ -55,12 +55,12 @@ export const userApi = apiSlice.injectEndpoints({
 				result
 					? [
 							...result.data.map(({ id }) => ({
-								type: 'User' as const,
+								type: TagTypes.USER,
 								id,
 							})),
-							{ type: 'User' as const, id: 'LIST' },
+							{ type: TagTypes.USER, id: 'LIST' },
 						]
-					: [{ type: 'User' as const, id: 'LIST' }],
+					: [{ type: TagTypes.USER, id: 'LIST' }],
 		}),
 
 		/**
@@ -78,7 +78,9 @@ export const userApi = apiSlice.injectEndpoints({
 			query: (id) => ({
 				url: `/users/${id}`,
 			}),
-			providesTags: ['User'],
+			providesTags: (_result, _error, id) => [
+				{ type: TagTypes.USER, id },
+			],
 		}),
 
 		/**
@@ -102,7 +104,7 @@ export const userApi = apiSlice.injectEndpoints({
 				method: 'POST',
 				body,
 			}),
-			invalidatesTags: ['User'],
+			invalidatesTags: [{ type: TagTypes.USER, id: 'LIST' }],
 		}),
 
 		/**
@@ -127,7 +129,10 @@ export const userApi = apiSlice.injectEndpoints({
 				method: 'PATCH',
 				body,
 			}),
-			invalidatesTags: ['User'],
+			invalidatesTags: (_result, _error, { id }) => [
+				{ type: TagTypes.USER, id },
+				{ type: TagTypes.USER, id: 'LIST' },
+			],
 		}),
 
 		/**
@@ -152,7 +157,10 @@ export const userApi = apiSlice.injectEndpoints({
 				method: 'PATCH',
 				body,
 			}),
-			invalidatesTags: ['User'],
+			invalidatesTags: (_result, _error, { id }) => [
+				{ type: TagTypes.USER, id },
+				{ type: TagTypes.USER, id: 'LIST' },
+			],
 		}),
 
 		/**
@@ -176,7 +184,10 @@ export const userApi = apiSlice.injectEndpoints({
 				method: 'PATCH',
 				body,
 			}),
-			invalidatesTags: ['User'],
+			invalidatesTags: (_result, _error, { id }) => [
+				{ type: TagTypes.USER, id },
+				{ type: TagTypes.USER, id: 'LIST' },
+			],
 		}),
 
 		/**
@@ -194,7 +205,10 @@ export const userApi = apiSlice.injectEndpoints({
 				url: `/users/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['User'],
+			invalidatesTags: (_result, _error, id) => [
+				{ type: TagTypes.USER, id },
+				{ type: TagTypes.USER, id: 'LIST' },
+			],
 		}),
 
 		/**
@@ -211,11 +225,13 @@ export const userApi = apiSlice.injectEndpoints({
 		 */
 		deleteUsers: builder.mutation<void, UserFilterInput>({
 			query: (params) => ({
-				url: `/users/`,
+				url: `/users`,
 				method: 'DELETE',
 				params,
 			}),
-			invalidatesTags: ['User'],
+			invalidatesTags: (_result, _error) => [
+				{ type: TagTypes.USER, id: 'LIST' },
+			],
 		}),
 	}),
 	overrideExisting: false,

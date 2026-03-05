@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
-vi.mock('../../api/users.api');
+vi.mock('../../api/user.api');
 
-import { useGetUserByIdQuery } from '../../api/users.api';
+import { useGetUserByIdQuery } from '../../api/user.api';
 import useUserDetails from '../useUserDetails';
 
 describe('useUserDetails()', () => {

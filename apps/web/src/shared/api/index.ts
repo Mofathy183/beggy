@@ -1,2 +1,2 @@
-export { apiSlice } from './api.slice';
+export { apiSlice, TagTypes } from './api.slice';
 export { baseQuery } from './baseQuery';

@@ -1,4 +1,4 @@
-import { apiSlice } from '@shared/api';
+import { apiSlice, TagTypes } from '@shared/api';
 import { clearPermissions, setPermissions } from '@shared/store/ability';
 import { setAuthenticated, setUnauthenticated } from '../store/auth.slice';
 import type {
@@ -46,7 +46,7 @@ export const authApi = apiSlice.injectEndpoints({
 				method: 'POST',
 				body,
 			}),
-			invalidatesTags: ['Auth'],
+			invalidatesTags: [TagTypes.AUTH],
 		}),
 
 		/**
@@ -67,7 +67,7 @@ export const authApi = apiSlice.injectEndpoints({
 				method: 'POST',
 				body,
 			}),
-			invalidatesTags: ['Auth'],
+			invalidatesTags: [TagTypes.AUTH],
 		}),
 
 		/**
@@ -90,7 +90,7 @@ export const authApi = apiSlice.injectEndpoints({
 		 */
 		me: builder.query<SuccessResponse<AuthMeDTO>, void>({
 			query: () => '/auth/me',
-			providesTags: ['Auth'],
+			providesTags: [TagTypes.AUTH],
 
 			/**
 			 * onQueryStarted
@@ -142,6 +142,7 @@ export const authApi = apiSlice.injectEndpoints({
 				url: '/auth/logout',
 				method: 'DELETE',
 			}),
+			invalidatesTags: [TagTypes.AUTH],
 		}),
 
 		/**

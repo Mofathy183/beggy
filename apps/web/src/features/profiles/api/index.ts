@@ -1,1 +1,1 @@
-export * from './profiles.api';
+export * from './profile.api';
