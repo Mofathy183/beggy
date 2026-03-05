@@ -52,7 +52,6 @@ export type CreateItemInput = Override<
 	{
 		name: string;
 		category: ItemCategory;
-		quantity: number;
 		weight: number;
 		weightUnit: WeightUnit;
 		volume: number;

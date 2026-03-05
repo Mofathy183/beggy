@@ -11,7 +11,6 @@ export type ItemFactoryOverrides = Partial<
 		ItemDTO,
 		| 'name'
 		| 'category'
-		// | 'quantity'
 		| 'weight'
 		| 'weightUnit'
 		| 'volume'
@@ -59,8 +58,6 @@ export const itemFactory = (
 	category:
 		overrides.category ??
 		faker.helpers.arrayElement(Object.values(ItemCategory)),
-
-	// quantity: overrides.quantity ?? faker.number.int({ min: 1, max: 10 }),
 
 	weight:
 		overrides.weight ??

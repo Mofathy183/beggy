@@ -1,3 +1,13 @@
+/**
+ * NOTE:
+ * Items are modeled as single entities rather than aggregated quantities.
+ * Example:
+ * Instead of `{ name: "sock", quantity: 3 }`
+ * we store three separate item records.
+ *
+ * This enables per-item packing, fragility flags, and weight tracking.
+ */
+
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema';
 import { ItemCategory, WeightUnit, VolumeUnit } from '../constants/item.enums';
@@ -25,9 +35,6 @@ export const ItemSchema = {
 
 		/** Logical category classification */
 		category: FieldsSchema.enum<typeof ItemCategory>(ItemCategory),
-
-		/** Number of identical items */
-		quantity: FieldsSchema.number('item', 'quantity'),
 
 		/** Weight of a single item */
 		weight: FieldsSchema.number('item', 'weight'),
@@ -74,9 +81,6 @@ export const ItemSchema = {
 
 		/** Updated category */
 		category: FieldsSchema.enum<typeof ItemCategory>(ItemCategory, false),
-
-		/** Updated quantity */
-		quantity: FieldsSchema.number('item', 'quantity', false),
 
 		/** Updated weight */
 		weight: FieldsSchema.number('item', 'weight', false),

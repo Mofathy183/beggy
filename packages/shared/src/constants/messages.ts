@@ -94,6 +94,8 @@ export const SuccessMessages = {
 		'Bag archived. Sometimes even seasoned travelers like to declutter before their next trip!',
 	BAGS_FETCHED:
 		'Here we go — all your bags, neatly organized and ready for review.',
+	BAG_FETCHED:
+		'Got your bag right here! Everything’s in place and ready for whatever adventure you’re planning next.',
 	BAG_DUPLICATED:
 		'Bag duplicated! Handy trick for similar trips — saves you time and second-guessing.',
 	BAG_CAPACITY_OPTIMIZED:
@@ -110,6 +112,8 @@ export const SuccessMessages = {
 		'Suitcase removed from your collection. Clean slates make room for new adventures!',
 	SUITCASES_FETCHED:
 		'Here are your suitcases, all organized and standing by for your next itinerary.',
+	SUITCASE_FETCHED:
+		'Here’s your suitcase — all details loaded and looking good. Quick check like this before packing? Saves a lot of last-minute reshuffling.',
 	SUITCASE_WEIGHT_CHECKED:
 		'Weight check complete — looks like you’re well within airline limits. Nicely balanced!',
 
@@ -124,6 +128,8 @@ export const SuccessMessages = {
 		'Item removed — sometimes traveling lighter really *is* the best way.',
 	ITEMS_FETCHED:
 		'Here’s your full collection. Everything’s ready to pack, no socks left behind!',
+	ITEM_FETCHED:
+		'Found it! Your item’s right here and ready to go. Always nice knowing exactly what’s making the trip — fewer surprises at unpacking time.',
 	ITEM_MOVED:
 		'Item moved! Reorganizing as you go — classic pro-traveler move.',
 

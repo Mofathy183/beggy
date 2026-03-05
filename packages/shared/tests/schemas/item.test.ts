@@ -44,13 +44,13 @@ describe('ItemSchema.create()', () => {
 describe('ItemSchema.update()', () => {
 	it('parses partial update payloads', () => {
 		const result = ItemSchema.update.parse({
-			quantity: 3,
-			isFragile: true,
+			category: ItemCategory.BOOKS,
+			isFragile: false,
 		});
 
 		expect(result).toEqual({
-			quantity: 3,
-			isFragile: true,
+			category: ItemCategory.BOOKS,
+			isFragile: false,
 		});
 	});
 
