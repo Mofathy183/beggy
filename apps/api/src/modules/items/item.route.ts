@@ -110,6 +110,93 @@
  *
  * Library items are read-only.
  */
+import { Router } from 'express';
+
+import { Action, Subject } from '@beggy/shared/constants';
+import {
+	ItemSchema,
+	QuerySchema,
+	OrderByQuerySchemas,
+} from '@beggy/shared/schemas';
+
+import type { ItemController } from '@modules/items';
+import {
+	requireAuth,
+	requirePermission,
+	prepareListQuery,
+	validateBody,
+	validateUuidParam,
+	validateQuery,
+} from '@shared/middlewares';
+
+export const createItemRouter = (itemController: ItemController): Router => {
+	const router = Router();
+	/**
+	 * GET /items
+	 * Returns paginated items owned by the authenticated user.
+	 */
+	router.get(
+		'/',
+		requireAuth,
+		requirePermission(Action.READ, Subject.ITEM),
+		prepareListQuery({
+			orderBySchema: OrderByQuerySchemas.itemOrderBy,
+		}),
+		validateQuery(QuerySchema.itemFilter),
+		itemController.getItems
+	);
+
+	/**
+	 * GET /items/:id
+	 * Returns a single user-owned item.
+	 */
+	router.get(
+		'/:id',
+		requireAuth,
+		requirePermission(Action.READ, Subject.ITEM),
+		validateUuidParam,
+		itemController.getItemById
+	);
+
+	/**
+	 * POST /items
+	 * Creates a new reusable item.
+	 */
+	router.post(
+		'/',
+		requireAuth,
+		requirePermission(Action.CREATE, Subject.ITEM),
+		validateBody(ItemSchema.create),
+		itemController.createItem
+	);
+
+	/**
+	 * PATCH /items/:id
+	 * Applies partial updates to a user-owned item.
+	 */
+	router.patch(
+		'/:id',
+		requireAuth,
+		requirePermission(Action.UPDATE, Subject.ITEM),
+		validateUuidParam,
+		validateBody(ItemSchema.update),
+		itemController.updateItem
+	);
+
+	/**
+	 * DELETE /items/:id
+	 * Deletes a user-owned item.
+	 */
+	router.delete(
+		'/:id',
+		requireAuth,
+		requirePermission(Action.DELETE, Subject.ITEM),
+		validateUuidParam,
+		itemController.deleteItemById
+	);
+
+	return router;
+};
 
 // import express from 'express';
 // import {

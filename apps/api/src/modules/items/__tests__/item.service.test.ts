@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { faker } from '@faker-js/faker';
 import { ItemService } from '../item.service';
 import { ErrorCode } from '@beggy/shared/constants';
 
@@ -40,7 +39,7 @@ describe('ItemService', () => {
 	});
 
 	describe('listItems()', () => {
-		it('returns paginated items for user', async () => {
+		it('returns paginated items for the user', async () => {
 			/* Arrange */
 			const userId = 'user-1';
 
@@ -78,7 +77,7 @@ describe('ItemService', () => {
 					category: 'CLOTHING',
 				},
 				orderBy: { createdAt: 'desc' },
-				take: 10,
+				take: 11, // limit + 1
 				skip: 0,
 			});
 
@@ -97,7 +96,7 @@ describe('ItemService', () => {
 	});
 
 	describe('getItemById()', () => {
-		it('returns item when found', async () => {
+		it('returns the item when it exists', async () => {
 			/* Arrange */
 			const item = buildItem(userId);
 
@@ -113,7 +112,7 @@ describe('ItemService', () => {
 			expect(result).toBe(item);
 		});
 
-		it('throws when item does not exist', async () => {
+		it('throws when the item does not exist', async () => {
 			/* Arrange */
 			const userId = 'user-1';
 			const error = new Error('not found');
@@ -133,18 +132,18 @@ describe('ItemService', () => {
 	});
 
 	describe('createItem()', () => {
-		it('creates item with valid input', async () => {
+		it('creates an item with valid input', async () => {
 			/* Arrange */
-			const input = {
-				...itemFactory(userId),
-				quantity: faker.number.int({ min: 1, max: 10 }),
-			};
+			const input = itemFactory(userId);
 			const createdItem = buildItem(userId);
 
 			mockPrisma.item.create.mockResolvedValue(createdItem);
 
 			/* Act */
-			const result = await service.createItem(input as CreateItemInput);
+			const result = await service.createItem(
+				userId,
+				input as CreateItemInput
+			);
 
 			/* Assert */
 			expect(mockPrisma.item.create).toHaveBeenCalledWith({
@@ -155,7 +154,7 @@ describe('ItemService', () => {
 	});
 
 	describe('updateItem()', () => {
-		it('updates item with cleaned payload', async () => {
+		it('updates the item with a cleaned payload', async () => {
 			/* Arrange */
 			const item = buildItem(userId);
 
@@ -185,7 +184,7 @@ describe('ItemService', () => {
 	});
 
 	describe('deleteItemById()', () => {
-		it('deletes item when found', async () => {
+		it('deletes the item when it exists', async () => {
 			/* Arrange */
 			const item = buildItem(userId);
 

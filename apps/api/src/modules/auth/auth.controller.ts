@@ -5,6 +5,7 @@ import { type UserService } from '@modules/users';
 import { STATUS_CODE } from '@shared/constants';
 import { oauthConfig } from '@config';
 import { apiResponseMap, AuthCookies, appErrorMap } from '@shared/utils';
+import { BaseController } from '@shared/core';
 import { generateCsrfToken, logger } from '@shared/middlewares';
 import { ErrorCode } from '@beggy/shared/constants';
 
@@ -15,11 +16,18 @@ import { ErrorCode } from '@beggy/shared/constants';
  * Delegates all business logic to services and manages cookies, status codes,
  * and API response formatting.
  */
-export class AuthController {
+export class AuthController extends BaseController {
 	constructor(
 		private readonly authService: AuthService,
 		private readonly userService: UserService
-	) {}
+	) {
+		super(
+			logger.child({
+				domain: 'auth',
+				controller: 'AuthController',
+			})
+		);
+	}
 
 	/**
 	 * Registers a new user and establishes an authenticated session.
@@ -144,14 +152,7 @@ export class AuthController {
 	 * @route GET /auth/me
 	 */
 	authMe = async (req: Request, res: Response): Promise<void> => {
-		if (!req.user?.id) {
-			logger.error(
-				{ path: req.path },
-				'Auth middleware allowed request without user context'
-			);
-			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
-		}
-
+		this.assertAuthenticated(req);
 		const userId = req.user.id;
 
 		const { user, permissions } = await this.authService.authUser(userId);

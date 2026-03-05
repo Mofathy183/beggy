@@ -18,7 +18,7 @@ describe('ItemMapper', () => {
 	});
 
 	describe('toDTO()', () => {
-		it('returns mapped item dto', () => {
+		it('converts an item to an item dto', () => {
 			/* Arrange */
 			const item = buildItem(userId);
 
@@ -52,7 +52,7 @@ describe('ItemMapper', () => {
 	});
 
 	describe('toDTOList()', () => {
-		it('returns mapped item dto list', () => {
+		it('converts items to an item dto list', () => {
 			/* Arrange */
 			const items = buildItems(3, userId);
 
@@ -77,7 +77,7 @@ describe('ItemMapper', () => {
 			expect(toISO).toHaveBeenCalledTimes(6); // 2 per item
 		});
 
-		it('returns empty array when items array is empty', () => {
+		it('returns an empty array when items array is empty', () => {
 			/* Arrange */
 			const items: any[] = [];
 

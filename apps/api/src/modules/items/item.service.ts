@@ -11,6 +11,7 @@ import { ErrorCode } from '@beggy/shared/constants';
 import { logger } from '@shared/middlewares';
 import type { PaginationPayload } from '@shared/types';
 import { appErrorMap, buildItemQuery, buildMeta } from '@shared/utils';
+
 /**
  * Domain service responsible for managing user-owned items.
  *
@@ -112,15 +113,16 @@ export class ItemService {
 	 * - Input validation has already been performed upstream.
 	 * - `userId` is trusted and provided by the application layer.
 	 */
-	async createItem(input: CreateItemInput): Promise<Item> {
-		const { quantity: _q, ...itemInput } = input;
-
+	async createItem(userId: string, input: CreateItemInput): Promise<Item> {
 		const item = await this.prisma.item.create({
-			data: itemInput,
+			data: {
+				...input,
+				userId,
+			},
 		});
 
 		this.itemLogger.info(
-			{ userId: item.userId, itemId: item.id },
+			{ userId: userId, itemId: item.id },
 			'Item created'
 		);
 
@@ -148,10 +150,8 @@ export class ItemService {
 		id: string,
 		input: UpdateItemInput
 	): Promise<Item> {
-		const { quantity: _q, ...itemInput } = input;
-
 		const data = Object.fromEntries(
-			Object.entries(itemInput).filter(
+			Object.entries(input).filter(
 				([, value]) => value !== undefined && value !== null
 			)
 		);
