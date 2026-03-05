@@ -3,15 +3,19 @@ import { PaginationMeta, PaginationParams } from '@beggy/shared/types';
 import { buildListParams } from '@shared/utils';
 
 /**
- * Configuration options for `useListQuery`.
+ * Configuration options for {@link useListQuery}.
  *
- * This hook is intentionally UI-agnostic and backend-agnostic.
- * It only coordinates state → query params → data.
+ * @typeParam Data - Item type returned by the backend.
+ * @typeParam Filter - Filter shape used by the list.
+ * @typeParam OrderBy - Sorting configuration shape.
  */
 type UseListQueryOptions<Data, Filter, OrderBy> = {
 	/**
-	 * Query hook (e.g. RTK Query, React Query, Apollo wrapper).
-	 * Must accept a flat params object and return list data + meta.
+	 * Query hook responsible for executing the request.
+	 *
+	 * @remarks
+	 * The hook must accept a flat params object and return list data
+	 * along with query lifecycle flags.
 	 */
 	useQuery: (params: Record<string, unknown>) => {
 		data?: {
@@ -24,78 +28,82 @@ type UseListQueryOptions<Data, Filter, OrderBy> = {
 		refetch: () => void;
 	};
 
-	/** Initial filter state (usually derived from route or defaults) */
+	/** Initial filter state. */
 	initialFilters?: Filter;
 
-	/** Initial ordering/sorting configuration */
+	/** Initial sorting configuration. */
 	initialOrderBy?: OrderBy;
 
-	/** Initial pagination (page/limit) */
+	/** Initial pagination state. */
 	initialPagination?: PaginationParams;
 };
 
 /**
- * Public API returned by `useListQuery`.
+ * Result returned by {@link useListQuery}.
  *
- * Designed to map cleanly to list UIs (tables, grids, admin panels).
+ * Designed to map directly to list-based UIs such as tables or grids.
  */
 type UseListQueryResult<Data, Filter, OrderBy> = {
-	/** Normalized list data (never undefined) */
+	/** Normalized list data (never undefined). */
 	data: Data[];
 
-	/** Pagination metadata from backend */
+	/** Pagination metadata returned by the backend. */
 	meta: PaginationMeta | null;
 
-	/** Initial load state */
+	/** Indicates the first load state. */
 	isLoading: boolean;
 
-	/** Background refetch state (filters/pagination change) */
+	/** Indicates a background refetch. */
 	isFetching: boolean;
 
-	/** Transport or server error */
+	/** Transport or server error. */
 	error?: unknown;
 
 	// ----- state -----
 
-	/** Current pagination state */
+	/** Current pagination state. */
 	pagination: PaginationParams;
 
-	/** Current applied filters */
+	/** Active filters applied to the list. */
 	filters: Filter;
 
-	/** Current ordering configuration */
+	/** Active sorting configuration. */
 	orderBy: OrderBy;
 
-	/** True when list contains at least one item */
+	/** True when at least one item is present. */
 	hasData: boolean;
 
-	/** True when list is empty and not loading (UX helper) */
+	/** True when the list is empty and not loading. */
 	isEmpty: boolean;
 
 	// ----- actions -----
 
 	/**
 	 * Update pagination partially.
-	 * Changing limit automatically resets page to 1 (UX rule).
+	 *
+	 * @remarks
+	 * Changing `limit` automatically resets `page` to `1`
+	 * to prevent invalid pagination states.
 	 */
 	setPagination(next: Partial<PaginationParams>): void;
 
-	/** Replace current filters and reset pagination */
+	/** Replace filters and reset pagination. */
 	setFilters(filters: Filter): void;
 
-	/** Replace current orderBy and reset pagination */
+	/** Replace sorting configuration and reset pagination. */
 	setOrderBy(orderBy: OrderBy): void;
 
-	/** Reset list state back to initial values */
+	/** Restore initial list state. */
 	reset(): void;
 
-	/** Manually re-trigger the query */
+	/** Manually re-trigger the underlying query. */
 	refetch(): void;
 };
 
 /**
- * Default pagination used when no initial pagination is provided.
- * Centralized to keep behavior consistent across lists.
+ * Default pagination used when none is provided.
+ *
+ * Centralizing defaults ensures consistent behavior across lists.
  */
 const defaultPagination: PaginationParams = {
 	limit: 10,
@@ -105,16 +113,18 @@ const defaultPagination: PaginationParams = {
 /**
  * Generic list controller hook.
  *
- * Responsibilities:
- * - Own list UI state (pagination, filters, ordering)
- * - Build stable query params
- * - Execute the provided query hook
- * - Expose UX-friendly derived flags
+ * @description
+ * Manages list UI state (pagination, filters, sorting) and connects it
+ * to a query hook responsible for data fetching.
  *
- * Non-responsibilities:
- * - Data normalization
- * - API concerns
- * - UI rendering
+ * @remarks
+ * This hook is intentionally agnostic to the underlying data client.
+ * It can work with RTK Query, React Query, Apollo, or any custom hook
+ * implementing the expected interface.
+ *
+ * @typeParam Data - Item type returned by the backend.
+ * @typeParam Filter - Filter type used for the list.
+ * @typeParam OrderBy - Sorting configuration type.
  */
 const useListQuery = <Data, Filter, OrderBy>(
 	options: UseListQueryOptions<Data, Filter, OrderBy>
@@ -122,30 +132,14 @@ const useListQuery = <Data, Filter, OrderBy>(
 	const { useQuery, initialFilters, initialOrderBy, initialPagination } =
 		options;
 
-	/**
-	 * Resolve pagination defaults once.
-	 * Prevents undefined state and keeps resets predictable.
-	 */
 	const resolvedInitialPagination = initialPagination ?? defaultPagination;
 
-	/**
-	 * Pagination state.
-	 * Always defined to simplify UI consumption.
-	 */
 	const [pagination, setPagination] = useState(resolvedInitialPagination);
 
-	/**
-	 * Filter state.
-	 * Defaults to an empty object to keep params serialization stable.
-	 */
 	const [filters, setFilters] = useState<Filter>(
 		initialFilters ?? ({} as Filter)
 	);
 
-	/**
-	 * Ordering state.
-	 * Undefined internally, normalized to `null` when exposed.
-	 */
 	const [orderBy, setOrderBy] = useState<OrderBy>(
 		initialOrderBy ?? ({} as OrderBy)
 	);
@@ -153,8 +147,7 @@ const useListQuery = <Data, Filter, OrderBy>(
 	/**
 	 * Update pagination with UX-aware rules.
 	 *
-	 * - Page can change freely
-	 * - Changing limit resets page to 1 to avoid empty states
+	 * Changing the page size resets the current page to avoid empty views.
 	 */
 	const updatePagination = (next: Partial<PaginationParams>) => {
 		setPagination((prev) => ({
@@ -166,7 +159,6 @@ const useListQuery = <Data, Filter, OrderBy>(
 
 	/**
 	 * Replace filters and reset pagination.
-	 * Expected behavior in all list UIs.
 	 */
 	const updateFilters = (next: Filter) => {
 		setPagination(defaultPagination);
@@ -174,8 +166,7 @@ const useListQuery = <Data, Filter, OrderBy>(
 	};
 
 	/**
-	 * Replace ordering and reset pagination.
-	 * Prevents invalid page numbers after re-sorting.
+	 * Replace sorting configuration and reset pagination.
 	 */
 	const updateOrderBy = (next: OrderBy) => {
 		setPagination(defaultPagination);
@@ -183,8 +174,7 @@ const useListQuery = <Data, Filter, OrderBy>(
 	};
 
 	/**
-	 * Memoized query params.
-	 * Ensures stable references and prevents unnecessary refetches.
+	 * Build stable query parameters used by the query hook.
 	 */
 	const params = useMemo(() => {
 		return buildListParams({
@@ -194,16 +184,8 @@ const useListQuery = <Data, Filter, OrderBy>(
 		});
 	}, [pagination, filters, orderBy]);
 
-	/**
-	 * Execute the provided query hook.
-	 * The hook itself controls caching and networking.
-	 */
 	const query = useQuery(params);
 
-	/**
-	 * UX helpers derived from query state.
-	 * Keeps UI components declarative and simple.
-	 */
 	const hasData = (query.data?.data?.length ?? 0) > 0;
 
 	return {
@@ -216,7 +198,7 @@ const useListQuery = <Data, Filter, OrderBy>(
 
 		pagination,
 		filters,
-		orderBy: orderBy,
+		orderBy,
 
 		hasData,
 		isEmpty: !query.isLoading && !hasData,
