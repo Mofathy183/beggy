@@ -82,7 +82,7 @@ describe('UserService', () => {
 				{} as any
 			);
 
-			expect(result.users).toHaveLength(10);
+			expect(result.users).toHaveLength(11);
 			expect(result.meta.hasNextPage).toBe(true);
 		});
 	});

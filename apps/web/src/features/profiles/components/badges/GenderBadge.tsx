@@ -2,14 +2,10 @@
 
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Badge } from '@shadcn-ui/badge';
-import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
-import {
-	Male02Icon,
-	Female02Icon,
-	User02Icon,
-} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@shadcn-lib';
 import { Gender } from '@beggy/shared/constants';
+import { GENDER_OPTIONS } from '@shared/ui/mappers';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
 // Built on top of shadcn Badge by overriding its default styling via className.
@@ -47,29 +43,6 @@ const genderBadgeVariants = cva(
 		},
 	}
 );
-
-// ─── Icon + label config ──────────────────────────────────────────────────────
-
-const GENDER_CONFIG: Record<
-	Gender,
-	{
-		label: string;
-		icon: IconSvgElement;
-	}
-> = {
-	[Gender.MALE]: {
-		label: 'Male',
-		icon: Male02Icon,
-	},
-	[Gender.FEMALE]: {
-		label: 'Female',
-		icon: Female02Icon,
-	},
-	[Gender.OTHER]: {
-		label: 'Other',
-		icon: User02Icon,
-	},
-};
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -120,9 +93,10 @@ const GenderBadge = ({
 	// ── Null guard — silent omission is the correct UX ───────────────────────
 	if (!gender) return null;
 
-	const config = GENDER_CONFIG[gender];
+	const options = GENDER_OPTIONS.find((option) => option.value === gender);
+
 	// Future-proof: unknown enum values are silently dropped
-	if (!config) return null;
+	if (!options) return null;
 
 	const iconSize = size === 'sm' ? 10 : size === 'lg' ? 14 : 12;
 
@@ -132,15 +106,15 @@ const GenderBadge = ({
 		// drive styling entirely through className
 		<Badge
 			role="img"
-			aria-label={`Gender: ${config.label}`}
+			aria-label={`Gender: ${options.label}`}
 			className={cn(genderBadgeVariants({ size, gender }), className)}
 		>
 			<HugeiconsIcon
-				icon={config.icon}
+				icon={options?.icon ?? (undefined as any)}
 				size={iconSize}
 				className="shrink-0"
 			/>
-			{!iconOnly && <span>{config.label}</span>}
+			{!iconOnly && <span>{options.label}</span>}
 		</Badge>
 	);
 };

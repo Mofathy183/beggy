@@ -1,5 +1,6 @@
 import { Badge } from '@shadcn-ui/badge';
 import type { Role } from '@beggy/shared/constants';
+import { ROLE_OPTIONS } from '@shared/ui/mappers';
 
 /**
  * Semantic intent mapping for each role.
@@ -24,13 +25,15 @@ export type UserRoleBadgeProps = {
  * Domain → semantic intent → design token.
  */
 const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
+	const roleOption = ROLE_OPTIONS.find((option) => option.value === role);
+
 	return (
 		<Badge
 			variant={roleIntent[role]}
-			className="text-xs font-medium tracking-wide uppercase"
+			className="text-xs font-medium tracking-wide"
 			aria-label={`User role: ${role}`}
 		>
-			{role}
+			{roleOption?.label}
 		</Badge>
 	);
 };

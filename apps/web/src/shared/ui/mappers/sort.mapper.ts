@@ -1,6 +1,11 @@
 import { OrderDirection } from '@beggy/shared/constants';
+import type { IconSvgElement } from '@hugeicons/react';
 
-import { UserOrderByField, ProfileOrderByField } from '@beggy/shared/constants';
+import {
+	UserOrderByField,
+	ProfileOrderByField,
+	ItemOrderByField,
+} from '@beggy/shared/constants';
 
 type SortValue<E extends string> = {
 	orderBy: E;
@@ -10,7 +15,7 @@ type SortValue<E extends string> = {
 export type UiOrderByOption<T extends string> = {
 	value: SortValue<T>;
 	label: string;
-	icon?: React.ComponentType<{ className?: string }>;
+	icon?: IconSvgElement;
 	disabled?: boolean;
 };
 
@@ -84,5 +89,29 @@ export const PROFILE_SORT_OPTIONS: UiOrderByOption<ProfileOrderByField>[] = [
 			direction: OrderDirection.ASC,
 		},
 		label: 'Last name',
+	},
+];
+
+export const ITEM_SORT_OPTIONS: UiOrderByOption<ItemOrderByField>[] = [
+	{
+		value: {
+			orderBy: ItemOrderByField.NAME,
+			direction: OrderDirection.ASC,
+		},
+		label: 'Name',
+	},
+	{
+		value: {
+			orderBy: ItemOrderByField.VOLUME,
+			direction: OrderDirection.ASC,
+		},
+		label: 'Volume',
+	},
+	{
+		value: {
+			orderBy: ItemOrderByField.WEIGHT,
+			direction: OrderDirection.ASC,
+		},
+		label: 'Weight',
 	},
 ];
