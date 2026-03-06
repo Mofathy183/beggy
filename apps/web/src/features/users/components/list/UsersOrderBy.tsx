@@ -1,6 +1,5 @@
 import ListOrderBy from '@shared/ui/list/ListOrderBy';
-import { createBaseSortOptions } from '@shared/ui/mappers';
-import { USER_SORT_OPTIONS } from '@shared/ui/mappers';
+import { createBaseSortOptions, USER_SORT_OPTIONS } from '@shared/ui/mappers';
 import { UserOrderByField, OrderDirection } from '@beggy/shared/constants';
 import type { UserOrderByInput } from '@beggy/shared/types';
 

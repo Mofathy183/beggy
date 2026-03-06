@@ -31,7 +31,7 @@ type ChipOption<T = string> = {
  * Shared props for both single and multiple modes.
  */
 type BaseProps<T> = {
-	options: ChipOption<T>[];
+	options: readonly ChipOption<T>[];
 
 	/** Disables the entire chips group */
 	disabled?: boolean;

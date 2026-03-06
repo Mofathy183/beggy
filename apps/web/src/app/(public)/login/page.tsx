@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-	searchParams: { error?: string };
+	searchParams: Promise<{ error?: string }>;
 };
 
 /**
@@ -16,8 +16,8 @@ type Props = {
  * Thin routing boundary that delegates rendering to the
  * feature-layer `LoginPage` composer.
  */
-export default function Page({ searchParams }: Props) {
-	const isOauthError = searchParams.error === 'oauth_failed';
+export default async function Page({ searchParams }: Props) {
+	const isOauthError = await searchParams;
 
-	return <LoginPage isOauthError={isOauthError} />;
+	return <LoginPage isOauthError={isOauthError.error === 'oauth_failed'} />;
 }
