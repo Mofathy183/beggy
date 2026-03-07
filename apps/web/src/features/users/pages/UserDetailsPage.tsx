@@ -1,6 +1,5 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { AlertCircle } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
@@ -10,16 +9,37 @@ import { useUserDetails } from '@features/users/hooks';
 import { Card, CardContent } from '@shadcn-ui/card';
 import { Button } from '@shadcn-ui/button';
 
-const UserDetailsPage = () => {
-	const params = useParams();
-	const userId = params?.id as string | undefined;
+/**
+ * Props for {@link UserDetailsPage}.
+ */
+type UserDetailsPageProps = {
+	/** Unique identifier of the user to display. */
+	id: string;
+};
 
+/**
+ * Feature page responsible for displaying detailed information about a user.
+ *
+ * This component orchestrates data retrieval via {@link useUserDetails} and
+ * renders the appropriate UI state:
+ *
+ * - Loading skeleton while data is being fetched
+ * - Error fallback when the request fails
+ * - User details when data is successfully retrieved
+ *
+ * @remarks
+ * Designed as a composition layer that connects feature hooks, UI components,
+ * and navigation behavior for the user details experience.
+ */
+const UserDetailsPage = ({ id }: UserDetailsPageProps) => {
 	const router = useRouter();
 
-	const { user, isLoading, error, refetch } = useUserDetails(userId);
+	const { user, isLoading, error, refetch } = useUserDetails(id);
 
 	// ─────────────────────────────────────────────
 	// Loading State
+	// Display skeleton placeholders while the
+	// user data request is in progress.
 	// ─────────────────────────────────────────────
 	if (isLoading) {
 		return (
@@ -32,6 +52,8 @@ const UserDetailsPage = () => {
 
 	// ─────────────────────────────────────────────
 	// Error State
+	// Render a recovery UI when fetching fails
+	// or when the user cannot be resolved.
 	// ─────────────────────────────────────────────
 	if (error || !user) {
 		return (
@@ -58,6 +80,7 @@ const UserDetailsPage = () => {
 
 	// ─────────────────────────────────────────────
 	// Success State
+	// Render the full user details layout.
 	// ─────────────────────────────────────────────
 	return (
 		<div className="space-y-6">

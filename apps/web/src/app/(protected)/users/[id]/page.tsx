@@ -1,5 +1,9 @@
-import { UserDetailsPage } from '@features/users/pages';
+import UserDetailsPage from '@features/users/pages/UserDetailsPage';
 
-export default function Page() {
-	return <UserDetailsPage />;
+type PageProps = {
+	params: { id: string };
+};
+
+export default function Page({ params }: PageProps) {
+	return <UserDetailsPage id={params.id} />;
 }
