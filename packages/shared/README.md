@@ -30,10 +30,10 @@ It is used via **pnpm workspaces** inside the Beggy monorepo.
 Example usage inside another workspace package:
 
 ```ts
-import { UserRole } from "@beggy/shared/constants"
-import { loginSchema } from "@beggy/shared/schemas"
-import type { User } from "@beggy/shared/types"
-````
+import { UserRole } from '@beggy/shared/constants';
+import { loginSchema } from '@beggy/shared/schemas';
+import type { User } from '@beggy/shared/types';
+```
 
 ---
 
@@ -70,8 +70,8 @@ The package exposes modular entry points:
 Example:
 
 ```ts
-import { loginSchema } from "@beggy/shared/schemas"
-import type { LoginRequest } from "@beggy/shared/types"
+import { loginSchema } from '@beggy/shared/schemas';
+import type { LoginRequest } from '@beggy/shared/types';
 ```
 
 ---
@@ -85,16 +85,16 @@ All API request and response validation is defined with **Zod**.
 Example:
 
 ```ts
-import { loginSchema } from "@beggy/shared/schemas"
+import { loginSchema } from '@beggy/shared/schemas';
 
-const result = loginSchema.parse(request.body)
+const result = loginSchema.parse(request.body);
 ```
 
 This ensures:
 
-* API validation
-* Frontend type inference
-* Consistent contracts
+- API validation
+- Frontend type inference
+- Consistent contracts
 
 ---
 
@@ -105,7 +105,7 @@ Types are defined once and reused everywhere.
 Example:
 
 ```ts
-import type { User, Suitcase, Bag, Item } from "@beggy/shared/types"
+import type { User, Suitcase, Bag, Item } from '@beggy/shared/types';
 ```
 
 ---
@@ -116,16 +116,16 @@ Centralized constants improve maintainability.
 
 Examples include:
 
-* User roles
-* API status codes
-* Suitcase statuses
-* Constraint definitions
-* RBAC permissions
+- User roles
+- API status codes
+- Suitcase statuses
+- Constraint definitions
+- RBAC permissions
 
 Example:
 
 ```ts
-import { UserRole } from "@beggy/shared/constants"
+import { UserRole } from '@beggy/shared/constants';
 ```
 
 ---
@@ -136,9 +136,9 @@ Helpers for suitcase and bag calculations.
 
 Example responsibilities:
 
-* Capacity calculations
-* Container state updates
-* Packing status
+- Capacity calculations
+- Container state updates
+- Packing status
 
 Located in:
 
@@ -158,8 +158,8 @@ dist/
 
 Contents include:
 
-* compiled JavaScript
-* TypeScript declaration files (`.d.ts`)
+- compiled JavaScript
+- TypeScript declaration files (`.d.ts`)
 
 Entry point:
 
@@ -251,9 +251,9 @@ Important compiler settings:
 
 These settings ensure:
 
-* strong type safety
-* compatibility with Turborepo builds
-* generated `.d.ts` for other packages
+- strong type safety
+- compatibility with Turborepo builds
+- generated `.d.ts` for other packages
 
 ---
 
@@ -277,7 +277,7 @@ When working in the Beggy codebase:
 Example:
 
 ```ts
-type LoginRequest = z.infer<typeof loginSchema>
+type LoginRequest = z.infer<typeof loginSchema>;
 ```
 
 ---
@@ -298,10 +298,10 @@ type LoginRequest = z.infer<typeof loginSchema>
 
 It ensures:
 
-* type-safe communication between services
-* centralized validation
-* shared domain logic
-* reduced duplication
+- type-safe communication between services
+- centralized validation
+- shared domain logic
+- reduced duplication
 
 Without this package, API and frontend contracts would easily diverge.
 

@@ -10,11 +10,11 @@ The web application provides a **modern dashboard-style interface** for managing
 
 Beggy helps travelers pack smarter by combining:
 
-* 🌦 **Weather-aware packing recommendations**
-* 🤖 **AI-powered packing suggestions**
-* 🧳 **Structured luggage organization**
-* 🔐 **Secure role-based access control**
-* 🎨 **A modern design system with dark mode**
+- 🌦 **Weather-aware packing recommendations**
+- 🤖 **AI-powered packing suggestions**
+- 🧳 **Structured luggage organization**
+- 🔐 **Secure role-based access control**
+- 🎨 **A modern design system with dark mode**
 
 The web app communicates with the **Beggy API** and shares types and schemas through the **`@beggy/shared`** package.
 
@@ -24,53 +24,53 @@ The web app communicates with the **Beggy API** and shares types and schemas thr
 
 ### Framework
 
-* **Next.js 16** (App Router)
-* **React 19**
+- **Next.js 16** (App Router)
+- **React 19**
 
 ### Styling & UI
 
-* **Tailwind CSS v4**
-* **shadcn/ui**
-* **Radix UI**
-* **Base UI**
-* **tw-animate-css**
+- **Tailwind CSS v4**
+- **shadcn/ui**
+- **Radix UI**
+- **Base UI**
+- **tw-animate-css**
 
 ### State Management
 
-* **Redux Toolkit**
-* **React Redux**
+- **Redux Toolkit**
+- **React Redux**
 
 ### Forms & Validation
 
-* **React Hook Form**
-* **Zod**
-* **@hookform/resolvers**
+- **React Hook Form**
+- **Zod**
+- **@hookform/resolvers**
 
 ### Authorization
 
-* **CASL** (Role Based Access Control)
+- **CASL** (Role Based Access Control)
 
 ### Utilities
 
-* **date-fns**
-* **clsx**
-* **tailwind-merge**
-* **class-variance-authority**
+- **date-fns**
+- **clsx**
+- **tailwind-merge**
+- **class-variance-authority**
 
 ### Icons
 
-* **Hugeicons**
+- **Hugeicons**
 
 ### Dark Mode
 
-* **next-themes**
+- **next-themes**
 
 ### Testing
 
-* **Vitest**
-* **React Testing Library**
-* **Storybook**
-* **Playwright (Storybook tests)**
+- **Vitest**
+- **React Testing Library**
+- **Storybook**
+- **Playwright (Storybook tests)**
 
 ---
 
@@ -179,9 +179,9 @@ text-red-600
 
 This ensures:
 
-* dark mode support
-* WCAG accessibility
-* consistent branding
+- dark mode support
+- WCAG accessibility
+- consistent branding
 
 ---
 
@@ -234,10 +234,10 @@ Route:
 
 Features:
 
-* paginated user list
-* sorting
-* filtering
-* actions menu
+- paginated user list
+- sorting
+- filtering
+- actions menu
 
 ---
 
@@ -251,10 +251,10 @@ Route:
 
 Displays:
 
-* user metadata
-* status badges
-* role badges
-* verification status
+- user metadata
+- status badges
+- role badges
+- verification status
 
 ---
 
@@ -262,15 +262,15 @@ Displays:
 
 Includes:
 
-* create user dialog
-* role change dialog
-* user actions menu
+- create user dialog
+- role change dialog
+- user actions menu
 
 Forms use:
 
-* React Hook Form
-* Zod validation
-* shared schemas from `@beggy/shared`
+- React Hook Form
+- Zod validation
+- shared schemas from `@beggy/shared`
 
 ---
 
@@ -286,9 +286,9 @@ src/shared/store
 
 Includes:
 
-* API slices
-* ability state
-* global UI state
+- API slices
+- ability state
+- global UI state
 
 ---
 
@@ -428,9 +428,9 @@ pnpm test:coverage
 
 Tests include:
 
-* component tests
-* hook tests
-* UI interaction tests
+- component tests
+- hook tests
+- UI interaction tests
 
 ---
 
@@ -464,10 +464,10 @@ Beggy uses a **token-based design system**.
 
 Key principles:
 
-* OKLCH color space
-* semantic tokens
-* WCAG 2.1 AA accessibility
-* light and dark themes
+- OKLCH color space
+- semantic tokens
+- WCAG 2.1 AA accessibility
+- light and dark themes
 
 All design tokens are defined in:
 
@@ -503,12 +503,12 @@ Shared types, schemas, and constants come from:
 
 Upcoming frontend features include:
 
-* bag management UI
-* suitcase management
-* packing list editor
-* AI packing assistant interface
-* weather-based packing suggestions
-* trip planning flows
+- bag management UI
+- suitcase management
+- packing list editor
+- AI packing assistant interface
+- weather-based packing suggestions
+- trip planning flows
 
 ---
 

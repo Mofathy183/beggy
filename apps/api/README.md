@@ -10,11 +10,11 @@ The API integrates **AI recommendations**, **weather data**, and **structured pa
 
 Beggy helps travelers organize luggage intelligently using:
 
-* 🌦 **Weather-based packing recommendations** (OpenWeather)
-* 🤖 **AI-powered suggestions** (Google Gemini)
-* 🧳 **Structured packing containers** (bags, suitcases, items)
-* 🔐 **Secure authentication & RBAC authorization**
-* 📦 **Monorepo architecture with shared types**
+- 🌦 **Weather-based packing recommendations** (OpenWeather)
+- 🤖 **AI-powered suggestions** (Google Gemini)
+- 🧳 **Structured packing containers** (bags, suitcases, items)
+- 🔐 **Secure authentication & RBAC authorization**
+- 📦 **Monorepo architecture with shared types**
 
 The API exposes endpoints used by the Beggy web application and other clients.
 
@@ -24,57 +24,57 @@ The API exposes endpoints used by the Beggy web application and other clients.
 
 ### Runtime & Language
 
-* Node.js ≥ 18
-* TypeScript
-* SWC (fast compilation)
+- Node.js ≥ 18
+- TypeScript
+- SWC (fast compilation)
 
 ### Framework
 
-* Express.js 5
+- Express.js 5
 
 ### Database
 
-* PostgreSQL
-* Prisma ORM
+- PostgreSQL
+- Prisma ORM
 
 ### Authentication
 
-* JWT (Access + Refresh Tokens)
-* Passport.js
-* Google OAuth
-* Facebook OAuth
+- JWT (Access + Refresh Tokens)
+- Passport.js
+- Google OAuth
+- Facebook OAuth
 
 ### Authorization
 
-* CASL (Role Based Access Control)
+- CASL (Role Based Access Control)
 
 ### Validation
 
-* Zod schemas (shared with frontend)
+- Zod schemas (shared with frontend)
 
 ### Security
 
-* Helmet
-* CSRF protection
-* Rate limiting
-* XSS sanitization
-* bcrypt password hashing
+- Helmet
+- CSRF protection
+- Rate limiting
+- XSS sanitization
+- bcrypt password hashing
 
 ### Logging
 
-* Pino
+- Pino
 
 ### API Documentation
 
-* Swagger
-* swagger-jsdoc
-* swagger-ui-express
+- Swagger
+- swagger-jsdoc
+- swagger-ui-express
 
 ### External Integrations
 
-* OpenWeather API
-* Google Gemini AI
-* Resend Email API
+- OpenWeather API
+- Google Gemini AI
+- Resend Email API
 
 ---
 
@@ -189,9 +189,9 @@ GET  /auth/csrf-token
 
 Supports:
 
-* JWT authentication
-* OAuth providers
-* CSRF protection
+- JWT authentication
+- OAuth providers
+- CSRF protection
 
 ---
 
@@ -199,9 +199,9 @@ Supports:
 
 Users are:
 
-  - Managed by the system
-  - Controlled via roles and permissions
-  - Not responsible for authentication logic
+- Managed by the system
+- Controlled via roles and permissions
+- Not responsible for authentication logic
 
 Examples:
 
@@ -219,9 +219,9 @@ DELETE /users/:id
 
 Profiles are:
 
-  - Separate from authentication
-  - Editable by the owning user
-  - Publicly readable where allowed
+- Separate from authentication
+- Editable by the owning user
+- Publicly readable where allowed
 
 Examples:
 
@@ -233,7 +233,7 @@ GET /profiles/:id
 
 ---
 
-### Bags *(planned / partially implemented)*
+### Bags _(planned / partially implemented)_
 
 Manage travel bags.
 
@@ -265,15 +265,16 @@ PATCH /items
 GET /items/:id
 DELETE /items/:id
 ```
+
 ---
 
-### Suitcases *(planned)*
+### Suitcases _(planned)_
 
 Suitcase containers with physical constraints.
 
 ---
 
-### Weather *(planned)*
+### Weather _(planned)_
 
 Weather integration.
 
@@ -287,7 +288,7 @@ Uses OpenWeather API.
 
 ---
 
-### Gemini AI *(planned)*
+### Gemini AI _(planned)_
 
 AI-powered packing recommendations.
 
@@ -460,9 +461,9 @@ pnpm test:coverage
 
 Tests include:
 
-* Unit tests
-* Integration tests
-* HTTP endpoint tests using **Supertest**
+- Unit tests
+- Integration tests
+- HTTP endpoint tests using **Supertest**
 
 ---
 
@@ -510,12 +511,12 @@ Development logs are formatted with **pino-pretty**.
 
 Security features include:
 
-* Helmet HTTP headers
-* CSRF protection
-* Rate limiting
-* XSS sanitization
-* Password hashing with bcrypt
-* Secure cookie handling
+- Helmet HTTP headers
+- CSRF protection
+- Rate limiting
+- XSS sanitization
+- Password hashing with bcrypt
+- Secure cookie handling
 
 ---
 

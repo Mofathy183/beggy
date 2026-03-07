@@ -204,12 +204,12 @@ beggy
 
 # 📦 Monorepo Packages
 
-|Package|Description|
-|---|---|
-|**@beggy/api**|Express backend API|
-|**@beggy/web**|Next.js frontend|
-|**@beggy/shared**|Shared types, Zod schemas, constants|
-|**@beggy/mcp**|Model Context Protocol development tooling|
+| Package           | Description                                |
+| ----------------- | ------------------------------------------ |
+| **@beggy/api**    | Express backend API                        |
+| **@beggy/web**    | Next.js frontend                           |
+| **@beggy/shared** | Shared types, Zod schemas, constants       |
+| **@beggy/mcp**    | Model Context Protocol development tooling |
 
 The **shared package** ensures **type safety across frontend and backend**.
 
@@ -442,7 +442,8 @@ Upcoming features:
 - AI packing assistant chat
 - mobile optimization
 - collaborative packing lists
-- 
+-
+
 ---
 
 # 🤝 Contributing

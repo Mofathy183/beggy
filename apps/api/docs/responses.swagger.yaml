@@ -1,0 +1,128 @@
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Operation completed successfully
+        data:
+          nullable: true
+          description: Response payload
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+        timestamp:
+          type: string
+          format: date-time
+          example: 2026-03-07T18:00:00Z
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: integer
+          example: 404
+        code:
+          type: string
+          example: RESOURCE_NOT_FOUND
+        message:
+          type: string
+          example: The requested resource could not be found
+        suggestion:
+          type: string
+          example: Please verify the resource ID
+        timestamp:
+          type: string
+          format: date-time
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: integer
+          example: 400
+        code:
+          type: string
+          example: INVALID_REQUEST_DATA
+        message:
+          type: string
+        suggestion:
+          type: string
+        fieldErrors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+  
+  responses:
+    OkResponse:
+      description: Successful request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SuccessResponse"
+
+    CreatedResponse:
+      description: Resource created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SuccessResponse"
+
+    BadRequestResponse:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    ValidationErrorResponse:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationErrorResponse"
+
+    UnauthorizedResponse:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    ForbiddenResponse:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFoundResponse:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    ServerErrorResponse:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
