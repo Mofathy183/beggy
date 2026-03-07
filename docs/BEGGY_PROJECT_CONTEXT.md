@@ -609,7 +609,7 @@ Feature-based organization. Each feature contains:
     - Copy: "Beggy – Discover the perfect bag for your journey", with primary calls-to-action like **"Browse Bags"** and **"Add New Bag"** (currently stubbed – wiring into real flows is future work).
 
 - **Protected Area Layout (`src/app/(protected)/layout.tsx`)**
-    - Wraps all authenticated routes and renders the `AppShell` from `@shared/layouts` (Header + Sidebar). `AuthGate` is available but currently commented out in the layout.
+    - Wraps all authenticated routes in `AuthGate` and renders the `AppShell` from `@shared/layouts` (Header + Sidebar).
     - Intended responsibilities:
         - **Auth boundary** via `AuthGate` (`@shared/guards`) to check session and redirect if unauthenticated.
         - Provide a consistent dashboard chrome (header/sidebar) for admin-style pages.

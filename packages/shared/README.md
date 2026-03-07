@@ -1,49 +1,322 @@
-# @beggy/shared
+# Beggy Shared
 
-Shared utilities and constants for the Beggy monorepo.
+Shared **types, schemas, constants, and utilities** for the **Beggy** monorepo.
 
-## Structure
+This package acts as the **single source of truth** for all domain models, validation schemas, and shared logic used across the Beggy ecosystem.
 
-```text
-packages/shared/
-├── src/
-│   ├── utils/            # Shared utility functions
-│   ├── constants/        # Shared constants
-│   └── index.ts          # Main entry point (re-exports @beggy/types)
-├── tsconfig.json
-└── package.json
+It ensures **type safety, consistency, and maintainability** between the backend (`@beggy/api`) and frontend (`@beggy/web`).
+
+---
+
+# Purpose
+
+The `@beggy/shared` package exists to:
+
+- Prevent **type drift** between API and frontend
+- Provide **centralized Zod validation schemas**
+- Share **constants, enums, and constraints**
+- Provide **utility functions for schemas and container calculations**
+- Maintain **consistent domain models**
+
+Both **backend and frontend import directly from this package**.
+
+---
+
+# Installation (Internal Workspace)
+
+This package is **not meant to be installed externally**.  
+It is used via **pnpm workspaces** inside the Beggy monorepo.
+
+Example usage inside another workspace package:
+
+```ts
+import { UserRole } from "@beggy/shared/constants"
+import { loginSchema } from "@beggy/shared/schemas"
+import type { User } from "@beggy/shared/types"
+````
+
+---
+
+# Package Structure
+
+```
+src/
+│
+├── constants/
+│
+├── containers/
+│
+├── schemas/
+│
+├── types/
+│
+├── utils/
+│
+└── index.ts
 ```
 
-## Usage
+---
 
-### Types (Recommended: Use `@beggy/types` directly)
+# Exports
 
-```typescript
-// Direct import from types package (recommended)
-import type { UserResponse, ApiResponse } from '@beggy/types';
+The package exposes modular entry points:
 
-// Or via shared package (convenience re-export)
-import type { UserResponse, ApiResponse } from '@beggy/shared';
+| Export                  | Description             |
+| ----------------------- | ----------------------- |
+| `@beggy/shared`         | Main entry point        |
+| `@beggy/shared/types`   | Shared TypeScript types |
+| `@beggy/shared/schemas` | Zod validation schemas  |
+
+Example:
+
+```ts
+import { loginSchema } from "@beggy/shared/schemas"
+import type { LoginRequest } from "@beggy/shared/types"
 ```
 
-### Utilities and Constants
+---
 
-```typescript
-// When you add utilities/constants
-import { someUtility, SOME_CONSTANT } from '@beggy/shared';
+# Key Features
+
+## Zod Schema Validation
+
+All API request and response validation is defined with **Zod**.
+
+Example:
+
+```ts
+import { loginSchema } from "@beggy/shared/schemas"
+
+const result = loginSchema.parse(request.body)
 ```
 
-## Package Organization
+This ensures:
 
-- **`@beggy/types`**: TypeScript types for API responses (standalone package)
-- **`@beggy/shared`**: Utilities, constants, and re-exports of types
+* API validation
+* Frontend type inference
+* Consistent contracts
 
-## Path Aliases
+---
 
-Both API and Web are configured to use these aliases:
+## Shared Domain Types
 
-- **TypeScript**: Configured in `tsconfig.json` files
-- **Vite (Web)**: Configured in `vite.config.ts`
-- **Imports**
-    - `import { UserResponse } from '@beggy/types'` (recommended)
-    - `import { UserResponse } from '@beggy/shared'` (convenience)
+Types are defined once and reused everywhere.
+
+Example:
+
+```ts
+import type { User, Suitcase, Bag, Item } from "@beggy/shared/types"
+```
+
+---
+
+## Constants & Enums
+
+Centralized constants improve maintainability.
+
+Examples include:
+
+* User roles
+* API status codes
+* Suitcase statuses
+* Constraint definitions
+* RBAC permissions
+
+Example:
+
+```ts
+import { UserRole } from "@beggy/shared/constants"
+```
+
+---
+
+## Container Utilities
+
+Helpers for suitcase and bag calculations.
+
+Example responsibilities:
+
+* Capacity calculations
+* Container state updates
+* Packing status
+
+Located in:
+
+```txt
+src/containers/
+```
+
+---
+
+# Build Output
+
+The package compiles into:
+
+```txt
+dist/
+```
+
+Contents include:
+
+* compiled JavaScript
+* TypeScript declaration files (`.d.ts`)
+
+Entry point:
+
+```txt
+dist/index.js
+dist/index.d.ts
+```
+
+---
+
+# Development
+
+## Install dependencies
+
+From repository root:
+
+```bash
+pnpm install
+```
+
+---
+
+## Build package
+
+```bash
+pnpm --filter @beggy/shared build
+```
+
+---
+
+## Type checking
+
+```bash
+pnpm --filter @beggy/shared type-check
+```
+
+---
+
+## Linting
+
+```bash
+pnpm --filter @beggy/shared lint
+```
+
+---
+
+# Testing
+
+Tests use **Vitest**.
+
+Run tests:
+
+```bash
+pnpm --filter @beggy/shared test
+```
+
+Watch mode:
+
+```bash
+pnpm --filter @beggy/shared test:watch
+```
+
+Coverage:
+
+```bash
+pnpm --filter @beggy/shared test:coverage
+```
+
+Test files are located in:
+
+```txt
+tests/**/*.test.ts
+```
+
+---
+
+# TypeScript Configuration
+
+Important compiler settings:
+
+| Option            | Value   |
+| ----------------- | ------- |
+| Target            | ES2022  |
+| Module            | ESNext  |
+| Module Resolution | Bundler |
+| Strict Mode       | Enabled |
+| Composite         | true    |
+| Declarations      | true    |
+
+These settings ensure:
+
+* strong type safety
+* compatibility with Turborepo builds
+* generated `.d.ts` for other packages
+
+---
+
+# Dependencies
+
+| Package | Purpose                                      |
+| ------- | -------------------------------------------- |
+| `zod`   | Runtime schema validation and type inference |
+
+---
+
+# Best Practices
+
+When working in the Beggy codebase:
+
+✔ Always import shared types and schemas from `@beggy/shared`
+✔ Avoid redefining domain types in apps
+✔ Keep validation schemas inside this package
+✔ Use Zod inference to generate TypeScript types
+
+Example:
+
+```ts
+type LoginRequest = z.infer<typeof loginSchema>
+```
+
+---
+
+# Related Packages
+
+| Package      | Description                  |
+| ------------ | ---------------------------- |
+| `@beggy/api` | Express backend              |
+| `@beggy/web` | Next.js frontend             |
+| `@beggy/mcp` | MCP developer tooling server |
+
+---
+
+# Role in Beggy Architecture
+
+`@beggy/shared` is a **core architectural package** in the Beggy monorepo.
+
+It ensures:
+
+* type-safe communication between services
+* centralized validation
+* shared domain logic
+* reduced duplication
+
+Without this package, API and frontend contracts would easily diverge.
+
+---
+
+```
+
+---
+
+✅ This README now functions as:
+
+- **Developer onboarding guide**
+- **AI assistant context**
+- **Architectural documentation**
+- **Shared package reference**
+
+---
+```
