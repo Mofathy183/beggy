@@ -148,7 +148,7 @@ const MeasurementField = ({
 					control={control}
 					render={({ field }) => (
 						<Select
-							value={field.value ?? ''}
+							value={field.value}
 							onValueChange={(val) => field.onChange(val)}
 						>
 							<SelectTrigger
@@ -163,7 +163,11 @@ const MeasurementField = ({
 									hasUnitError ? unitErrorId : undefined
 								}
 							>
-								<SelectValue placeholder="Unit" />
+								<SelectValue placeholder="Unit">
+									{unitOptions.find(
+										(opt) => opt.value === field.value
+									)?.label ?? 'Unit'}
+								</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
 								{unitOptions.map((opt) => (
