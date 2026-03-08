@@ -1,0 +1,93 @@
+tags:
+  - name: Profiles
+
+paths:
+  /profiles/me:
+    get:
+      summary: Retrieve the authenticated user's profile
+      description: Returns the private profile of the currently authenticated user.
+      tags:
+        - Profiles
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PrivateProfileResponseData"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    patch:
+      summary: Update the authenticated user's profile
+      description: Partially updates the profile of the authenticated user. Supports PATCH semantics where only provided fields are updated.
+      tags:
+        - Profiles
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditProfileRequest"
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PrivateProfileResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /profiles/{id}:
+    get:
+      summary: Retrieve a public user profile
+      description: Returns the public-facing profile of a user by profile ID. This endpoint exposes only whitelisted public fields.
+      tags:
+        - Profiles
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      responses:
+        "200":
+          description: Public profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PublicProfileResponseData"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"

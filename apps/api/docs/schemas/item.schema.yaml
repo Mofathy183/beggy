@@ -1,0 +1,97 @@
+components:
+  schemas:
+    ItemDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        weight:
+          type: number
+        weightUnit:
+          $ref: "#/components/schemas/WeightUnit"
+        volume:
+          type: number
+        volumeUnit:
+          $ref: "#/components/schemas/VolumeUnit"
+        color:
+          type: string
+          nullable: true
+        isFragile:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+
+    CreateItemRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - category
+        - weight
+        - weightUnit
+        - volume
+        - volumeUnit
+      properties:
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        weight:
+          type: number
+        weightUnit:
+          $ref: "#/components/schemas/WeightUnit"
+        volume:
+          type: number
+        volumeUnit:
+          $ref: "#/components/schemas/VolumeUnit"
+        color:
+          type: string
+          nullable: true
+          default: black
+        isFragile:
+          type: boolean
+          default: false
+
+    UpdateItemRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        weight:
+          type: number
+        weightUnit:
+          $ref: "#/components/schemas/WeightUnit"
+        volume:
+          type: number
+        volumeUnit:
+          $ref: "#/components/schemas/VolumeUnit"
+        color:
+          type: string
+          nullable: true
+        isFragile:
+          type: boolean
+
+    ItemsListResponseData:
+      type: array
+      items:
+        $ref: "#/components/schemas/ItemDTO"
+
+    ItemResponseData:
+      $ref: "#/components/schemas/ItemDTO"

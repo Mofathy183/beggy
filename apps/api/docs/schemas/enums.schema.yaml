@@ -1,0 +1,231 @@
+components:
+  schemas:
+    OrderDirection:
+      type: string
+      description: Ordering direction for sortable queries.
+      enum:
+        - asc
+        - desc
+
+    Role:
+      type: string
+      description: Application-level user roles.
+      enum:
+        - ADMIN
+        - MEMBER
+        - MODERATOR
+        - USER
+
+    AuthProvider:
+      type: string
+      description: Authentication providers supported by the system.
+      enum:
+        - GOOGLE
+        - FACEBOOK
+        - LOCAL
+
+    Subject:
+      type: string
+      description: Domain entities that can be protected by permissions.
+      enum:
+        - USER
+        - PROFILE
+        - BAG
+        - ITEM
+        - SUITCASE
+        - ROLE
+        - PERMISSION
+
+    Scope:
+      type: string
+      description: Scope of a permission.
+      enum:
+        - OWN
+        - ANY
+
+    Action:
+      type: string
+      description: Actions that can be performed on a subject.
+      enum:
+        - CREATE
+        - READ
+        - UPDATE
+        - DELETE
+        - MANAGE
+
+    BagType:
+      type: string
+      description: Supported bag categories.
+      enum:
+        - BACKPACK
+        - DUFFEL
+        - TOTE
+        - MESSENGER
+        - LAPTOP_BAG
+        - TRAVEL_BAG
+        - HANDBAG
+        - CROSSBODY
+        - SHOULDER_BAG
+
+    Size:
+      type: string
+      description: Physical size classification for bags.
+      enum:
+        - SMALL
+        - MEDIUM
+        - LARGE
+        - EXTRA_LARGE
+
+    Material:
+      type: string
+      description: Primary material used in bag construction.
+      enum:
+        - LEATHER
+        - SYNTHETIC
+        - FABRIC
+        - POLYESTER
+        - NYLON
+        - CANVAS
+        - HARD_SHELL
+        - METAL
+
+    BagFeature:
+      type: string
+      description: Optional functional or structural features of a bag.
+      enum:
+        - NONE
+        - WATERPROOF
+        - PADDED_LAPTOP_COMPARTMENT
+        - USB_PORT
+        - ANTI_THEFT
+        - MULTIPLE_POCKETS
+        - LIGHTWEIGHT
+        - EXPANDABLE
+        - REINFORCED_STRAPS
+        - TROLLEY_SLEEVE
+        - HIDDEN_POCKET
+
+    BagOrderByField:
+      type: string
+      description: Allowed order by fields for Bag queries.
+      enum:
+        - createdAt
+        - updatedAt
+        - name
+        - maxWeight
+        - maxCapacity
+
+    ItemCategory:
+      type: string
+      description: High-level classification for items.
+      enum:
+        - ELECTRONICS
+        - ACCESSORIES
+        - FURNITURE
+        - MEDICINE
+        - CLOTHING
+        - BOOKS
+        - FOOD
+        - TOILETRIES
+        - DOCUMENTS
+        - SPORTS
+
+    VolumeUnit:
+      type: string
+      description: Supported volume measurement units.
+      enum:
+        - ML
+        - LITER
+        - CU_CM
+        - CU_IN
+
+    WeightUnit:
+      type: string
+      description: Supported weight measurement units.
+      enum:
+        - GRAM
+        - KILOGRAM
+        - POUND
+        - OUNCE
+
+    ItemOrderByField:
+      type: string
+      description: Allowed order by fields for Item queries.
+      enum:
+        - createdAt
+        - updatedAt
+        - name
+        - weight
+        - volume
+
+    Gender:
+      type: string
+      description: Gender classification for user profiles.
+      enum:
+        - MALE
+        - FEMALE
+        - OTHER
+
+    ProfileOrderByField:
+      type: string
+      description: Allowed order by fields for Profile queries.
+      enum:
+        - createdAt
+        - updatedAt
+        - firstName
+        - lastName
+
+    SuitcaseType:
+      type: string
+      description: High-level suitcase classifications.
+      enum:
+        - CARRY_ON
+        - CHECKED_LUGGAGE
+        - HARD_SHELL
+        - SOFT_SHELL
+        - BUSINESS
+        - KIDS
+        - EXPANDABLE
+
+    SuitcaseFeature:
+      type: string
+      description: Optional functional or structural suitcase features.
+      enum:
+        - NONE
+        - TSA_LOCK
+        - WATERPROOF
+        - EXPANDABLE
+        - USB_PORT
+        - LIGHTWEIGHT
+        - ANTI_THEFT
+        - SCRATCH_RESISTANT
+        - COMPRESSION_STRAPS
+        - TELESCOPIC_HANDLE
+
+    WheelType:
+      type: string
+      description: Wheel configuration for a suitcase.
+      enum:
+        - NONE
+        - TWO_WHEEL
+        - FOUR_WHEEL
+        - SPINNER
+
+    SuitcaseOrderByField:
+      type: string
+      description: Allowed order by fields for Suitcase queries.
+      enum:
+        - createdAt
+        - updatedAt
+        - name
+        - maxWeight
+        - maxCapacity
+
+    UserOrderByField:
+      type: string
+      description: Allowed user ordering fields.
+      enum:
+        - createdAt
+        - updatedAt
+        - email
+        - role

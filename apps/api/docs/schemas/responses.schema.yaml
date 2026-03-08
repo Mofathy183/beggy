@@ -16,7 +16,9 @@ components:
           nullable: true
           description: Response payload
         meta:
-          $ref: "#/components/schemas/PaginationMeta"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PaginationMeta"
         timestamp:
           type: string
           format: date-time
@@ -69,7 +71,7 @@ components:
         timestamp:
           type: string
           format: date-time
-  
+
   responses:
     OkResponse:
       description: Successful request

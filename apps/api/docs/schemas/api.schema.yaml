@@ -49,18 +49,11 @@ components:
       additionalProperties: false
       properties:
         orderBy:
-          type: string
-          enum:
-            - createdAt
-            - updatedAt
-            - email
-            - role
+          $ref: "#/components/schemas/UserOrderByField"
 
         direction:
-          type: string
-          enum:
-            - ASC
-            - DESC
+          allOf:
+            - $ref: "#/components/schemas/OrderDirection"
           default: ASC
 
     ProfileOrderBy:
@@ -68,18 +61,11 @@ components:
       additionalProperties: false
       properties:
         orderBy:
-          type: string
-          enum:
-            - createdAt
-            - updatedAt
-            - firstName
-            - lastName
+          $ref: "#/components/schemas/ProfileOrderByField"
 
         direction:
-          type: string
-          enum:
-            - ASC
-            - DESC
+          allOf:
+            - $ref: "#/components/schemas/OrderDirection"
           default: ASC
 
     ItemOrderBy:
@@ -87,19 +73,11 @@ components:
       additionalProperties: false
       properties:
         orderBy:
-          type: string
-          enum:
-            - createdAt
-            - updatedAt
-            - name
-            - weight
-            - volume
+          $ref: "#/components/schemas/ItemOrderByField"
 
         direction:
-          type: string
-          enum:
-            - ASC
-            - DESC
+          allOf:
+            - $ref: "#/components/schemas/OrderDirection"
           default: ASC
 
     BagOrderBy:
@@ -107,19 +85,11 @@ components:
       additionalProperties: false
       properties:
         orderBy:
-          type: string
-          enum:
-            - createdAt
-            - updatedAt
-            - name
-            - maxWeight
-            - maxCapacity
+          $ref: "#/components/schemas/BagOrderByField"
 
         direction:
-          type: string
-          enum:
-            - ASC
-            - DESC
+          allOf:
+            - $ref: "#/components/schemas/OrderDirection"
           default: ASC
 
     SuitcaseOrderBy:
@@ -127,22 +97,14 @@ components:
       additionalProperties: false
       properties:
         orderBy:
-          type: string
-          enum:
-            - createdAt
-            - updatedAt
-            - name
-            - maxWeight
-            - maxCapacity
+          $ref: "#/components/schemas/SuitcaseOrderByField"
 
         direction:
-          type: string
-          enum:
-            - ASC
-            - DESC
+          allOf:
+            - $ref: "#/components/schemas/OrderDirection"
           default: ASC
 
-    #* Query FIlter ////////////////////////////////////////
+    #* Query Filter ////////////////////////////////////////
     UserFilter:
       type: object
       additionalProperties: false
@@ -152,10 +114,7 @@ components:
           format: email
 
         role:
-          type: string
-          enum:
-            - ADMIN
-            - USER
+          $ref: "#/components/schemas/Role"
 
         isActive:
           type: boolean
@@ -184,13 +143,7 @@ components:
       additionalProperties: false
       properties:
         category:
-          type: string
-          enum:
-            - CLOTHING
-            - ELECTRONICS
-            - TOILETRIES
-            - DOCUMENTS
-            - OTHER
+          $ref: "#/components/schemas/ItemCategory"
 
         color:
           type: string
@@ -212,25 +165,13 @@ components:
       additionalProperties: false
       properties:
         type:
-          type: string
-          enum:
-            - BACKPACK
-            - DUFFEL
-            - TOTE
+          $ref: "#/components/schemas/BagType"
 
         size:
-          type: string
-          enum:
-            - SMALL
-            - MEDIUM
-            - LARGE
+          $ref: "#/components/schemas/Size"
 
         material:
-          type: string
-          enum:
-            - FABRIC
-            - LEATHER
-            - SYNTHETIC
+          $ref: "#/components/schemas/Material"
 
         color:
           type: string
@@ -249,33 +190,16 @@ components:
       additionalProperties: false
       properties:
         type:
-          type: string
-          enum:
-            - BACKPACK
-            - DUFFEL
-            - TOTE
+          $ref: "#/components/schemas/SuitcaseType"
 
         size:
-          type: string
-          enum:
-            - SMALL
-            - MEDIUM
-            - LARGE
+          $ref: "#/components/schemas/Size"
 
         wheels:
-          type: string
-          enum:
-            - NONE
-            - TWO_WHEEL
-            - FOUR_WHEEL
-            - SPINNER
+          $ref: "#/components/schemas/WheelType"
 
         material:
-          type: string
-          enum:
-            - FABRIC
-            - LEATHER
-            - SYNTHETIC
+          $ref: "#/components/schemas/Material"
 
         color:
           type: string
@@ -288,17 +212,6 @@ components:
 
         createdAt:
           $ref: "#/components/schemas/DateRange"
-
-    #* Param ////////////////////////////////////////
-    UuidParam:
-      type: object
-      additionalProperties: false
-      required:
-        - id
-      properties:
-        id:
-          type: string
-          format: uuid
 
     #* Meta ////////////////////////////////////////
     PaginationMeta:
@@ -327,6 +240,17 @@ components:
 
         hasNextPage:
           type: boolean
-        
+
         hasPreviousPage:
           type: boolean
+
+  parameters:
+    #* Param ////////////////////////////////////////
+    UuidParam:
+      name: id
+      in: path
+      required: true
+      description: Resource unique identifier
+      schema:
+        type: string
+        format: uuid

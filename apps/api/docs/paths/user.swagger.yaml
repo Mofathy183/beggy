@@ -11,9 +11,24 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - $ref: "#/components/schemas/Pagination"
-        - $ref: "#/components/schemas/UserOrderBy"
-        - $ref: "#/components/schemas/UserFilter"
+        - in: query
+          name: pagination
+          required: false
+          schema:
+            $ref: "#/components/schemas/Pagination"
+
+        - in: query
+          name: order
+          required: false
+          schema:
+            $ref: "#/components/schemas/UserOrderBy"
+
+        - in: query
+          name: filter
+          required: false
+          schema:
+            $ref: "#/components/schemas/UserFilter"
+
       responses:
         "200":
           description: Users retrieved successfully
@@ -81,7 +96,11 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - $ref: "#/components/schemas/UserFilter"
+        - in: query
+          name: filter
+          required: false
+          schema:
+            $ref: "#/components/schemas/UserFilter"
       responses:
         "204":
           description: Users deleted successfully
@@ -103,7 +122,7 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - $ref: "#/components/schemas/UuidParam"
+        - $ref: "#/components/parameters/UuidParam"
       responses:
         "200":
           description: User retrieved successfully
@@ -133,7 +152,7 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - $ref: "#/components/schemas/UuidParam"
+        - $ref: "#/components/parameters/UuidParam"
       responses:
         "204":
           description: User deleted successfully
@@ -155,7 +174,7 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - $ref: "#/components/schemas/UuidParam"
+        - $ref: "#/components/parameters/UuidParam"
       requestBody:
         required: true
         content:
@@ -194,7 +213,7 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - $ref: "#/components/schemas/UuidParam"
+        - $ref: "#/components/parameters/UuidParam"
       requestBody:
         required: true
         content:
@@ -233,7 +252,7 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - $ref: "#/components/schemas/UuidParam"
+        - $ref: "#/components/parameters/UuidParam"
       requestBody:
         required: true
         content:

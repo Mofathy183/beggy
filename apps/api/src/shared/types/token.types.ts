@@ -1,4 +1,4 @@
-import { type Role } from '@beggy/shared/types';
+import type { Role } from '@beggy/shared/constants';
 
 /**
  * Represents a secure token pair used during authentication flows.

@@ -1,0 +1,178 @@
+tags:
+  - name: Items
+
+paths:
+  /items:
+    get:
+      summary: Retrieve the authenticated user's items
+      description: Returns a paginated list of items owned by the authenticated user. Supports filtering, ordering, and pagination.
+      tags:
+        - Items
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: pagination
+          required: false
+          schema:
+            $ref: "#/components/schemas/Pagination"
+
+        - in: query
+          name: filter
+          required: false
+          schema:
+            $ref: "#/components/schemas/ItemFilter"
+
+        - in: query
+          name: order
+          required: false
+          schema:
+            $ref: "#/components/schemas/ItemOrderBy"
+      responses:
+        "200":
+          description: Items retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ItemsListResponseData"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    post:
+      summary: Create a new item
+      description: Creates a new reusable item owned by the authenticated user.
+      tags:
+        - Items
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest"
+      responses:
+        "201":
+          description: Item created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ItemResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /items/{id}:
+    get:
+      summary: Retrieve an item by ID
+      description: Returns a single item owned by the authenticated user.
+      tags:
+        - Items
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      responses:
+        "200":
+          description: Item retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ItemResponseData"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    patch:
+      summary: Update an item
+      description: Applies partial updates to a user-owned item.
+      tags:
+        - Items
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateItemRequest"
+      responses:
+        "200":
+          description: Item updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ItemResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    delete:
+      summary: Delete an item
+      description: Deletes a user-owned item by ID.
+      tags:
+        - Items
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      responses:
+        "204":
+          description: Item deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"

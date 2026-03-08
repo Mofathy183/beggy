@@ -33,7 +33,8 @@ components:
           format: uri
           nullable: true
         gender:
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/Gender"
           nullable: true
         birthDate:
           type: string
@@ -139,14 +140,6 @@ components:
           type: string
           format: email
 
-    AuthProvider:
-      type: string
-      description: Authentication provider linked to the account
-      enum:
-        - LOCAL
-        - GOOGLE
-        - FACEBOOK
-
     AuthMeUser:
       type: object
       additionalProperties: false
@@ -163,7 +156,7 @@ components:
           type: string
           format: email
         role:
-          type: string
+          $ref: "#/components/schemas/Role"
         createdAt:
           type: string
           format: date-time
