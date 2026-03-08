@@ -442,9 +442,7 @@ Upcoming features:
 - AI packing assistant chat
 - mobile optimization
 - collaborative packing lists
--
-
----
+- ***
 
 # 🤝 Contributing
 

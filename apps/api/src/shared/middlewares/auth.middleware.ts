@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { AuthUser } from '@shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
 import {
 	verifyAccessToken,
@@ -66,11 +67,13 @@ export const requireAuth: RequestHandler = (
 	try {
 		const payLoad = verifyAccessToken(token);
 
-		req.user = {
+		const user: AuthUser = {
 			id: payLoad.id,
 			role: payLoad.role,
 			issuedAt: payLoad.issuedAt,
 		};
+
+		req.user = user;
 
 		/**
 		 * Initialize the user's authorization ability
@@ -79,7 +82,7 @@ export const requireAuth: RequestHandler = (
 		 * This ability will be consumed by downstream
 		 * permission middleware.
 		 */
-		req.ability = defineAbilityFor(req.user.role);
+		req.ability = defineAbilityFor(user.role);
 
 		next();
 	} catch (error: unknown) {

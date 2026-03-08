@@ -1,0 +1,183 @@
+tags:
+  - name: Auth
+
+paths:
+  /auth/signup:
+    post:
+      summary: Register a new user
+      description: Registers a new user using email and password credentials.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpRequest"
+      responses:
+        "201":
+          $ref: "#/components/responses/CreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/login:
+    post:
+      summary: Authenticate a user
+      description: Authenticates a user using email and password and issues authentication cookies.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/me:
+    get:
+      summary: Get authenticated user context
+      description: Returns the authenticated user's identity, profile summary, permissions, and authentication metadata.
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Authenticated user context retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OkResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuthMeResponseData"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/logout:
+    delete:
+      summary: Logout current user
+      description: Invalidates the current authenticated session and clears authentication cookies.
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      responses:
+        "204":
+          description: Logout successful
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/refresh-token:
+    post:
+      summary: Refresh access token
+      description: Issues a new access token using a valid refresh token.
+      tags:
+        - Auth
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/OkResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/csrf-token:
+    get:
+      summary: Issue CSRF token
+      description: Returns a CSRF token used to protect state-changing requests in cookie-based authentication flows.
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: CSRF token issued
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/responses/OkResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CsrfTokenResponseData"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/google:
+    get:
+      summary: Initiate Google OAuth authentication
+      description: Redirects the user to Google's OAuth consent screen.
+      tags:
+        - Auth
+      responses:
+        "302":
+          description: Redirect to Google OAuth consent screen
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/google/callback:
+    get:
+      summary: Google OAuth callback
+      description: Handles Google's OAuth callback, authenticates the user, and redirects to the frontend.
+      tags:
+        - Auth
+      responses:
+        "302":
+          description: Redirect to frontend after successful authentication
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/facebook:
+    get:
+      summary: Initiate Facebook OAuth authentication
+      description: Redirects the user to Facebook's OAuth consent screen.
+      tags:
+        - Auth
+      responses:
+        "302":
+          description: Redirect to Facebook OAuth consent screen
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /auth/facebook/callback:
+    get:
+      summary: Facebook OAuth callback
+      description: Handles Facebook's OAuth callback, authenticates the user, and redirects to the frontend.
+      tags:
+        - Auth
+      responses:
+        "302":
+          description: Redirect to frontend after successful authentication
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"

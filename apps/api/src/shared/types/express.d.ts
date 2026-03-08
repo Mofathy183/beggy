@@ -92,6 +92,6 @@ declare global {
 		 * - Represents the minimum trusted identity payload
 		 * - Should remain lightweight and free of database entities
 		 */
-		interface User extends AuthUser, OAuthProfile {}
+		interface User extends Partial<AuthUser>, Partial<OAuthProfile> {}
 	}
 }

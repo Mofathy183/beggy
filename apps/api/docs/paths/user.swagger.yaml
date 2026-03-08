@@ -1,0 +1,264 @@
+tags:
+  - name: Users
+
+paths:
+  /users:
+    get:
+      summary: Retrieve a paginated list of users
+      description: Returns a paginated list of user accounts with optional filtering, searching, and ordering. Intended for administrative use.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/schemas/Pagination"
+        - $ref: "#/components/schemas/UserOrderBy"
+        - $ref: "#/components/schemas/UserFilter"
+      responses:
+        "200":
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UsersListResponseData"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    post:
+      summary: Create a new user
+      description: Creates a new user account. Intended for administrative provisioning workflows.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    delete:
+      summary: Bulk delete users
+      description: Deletes multiple users based on optional filtering criteria. Intended for administrative cleanup and moderation workflows.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/schemas/UserFilter"
+      responses:
+        "204":
+          description: Users deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /users/{id}:
+    get:
+      summary: Retrieve a user by ID
+      description: Returns a single user account by its unique identifier.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/schemas/UuidParam"
+      responses:
+        "200":
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponseData"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    delete:
+      summary: Delete a user by ID
+      description: Deletes a single user account using its unique identifier.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/schemas/UuidParam"
+      responses:
+        "204":
+          description: User deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /users/{id}/profile:
+    patch:
+      summary: Update a user's profile
+      description: Partially updates profile-related information for a specific user. Does not affect authentication, role, or account status.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/schemas/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserProfileRequest"
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ProfileResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /users/{id}/status:
+    patch:
+      summary: Update a user's operational status
+      description: Updates moderation-related status flags such as activation state and email verification status.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/schemas/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserStatusRequest"
+      responses:
+        "200":
+          description: User status updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /users/{id}/role:
+    patch:
+      summary: Change a user's role
+      description: Updates the role assigned to a specific user. Restricted to authorized administrators.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/schemas/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeUserRoleRequest"
+      responses:
+        "200":
+          description: User role updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"

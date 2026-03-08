@@ -1,4 +1,7 @@
-const swaggerDefinition = {
+import type { SwaggerDefinition, Options } from 'swagger-jsdoc';
+import path from 'path';
+
+const swaggerDefinition: SwaggerDefinition = {
 	openapi: '3.0.0',
 	info: {
 		title: 'Beggy API',
@@ -39,10 +42,6 @@ const swaggerDefinition = {
 				name: 'x-csrf-token',
 			},
 		},
-
-		schemas: {},
-
-		responses: {},
 	},
 
 	security: [
@@ -52,9 +51,9 @@ const swaggerDefinition = {
 	],
 };
 
-const swaggerOptions = {
-	swaggerDefinition,
-	apis: ['./src/docs/**/*.yaml', './src/modules/**/*.route.ts'],
+const swaggerOptions: Options = {
+	definition: swaggerDefinition,
+	apis: [path.join(process.cwd(), '/docs/**/*.yaml')],
 };
 
 export default swaggerOptions;

@@ -1,0 +1,237 @@
+components:
+  schemas:
+    SignUpRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+        - confirmPassword
+      properties:
+        firstName:
+          type: string
+          description: User first name
+        lastName:
+          type: string
+          description: User last name
+        email:
+          type: string
+          format: email
+          description: User email address
+        password:
+          type: string
+          format: password
+          description: User password
+        confirmPassword:
+          type: string
+          format: password
+          description: Confirmation password
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        rememberMe:
+          type: boolean
+          default: false
+
+    ForgotPasswordRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+
+    ResetPasswordRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - password
+        - confirmPassword
+      properties:
+        password:
+          type: string
+          format: password
+        confirmPassword:
+          type: string
+          format: password
+
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - currentPassword
+        - newPassword
+        - confirmPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+        confirmPassword:
+          type: string
+          format: password
+
+    SetPasswordRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - newPassword
+        - confirmPassword
+      properties:
+        newPassword:
+          type: string
+          format: password
+        confirmPassword:
+          type: string
+          format: password
+
+    ChangeEmailRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+
+    SendVerificationEmailRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+
+    AuthProvider:
+      type: string
+      description: Authentication provider linked to the account
+      enum:
+        - LOCAL
+        - GOOGLE
+        - FACEBOOK
+
+    AuthMeUser:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - email
+        - role
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthMeProfile:
+      type: object
+      additionalProperties: false
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        displayName:
+          type: string
+        age:
+          type: integer
+        city:
+          type: string
+        country:
+          type: string
+
+    AuthPermissions:
+      type: object
+      additionalProperties: true
+      description: Effective permissions granted to the user
+
+    AuthMeAuthContext:
+      type: object
+      additionalProperties: false
+      required:
+        - providers
+        - hasLocalAuth
+      properties:
+        providers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthProvider"
+        hasLocalAuth:
+          type: boolean
+
+    AuthMeResponseData:
+      type: object
+      additionalProperties: false
+      required:
+        - user
+        - permissions
+        - auth
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthMeUser"
+        profile:
+          allOf:
+            - $ref: "#/components/schemas/AuthMeProfile"
+          nullable: true
+        permissions:
+          $ref: "#/components/schemas/AuthPermissions"
+        auth:
+          $ref: "#/components/schemas/AuthMeAuthContext"
+
+    CsrfTokenResponseData:
+      type: object
+      additionalProperties: false
+      required:
+        - csrfToken
+      properties:
+        csrfToken:
+          type: string

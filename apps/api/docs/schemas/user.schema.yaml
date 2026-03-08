@@ -1,0 +1,167 @@
+components:
+  schemas:
+    AdminUserDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [ADMIN, USER, MODERATOR]
+        isActive:
+          type: boolean
+        isEmailVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProfileDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        displayName:
+          type: string
+          nullable: true
+          description: Computed display name derived from profile data
+        age:
+          type: integer
+          nullable: true
+          description: Computed age derived from birthDate
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+        - confirmPassword
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        confirmPassword:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+
+    UpdateUserProfileRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+        birthDate:
+          type: string
+          format: date
+        country:
+          type: string
+        city:
+          type: string
+
+    UpdateUserStatusRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        isActive:
+          type: boolean
+        isEmailVerified:
+          type: boolean
+      minProperties: 1
+
+    ChangeUserRoleRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum: [ADMIN, USER, MODERATOR]
+
+    UsersListResponseData:
+      type: array
+      items:
+        $ref: "#/components/schemas/AdminUserDTO"
+
+    UserResponseData:
+      $ref: "#/components/schemas/AdminUserDTO"
+
+    ProfileResponseData:
+      $ref: "#/components/schemas/ProfileDTO"

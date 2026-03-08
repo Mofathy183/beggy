@@ -1,330 +1,332 @@
-DateRange:
-  type: object
-  additionalProperties: false
-  properties:
-    from:
-      type: string
-      format: date-time
-      description: Start date (inclusive)
-    to:
-      type: string
-      format: date-time
-      description: End date (inclusive)
+components:
+  schemas:
+    DateRange:
+      type: object
+      additionalProperties: false
+      properties:
+        from:
+          type: string
+          format: date-time
+          description: Start date (inclusive)
+        to:
+          type: string
+          format: date-time
+          description: End date (inclusive)
 
-NumberRange:
-  type: object
-  additionalProperties: false
-  properties:
-    min:
-      type: number
-      description: Minimum value (inclusive)
-    max:
-      type: number
-      description: Maximum value (inclusive)
+    NumberRange:
+      type: object
+      additionalProperties: false
+      properties:
+        min:
+          type: number
+          description: Minimum value (inclusive)
+        max:
+          type: number
+          description: Maximum value (inclusive)
 
-#* Query Pagination ////////////////////////////////////////
-Pagination:
-  type: object
-  additionalProperties: false
-  properties:
-    page:
-      type: integer
-      minimum: 1
-      maximum: 100
-      default: 1
-      description: Page number (1-based)
+    #* Query Pagination ////////////////////////////////////////
+    Pagination:
+      type: object
+      additionalProperties: false
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 1
+          description: Page number (1-based)
 
-    limit:
-      type: integer
-      minimum: 1
-      maximum: 100
-      default: 10
-      description: Maximum number of items per page
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+          description: Maximum number of items per page
 
-#* Query OrderBy ////////////////////////////////////////
-UserOrderBy:
-  type: object
-  additionalProperties: false
-  properties:
-    orderBy:
-      type: string
-      enum:
-        - createdAt
-        - updatedAt
-        - email
-        - role
+    #* Query OrderBy ////////////////////////////////////////
+    UserOrderBy:
+      type: object
+      additionalProperties: false
+      properties:
+        orderBy:
+          type: string
+          enum:
+            - createdAt
+            - updatedAt
+            - email
+            - role
 
-    direction:
-      type: string
-      enum:
-        - ASC
-        - DESC
-      default: ASC
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+          default: ASC
 
-ProfileOrderBy:
-  type: object
-  additionalProperties: false
-  properties:
-    orderBy:
-      type: string
-      enum:
-        - createdAt
-        - updatedAt
-        - firstName
-        - lastName
+    ProfileOrderBy:
+      type: object
+      additionalProperties: false
+      properties:
+        orderBy:
+          type: string
+          enum:
+            - createdAt
+            - updatedAt
+            - firstName
+            - lastName
 
-    direction:
-      type: string
-      enum:
-        - ASC
-        - DESC
-      default: ASC
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+          default: ASC
 
-ItemOrderBy:
-  type: object
-  additionalProperties: false
-  properties:
-    orderBy:
-      type: string
-      enum:
-        - createdAt
-        - updatedAt
-        - name
-        - weight
-        - volume
+    ItemOrderBy:
+      type: object
+      additionalProperties: false
+      properties:
+        orderBy:
+          type: string
+          enum:
+            - createdAt
+            - updatedAt
+            - name
+            - weight
+            - volume
 
-    direction:
-      type: string
-      enum:
-        - ASC
-        - DESC
-      default: ASC
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+          default: ASC
 
-BagOrderBy:
-  type: object
-  additionalProperties: false
-  properties:
-    orderBy:
-      type: string
-      enum:
-        - createdAt
-        - updatedAt
-        - name
-        - maxWeight
-        - maxCapacity
+    BagOrderBy:
+      type: object
+      additionalProperties: false
+      properties:
+        orderBy:
+          type: string
+          enum:
+            - createdAt
+            - updatedAt
+            - name
+            - maxWeight
+            - maxCapacity
 
-    direction:
-      type: string
-      enum:
-        - ASC
-        - DESC
-      default: ASC
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+          default: ASC
 
-SuitcaseOrderBy:
-  type: object
-  additionalProperties: false
-  properties:
-    orderBy:
-      type: string
-      enum:
-        - createdAt
-        - updatedAt
-        - name
-        - maxWeight
-        - maxCapacity
+    SuitcaseOrderBy:
+      type: object
+      additionalProperties: false
+      properties:
+        orderBy:
+          type: string
+          enum:
+            - createdAt
+            - updatedAt
+            - name
+            - maxWeight
+            - maxCapacity
 
-    direction:
-      type: string
-      enum:
-        - ASC
-        - DESC
-      default: ASC
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+          default: ASC
 
-#* Query FIlter ////////////////////////////////////////
-UserFilter:
-  type: object
-  additionalProperties: false
-  properties:
-    email:
-      type: string
-      format: email
+    #* Query FIlter ////////////////////////////////////////
+    UserFilter:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
 
-    role:
-      type: string
-      enum:
-        - ADMIN
-        - USER
+        role:
+          type: string
+          enum:
+            - ADMIN
+            - USER
 
-    isActive:
-      type: boolean
+        isActive:
+          type: boolean
 
-    isEmailVerified:
-      type: boolean
+        isEmailVerified:
+          type: boolean
 
-    createdAt:
-      $ref: "#/components/schemas/DateRange"
+        createdAt:
+          $ref: "#/components/schemas/DateRange"
 
-ProfileFilter:
-  type: object
-  additionalProperties: false
-  properties:
-    city:
-      type: string
+    ProfileFilter:
+      type: object
+      additionalProperties: false
+      properties:
+        city:
+          type: string
 
-    country:
-      type: string
+        country:
+          type: string
 
-    createdAt:
-      $ref: "#/components/schemas/DateRange"
+        createdAt:
+          $ref: "#/components/schemas/DateRange"
 
-ItemFilter:
-  type: object
-  additionalProperties: false
-  properties:
-    category:
-      type: string
-      enum:
-        - CLOTHING
-        - ELECTRONICS
-        - TOILETRIES
-        - DOCUMENTS
-        - OTHER
+    ItemFilter:
+      type: object
+      additionalProperties: false
+      properties:
+        category:
+          type: string
+          enum:
+            - CLOTHING
+            - ELECTRONICS
+            - TOILETRIES
+            - DOCUMENTS
+            - OTHER
 
-    color:
-      type: string
+        color:
+          type: string
 
-    isFragile:
-      type: boolean
+        isFragile:
+          type: boolean
 
-    weight:
-      $ref: "#/components/schemas/NumberRange"
+        weight:
+          $ref: "#/components/schemas/NumberRange"
 
-    volume:
-      $ref: "#/components/schemas/NumberRange"
+        volume:
+          $ref: "#/components/schemas/NumberRange"
 
-    createdAt:
-      $ref: "#/components/schemas/DateRange"
+        createdAt:
+          $ref: "#/components/schemas/DateRange"
 
-BagFilter:
-  type: object
-  additionalProperties: false
-  properties:
-    type:
-      type: string
-      enum:
-        - BACKPACK
-        - DUFFEL
-        - TOTE
+    BagFilter:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - BACKPACK
+            - DUFFEL
+            - TOTE
 
-    size:
-      type: string
-      enum:
-        - SMALL
-        - MEDIUM
-        - LARGE
+        size:
+          type: string
+          enum:
+            - SMALL
+            - MEDIUM
+            - LARGE
 
-    material:
-      type: string
-      enum:
-        - FABRIC
-        - LEATHER
-        - SYNTHETIC
+        material:
+          type: string
+          enum:
+            - FABRIC
+            - LEATHER
+            - SYNTHETIC
 
-    color:
-      type: string
+        color:
+          type: string
 
-    maxCapacity:
-      $ref: "#/components/schemas/NumberRange"
+        maxCapacity:
+          $ref: "#/components/schemas/NumberRange"
 
-    maxWeight:
-      $ref: "#/components/schemas/NumberRange"
+        maxWeight:
+          $ref: "#/components/schemas/NumberRange"
 
-    createdAt:
-      $ref: "#/components/schemas/DateRange"
+        createdAt:
+          $ref: "#/components/schemas/DateRange"
 
-SuitcaseFilter:
-  type: object
-  additionalProperties: false
-  properties:
-    type:
-      type: string
-      enum:
-        - BACKPACK
-        - DUFFEL
-        - TOTE
+    SuitcaseFilter:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - BACKPACK
+            - DUFFEL
+            - TOTE
 
-    size:
-      type: string
-      enum:
-        - SMALL
-        - MEDIUM
-        - LARGE
+        size:
+          type: string
+          enum:
+            - SMALL
+            - MEDIUM
+            - LARGE
 
-    wheels:
-      type: string
-      enum:
-        - NONE
-        - TWO_WHEEL
-        - FOUR_WHEEL
-        - SPINNER
+        wheels:
+          type: string
+          enum:
+            - NONE
+            - TWO_WHEEL
+            - FOUR_WHEEL
+            - SPINNER
 
-    material:
-      type: string
-      enum:
-        - FABRIC
-        - LEATHER
-        - SYNTHETIC
+        material:
+          type: string
+          enum:
+            - FABRIC
+            - LEATHER
+            - SYNTHETIC
 
-    color:
-      type: string
+        color:
+          type: string
 
-    maxCapacity:
-      $ref: "#/components/schemas/NumberRange"
+        maxCapacity:
+          $ref: "#/components/schemas/NumberRange"
 
-    maxWeight:
-      $ref: "#/components/schemas/NumberRange"
+        maxWeight:
+          $ref: "#/components/schemas/NumberRange"
 
-    createdAt:
-      $ref: "#/components/schemas/DateRange"
+        createdAt:
+          $ref: "#/components/schemas/DateRange"
 
-#* Param ////////////////////////////////////////
-UuidParam:
-  type: object
-  additionalProperties: false
-  required:
-    - id
-  properties:
-    id:
-      type: string
-      format: uuid
+    #* Param ////////////////////////////////////////
+    UuidParam:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
 
-#* Meta ////////////////////////////////////////
-PaginationMeta:
-  type: object
-  properties:
-    page:
-      type: integer
-      example: 1
+    #* Meta ////////////////////////////////////////
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
 
-    limit:
-      type: integer
-      example: 10
+        limit:
+          type: integer
+          example: 10
 
-    count:
-      type: integer
-      example: 10
+        count:
+          type: integer
+          example: 10
 
-    totalItems:
-      type: integer
-      nullable: true
-      example: 120
+        totalItems:
+          type: integer
+          nullable: true
+          example: 120
 
-    totalPages:
-      type: integer
-      example: 12
+        totalPages:
+          type: integer
+          example: 12
 
-    hasNextPage:
-      type: boolean
-    
-    hasPreviousPage:
-      type: boolean
+        hasNextPage:
+          type: boolean
+        
+        hasPreviousPage:
+          type: boolean

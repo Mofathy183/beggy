@@ -188,10 +188,7 @@ export class AuthController extends BaseController {
 	 * @route GET /auth/google/callback
 	 */
 	googleCallback = async (req: Request, res: Response): Promise<void> => {
-		if (!req.user || !('providerId' in req.user)) {
-			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
-		}
-
+		this.assertOAuthProfile(req);
 		const { id, role } = await this.authService.oauthUser(req.user);
 
 		AuthCookies.setCookies(res, id, role);
@@ -213,10 +210,7 @@ export class AuthController extends BaseController {
 	 * @route GET /auth/facebook/callback
 	 */
 	facebookCallback = async (req: Request, res: Response): Promise<void> => {
-		if (!req.user || !('providerId' in req.user)) {
-			throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
-		}
-
+		this.assertOAuthProfile(req);
 		const { id, role } = await this.authService.oauthUser(req.user);
 
 		AuthCookies.setCookies(res, id, role);

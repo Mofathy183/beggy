@@ -4,7 +4,7 @@ import pino from 'pino';
 import pinoHttp from 'pino-http';
 import pinoPretty from 'pino-pretty';
 import swaggerJSDoc from 'swagger-jsdoc';
-import swaggerOptions from '@doc';
+import swaggerOptions from 'docs/swagger.config';
 
 import type { Request, Response, NextFunction } from 'express';
 import { doubleCsrf } from 'csrf-csrf';
