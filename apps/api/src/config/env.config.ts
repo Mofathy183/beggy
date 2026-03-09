@@ -388,11 +388,7 @@ export const doubleCsrfConfig: DoubleCsrfConfig = {
 		// 	req.session?.id || req.sessionID || req.ip || 'anonymous-session'
 		// );
 		// Tie CSRF to refresh token presence (best stateless anchor)
-		return (
-			req.cookies?.[env.JWT_REFRESH_TOKEN_NAME] ??
-			req.cookies?.[env.JWT_ACCESS_TOKEN_NAME] ??
-			'unauthenticated'
-		);
+		return req.ip ?? 'anonymous';
 	},
 
 	// Required: Cookie name for the CSRF token

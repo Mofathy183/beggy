@@ -21,39 +21,50 @@ vi.mock('@shared/middlewares/permission.middleware', () => ({
 	defineAbilityFor: vi.fn(),
 }));
 
-describe('authCookieParser', () => {
+vi.mock('@config', async () => {
+	const actual = await vi.importActual<any>('@config');
+
+	return {
+		...actual,
+		env: {
+			JWT_ACCESS_TOKEN_NAME: 'access_token',
+			JWT_REFRESH_TOKEN_NAME: 'refresh_token',
+		},
+	};
+});
+describe('authCookieParser()', () => {
 	let req: Partial<Request>;
 	let res: Partial<Response>;
 	let next: NextFunction;
 
 	beforeEach(() => {
-		req = {
-			cookies: {
-				accessToken: 'access-token',
-				refreshToken: 'refresh-token',
-			},
-		};
-
+		req = {};
 		res = {};
 		next = vi.fn();
 	});
 
-	it('extracts auth tokens from cookies', () => {
+	it('extracts tokens from cookies', () => {
+		// Arrange
+		req.cookies = {
+			access_token: 'access123',
+			refresh_token: 'refresh123',
+		};
+
 		// Act
 		authCookieParser(req as Request, res as Response, next);
 
 		// Assert
 		expect(req.authTokens).toEqual({
-			accessToken: 'access-token',
-			refreshToken: 'refresh-token',
+			accessToken: 'access123',
+			refreshToken: 'refresh123',
 		});
 
-		expect(next).toHaveBeenCalledOnce();
+		expect(next).toHaveBeenCalledTimes(1);
 	});
 
-	it('returns empty auth tokens when cookies are missing', () => {
+	it('returns undefined tokens when cookies do not contain token names', () => {
 		// Arrange
-		req = {};
+		req.cookies = {};
 
 		// Act
 		authCookieParser(req as Request, res as Response, next);
@@ -64,7 +75,36 @@ describe('authCookieParser', () => {
 			refreshToken: undefined,
 		});
 
-		expect(next).toHaveBeenCalledOnce();
+		expect(next).toHaveBeenCalledTimes(1);
+	});
+
+	it('returns undefined tokens when request has no cookies', () => {
+		// Arrange
+		req.cookies = undefined;
+
+		// Act
+		authCookieParser(req as Request, res as Response, next);
+
+		// Assert
+		expect(req.authTokens).toEqual({
+			accessToken: undefined,
+			refreshToken: undefined,
+		});
+
+		expect(next).toHaveBeenCalledTimes(1);
+	});
+
+	it('calls next middleware', () => {
+		// Arrange
+		req.cookies = {
+			access_token: 'token',
+		};
+
+		// Act
+		authCookieParser(req as Request, res as Response, next);
+
+		// Assert
+		expect(next).toHaveBeenCalledTimes(1);
 	});
 });
 

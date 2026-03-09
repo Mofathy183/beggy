@@ -93,6 +93,7 @@ enum Scope {
 /// - ITEM       → item within a bag
 /// - SUITCASE   → suitcase configuration
 /// - USER       → user account
+/// - PROFILE    → profile of the user
 /// - ROLE       → system roles
 /// - PERMISSION → RBAC permissions
 ///
@@ -104,6 +105,7 @@ enum Subject {
     BAG
     ITEM
     SUITCASE
+    PROFILE
     USER
     ROLE
     PERMISSION

@@ -1,12 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { type AbilityClass, PureAbility, AbilityBuilder } from '@casl/ability';
-import {
-	RolePermissions,
-	ErrorCode,
-	type Role,
-	type Action,
-	type Subject,
-} from '@beggy/shared/constants';
+import { RolePermissions, ErrorCode } from '@beggy/shared/constants';
+import type { Role, Action, Subject } from '@prisma-generated/enums';
 import { type Permissions } from '@beggy/shared/types';
 import type { AppAbility } from '@shared/types';
 import { appErrorMap } from '@shared/utils';

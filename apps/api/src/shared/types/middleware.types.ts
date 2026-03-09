@@ -1,10 +1,6 @@
 import { type ZodType } from 'zod';
-import type {
-	Action,
-	OrderDirection,
-	Role,
-	Subject,
-} from '@beggy/shared/constants';
+import type { OrderDirection } from '@beggy/shared/constants';
+import type { Action, Role, Subject } from '@prisma-generated/enums';
 import { type PaginationParams } from '@beggy/shared/types';
 import { type PureAbility } from '@casl/ability';
 

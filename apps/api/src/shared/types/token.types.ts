@@ -1,4 +1,4 @@
-import type { Role } from '@beggy/shared/constants';
+import type { Role } from '@prisma-generated/enums';
 
 /**
  * Represents a secure token pair used during authentication flows.

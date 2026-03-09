@@ -6,28 +6,47 @@ import {
 	appErrorMap,
 	verifyRefreshToken,
 } from '@shared/utils';
-import { defineAbilityFor } from '@shared/middlewares';
+import { defineAbilityFor, logger } from '@shared/middlewares';
+import { env } from '@config';
 
 /**
- * Authentication cookie parser middleware.
+ * Middleware that extracts authentication tokens from cookies
+ * and normalizes them onto the request object.
+ *
+ * @description
+ * Reads JWT tokens from HTTP cookies and attaches them to
+ * `req.authTokens` so downstream authentication middleware
+ * can access them from a consistent location.
  *
  * @remarks
- * - Extracts authentication tokens from HTTP cookies
- * - Normalizes them into `req.authTokens`
- * - Does NOT perform validation or authentication
+ * This middleware **does not perform authentication or validation**.
+ * It only prepares token data for guards such as `requireAuth`
+ * or `requireRefreshToken`.
  *
- * @usage
- * This middleware should be registered globally in `app.ts`
- * before any authentication or authorization middleware.
+ * The abstraction allows the token transport mechanism to change
+ * (e.g. cookies → headers) without modifying authentication guards.
+ *
+ * @see requireAuth
+ * @see requireRefreshToken
  */
 export const authCookieParser: RequestHandler = (
 	req: Request,
 	_res: Response,
 	next: NextFunction
 ) => {
+	/**
+	 * Attach normalized token structure to the request.
+	 *
+	 * Using configured cookie names.
+	 * Cookie names are environment-driven to allow safe rotation
+	 * and environment-specific configuration.
+	 *
+	 * Downstream middleware should read tokens exclusively from
+	 * `req.authTokens` rather than directly accessing `req.cookies`.
+	 */
 	req.authTokens = {
-		accessToken: req.cookies?.accessToken,
-		refreshToken: req.cookies?.refreshToken,
+		accessToken: req.cookies?.[env.JWT_ACCESS_TOKEN_NAME],
+		refreshToken: req.cookies?.[env.JWT_REFRESH_TOKEN_NAME],
 	};
 
 	next();
@@ -61,8 +80,25 @@ export const requireAuth: RequestHandler = (
 	const token = req.authTokens?.accessToken;
 
 	if (!token) {
+		logger.error(
+			{
+				domain: 'auth',
+				middleware: 'accessToken',
+				accessToken: token,
+			},
+			'token is not found'
+		);
 		throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
 	}
+
+	logger.info(
+		{
+			domain: 'auth',
+			middleware: 'accessToken',
+			accessToken: token,
+		},
+		'ACCESS TOKEN'
+	);
 
 	try {
 		const payLoad = verifyAccessToken(token);
@@ -86,6 +122,14 @@ export const requireAuth: RequestHandler = (
 
 		next();
 	} catch (error: unknown) {
+		logger.error(
+			{
+				domain: 'auth',
+				middleware: 'requireRefreshToken',
+				error,
+			},
+			'Error Occur'
+		);
 		next(error);
 	}
 };
@@ -125,6 +169,14 @@ export const requireRefreshToken: RequestHandler = (
 
 	// Refresh token is mandatory for this flow
 	if (!token) {
+		logger.error(
+			{
+				domain: 'auth',
+				middleware: 'requireRefreshToken',
+				refreshToken: token,
+			},
+			'token is not found'
+		);
 		throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
 	}
 
@@ -146,6 +198,14 @@ export const requireRefreshToken: RequestHandler = (
 
 		next();
 	} catch (error) {
+		logger.error(
+			{
+				domain: 'auth',
+				middleware: 'requireRefreshToken',
+				error,
+			},
+			'Error Occur'
+		);
 		next(error);
 	}
 };

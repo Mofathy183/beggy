@@ -17,6 +17,7 @@ import {
 	errorHandler,
 	doubleCsrfProtection,
 	injectCsrfToken,
+	authCookieParser,
 } from '@shared/middlewares';
 
 const app: Express = express();
@@ -47,8 +48,29 @@ app.use(express.json({ limit: '10kb' }));
 // 6. URL-encoded body parser for form data
 app.use(express.urlencoded({ extended: true }));
 
-// 7. Cookie parser - Required for sessions, CSRF, auth tokens
+// 7. Cookie parser - Required to read cookies from incoming HTTP requests.
+// Express does NOT parse cookies automatically. This middleware populates `req.cookies`
+// by parsing the "Cookie" header sent by the browser.
 app.use(cookieParser());
+
+/**
+ * Authentication cookie extraction middleware.
+ *
+ * Must run AFTER `cookieParser()` because it relies on `req.cookies`
+ * being populated.
+ *
+ * Responsibility:
+ * - Extract auth tokens from cookies
+ * - Normalize them into `req.authTokens`
+ *
+ * This creates a consistent location where downstream authentication
+ * middleware can read tokens from, without needing to know where they
+ * originally came from (cookies, headers, etc.).
+ *
+ * This middleware does NOT authenticate the user.
+ * It only prepares the request for authentication middleware.
+ */
+app.use(authCookieParser);
 
 // ============================================
 //* AUTHENTICATION & SESSION MIDDLEWARE

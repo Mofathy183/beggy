@@ -70,7 +70,7 @@
 		"prisma:migrate": "pnpm prisma migrate dev",
 		"prisma:deploy": "pnpm prisma migrate deploy",
 		"prisma:reset": "pnpm prisma migrate reset",
-		"prisma:seed": "tsx prisma/seed.ts",
+		"prisma:seed": "tsx prisma/prisma.seed.ts",
 		"prisma:test": "dotenv -e .env.test -- pnpm prisma migrate deploy"
 	},
 	"devDependencies": {
