@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useMeQuery, useSignupMutation } from '@features/auth/api';
 import useAuthRedirect from './useAuthRedirect';
 import type { SignUpInput } from '@beggy/shared/types';
+
 import type { HttpClientError } from '@shared/types';
 
 /**
@@ -30,9 +31,11 @@ const useSignup = () => {
 		setServerError(null);
 
 		try {
+			console.log('Values =>', values);
+
 			await signupMutation(values).unwrap();
 			await refetch();
-		} catch (err) {
+		} catch (err: unknown) {
 			const error = err as HttpClientError;
 
 			setServerError(error.body?.message ?? 'Something went wrong.');

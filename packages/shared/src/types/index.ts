@@ -21,4 +21,6 @@ export type Override<Base, Overrides extends Partial<Base>> = Omit<
 > &
 	Overrides;
 
+export type PayloadFromInput<T> = Omit<T, 'confirmPassword'>;
+
 export type ISODateString = string;

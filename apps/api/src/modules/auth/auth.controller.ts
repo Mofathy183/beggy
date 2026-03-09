@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { AuthMeDTO, LoginInput } from '@beggy/shared/types';
+import type { AuthMeDTO, LoginInput, SignUpPayload } from '@beggy/shared/types';
 import { type AuthService, AuthMapper } from '@modules/auth';
 import { type UserService } from '@modules/users';
 import { STATUS_CODE } from '@shared/constants';
@@ -35,7 +35,7 @@ export class AuthController extends BaseController {
 	 * @route POST /auth/signup
 	 */
 	signup = async (req: Request, res: Response): Promise<void> => {
-		const { body: user } = req;
+		const user = req.body as SignUpPayload;
 
 		const { id, role } = await this.authService.signupUser(user);
 

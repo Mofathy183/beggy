@@ -6,7 +6,7 @@
 import type * as z from 'zod';
 import { type AdminSchema } from '../schemas/user.schema';
 import type { Role } from '../constants/auth.enums';
-import type { Override, ISODateString } from './index';
+import type { Override, PayloadFromInput, ISODateString } from './index';
 
 /**
  * Core user domain model.
@@ -114,12 +114,4 @@ export type CreateUserInput = Override<
 // Privileged, sanitized admin data
 // Safe to pass directly into services / DB layer
 
-export type CreateUserPayload = Override<
-	z.output<typeof AdminSchema.createUser>,
-	{
-		firstName: string;
-		lastName: string;
-		email: string;
-		password: string;
-	}
->;
+export type CreateUserPayload = PayloadFromInput<CreateUserInput>;

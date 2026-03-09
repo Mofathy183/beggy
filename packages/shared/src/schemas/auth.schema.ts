@@ -1,3 +1,8 @@
+// NOTE: transform temporarily disabled due to Zod type inference issue
+// It should remove confirmPassword before reaching the service layer
+// Re-enable once the typing/runtime issue is resolved
+// .transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
+
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema';
 import { Gender } from '../constants/profile.enums';
@@ -72,15 +77,15 @@ export const AuthSchema = {
 						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
-		})
-		/**
-		 * Output transformation.
-		 *
-		 * @remarks
-		 * - Removes confirmPassword before data reaches services or DB
-		 * - Guarantees sensitive fields are never persisted
-		 */
-		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
+		}),
+	// /**
+	//  * Output transformation.
+	//  *
+	//  * @remarks
+	//  * - Removes confirmPassword before data reaches services or DB
+	//  * - Guarantees sensitive fields are never persisted
+	//  */
+	// .transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 
 	/**
 	 * Change-email schema.
@@ -136,15 +141,15 @@ export const AuthSchema = {
 						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
-		})
-		/**
-		 * Output transformation.
-		 *
-		 * @remarks
-		 * - Removes confirmPassword before data reaches services or DB
-		 * - Guarantees sensitive fields are never persisted
-		 */
-		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
+		}),
+	// /**
+	//  * Output transformation.
+	//  *
+	//  * @remarks
+	//  * - Removes confirmPassword before data reaches services or DB
+	//  * - Guarantees sensitive fields are never persisted
+	//  */
+	// .transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 
 	/**
 	 * Schema for setting a LOCAL password for OAuth-based users.
@@ -193,15 +198,15 @@ export const AuthSchema = {
 						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
-		})
-		/**
-		 * Output transformation.
-		 *
-		 * @remarks
-		 * - Removes confirmPassword before data reaches services or DB
-		 * - Guarantees sensitive fields are never persisted
-		 */
-		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
+		}),
+	// /**
+	//  * Output transformation.
+	//  *
+	//  * @remarks
+	//  * - Removes confirmPassword before data reaches services or DB
+	//  * - Guarantees sensitive fields are never persisted
+	//  */
+	// .transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 
 	/**
 	 * Send-verification-email schema.
@@ -255,13 +260,13 @@ export const AuthSchema = {
 						'Those passwords don’t quite match — like two tickets with different names. Let’s double-check and make sure they travel together.',
 				});
 			}
-		})
-		/**
-		 * Output transformation.
-		 *
-		 * @remarks
-		 * - Removes confirmPassword before data reaches services or DB
-		 * - Guarantees sensitive fields are never persisted
-		 */
-		.transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
+		}),
+	// /**
+	//  * Output transformation.
+	//  *
+	//  * @remarks
+	//  * - Removes confirmPassword before data reaches services or DB
+	//  * - Guarantees sensitive fields are never persisted
+	//  */
+	// .transform(({ confirmPassword: _confirmPassword, ...rest }) => rest),
 };

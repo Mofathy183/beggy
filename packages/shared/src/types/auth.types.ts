@@ -1,6 +1,6 @@
 import { type AuthSchema } from '../schemas/auth.schema';
 import type * as z from 'zod';
-import type { Override } from './index';
+import type { Override, PayloadFromInput } from './index';
 import type { Action, Scope, Subject } from '../constants/auth.enums';
 
 /**
@@ -116,34 +116,10 @@ export type SetPasswordInput = Override<
 // Fully validated, normalized auth data
 // Ready for services, hashing, persistence
 
-export type SignUpPayload = Override<
-	z.output<typeof AuthSchema.signUp>,
-	{
-		firstName: string;
-		lastName: string;
-		email: string;
-		password: string;
-	}
->;
+export type SignUpPayload = PayloadFromInput<SignUpInput>;
 
-export type ResetPasswordPayload = Override<
-	z.output<typeof AuthSchema.resetPassword>,
-	{
-		password: string;
-	}
->;
+export type ResetPasswordPayload = PayloadFromInput<ResetPasswordInput>;
 
-export type ChangePasswordPayload = Override<
-	z.output<typeof AuthSchema.changePassword>,
-	{
-		currentPassword: string;
-		newPassword: string;
-	}
->;
+export type ChangePasswordPayload = PayloadFromInput<ChangePasswordInput>;
 
-export type SetPasswordPayLoad = Override<
-	z.output<typeof AuthSchema.setPassword>,
-	{
-		newPassword: string;
-	}
->;
+export type SetPasswordPayload = PayloadFromInput<SetPasswordInput>;
