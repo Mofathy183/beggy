@@ -16,7 +16,10 @@ import { useMeQuery } from '@features/auth/api';
  * - Should be mounted once at the application root.
  */
 const AuthBootstrap = (): null => {
-	useMeQuery();
+	useMeQuery(undefined, {
+		refetchOnMountOrArgChange: true,
+		refetchOnReconnect: true,
+	});
 	return null;
 };
 

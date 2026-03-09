@@ -18,10 +18,10 @@ const SignupForm = () => {
 			password: '',
 			confirmPassword: '',
 			avatarUrl: null,
-			gender: undefined,
-			birthDate: undefined,
-			country: '',
-			city: '',
+			gender: null,
+			birthDate: null,
+			country: null,
+			city: null,
 		},
 	});
 

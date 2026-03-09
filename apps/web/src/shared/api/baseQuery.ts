@@ -7,6 +7,9 @@ import { env } from '@/env';
 /**
  * Low-level fetch base query.
  *
+ * Wraps the native `fetch` API via RTK Query's `fetchBaseQuery`
+ * and defines transport-level configuration shared by all requests.
+ *
  * This is a thin wrapper around `fetch` provided by RTK Query.
  * It handles:
  * - base URL resolution
@@ -14,42 +17,53 @@ import { env } from '@/env';
  * - request headers
  * - JSON parsing
  *
- * This layer should remain framework-agnostic and free of
- * application-specific logic.
+ * This layer must remain **framework-agnostic** and free of
+ * application-specific concerns such as authentication flows
+ * or error transformation.
  *
  * IMPORTANT:
  * - Env variables MUST NOT be read at module scope
  * - This factory ensures runtime-safe access
  */
-const createRawBaseQuery = () =>
-	fetchBaseQuery({
-		/**
-		 * Base URL for all API requests.
-		 *
-		 * Must be exposed with `NEXT_PUBLIC_` because this code
-		 * runs in the browser.
-		 */
-		baseUrl: env.API_URL,
+const rawBaseQuery = fetchBaseQuery({
+	/**
+	 * Base URL for all API requests.
+	 *
+	 * Must be exposed with `NEXT_PUBLIC_` because this code
+	 * runs in the browser.
+	 */
+	baseUrl: env.API_URL,
 
-		/**
-		 * Ensures cookies (e.g. session, refresh tokens)
-		 * are sent with every request.
-		 */
-		credentials: 'include',
+	/**
+	 * Ensures cookies (e.g. session, refresh tokens)
+	 * are sent with every request.
+	 */
+	credentials: 'include',
 
-		/**
-		 * Prepare default headers for every request.
-		 *
-		 * Note:
-		 * - Do NOT set `Content-Type` globally
-		 *   (fetchBaseQuery handles it automatically for JSON)
-		 * - Auth headers (if any) can be added later here
-		 */
-		prepareHeaders: (headers) => {
-			headers.set('Accept', 'application/json');
-			return headers;
-		},
-	});
+	/**
+	 * Prepare default headers for every request.
+	 *
+	 * Note:
+	 * - Do NOT set `Content-Type` globally
+	 *   (fetchBaseQuery handles it automatically for JSON)
+	 * - Auth headers (if any) can be added later here
+	 */
+	prepareHeaders: (headers) => {
+		headers.set('Accept', 'application/json');
+
+		const csrfToken = document.cookie
+			.split('; ')
+			.find((c) => c.startsWith('XSRF-TOKEN='))
+			?.split('=')[1]
+			?.trim();
+
+		if (csrfToken) {
+			headers.set('x-xsrf-token', csrfToken);
+		}
+
+		return headers;
+	},
+});
 
 /**
  * Application-level base query.
@@ -76,8 +90,6 @@ export const baseQuery: BaseQueryFn<
 	unknown,
 	HttpClientError
 > = async (args, api, extraOptions) => {
-	const rawBaseQuery = createRawBaseQuery();
-
 	const serializedArgs = serializeParams(args);
 	const result = await rawBaseQuery(serializedArgs, api, extraOptions);
 
@@ -91,20 +103,6 @@ export const baseQuery: BaseQueryFn<
 	 */
 	if (result.error) {
 		const normalized = normalizeError(result.error);
-		/**
-		 * Stage 1: Observe only
-		 */
-		// if (isApiError(result.error)) {
-		// 	// Validation errors → handled by forms
-		// 	if (isValidationError(result.error)) {
-		// 		// intentionally empty
-		// 	}
-
-		// 	// Unauthorized → future auth handling
-		// 	if (result.error.status === 401) {
-		// 		// later: logout / refresh
-		// 	}
-		// }
 
 		return { error: normalized };
 	}

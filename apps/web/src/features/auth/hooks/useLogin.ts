@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useLoginMutation } from '@features/auth/api';
+import { useLoginMutation, useMeQuery } from '@features/auth/api';
 import useAuthRedirect from './useAuthRedirect';
 import type { LoginInput } from '@beggy/shared/types';
 import type { HttpClientError } from '@shared/types';
@@ -31,6 +31,7 @@ import type { HttpClientError } from '@shared/types';
 const useLogin = () => {
 	const [loginMutation, { isLoading }] = useLoginMutation();
 	const [serverError, setServerError] = useState<string | null>(null);
+	const { refetch } = useMeQuery();
 
 	useAuthRedirect();
 
@@ -41,7 +42,7 @@ const useLogin = () => {
 
 		try {
 			await loginMutation(values).unwrap();
-			// Redirect handled by useAuthRedirect watching authSlice
+			await refetch();
 		} catch (err) {
 			const error = err as HttpClientError;
 			setServerError(error.body?.message ?? 'Something went wrong.');

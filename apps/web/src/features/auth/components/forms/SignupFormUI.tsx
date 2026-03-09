@@ -60,6 +60,7 @@ const SignupFormUI = ({
 	serverError,
 }: SignupFormUIProps) => (
 	<form
+		id="signup-form"
 		onSubmit={form.handleSubmit(onSubmit)}
 		noValidate
 		className="flex flex-col gap-5"
@@ -83,7 +84,7 @@ const SignupFormUI = ({
 								<Input
 									{...field}
 									id="signup-first-name"
-									placeholder="Mohamed"
+									placeholder="Bruce"
 									autoComplete="given-name"
 									required
 									aria-required="true"
@@ -123,7 +124,7 @@ const SignupFormUI = ({
 								<Input
 									{...field}
 									id="signup-last-name"
-									placeholder="Fathy"
+									placeholder="Wayne"
 									autoComplete="family-name"
 									required
 									aria-required="true"
@@ -300,7 +301,12 @@ const SignupFormUI = ({
 		</FieldGroup>
 
 		{/* ── Submit ────────────────────────────────────────────────── */}
-		<Button type="submit" className="w-full" disabled={isSubmitting}>
+		<Button
+			form="signup-form"
+			type="submit"
+			className="w-full"
+			disabled={isSubmitting}
+		>
 			{isSubmitting ? 'Creating account...' : 'Create account'}
 		</Button>
 	</form>

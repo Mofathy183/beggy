@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSignupMutation } from '@features/auth/api';
+import { useMeQuery, useSignupMutation } from '@features/auth/api';
 import useAuthRedirect from './useAuthRedirect';
 import type { SignUpInput } from '@beggy/shared/types';
 import type { HttpClientError } from '@shared/types';
@@ -20,6 +20,7 @@ import type { HttpClientError } from '@shared/types';
 const useSignup = () => {
 	const [signupMutation, { isLoading }] = useSignupMutation();
 	const [serverError, setServerError] = useState<string | null>(null);
+	const { refetch } = useMeQuery();
 
 	useAuthRedirect();
 
@@ -30,6 +31,7 @@ const useSignup = () => {
 
 		try {
 			await signupMutation(values).unwrap();
+			await refetch();
 		} catch (err) {
 			const error = err as HttpClientError;
 

@@ -1,6 +1,10 @@
 import { apiSlice, TagTypes } from '@shared/api';
 import { clearPermissions, setPermissions } from '@shared/store/ability';
-import { setAuthenticated, setUnauthenticated } from '../store/auth.slice';
+import {
+	setAuthenticated,
+	setLoading,
+	setUnauthenticated,
+} from '../store/auth.slice';
 import type {
 	SuccessResponse,
 	SignUpInput,
@@ -105,6 +109,8 @@ export const authApi = apiSlice.injectEndpoints({
 			 * - No bootstrap thunk
 			 */
 			async onQueryStarted(_, { dispatch, queryFulfilled }) {
+				dispatch(setLoading());
+
 				try {
 					const { data } = await queryFulfilled;
 					const payload = data.data;
