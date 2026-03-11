@@ -106,4 +106,36 @@ export class ProfileService {
 
 		return updatedProfile;
 	}
+
+	/**
+	 * Completes the onboarding process for a user profile.
+	 *
+	 * @param userId - Authenticated user identifier
+	 * @param profile - Partial profile data collected during onboarding
+	 *
+	 * @returns Updated {@link Profile} entity
+	 *
+	 * @remarks
+	 * - Ignores `undefined` and `null` values to prevent accidental
+	 *   overwriting of existing profile data.
+	 * - Marks the profile as `onboardingCompleted`.
+	 */
+	async completeOnboarding(
+		userId: string,
+		profile: EditProfileInput
+	): Promise<Profile> {
+		this.profileLogger.info({ userId }, 'User onboarding completed');
+
+		return this.prisma.profile.update({
+			where: { userId },
+			data: {
+				...Object.fromEntries(
+					Object.entries(profile).filter(
+						([, v]) => v !== undefined && v !== null
+					)
+				),
+				onboardingCompleted: true,
+			},
+		});
+	}
 }

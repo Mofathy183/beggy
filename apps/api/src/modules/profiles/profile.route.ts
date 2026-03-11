@@ -115,5 +115,18 @@ export const createProfileRouter = (
 		profileController.updateUserProfile
 	);
 
+	/**
+	 * Profile onboarding routes.
+	 *
+	 * @remarks
+	 * Allows an authenticated user to complete their initial
+	 * profile setup after account creation.
+	 */
+	router.post(
+		'/me/onboarding',
+		requireAuth,
+		profileController.completeOnboarding
+	);
+
 	return router;
 };

@@ -58,11 +58,6 @@ export class AuthService {
 					create: {
 						firstName: user.firstName,
 						lastName: user.lastName,
-						city: user.city,
-						country: user.country,
-						avatarUrl: user.avatarUrl,
-						gender: user.gender,
-						birthDate: user.birthDate,
 					},
 				},
 			},

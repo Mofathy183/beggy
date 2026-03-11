@@ -34,6 +34,10 @@ model Profile {
     /// Optional city.
     city String?
 
+    /// Indicates whether the user has completed or dismissed the optional onboarding flow.
+    /// Used by the frontend to decide whether to show Soft Nudge onboarding hints.
+    onboardingCompleted Boolean @default(false) @map("onboarding_completed")
+
     /// Profile creation timestamp.
     createdAt DateTime @default(now())
 

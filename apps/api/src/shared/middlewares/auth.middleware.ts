@@ -6,7 +6,7 @@ import {
 	appErrorMap,
 	verifyRefreshToken,
 } from '@shared/utils';
-import { defineAbilityFor, logger } from '@shared/middlewares';
+import { defineAbilityFor } from '@shared/middlewares';
 import { env } from '@config';
 
 /**
@@ -80,25 +80,16 @@ export const requireAuth: RequestHandler = (
 	const token = req.authTokens?.accessToken;
 
 	if (!token) {
-		logger.error(
+		req.log.warn(
 			{
 				domain: 'auth',
-				middleware: 'accessToken',
-				accessToken: token,
+				middleware: 'requireAuth',
+				reason: 'missing_access_token',
 			},
-			'token is not found'
+			'Authentication failed'
 		);
 		throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
 	}
-
-	logger.info(
-		{
-			domain: 'auth',
-			middleware: 'accessToken',
-			accessToken: token,
-		},
-		'ACCESS TOKEN'
-	);
 
 	try {
 		const payLoad = verifyAccessToken(token);
@@ -122,14 +113,16 @@ export const requireAuth: RequestHandler = (
 
 		next();
 	} catch (error: unknown) {
-		logger.error(
+		req.log.warn(
 			{
 				domain: 'auth',
-				middleware: 'requireRefreshToken',
+				middleware: 'requireAuth',
+				reason: 'invalid_access_token',
 				error,
 			},
-			'Error Occur'
+			'Token verification failed'
 		);
+
 		next(error);
 	}
 };
@@ -169,13 +162,13 @@ export const requireRefreshToken: RequestHandler = (
 
 	// Refresh token is mandatory for this flow
 	if (!token) {
-		logger.error(
+		req.log.warn(
 			{
 				domain: 'auth',
 				middleware: 'requireRefreshToken',
-				refreshToken: token,
+				reason: 'missing_refresh_token',
 			},
-			'token is not found'
+			'Refresh token missing'
 		);
 		throw appErrorMap.unauthorized(ErrorCode.UNAUTHORIZED);
 	}
@@ -198,13 +191,14 @@ export const requireRefreshToken: RequestHandler = (
 
 		next();
 	} catch (error) {
-		logger.error(
+		req.log.warn(
 			{
 				domain: 'auth',
 				middleware: 'requireRefreshToken',
+				reason: 'invalid_refresh_token',
 				error,
 			},
-			'Error Occur'
+			'Refresh token verification failed'
 		);
 		next(error);
 	}
