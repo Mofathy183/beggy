@@ -2,7 +2,7 @@ import { it, describe, expect } from 'vitest';
 import { AuthSchema } from '../../src/schemas/auth.schema';
 
 describe('AuthSchema.login()', () => {
-	it('parses valid credentials and defaults rememberMe to false', () => {
+	it('accepts valid credentials and defaults rememberMe to false', () => {
 		const result = AuthSchema.login.parse({
 			email: 'user@example.com',
 			password: 'Strong@123',
@@ -15,7 +15,7 @@ describe('AuthSchema.login()', () => {
 		});
 	});
 
-	it('throws when unknown fields are provided', () => {
+	it('rejects unknown fields', () => {
 		expect(() =>
 			AuthSchema.login.parse({
 				email: 'user@example.com',
@@ -27,7 +27,7 @@ describe('AuthSchema.login()', () => {
 });
 
 describe('AuthSchema.signUp()', () => {
-	it('parses valid input and omits confirmPassword from the result', () => {
+	it('accepts valid input', () => {
 		const result = AuthSchema.signUp.parse({
 			firstName: 'Mohamed',
 			lastName: 'Fathy',
@@ -41,12 +41,47 @@ describe('AuthSchema.signUp()', () => {
 			lastName: 'Fathy',
 			email: 'user@example.com',
 			password: 'Strong@123',
+			confirmPassword: 'Strong@123',
 		});
-
-		expect('confirmPassword' in result).toBe(false);
 	});
 
-	it('throws when password and confirmPassword do not match', () => {
+	it('rejects confirmPassword when empty after trimming', () => {
+		expect(() =>
+			AuthSchema.signUp.parse({
+				firstName: 'Mohamed',
+				lastName: 'Fathy',
+				email: 'user@example.com',
+				password: 'Strong@123',
+				confirmPassword: '   ',
+			})
+		).toThrow();
+	});
+
+	it('rejects unknown fields', () => {
+		expect(() =>
+			AuthSchema.signUp.parse({
+				firstName: 'Mohamed',
+				lastName: 'Fathy',
+				email: 'user@example.com',
+				password: 'Strong@123',
+				confirmPassword: 'Strong@123',
+				role: 'ADMIN',
+			})
+		).toThrow();
+	});
+
+	it('rejects input when confirmPassword is missing', () => {
+		expect(() =>
+			AuthSchema.signUp.parse({
+				firstName: 'Mohamed',
+				lastName: 'Fathy',
+				email: 'user@example.com',
+				password: 'Strong@123',
+			})
+		).toThrow();
+	});
+
+	it('rejects when password and confirmPassword do not match', () => {
 		expect(() =>
 			AuthSchema.signUp.parse({
 				firstName: 'Mohamed',
@@ -60,7 +95,7 @@ describe('AuthSchema.signUp()', () => {
 });
 
 describe('AuthSchema.changePassword()', () => {
-	it('parses valid input and omits confirmPassword from the result', () => {
+	it('accepts valid input', () => {
 		const result = AuthSchema.changePassword.parse({
 			currentPassword: 'Old@1234',
 			newPassword: 'New@1234',
@@ -70,10 +105,11 @@ describe('AuthSchema.changePassword()', () => {
 		expect(result).toEqual({
 			currentPassword: 'Old@1234',
 			newPassword: 'New@1234',
+			confirmPassword: 'New@1234',
 		});
 	});
 
-	it('throws when newPassword and confirmPassword do not match', () => {
+	it('rejects when newPassword and confirmPassword do not match', () => {
 		expect(() =>
 			AuthSchema.changePassword.parse({
 				currentPassword: 'Old@1234',
@@ -85,7 +121,7 @@ describe('AuthSchema.changePassword()', () => {
 });
 
 describe('AuthSchema.changeEmail()', () => {
-	it('parses a valid change email payload', () => {
+	it('accepts valid email', () => {
 		const result = AuthSchema.changeEmail.parse({
 			email: 'new@example.com',
 		});
@@ -93,7 +129,7 @@ describe('AuthSchema.changeEmail()', () => {
 		expect(result).toEqual({ email: 'new@example.com' });
 	});
 
-	it('throws when extra fields are provided', () => {
+	it('rejects unknown fields', () => {
 		expect(() =>
 			AuthSchema.changeEmail.parse({
 				email: 'new@example.com',

@@ -84,6 +84,9 @@ export const SuccessMessages = {
 	PREFERENCES_SAVED:
 		'Got it! I’ll remember these packing preferences next time wanderlust strikes.',
 
+	ONBOARDING_COMPLETED:
+		'Nice work — onboarding complete! You’ve got everything set up now, so packing your next trip should feel a whole lot easier. From here on, I’ll help keep things organized while you focus on the adventure.',
+
 	// ============================================================================
 	// BAGS
 	// ============================================================================

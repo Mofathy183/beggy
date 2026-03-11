@@ -5,7 +5,7 @@ import { AdminSchema } from '../../src/schemas/user.schema';
 import { Role } from '../../src/constants/auth.enums';
 
 describe('AdminSchema.createUser()', () => {
-	it('parses a valid admin user creation payload', () => {
+	it('accepts valid admin user creation input', () => {
 		const { email } = userFactory();
 		const { firstName, lastName } = profileFactory('user-1');
 
@@ -25,10 +25,54 @@ describe('AdminSchema.createUser()', () => {
 			lastName,
 			email: email.toLowerCase(),
 			password: 'Strong@123',
+			confirmPassword: 'Strong@123',
 		});
 	});
 
-	it('throws when password and confirmPassword do not match', () => {
+	it('rejects confirmPassword when empty after trimming', () => {
+		const { email } = userFactory();
+		const { firstName, lastName } = profileFactory('user-1');
+
+		expect(() =>
+			AdminSchema.createUser.parse({
+				firstName,
+				lastName,
+				email,
+				password: 'Strong@123',
+				confirmPassword: '   ',
+			})
+		).toThrow();
+	});
+
+	it('rejects input when confirmPassword is missing', () => {
+		const { email } = userFactory();
+		const { firstName, lastName } = profileFactory('user-1');
+
+		expect(() =>
+			AdminSchema.createUser.parse({
+				firstName,
+				lastName,
+				email,
+				password: 'Strong@123',
+			})
+		).toThrow();
+	});
+
+	it('rejects invalid email', () => {
+		const { firstName, lastName } = profileFactory('user-1');
+
+		expect(() =>
+			AdminSchema.createUser.parse({
+				firstName,
+				lastName,
+				email: 'not-an-email',
+				password: 'Strong@123',
+				confirmPassword: 'Strong@123',
+			})
+		).toThrow();
+	});
+
+	it('rejects when password and confirmPassword do not match', () => {
 		const { email } = userFactory();
 		const { firstName, lastName } = profileFactory('user-1');
 
@@ -43,7 +87,7 @@ describe('AdminSchema.createUser()', () => {
 		expect(() => AdminSchema.createUser.parse(input)).toThrow();
 	});
 
-	it('throws when unknown fields are provided', () => {
+	it('rejects unknown fields', () => {
 		const { email } = userFactory();
 		const { firstName, lastName } = profileFactory('user-1');
 
@@ -61,7 +105,7 @@ describe('AdminSchema.createUser()', () => {
 });
 
 describe('AdminSchema.changeRole()', () => {
-	it('parses a valid role change payload', () => {
+	it('accepts valid role', () => {
 		expect(AdminSchema.changeRole.parse({ role: Role.ADMIN })).toEqual({
 			role: Role.ADMIN,
 		});
@@ -69,7 +113,7 @@ describe('AdminSchema.changeRole()', () => {
 });
 
 describe('AdminSchema.updateStatus()', () => {
-	it('parses payload when only isActive is provided', () => {
+	it('accepts input when only isActive is provided', () => {
 		const result = AdminSchema.updateStatus.safeParse({
 			isActive: true,
 		});
@@ -77,7 +121,7 @@ describe('AdminSchema.updateStatus()', () => {
 		expect(result.success).toBe(true);
 	});
 
-	it('parses payload when only isEmailVerified is provided', () => {
+	it('accepts input when only isEmailVerified is provided', () => {
 		const result = AdminSchema.updateStatus.safeParse({
 			isEmailVerified: false,
 		});
@@ -85,7 +129,7 @@ describe('AdminSchema.updateStatus()', () => {
 		expect(result.success).toBe(true);
 	});
 
-	it('parses payload when both status fields are provided', () => {
+	it('accepts input when both status fields are provided', () => {
 		const result = AdminSchema.updateStatus.safeParse({
 			isActive: true,
 			isEmailVerified: true,
@@ -94,7 +138,7 @@ describe('AdminSchema.updateStatus()', () => {
 		expect(result.success).toBe(true);
 	});
 
-	it('fails when no fields are provided (empty update)', () => {
+	it('rejects empty input', () => {
 		const result = AdminSchema.updateStatus.safeParse({});
 
 		expect(result.success).toBe(false);
@@ -104,7 +148,7 @@ describe('AdminSchema.updateStatus()', () => {
 		);
 	});
 
-	it('fails when unknown fields are provided', () => {
+	it('rejects unknown fields', () => {
 		const result = AdminSchema.updateStatus.safeParse({
 			isActive: true,
 			role: 'ADMIN',
@@ -113,7 +157,7 @@ describe('AdminSchema.updateStatus()', () => {
 		expect(result.success).toBe(false);
 	});
 
-	it('fails when field values have invalid types', () => {
+	it('rejects invalid field types', () => {
 		const result = AdminSchema.updateStatus.safeParse({
 			isActive: 'true',
 		});
