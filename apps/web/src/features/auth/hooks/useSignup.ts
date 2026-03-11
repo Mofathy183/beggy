@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useMeQuery, useSignupMutation } from '@features/auth/api';
+import { useAppDispatch } from '@shared/store';
+import { authApi, useSignupMutation } from '@features/auth/api';
 import useAuthRedirect from './useAuthRedirect';
 import type { SignUpInput } from '@beggy/shared/types';
 
@@ -19,9 +20,9 @@ import type { HttpClientError } from '@shared/types';
  * no special handling needed, it renders via root error automatically.
  */
 const useSignup = () => {
+	const dispatch = useAppDispatch();
 	const [signupMutation, { isLoading }] = useSignupMutation();
 	const [serverError, setServerError] = useState<string | null>(null);
-	const { refetch } = useMeQuery();
 
 	useAuthRedirect();
 
@@ -31,10 +32,12 @@ const useSignup = () => {
 		setServerError(null);
 
 		try {
-			console.log('Values =>', values);
-
 			await signupMutation(values).unwrap();
-			await refetch();
+			// ✅ This goes through onQueryStarted → dispatches setAuthenticated
+			// authSlice.profile and authSlice.status update → useAuthRedirect fires
+			await dispatch(
+				authApi.endpoints.me.initiate(undefined, { forceRefetch: true })
+			);
 		} catch (err: unknown) {
 			const error = err as HttpClientError;
 

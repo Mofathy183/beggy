@@ -33,7 +33,7 @@ const useAuthRedirect = () => {
 		// Wait until bootstrap has completed at least once
 		if (!initialized || status !== 'authenticated') return;
 
-		if (profile === null) {
+		if (profile === null || !profile.onboardingCompleted) {
 			// New user or OAuth first login — profile not yet created
 			router.replace('/onboarding');
 			return;

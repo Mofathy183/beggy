@@ -42,7 +42,15 @@ import { AlertCircleIcon, Luggage01Icon } from '@hugeicons/core-free-icons';
 type OnboardingFormUIProps = {
 	form: UseFormReturn<EditProfileInput>;
 	onSubmit: (values: EditProfileInput) => void;
+	/**
+	 * Called when the user clicks "Skip for now".
+	 * Triggers completeOnboarding({}) — sets the flag without saving data.
+	 * This is what converts the Hard Gate into a Soft Nudge.
+	 */
+	onSkip: () => Promise<void>;
 	isSubmitting?: boolean;
+	/** True while the skip action is in-flight — shows spinner on skip button */
+	isSkipping?: boolean;
 	serverError?: string | null;
 	serverSuggestion?: string | null;
 };
@@ -54,20 +62,27 @@ type OnboardingFormUIProps = {
  *
  * Purely presentational — no API calls, no routing, no side effects.
  *
- * Tone: warm welcome, not a form. Copy reflects §12.1:
- * "warm, travel-inspired, approachable". Section headers break the fields
- * into digestible groups so new users don't feel overwhelmed.
+ * Soft Nudge implementation:
+ * The footer now has two actions:
+ *  - Primary CTA: "Let's go →"  (submits the form with data)
+ *  - Skip link:   "Skip for now" (calls onSkip, no data required)
  *
- * Same Field/FieldLabel/FieldError/FieldGroup pattern as CreateUserFormUI
- * and EditProfileFormUI for architectural consistency.
+ * The skip link is deliberately styled as a ghost/text action, not a
+ * button, so it reads as "less important" without being hidden. The copy
+ * "You can update everything later in settings" reinforces that skipping
+ * is safe and reversible — key to reducing anxiety around the gate.
  */
 const OnboardingFormUI = ({
 	form,
 	onSubmit,
+	onSkip,
 	isSubmitting,
+	isSkipping,
 	serverError,
 	serverSuggestion,
 }: OnboardingFormUIProps) => {
+	const isAnyLoading = isSubmitting || isSkipping;
+
 	return (
 		<form
 			onSubmit={form.handleSubmit(onSubmit)}
@@ -433,6 +448,33 @@ const OnboardingFormUI = ({
 							? 'Setting up your profile...'
 							: "Let's go →"}
 					</Button>
+
+					{/*
+					 * Skip: the Soft Nudge escape hatch.
+					 *
+					 * Styled as a subtle ghost link — present and accessible,
+					 * but visually subordinate to the primary CTA so it doesn't
+					 * compete. The copy "I'll do this later" is intentionally
+					 * casual and low-pressure.
+					 *
+					 * Clicking this calls onSkip() → POST /profiles/me/onboarding
+					 * with an empty body → sets onboardingCompleted: true →
+					 * redirects to /dashboard where the Getting Started checklist
+					 * takes over as the gentle reminder mechanism.
+					 */}
+					<Button
+						type="button"
+						variant="ghost"
+						className="w-full text-muted-foreground hover:text-foreground"
+						disabled={isAnyLoading}
+						onClick={onSkip}
+					>
+						{isSkipping ? 'Skipping...' : "I'll do this later"}
+					</Button>
+
+					<p className="text-center text-xs text-muted-foreground/60">
+						You can complete your profile anytime in Settings.
+					</p>
 				</CardFooter>
 			</Card>
 		</form>

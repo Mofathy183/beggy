@@ -32,7 +32,9 @@ export default function OAuthCallbackPage() {
 		if (!initialized) return;
 
 		if (status === 'authenticated') {
-			router.replace(profile === null ? '/onboarding' : '/dashboard');
+			router.replace(
+				profile?.onboardingCompleted ? '/onboarding' : '/dashboard'
+			);
 			return;
 		}
 

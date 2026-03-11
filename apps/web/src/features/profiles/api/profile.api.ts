@@ -100,6 +100,18 @@ export const profilesApi = apiSlice.injectEndpoints({
 			}),
 			invalidatesTags: [TagTypes.PROFILE],
 		}),
+
+		completeOnboarding: builder.mutation<
+			SuccessResponse<ProfileDTO>,
+			EditProfileInput
+		>({
+			query: (body) => ({
+				url: '/profiles/me/onboarding',
+				method: 'POST',
+				body,
+			}),
+			invalidatesTags: [TagTypes.PROFILE],
+		}),
 	}),
 	overrideExisting: false,
 });
@@ -116,4 +128,5 @@ export const {
 	useEditProfileMutation,
 	useGetPrivateProfileQuery,
 	useGetPublicProfileQuery,
+	useCompleteOnboardingMutation,
 } = profilesApi;
