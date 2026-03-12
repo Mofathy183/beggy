@@ -92,6 +92,19 @@ describe('AuthSchema.signUp()', () => {
 			})
 		).toThrow();
 	});
+
+	it('rejects removed profile fields', () => {
+		expect(() =>
+			AuthSchema.signUp.parse({
+				firstName: 'Mohamed',
+				lastName: 'Fathy',
+				email: 'user@example.com',
+				password: 'Strong@123',
+				confirmPassword: 'Strong@123',
+				avatarUrl: 'https://example.com/avatar.png',
+			})
+		).toThrow();
+	});
 });
 
 describe('AuthSchema.changePassword()', () => {

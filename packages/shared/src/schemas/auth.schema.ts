@@ -5,7 +5,6 @@
 
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema';
-import { Gender } from '../constants/profile.enums';
 
 /**
  * Authentication-related validation schemas.
@@ -36,7 +35,6 @@ export const AuthSchema = {
 	 * @remarks
 	 * - Uses strict object to prevent mass-assignment attacks
 	 * - `confirmPassword` is validated but never persisted
-	 * - Optional profile fields are explicitly marked as optional
 	 */
 	signUp: z
 		.strictObject({
@@ -53,12 +51,6 @@ export const AuthSchema = {
 			 * - No password rules applied here (UX best practice)
 			 */
 			confirmPassword: z.string().trim(),
-
-			avatarUrl: FieldsSchema.url(false),
-			gender: FieldsSchema.enum<typeof Gender>(Gender, false),
-			birthDate: FieldsSchema.date(false),
-			country: FieldsSchema.name('Country', 'place', false),
-			city: FieldsSchema.name('City', 'place', false),
 		})
 		/**
 		 * Cross-field validation.

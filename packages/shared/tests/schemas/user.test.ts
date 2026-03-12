@@ -5,7 +5,7 @@ import { AdminSchema } from '../../src/schemas/user.schema';
 import { Role } from '../../src/constants/auth.enums';
 
 describe('AdminSchema.createUser()', () => {
-	it('accepts valid admin user creation input', () => {
+	it('accepts valid input', () => {
 		const { email } = userFactory();
 		const { firstName, lastName } = profileFactory('user-1');
 
@@ -76,31 +76,47 @@ describe('AdminSchema.createUser()', () => {
 		const { email } = userFactory();
 		const { firstName, lastName } = profileFactory('user-1');
 
-		const input = {
-			firstName,
-			lastName,
-			email,
-			password: 'Strong@123',
-			confirmPassword: 'Wrong@123',
-		};
-
-		expect(() => AdminSchema.createUser.parse(input)).toThrow();
+		expect(() =>
+			AdminSchema.createUser.parse({
+				firstName,
+				lastName,
+				email,
+				password: 'Strong@123',
+				confirmPassword: 'Wrong@123',
+			})
+		).toThrow();
 	});
 
 	it('rejects unknown fields', () => {
 		const { email } = userFactory();
 		const { firstName, lastName } = profileFactory('user-1');
 
-		const input = {
-			firstName,
-			lastName,
-			email,
-			password: 'Strong@123',
-			confirmPassword: 'Wrong@123',
-			role: Role.ADMIN,
-		};
+		expect(() =>
+			AdminSchema.createUser.parse({
+				firstName,
+				lastName,
+				email,
+				password: 'Strong@123',
+				confirmPassword: 'Wrong@123',
+				role: Role.ADMIN,
+			})
+		).toThrow();
+	});
 
-		expect(() => AdminSchema.createUser.parse(input)).toThrow();
+	it('rejects removed profile fields', () => {
+		const { email } = userFactory();
+		const { firstName, lastName } = profileFactory('user-1');
+
+		expect(() =>
+			AdminSchema.createUser.parse({
+				firstName,
+				lastName,
+				email,
+				password: 'Strong@123',
+				confirmPassword: 'Strong@123',
+				avatarUrl: 'https://example.com/avatar.png',
+			})
+		).toThrow();
 	});
 });
 

@@ -6,7 +6,6 @@
 import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema';
 import { Role } from '../constants/auth.enums';
-import { Gender } from '../constants/profile.enums';
 
 /**
  * Admin-related validation schemas.
@@ -47,21 +46,6 @@ export const AdminSchema = {
 			 * - No password rules applied here (UX best practice)
 			 */
 			confirmPassword: z.string().trim(),
-
-			/** Optional Avatar URL */
-			avatarUrl: FieldsSchema.url(false),
-
-			/** Optional gender selection */
-			gender: FieldsSchema.enum<typeof Gender>(Gender, false),
-
-			/** Optional birth date */
-			birthDate: FieldsSchema.date(false),
-
-			/** Optional country name */
-			country: FieldsSchema.name('Country', 'place', false),
-
-			/** Optional city name */
-			city: FieldsSchema.name('City', 'place', false),
 		})
 		/**
 		 * Cross-field validation.

@@ -2,6 +2,79 @@ import * as z from 'zod';
 import { FieldsSchema } from '../schemas/fields.schema';
 import { Gender } from '../constants/profile.enums';
 
+const profileFields = {
+	/**
+	 * User first name.
+	 *
+	 * @remarks
+	 * - Optional to allow partial updates
+	 * - Validated using shared name constraints
+	 * - Intended for personal identification and UI display
+	 */
+	firstName: FieldsSchema.name('First Name', 'person', false),
+
+	/**
+	 * User last name.
+	 *
+	 * @remarks
+	 * - Optional to allow partial updates
+	 * - Uses the same validation rules as first name
+	 * - Stored and displayed as part of the public profile
+	 */
+	lastName: FieldsSchema.name('Last Name', 'person', false),
+
+	/**
+	 * Public avatar image URL.
+	 *
+	 * @remarks
+	 * - Optional profile picture reference
+	 * - Expected to point to an externally managed resource (e.g. CDN)
+	 * - Validation ensures a well-formed URL only
+	 */
+	avatarUrl: FieldsSchema.url(false),
+
+	/**
+	 * Optional gender selection.
+	 *
+	 * @remarks
+	 * - Stored as an enum for consistency and safety
+	 * - Not required for core functionality
+	 * - Intended for personalization or future AI-driven features
+	 * - Should be handled carefully in downstream consumers
+	 */
+	gender: FieldsSchema.enum<typeof Gender>(Gender, false),
+
+	/**
+	 * User date of birth.
+	 *
+	 * @remarks
+	 * - Optional field used for derived values (e.g. age)
+	 * - Raw date is validated but should be treated as sensitive data
+	 * - Downstream layers should avoid exposing this directly to clients
+	 */
+	birthDate: FieldsSchema.date(false),
+
+	/**
+	 * User country.
+	 *
+	 * @remarks
+	 * - Optional location field
+	 * - Used for regional features (e.g. weather, localization)
+	 * - Validated as a human-readable place name
+	 */
+	country: FieldsSchema.name('Country', 'place', false),
+
+	/**
+	 * User city.
+	 *
+	 * @remarks
+	 * - Optional location field
+	 * - Often paired with country for location-based features
+	 * - Free-text but constrained via shared validation rules
+	 */
+	city: FieldsSchema.name('City', 'place', false),
+};
+
 /**
  * User profile–related validation schemas.
  *
@@ -22,76 +95,69 @@ export const ProfileSchema = {
 	 * - No default values are applied to avoid unintended data overwrites
 	 * - Fields not provided in the payload remain unchanged
 	 */
-	editProfile: z.strictObject({
-		/**
-		 * User first name.
-		 *
-		 * @remarks
-		 * - Optional to allow partial updates
-		 * - Validated using shared name constraints
-		 * - Intended for personal identification and UI display
-		 */
-		firstName: FieldsSchema.name('First Name', 'person', false),
+	editProfile: z.strictObject(profileFields),
 
-		/**
-		 * User last name.
-		 *
-		 * @remarks
-		 * - Optional to allow partial updates
-		 * - Uses the same validation rules as first name
-		 * - Stored and displayed as part of the public profile
-		 */
-		lastName: FieldsSchema.name('Last Name', 'person', false),
+	/**
+	 * Complete-onboarding schema.
+	 *
+	 * @description
+	 * Validates profile data submitted when the user finishes the onboarding flow.
+	 *
+	 * @remarks
+	 * - All profile fields are accepted, mirroring the editable profile structure.
+	 * - The `onboardingCompleted` flag is **not trusted from the client**.
+	 * - Instead, completion is computed server-side based on whether all
+	 *   required profile fields are populated.
+	 *
+	 * This prevents clients from prematurely marking onboarding as completed
+	 * and ensures the backend remains the single source of truth.
+	 *
+	 * @returns Normalized profile payload with a computed `onboardingCompleted` flag.
+	 */
+	completeOnboarding: z
+		.strictObject({
+			...profileFields,
 
-		/**
-		 * Public avatar image URL.
-		 *
-		 * @remarks
-		 * - Optional profile picture reference
-		 * - Expected to point to an externally managed resource (e.g. CDN)
-		 * - Validation ensures a well-formed URL only
-		 */
-		avatarUrl: FieldsSchema.url(false),
+			/**
+			 * Client-supplied onboarding flag.
+			 *
+			 * @remarks
+			 * - Accepted for schema compatibility but ignored during transformation.
+			 * - Defaults to `false` if omitted.
+			 * - Final value is computed server-side.
+			 */
+			onboardingCompleted: z.boolean().default(false),
+		})
+		.transform(({ onboardingCompleted: _ignored, ...fields }) => {
+			/**
+			 * Determine whether onboarding is complete.
+			 *
+			 * A profile is considered complete only when **all profile
+			 * fields are present and non-empty**.
+			 */
+			const profileFieldKeys = Object.keys(
+				profileFields
+			) as (keyof typeof profileFields)[];
 
-		/**
-		 * Optional gender selection.
-		 *
-		 * @remarks
-		 * - Stored as an enum for consistency and safety
-		 * - Not required for core functionality
-		 * - Intended for personalization or future AI-driven features
-		 * - Should be handled carefully in downstream consumers
-		 */
-		gender: FieldsSchema.enum<typeof Gender>(Gender, false),
+			const allFilled = profileFieldKeys.every((key) => {
+				const value = fields[key];
 
-		/**
-		 * User date of birth.
-		 *
-		 * @remarks
-		 * - Optional field used for derived values (e.g. age)
-		 * - Raw date is validated but should be treated as sensitive data
-		 * - Downstream layers should avoid exposing this directly to clients
-		 */
-		birthDate: FieldsSchema.date(false),
+				/**
+				 * Treat undefined, null, or empty string as "not filled".
+				 */
+				return value !== undefined && value !== null && value !== '';
+			});
 
-		/**
-		 * User country.
-		 *
-		 * @remarks
-		 * - Optional location field
-		 * - Used for regional features (e.g. weather, localization)
-		 * - Validated as a human-readable place name
-		 */
-		country: FieldsSchema.name('Country', 'place', false),
+			return {
+				...fields,
 
-		/**
-		 * User city.
-		 *
-		 * @remarks
-		 * - Optional location field
-		 * - Often paired with country for location-based features
-		 * - Free-text but constrained via shared validation rules
-		 */
-		city: FieldsSchema.name('City', 'place', false),
-	}),
+				/**
+				 * Final computed onboarding status.
+				 *
+				 * @remarks
+				 * This value overrides any client-provided flag.
+				 */
+				onboardingCompleted: allFilled,
+			};
+		}),
 };

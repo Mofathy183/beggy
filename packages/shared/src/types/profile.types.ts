@@ -123,3 +123,7 @@ export type PublicProfileDTO = Pick<
 // Authenticated user modifying their own data
 
 export type EditProfileInput = z.infer<typeof ProfileSchema.editProfile>;
+
+export type CompleteOnboardingInput = z.infer<
+	typeof ProfileSchema.completeOnboarding
+>;
