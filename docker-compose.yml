@@ -14,19 +14,19 @@ services:
       timeout: 5s
       retries: 5
 
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/api/Dockerfile
-  #   container_name: beggy-api
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   env_file:
-  #     - apps/api/.env.docker
-  #   ports:
-  #     - "3000:3000"
-  #   restart: unless-stopped
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: beggy-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - apps/api/.env.docker
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
 
   # web:
   #     build:
