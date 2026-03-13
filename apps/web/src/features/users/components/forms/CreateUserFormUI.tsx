@@ -95,13 +95,13 @@ const CreateUserFormUI = ({
 
 				<CardContent>
 					{/* 
-            noValidate disables native browser validation
-            so Zod + RHF fully control validation messaging.
-        */}
+                        noValidate disables native browser validation
+                        so Zod + RHF fully control validation messaging.
+                 */}
 
 					<FieldGroup>
 						{/* =========================
-                   First Name
+                    First Name
                    ========================= */}
 						<Controller
 							name="firstName"
@@ -145,7 +145,7 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-                   Last Name
+                    Last Name
                    ========================= */}
 						<Controller
 							name="lastName"
@@ -188,7 +188,7 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-                   Email
+                    Email
                    ========================= */}
 						<Controller
 							name="email"
@@ -240,7 +240,7 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-                   Password
+                    Password
                    ========================= */}
 						<Controller
 							name="password"
@@ -292,7 +292,7 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-                   Confirm Password
+                    Confirm Password
                    ========================= */}
 						<Controller
 							name="confirmPassword"
@@ -336,59 +336,7 @@ const CreateUserFormUI = ({
 						/>
 
 						{/* =========================
-                   Avatar URL (Optional)
-                   ========================= */}
-						<Controller
-							name="avatarUrl"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'form-avatar-url-error';
-								const descId = 'form-avatar-url-desc';
-
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="form-avatar-url">
-											Avatar URL
-										</FieldLabel>
-
-										<Input
-											{...field}
-											id="form-avatar-url"
-											type="url"
-											value={field.value ?? undefined}
-											placeholder="https://example.com/avatar.png"
-											autoComplete="off"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={[
-												descId,
-												fieldState.error
-													? errorId
-													: null,
-											]
-												.filter(Boolean)
-												.join(' ')}
-										/>
-
-										<FieldDescription id={descId}>
-											Optional. Provide a public image
-											URL.
-										</FieldDescription>
-
-										{fieldState.error && (
-											<FieldError
-												className="text-destructive font-medium mt-1"
-												id={errorId}
-												role="alert"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						{/* =========================
-                   Server-Level Error
+                    Server-Level Error
                    ========================= */}
 						{serverError && (
 							<Field data-invalid>
@@ -408,13 +356,10 @@ const CreateUserFormUI = ({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => {
-								form.reset();
-								onCancel?.();
-							}}
+							onClick={onCancel ?? (() => form.reset())}
 							disabled={isSubmitting}
 						>
-							Reset
+							{onCancel ? 'Cancel' : 'Reset'}
 						</Button>
 
 						<Button type="submit" disabled={isSubmitting}>

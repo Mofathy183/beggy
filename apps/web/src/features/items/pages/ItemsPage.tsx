@@ -14,8 +14,7 @@ import ItemsOrderBy from '@features/items/components/list/ItemsOrderBy';
 import { CreateItemForm } from '@features/items/components/forms';
 import { UpdateItemForm } from '@features/items/components/forms';
 
-import { useItemsList } from '@features/items/hooks';
-import { useItemsActions } from '@features/items/hooks';
+import { useItemsList, useItemsActions } from '@features/items/hooks';
 
 import type { ItemDTO } from '@beggy/shared/types';
 

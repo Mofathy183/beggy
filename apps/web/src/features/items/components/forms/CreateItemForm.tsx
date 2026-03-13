@@ -11,6 +11,8 @@ import { WeightUnit, VolumeUnit } from '@beggy/shared/constants';
 import { useItemsActions } from '@features/items/hooks';
 import CreateItemFormUI from './CreateItemFormUI';
 
+import type { HttpClientError } from '@shared/types';
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type CreateItemFormProps = {
@@ -59,9 +61,7 @@ const CreateItemForm = ({ onSuccess, onCancel }: CreateItemFormProps) => {
 	 * Server error from the create mutation.
 	 * Matches EditProfileForm's error?.body.message pattern.
 	 */
-	const error = states.create.error as
-		| { body: { message: string; suggestion?: string } }
-		| undefined;
+	const error = states.create.error as HttpClientError | undefined;
 
 	const form = useForm<CreateItemInput>({
 		resolver: zodResolver(ItemSchema.create as any),

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { EditProfileInput } from '@beggy/shared/types';
+import type { CompleteOnboardingInput } from '@beggy/shared/types';
 import { ProfileSchema } from '@beggy/shared/schemas';
 
 import OnboardingFormUI from './OnboardingFormUI';
@@ -52,8 +52,8 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 		reset: resetMutation,
 	} = useOnboarding({ redirectTo });
 
-	const form = useForm<EditProfileInput>({
-		resolver: zodResolver(ProfileSchema.editProfile as any),
+	const form = useForm<CompleteOnboardingInput>({
+		resolver: zodResolver(ProfileSchema.completeOnboarding as any),
 		defaultValues: {
 			firstName: undefined,
 			lastName: undefined,
@@ -73,7 +73,7 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 		return () => subscription.unsubscribe();
 	}, [form, error, resetMutation]);
 
-	const onSubmit: SubmitHandler<EditProfileInput> = async (values) => {
+	const onSubmit: SubmitHandler<CompleteOnboardingInput> = async (values) => {
 		if (isLoading) return;
 		await submit(values);
 	};

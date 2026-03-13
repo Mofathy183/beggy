@@ -151,21 +151,23 @@ const NumberRangeFilter = <E extends NumericEntity>({
 
 				{hasUnit && selectedUnitMeta && (
 					<DropdownMenu>
-						<DropdownMenuTrigger>
-							<Button
-								variant="outline"
-								size="sm"
-								className="h-8 px-3 gap-2"
-							>
-								<span className="text-sm font-medium">
-									{selectedUnitMeta.symbol}
-								</span>
-								<HugeiconsIcon
-									icon={ChevronDown}
-									className="h-4 w-4 text-muted-foreground"
-								/>
-							</Button>
-						</DropdownMenuTrigger>
+						<DropdownMenuTrigger
+							render={
+								<Button
+									variant="outline"
+									size="sm"
+									className="h-8 px-3 gap-2"
+								>
+									<span className="text-sm font-medium">
+										{selectedUnitMeta.symbol}
+									</span>
+									<HugeiconsIcon
+										icon={ChevronDown}
+										className="h-4 w-4 text-muted-foreground"
+									/>
+								</Button>
+							}
+						/>
 
 						<DropdownMenuContent align="end" className="w-[200px]">
 							{unitMetaList.map((meta) => {

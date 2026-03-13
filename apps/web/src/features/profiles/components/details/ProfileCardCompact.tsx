@@ -149,28 +149,30 @@ export const ProfileCardCompact = ({
 	// ── Clickable variant: shadcn Button ghost ────────────────────────────────
 	const row = onClick ? (
 		<Tooltip>
-			<TooltipTrigger>
-				{/*
-				 * Using Button variant="ghost" gives us:
-				 * - Correct focus ring (ring-ring / §12.6)
-				 * - Keyboard accessibility
-				 * - hover:bg-accent / hover:text-accent-foreground via ghost variant
-				 * We override bg to use sidebar tokens when inside sidebar context
-				 */}
-				<Button
-					variant="ghost"
-					onClick={onClick}
-					className={cn(
-						'group flex w-full items-center justify-start gap-3',
-						'h-auto rounded-xl px-3 py-2.5',
-						// Sidebar-specific hover tokens (§12.6 Sidebar Tokens)
-						'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-						className
-					)}
-				>
-					{inner}
-				</Button>
-			</TooltipTrigger>
+			{/*
+			 * Using Button variant="ghost" gives us:
+			 * - Correct focus ring (ring-ring / §12.6)
+			 * - Keyboard accessibility
+			 * - hover:bg-accent / hover:text-accent-foreground via ghost variant
+			 * We override bg to use sidebar tokens when inside sidebar context
+			 */}
+			<TooltipTrigger
+				render={
+					<Button
+						variant="ghost"
+						onClick={onClick}
+						className={cn(
+							'group flex w-full items-center justify-start gap-3',
+							'h-auto rounded-xl px-3 py-2.5',
+							// Sidebar-specific hover tokens (§12.6 Sidebar Tokens)
+							'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+							className
+						)}
+					>
+						{inner}
+					</Button>
+				}
+			/>
 			<TooltipContent side="right" className="text-xs">
 				View profile settings
 			</TooltipContent>

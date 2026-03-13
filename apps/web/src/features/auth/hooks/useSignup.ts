@@ -33,7 +33,7 @@ const useSignup = () => {
 
 		try {
 			await signupMutation(values).unwrap();
-			// ✅ This goes through onQueryStarted → dispatches setAuthenticated
+			//* This goes through onQueryStarted → dispatches setAuthenticated
 			// authSlice.profile and authSlice.status update → useAuthRedirect fires
 			await dispatch(
 				authApi.endpoints.me.initiate(undefined, { forceRefetch: true })

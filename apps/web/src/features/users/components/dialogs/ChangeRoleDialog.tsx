@@ -28,12 +28,14 @@ const ChangeRoleDialog = ({ userId, currentRole }: Props) => {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{/* Trigger */}
-			<DialogTrigger>
-				<Button variant="outline" size="sm">
-					<HugeiconsIcon icon={Pencil} className="mr-2 size-4" />
-					Change Role
-				</Button>
-			</DialogTrigger>
+			<DialogTrigger
+				render={
+					<Button variant="outline" size="sm">
+						<HugeiconsIcon icon={Pencil} className="mr-2 size-4" />
+						Change Role
+					</Button>
+				}
+			/>
 
 			{/* Content */}
 			<DialogContent className="sm:max-w-md">

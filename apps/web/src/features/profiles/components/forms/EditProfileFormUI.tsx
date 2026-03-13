@@ -3,6 +3,7 @@
 import { Controller, UseFormReturn } from 'react-hook-form';
 import type { EditProfileInput } from '@beggy/shared/types';
 import { Gender } from '@beggy/shared/constants';
+import { GENDER_OPTIONS } from '@shared-ui/mappers';
 
 import { Button } from '@shared/components/ui/button';
 import {
@@ -203,23 +204,22 @@ const EditProfileFormUI = ({
 							}}
 						/>
 
-						{/* ── Gender ───────────────────────────────────────── */}
+						{/* Gender */}
 						<Controller
 							name="gender"
 							control={form.control}
 							render={({ field, fieldState }) => {
-								const errorId = 'edit-profile-gender-error';
+								const errorId = 'onboarding-gender-error';
+
 								return (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="edit-profile-gender">
-											Gender
+										<FieldLabel htmlFor="onboarding-gender">
+											Gender{' '}
+											<span className="text-muted-foreground font-normal">
+												(optional)
+											</span>
 										</FieldLabel>
-										{/*
-										 * shadcn Select — value must be a string.
-										 * We convert undefined → "" for the placeholder
-										 * and "" → undefined on change so RHF stores
-										 * undefined (absent) not an empty string.
-										 */}
+
 										<Select
 											value={field.value ?? ''}
 											onValueChange={(val) =>
@@ -231,7 +231,7 @@ const EditProfileFormUI = ({
 											}
 										>
 											<SelectTrigger
-												id="edit-profile-gender"
+												id="onboarding-gender"
 												aria-invalid={
 													fieldState.invalid
 												}
@@ -243,22 +243,35 @@ const EditProfileFormUI = ({
 											>
 												<SelectValue placeholder="Select gender" />
 											</SelectTrigger>
+
 											<SelectContent>
-												<SelectItem value={Gender.MALE}>
-													Male
-												</SelectItem>
-												<SelectItem
-													value={Gender.FEMALE}
-												>
-													Female
-												</SelectItem>
-												<SelectItem
-													value={Gender.OTHER}
-												>
-													Other
-												</SelectItem>
+												{GENDER_OPTIONS.map(
+													(option) => (
+														<SelectItem
+															key={option.value}
+															value={option.value}
+														>
+															<div className="flex items-center gap-2">
+																{option.icon && (
+																	<HugeiconsIcon
+																		icon={
+																			option.icon
+																		}
+																		className="size-4 text-muted-foreground"
+																	/>
+																)}
+																<span>
+																	{
+																		option.label
+																	}
+																</span>
+															</div>
+														</SelectItem>
+													)
+												)}
 											</SelectContent>
 										</Select>
+
 										{fieldState.error && (
 											<FieldError
 												id={errorId}

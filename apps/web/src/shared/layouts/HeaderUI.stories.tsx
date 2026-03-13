@@ -1,16 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import HeaderUI from './HeaderUI';
+import { AuthMeProfileDTO } from '@beggy/shared/types';
 
 const noop = () => {};
 
-const mockProfile = {
-	id: 'user-1',
+const mockProfile: AuthMeProfileDTO = {
 	firstName: 'Mohamed',
 	lastName: 'Fathy',
 	displayName: 'Mohamed Fathy',
 	avatarUrl: '',
 	city: 'Cairo',
 	country: 'Egypt',
+	onboardingCompleted: true,
 };
 
 const meta: Meta<typeof HeaderUI> = {

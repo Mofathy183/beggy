@@ -59,15 +59,17 @@ export type ActionsMenuProps = {
 const ActionsMenu = ({ items }: ActionsMenuProps) => {
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger>
-				<Button
-					variant="ghost"
-					size="icon"
-					aria-label="Open actions menu"
-				>
-					<HugeiconsIcon icon={MoreVertical} className="size-4" />
-				</Button>
-			</DropdownMenuTrigger>
+			<DropdownMenuTrigger
+				render={
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label="Open actions menu"
+					>
+						<HugeiconsIcon icon={MoreVertical} className="size-4" />
+					</Button>
+				}
+			/>
 
 			<DropdownMenuContent align="end" className="w-44">
 				{items.map((item) => (

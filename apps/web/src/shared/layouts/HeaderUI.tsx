@@ -131,40 +131,42 @@ const UserMenu = ({
 	return (
 		<DropdownMenu>
 			{/* ── Trigger ──────────────────────────────────────────── */}
-			<DropdownMenuTrigger>
-				<button
-					type="button"
-					aria-label="Open user menu"
-					className={cn(
-						'flex items-center gap-2 rounded-lg px-2 py-1.5',
-						'cursor-pointer select-none',
-						'text-sm text-foreground',
-						'transition-colors',
-						'hover:bg-accent hover:text-accent-foreground',
-						'focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2'
-					)}
-				>
-					<Avatar className="h-7 w-7 shrink-0 ring-2 ring-border">
-						{profile.avatarUrl && (
-							<AvatarImage
-								src={profile.avatarUrl}
-								alt={fullName}
-							/>
+			<DropdownMenuTrigger
+				render={
+					<button
+						type="button"
+						aria-label="Open user menu"
+						className={cn(
+							'flex items-center gap-2 rounded-lg px-2 py-1.5',
+							'cursor-pointer select-none',
+							'text-sm text-foreground',
+							'transition-colors',
+							'hover:bg-accent hover:text-accent-foreground',
+							'focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2'
 						)}
-						<AvatarFallback
-							aria-hidden="true"
-							className="bg-primary/12 text-xs font-semibold text-primary"
-						>
-							{fallback}
-						</AvatarFallback>
-					</Avatar>
+					>
+						<Avatar className="h-7 w-7 shrink-0 ring-2 ring-border">
+							{profile.avatarUrl && (
+								<AvatarImage
+									src={profile.avatarUrl}
+									alt={fullName}
+								/>
+							)}
+							<AvatarFallback
+								aria-hidden="true"
+								className="bg-primary/12 text-xs font-semibold text-primary"
+							>
+								{fallback}
+							</AvatarFallback>
+						</Avatar>
 
-					{/* Name label — visible on md+ only */}
-					<span className="hidden max-w-[120px] truncate font-medium md:block">
-						{shortName}
-					</span>
-				</button>
-			</DropdownMenuTrigger>
+						{/* Name label — visible on md+ only */}
+						<span className="hidden max-w-[120px] truncate font-medium md:block">
+							{shortName}
+						</span>
+					</button>
+				}
+			/>
 
 			{/* ── Dropdown panel ───────────────────────────────────── */}
 			<DropdownMenuContent
