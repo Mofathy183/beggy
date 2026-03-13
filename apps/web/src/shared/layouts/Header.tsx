@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLogout } from '@features/auth/hooks';
-import { ThemeToggle } from '@shadcn-components';
+import { ThemeToggle } from '@shared-ui/theme';
 import { useAppSelector } from '@shared/store';
 import HeaderUI from './HeaderUI';
 

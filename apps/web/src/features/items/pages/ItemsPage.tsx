@@ -93,15 +93,17 @@ const ItemsPage = () => {
 
 				{/* Add item — opens create dialog */}
 				<Dialog open={createOpen} onOpenChange={setCreateOpen}>
-					<DialogTrigger>
-						<Button>
-							<HugeiconsIcon
-								icon={Add01Icon}
-								className="mr-2 size-4"
-							/>
-							Add item
-						</Button>
-					</DialogTrigger>
+					<DialogTrigger
+						render={
+							<Button>
+								<HugeiconsIcon
+									icon={Add01Icon}
+									className="mr-2 size-4"
+								/>
+								Add item
+							</Button>
+						}
+					/>
 					<DialogContent className="sm:max-w-lg p-0 overflow-hidden">
 						<CreateItemForm
 							onSuccess={() => {

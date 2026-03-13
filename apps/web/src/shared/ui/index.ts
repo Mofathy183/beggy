@@ -6,3 +6,4 @@ export * from './grid';
 export * from './list';
 export * from './mappers';
 export * from './states';
+export * from './theme';
