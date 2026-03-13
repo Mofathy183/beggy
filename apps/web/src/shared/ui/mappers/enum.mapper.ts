@@ -40,6 +40,32 @@ type UiEnumOptions<E extends string> = {
 };
 
 /**
+ * Retrieves the display label associated with a given enum value.
+ *
+ * @template E Enum value type
+ * @param options UI option definitions derived from an enum
+ * @param value Enum value to resolve
+ * @returns The corresponding label, or `undefined` if the value is not present
+ *
+ * @remarks
+ * This helper avoids duplicating `.find(...).label` logic across
+ * forms, filters, and UI components when rendering enum values.
+ *
+ * @example
+ * getEnumLabel(GENDER_OPTIONS, Gender.MALE)
+ * // "Male"
+ *
+ * @example
+ * getEnumLabel(ROLE_OPTIONS, user.role)
+ */
+export function getEnumLabel<E extends string>(
+	options: readonly UiEnumOptions<E>[],
+	value?: E
+) {
+	return options.find((o) => o.value === value)?.label;
+}
+
+/**
  * UI metadata for {@link Role} enum values.
  *
  * Used in role selectors, admin panels, and user management UIs.

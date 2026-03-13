@@ -38,6 +38,8 @@ import { Separator } from '@shared/components/ui/separator';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { AlertCircleIcon, Luggage01Icon } from '@hugeicons/core-free-icons';
 
+import { AvatarUrlField } from '@shared-ui/fields';
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 type OnboardingFormUIProps = {
@@ -84,6 +86,11 @@ const OnboardingFormUI = ({
 }: OnboardingFormUIProps) => {
 	const isAnyLoading = isSubmitting || isSkipping;
 
+	const firstName = form.watch('firstName');
+	const lastName = form.watch('lastName');
+	const displayName =
+		[firstName, lastName].filter(Boolean).join(' ') || 'User';
+
 	return (
 		<form
 			onSubmit={form.handleSubmit(onSubmit)}
@@ -111,322 +118,384 @@ const OnboardingFormUI = ({
 
 				<CardContent>
 					<FieldGroup>
-						{/* ── Section: Identity ────────────────────────────── */}
-						<p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-							Your Identity
-						</p>
+						<section className="space-y-4">
+							{/* ── Section: Identity ────────────────────────────── */}
+							<p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+								Your Identity
+							</p>
+							{/* ── Avatar URL — with live preview ───────────────── */}
+							<AvatarUrlField
+								control={form.control}
+								displayName={displayName}
+								disabled={isSubmitting}
+							/>
+							<div className="grid grid-cols-2 gap-4">
+								{/* First Name */}
+								<Controller
+									name="firstName"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId =
+											'onboarding-first-name-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel htmlFor="onboarding-first-name">
+													First Name
+												</FieldLabel>
+												<Input
+													{...field}
+													id="onboarding-first-name"
+													value={field.value ?? ''}
+													placeholder="What do your travel companions call you?"
+													autoComplete="given-name"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										);
+									}}
+								/>
 
-						{/* First Name */}
-						<Controller
-							name="firstName"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'onboarding-first-name-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="onboarding-first-name">
-											First Name
-										</FieldLabel>
-										<Input
-											{...field}
-											id="onboarding-first-name"
-											value={field.value ?? ''}
-											placeholder="What do your travel companions call you?"
-											autoComplete="given-name"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
+								{/* Last Name */}
+								<Controller
+									name="lastName"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId =
+											'onboarding-last-name-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel htmlFor="onboarding-last-name">
+													Last Name
+												</FieldLabel>
+												<Input
+													{...field}
+													id="onboarding-last-name"
+													value={field.value ?? ''}
+													placeholder="Doe"
+													autoComplete="family-name"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										);
+									}}
+								/>
+							</div>
+						</section>
 
-						{/* Last Name */}
-						<Controller
-							name="lastName"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'onboarding-last-name-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="onboarding-last-name">
-											Last Name
-										</FieldLabel>
-										<Input
-											{...field}
-											id="onboarding-last-name"
-											value={field.value ?? ''}
-											placeholder="Doe"
-											autoComplete="family-name"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
+						<Separator className="my-1" />
 
-						{/* Gender */}
-						<Controller
-							name="gender"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'onboarding-gender-error';
+						<section className="space-y-4">
+							{/* ── Section: A little more ───────────────────────── */}
+							<p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+								A little more About you
+							</p>
 
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="onboarding-gender">
-											Gender{' '}
-											<span className="text-muted-foreground font-normal">
-												(optional)
-											</span>
-										</FieldLabel>
+							{/* Gender */}
+							<Controller
+								name="gender"
+								control={form.control}
+								render={({ field, fieldState }) => {
+									const errorId = 'onboarding-gender-error';
 
-										<Select
-											value={field.value ?? ''}
-											onValueChange={(val) =>
-												field.onChange(
-													val === ''
-														? undefined
-														: (val as Gender)
-												)
-											}
+									return (
+										<Field
+											data-invalid={fieldState.invalid}
 										>
-											<SelectTrigger
-												id="onboarding-gender"
+											<FieldLabel htmlFor="onboarding-gender">
+												Gender{' '}
+												<span className="text-muted-foreground font-normal">
+													(optional)
+												</span>
+											</FieldLabel>
+
+											<Select
+												value={field.value ?? ''}
+												onValueChange={(val) =>
+													field.onChange(
+														val === ''
+															? undefined
+															: (val as Gender)
+													)
+												}
+											>
+												<SelectTrigger
+													id="onboarding-gender"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												>
+													<SelectValue placeholder="Select gender" />
+												</SelectTrigger>
+
+												<SelectContent>
+													{GENDER_OPTIONS.map(
+														(option) => (
+															<SelectItem
+																key={
+																	option.value
+																}
+																value={
+																	option.value
+																}
+															>
+																<div className="flex items-center gap-2">
+																	{option.icon && (
+																		<HugeiconsIcon
+																			icon={
+																				option.icon
+																			}
+																			className="size-4 text-muted-foreground"
+																		/>
+																	)}
+																	<span>
+																		{
+																			option.label
+																		}
+																	</span>
+																</div>
+															</SelectItem>
+														)
+													)}
+												</SelectContent>
+											</Select>
+
+											{fieldState.error && (
+												<FieldError
+													id={errorId}
+													role="alert"
+													className="text-destructive font-medium mt-1"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+
+							{/* Birth Date */}
+							<Controller
+								name="birthDate"
+								control={form.control}
+								render={({ field, fieldState }) => {
+									const errorId =
+										'onboarding-birth-date-error';
+									const descId = 'onboarding-birth-date-desc';
+									return (
+										<Field
+											data-invalid={fieldState.invalid}
+										>
+											<FieldLabel htmlFor="onboarding-birth-date">
+												Date of Birth{' '}
+												<span className="text-muted-foreground font-normal">
+													(optional)
+												</span>
+											</FieldLabel>
+											<Input
+												{...field}
+												id="onboarding-birth-date"
+												type="date"
+												value={
+													field.value
+														? new Date(field.value)
+																.toISOString()
+																.split('T')[0]
+														: ''
+												}
+												onChange={(e) =>
+													field.onChange(
+														e.target.value
+															? new Date(
+																	e.target
+																		.value
+																)
+															: undefined
+													)
+												}
+												autoComplete="bday"
 												aria-invalid={
 													fieldState.invalid
 												}
-												aria-describedby={
+												aria-describedby={[
+													descId,
 													fieldState.error
 														? errorId
-														: undefined
+														: null,
+												]
+													.filter(Boolean)
+													.join(' ')}
+											/>
+											<FieldDescription id={descId}>
+												Used to show your age on your
+												profile.
+											</FieldDescription>
+											{fieldState.error && (
+												<FieldError
+													id={errorId}
+													role="alert"
+													className="text-destructive font-medium mt-1"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+						</section>
+
+						<Separator className="my-1" />
+
+						<section className="space-y-4">
+							{/* ── Section: Where are you based? ────────────────── */}
+							<p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+								Where are you based?
+							</p>
+
+							<div className="grid grid-cols-2 gap-4">
+								{/* Country */}
+								<Controller
+									name="country"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId =
+											'onboarding-country-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
 												}
 											>
-												<SelectValue placeholder="Select gender" />
-											</SelectTrigger>
-
-											<SelectContent>
-												{GENDER_OPTIONS.map(
-													(option) => (
-														<SelectItem
-															key={option.value}
-															value={option.value}
-														>
-															<div className="flex items-center gap-2">
-																{option.icon && (
-																	<HugeiconsIcon
-																		icon={
-																			option.icon
-																		}
-																		className="size-4 text-muted-foreground"
-																	/>
-																)}
-																<span>
-																	{
-																		option.label
-																	}
-																</span>
-															</div>
-														</SelectItem>
-													)
+												<FieldLabel htmlFor="onboarding-country">
+													Country{' '}
+													<span className="text-muted-foreground font-normal">
+														(optional)
+													</span>
+												</FieldLabel>
+												<Input
+													{...field}
+													id="onboarding-country"
+													value={field.value ?? ''}
+													placeholder="Egypt"
+													autoComplete="country-name"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
 												)}
-											</SelectContent>
-										</Select>
+											</Field>
+										);
+									}}
+								/>
 
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						<Separator className="my-1" />
-
-						{/* ── Section: Where are you based? ────────────────── */}
-						<p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-							Where are you based?
-						</p>
-
-						{/* Country */}
-						<Controller
-							name="country"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'onboarding-country-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="onboarding-country">
-											Country{' '}
-											<span className="text-muted-foreground font-normal">
-												(optional)
-											</span>
-										</FieldLabel>
-										<Input
-											{...field}
-											id="onboarding-country"
-											value={field.value ?? ''}
-											placeholder="Egypt"
-											autoComplete="country-name"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						{/* City */}
-						<Controller
-							name="city"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'onboarding-city-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="onboarding-city">
-											City{' '}
-											<span className="text-muted-foreground font-normal">
-												(optional)
-											</span>
-										</FieldLabel>
-										<Input
-											{...field}
-											id="onboarding-city"
-											value={field.value ?? ''}
-											placeholder="Cairo"
-											autoComplete="address-level2"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						<Separator className="my-1" />
-
-						{/* ── Section: A little more ───────────────────────── */}
-						<p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-							A little more
-						</p>
-
-						{/* Birth Date */}
-						<Controller
-							name="birthDate"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'onboarding-birth-date-error';
-								const descId = 'onboarding-birth-date-desc';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="onboarding-birth-date">
-											Date of Birth{' '}
-											<span className="text-muted-foreground font-normal">
-												(optional)
-											</span>
-										</FieldLabel>
-										<Input
-											{...field}
-											id="onboarding-birth-date"
-											type="date"
-											value={
-												field.value
-													? new Date(field.value)
-															.toISOString()
-															.split('T')[0]
-													: ''
-											}
-											onChange={(e) =>
-												field.onChange(
-													e.target.value
-														? new Date(
-																e.target.value
-															)
-														: undefined
-												)
-											}
-											autoComplete="bday"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={[
-												descId,
-												fieldState.error
-													? errorId
-													: null,
-											]
-												.filter(Boolean)
-												.join(' ')}
-										/>
-										<FieldDescription id={descId}>
-											Used to show your age on your
-											profile.
-										</FieldDescription>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
+								{/* City */}
+								<Controller
+									name="city"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId = 'onboarding-city-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel htmlFor="onboarding-city">
+													City{' '}
+													<span className="text-muted-foreground font-normal">
+														(optional)
+													</span>
+												</FieldLabel>
+												<Input
+													{...field}
+													id="onboarding-city"
+													value={field.value ?? ''}
+													placeholder="Cairo"
+													autoComplete="address-level2"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										);
+									}}
+								/>
+							</div>
+						</section>
 
 						{/* ── Server-level error ────────────────────────────── */}
 						{serverError && (

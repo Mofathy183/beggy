@@ -29,6 +29,8 @@ import {
 
 import { Role } from '@beggy/shared/constants';
 
+import { ROLE_OPTIONS, getEnumLabel } from '@shared-ui/mappers';
+
 /**
  * Props for ChangeRoleFormUI.
  *
@@ -146,7 +148,12 @@ const ChangeRoleFormUI = ({
 													.filter(Boolean)
 													.join(' ')}
 											>
-												<SelectValue placeholder="Select a role" />
+												<SelectValue placeholder="Select a role">
+													{getEnumLabel<Role>(
+														ROLE_OPTIONS,
+														field.value as any
+													)}
+												</SelectValue>
 											</SelectTrigger>
 
 											<SelectContent>
@@ -154,16 +161,18 @@ const ChangeRoleFormUI = ({
 													Role enum is centralized in shared constants.
 													This ensures backend + frontend alignment.
 												*/}
-												{Object.values(Role).map(
-													(role) => (
-														<SelectItem
-															key={role}
-															value={role}
-														>
-															{role}
-														</SelectItem>
-													)
-												)}
+												{ROLE_OPTIONS.map((option) => (
+													<SelectItem
+														key={option.value}
+														value={option.value}
+													>
+														<div className="flex items-center gap-2">
+															<span>
+																{option.label}
+															</span>
+														</div>
+													</SelectItem>
+												))}
 											</SelectContent>
 										</Select>
 

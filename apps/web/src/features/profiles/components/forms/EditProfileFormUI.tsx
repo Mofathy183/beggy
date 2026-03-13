@@ -3,7 +3,7 @@
 import { Controller, UseFormReturn } from 'react-hook-form';
 import type { EditProfileInput } from '@beggy/shared/types';
 import { Gender } from '@beggy/shared/constants';
-import { GENDER_OPTIONS } from '@shared-ui/mappers';
+import { GENDER_OPTIONS, getEnumLabel } from '@shared-ui/mappers';
 
 import { Button } from '@shared/components/ui/button';
 import {
@@ -37,6 +37,8 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import { AlertCircleIcon } from '@hugeicons/core-free-icons';
 
+import { AvatarUrlField } from '@shared-ui/fields';
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 type EditProfileFormUIProps = {
@@ -67,6 +69,11 @@ const EditProfileFormUI = ({
 	serverError,
 	serverSuggestion,
 }: EditProfileFormUIProps) => {
+	const firstName = form.watch('firstName');
+	const lastName = form.watch('lastName');
+	const displayName =
+		[firstName, lastName].filter(Boolean).join(' ') || 'User';
+
 	return (
 		<form
 			onSubmit={form.handleSubmit(onSubmit)}
@@ -84,340 +91,386 @@ const EditProfileFormUI = ({
 
 				<CardContent>
 					<FieldGroup>
-						{/* ── First Name ───────────────────────────────────── */}
-						<Controller
-							name="firstName"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'edit-profile-first-name-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="edit-profile-first-name">
-											First Name
-										</FieldLabel>
-										<Input
-											{...field}
-											id="edit-profile-first-name"
-											value={field.value ?? ''}
-											placeholder="John"
-											autoComplete="given-name"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
+						<section className="space-y-4">
+							<h3 className="text-sm font-semibold text-foreground">
+								Identity
+							</h3>
 
-						{/* ── Last Name ────────────────────────────────────── */}
-						<Controller
-							name="lastName"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'edit-profile-last-name-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="edit-profile-last-name">
-											Last Name
-										</FieldLabel>
-										<Input
-											{...field}
-											id="edit-profile-last-name"
-											value={field.value ?? ''}
-											placeholder="Doe"
-											autoComplete="family-name"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
+							{/* ── Avatar URL — with live preview ───────────────── */}
+							<AvatarUrlField
+								control={form.control}
+								displayName={displayName}
+								disabled={isSubmitting}
+							/>
 
-						{/* ── Avatar URL ───────────────────────────────────── */}
-						<Controller
-							name="avatarUrl"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'edit-profile-avatar-error';
-								const descId = 'edit-profile-avatar-desc';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="edit-profile-avatar">
-											Avatar URL
-										</FieldLabel>
-										<Input
-											{...field}
-											id="edit-profile-avatar"
-											type="url"
-											value={field.value ?? ''}
-											placeholder="https://example.com/avatar.png"
-											autoComplete="off"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={[
-												descId,
-												fieldState.error
-													? errorId
-													: null,
-											]
-												.filter(Boolean)
-												.join(' ')}
-										/>
-										<FieldDescription id={descId}>
-											Optional. Provide a public image
-											URL.
-										</FieldDescription>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
+							<div className="grid grid-cols-2 gap-4">
+								{/* ── First Name ───────────────────────────────────── */}
+								<Controller
+									name="firstName"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId =
+											'edit-profile-first-name-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel htmlFor="edit-profile-first-name">
+													First Name
+												</FieldLabel>
+												<Input
+													{...field}
+													id="edit-profile-first-name"
+													value={field.value ?? ''}
+													placeholder="John"
+													autoComplete="given-name"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										);
+									}}
+								/>
 
-						{/* Gender */}
-						<Controller
-							name="gender"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'onboarding-gender-error';
+								{/* ── Last Name ────────────────────────────────────── */}
+								<Controller
+									name="lastName"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId =
+											'edit-profile-last-name-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel htmlFor="edit-profile-last-name">
+													Last Name
+												</FieldLabel>
+												<Input
+													{...field}
+													id="edit-profile-last-name"
+													value={field.value ?? ''}
+													placeholder="Doe"
+													autoComplete="family-name"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										);
+									}}
+								/>
+							</div>
+						</section>
 
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="onboarding-gender">
-											Gender{' '}
-											<span className="text-muted-foreground font-normal">
-												(optional)
-											</span>
-										</FieldLabel>
+						<section className="space-y-4">
+							<h3 className="text-sm font-semibold text-foreground">
+								Personal details
+							</h3>
 
-										<Select
-											value={field.value ?? ''}
-											onValueChange={(val) =>
-												field.onChange(
-													val === ''
-														? undefined
-														: (val as Gender)
-												)
-											}
+							{/* Gender */}
+							<Controller
+								name="gender"
+								control={form.control}
+								render={({ field, fieldState }) => {
+									const errorId = 'onboarding-gender-error';
+
+									return (
+										<Field
+											data-invalid={fieldState.invalid}
 										>
-											<SelectTrigger
-												id="onboarding-gender"
+											<FieldLabel htmlFor="onboarding-gender">
+												Gender{' '}
+												<span className="text-muted-foreground font-normal">
+													(optional)
+												</span>
+											</FieldLabel>
+
+											<Select
+												value={field.value ?? ''}
+												onValueChange={(val) =>
+													field.onChange(
+														val === ''
+															? undefined
+															: (val as Gender)
+													)
+												}
+											>
+												<SelectTrigger
+													id="onboarding-gender"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												>
+													<SelectValue placeholder="Select gender">
+														{getEnumLabel<Gender>(
+															GENDER_OPTIONS,
+															field.value as any
+														)}
+													</SelectValue>
+												</SelectTrigger>
+
+												<SelectContent>
+													{GENDER_OPTIONS.map(
+														(option) => (
+															<SelectItem
+																key={
+																	option.value
+																}
+																value={
+																	option.value
+																}
+															>
+																<div className="flex items-center gap-2">
+																	{option.icon && (
+																		<HugeiconsIcon
+																			icon={
+																				option.icon
+																			}
+																			className="size-4 text-muted-foreground"
+																		/>
+																	)}
+																	<span>
+																		{
+																			option.label
+																		}
+																	</span>
+																</div>
+															</SelectItem>
+														)
+													)}
+												</SelectContent>
+											</Select>
+
+											{fieldState.error && (
+												<FieldError
+													id={errorId}
+													role="alert"
+													className="text-destructive font-medium mt-1"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+
+							{/* ── Birth Date ───────────────────────────────────── */}
+							<Controller
+								name="birthDate"
+								control={form.control}
+								render={({ field, fieldState }) => {
+									const errorId =
+										'edit-profile-birth-date-error';
+									const descId =
+										'edit-profile-birth-date-desc';
+									return (
+										<Field
+											data-invalid={fieldState.invalid}
+										>
+											<FieldLabel htmlFor="edit-profile-birth-date">
+												Date of Birth{' '}
+												<span className="text-muted-foreground font-normal">
+													(optional)
+												</span>
+											</FieldLabel>
+											<Input
+												{...field}
+												id="edit-profile-birth-date"
+												type="date"
+												value={
+													field.value
+														? new Date(field.value)
+																.toISOString()
+																.split('T')[0]
+														: ''
+												}
+												onChange={(e) =>
+													field.onChange(
+														e.target.value
+															? new Date(
+																	e.target
+																		.value
+																)
+															: undefined
+													)
+												}
+												autoComplete="bday"
 												aria-invalid={
 													fieldState.invalid
 												}
-												aria-describedby={
+												aria-describedby={[
+													descId,
 													fieldState.error
 														? errorId
-														: undefined
+														: null,
+												]
+													.filter(Boolean)
+													.join(' ')}
+											/>
+											<FieldDescription id={descId}>
+												Used to display your age on your
+												profile.
+											</FieldDescription>
+											{fieldState.error && (
+												<FieldError
+													id={errorId}
+													role="alert"
+													className="text-destructive font-medium mt-1"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+						</section>
+
+						<section className="space-y-4">
+							<h3 className="text-sm font-semibold text-foreground">
+								Location
+							</h3>
+
+							<div className="grid grid-cols-2 gap-4">
+								{/* ── Country ──────────────────────────────────────── */}
+								<Controller
+									name="country"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId =
+											'edit-profile-country-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
 												}
 											>
-												<SelectValue placeholder="Select gender" />
-											</SelectTrigger>
-
-											<SelectContent>
-												{GENDER_OPTIONS.map(
-													(option) => (
-														<SelectItem
-															key={option.value}
-															value={option.value}
-														>
-															<div className="flex items-center gap-2">
-																{option.icon && (
-																	<HugeiconsIcon
-																		icon={
-																			option.icon
-																		}
-																		className="size-4 text-muted-foreground"
-																	/>
-																)}
-																<span>
-																	{
-																		option.label
-																	}
-																</span>
-															</div>
-														</SelectItem>
-													)
+												<FieldLabel htmlFor="edit-profile-country">
+													Country{' '}
+													<span className="text-muted-foreground font-normal">
+														(optional)
+													</span>
+												</FieldLabel>
+												<Input
+													{...field}
+													id="edit-profile-country"
+													value={field.value ?? ''}
+													placeholder="Egypt"
+													autoComplete="country-name"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
 												)}
-											</SelectContent>
-										</Select>
+											</Field>
+										);
+									}}
+								/>
 
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						{/* ── Birth Date ───────────────────────────────────── */}
-						<Controller
-							name="birthDate"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'edit-profile-birth-date-error';
-								const descId = 'edit-profile-birth-date-desc';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="edit-profile-birth-date">
-											Date of Birth
-										</FieldLabel>
-										<Input
-											{...field}
-											id="edit-profile-birth-date"
-											type="date"
-											value={
-												field.value
-													? new Date(field.value)
-															.toISOString()
-															.split('T')[0]
-													: ''
-											}
-											onChange={(e) =>
-												field.onChange(
-													e.target.value
-														? new Date(
-																e.target.value
-															)
-														: undefined
-												)
-											}
-											autoComplete="bday"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={[
-												descId,
-												fieldState.error
-													? errorId
-													: null,
-											]
-												.filter(Boolean)
-												.join(' ')}
-										/>
-										<FieldDescription id={descId}>
-											Used to display your age on your
-											profile.
-										</FieldDescription>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						{/* ── Country ──────────────────────────────────────── */}
-						<Controller
-							name="country"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'edit-profile-country-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="edit-profile-country">
-											Country
-										</FieldLabel>
-										<Input
-											{...field}
-											id="edit-profile-country"
-											value={field.value ?? ''}
-											placeholder="Egypt"
-											autoComplete="country-name"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						{/* ── City ─────────────────────────────────────────── */}
-						<Controller
-							name="city"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'edit-profile-city-error';
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="edit-profile-city">
-											City
-										</FieldLabel>
-										<Input
-											{...field}
-											id="edit-profile-city"
-											value={field.value ?? ''}
-											placeholder="Cairo"
-											autoComplete="address-level2"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-										{fieldState.error && (
-											<FieldError
-												id={errorId}
-												role="alert"
-												className="text-destructive font-medium mt-1"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
+								{/* ── City ─────────────────────────────────────────── */}
+								<Controller
+									name="city"
+									control={form.control}
+									render={({ field, fieldState }) => {
+										const errorId =
+											'edit-profile-city-error';
+										return (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel htmlFor="edit-profile-city">
+													City{' '}
+													<span className="text-muted-foreground font-normal">
+														(optional)
+													</span>
+												</FieldLabel>
+												<Input
+													{...field}
+													id="edit-profile-city"
+													value={field.value ?? ''}
+													placeholder="Cairo"
+													autoComplete="address-level2"
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.error
+															? errorId
+															: undefined
+													}
+												/>
+												{fieldState.error && (
+													<FieldError
+														id={errorId}
+														role="alert"
+														className="text-destructive font-medium mt-1"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										);
+									}}
+								/>
+							</div>
+						</section>
 
 						{/* ── Server-level error (HttpClientError) ─────────── */}
 						{serverError && (
