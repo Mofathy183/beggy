@@ -2,13 +2,16 @@
 
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import type { CreateUserInput } from '@beggy/shared/types';
 import { AdminSchema } from '@beggy/shared/schemas';
 
 import CreateUserFormUI from './CreateUserFormUI';
 import { useUserMutations } from '@features/users/hooks';
+
+import { notify } from '@shared/utils';
+import type { HttpClientError } from '@shared/types';
 
 type CreateUserFormProps = {
 	onCancel?: () => void;
@@ -39,10 +42,10 @@ const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 	const { createUser, states } = useUserMutations();
 
 	/**
-	 * Holds server-side errors (e.g., API validation failures).
-	 * These are separate from client-side schema validation errors.
+	 * Server error from the create mutation.
+	 * Matches EditProfileForm's error?.body.message pattern.
 	 */
-	const [serverError, setServerError] = useState<string | null>(null);
+	const error = states.create.error as HttpClientError | undefined;
 
 	/**
 	 * React Hook Form configuration.
@@ -64,12 +67,15 @@ const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 		mode: 'onSubmit',
 	});
 
+	// Clear the server error banner when the user edits any field
 	useEffect(() => {
+		if (!error) return;
 		const subscription = form.watch(() => {
-			if (serverError) setServerError(null);
+			// Reset mutation state to clear the error banner
+			states.create.reset?.();
 		});
 		return () => subscription.unsubscribe();
-	}, [form, serverError]);
+	}, [form, error, states.create]);
 
 	/**
 	 * Handles form submission.
@@ -86,17 +92,14 @@ const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 		if (states.create.isLoading) return;
 
 		try {
-			// Clear any previous server error before new attempt
-			setServerError(null);
-
 			// Execute mutation (unwrap throws on failure)
-			await createUser(values).unwrap();
+			const { message } = await createUser(values).unwrap();
 
 			// Reset form to initial state after successful creation
 			form.reset();
+			notify.success({ message });
 		} catch (error: any) {
-			// Extract meaningful API error message if available
-			setServerError(error?.data?.message || 'Failed to create user.');
+			notify.error.fromHttp(error as HttpClientError);
 		}
 	};
 
@@ -109,7 +112,8 @@ const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 			form={form}
 			onSubmit={onSubmit}
 			isSubmitting={states.create.isLoading}
-			serverError={serverError}
+			serverError={error?.body.message ?? null}
+			serverSuggestion={error?.body.suggestion ?? null}
 			onCancel={onCancel}
 		/>
 	);

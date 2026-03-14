@@ -9,6 +9,7 @@ import type { ItemDTO, UpdateItemInput } from '@beggy/shared/types';
 
 import { useItemsActions } from '@features/items/hooks';
 import UpdateItemFormUI from './UpdateItemFormUI';
+import { notify } from '@shared/utils';
 import type { HttpClientError } from '@shared/types';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -100,7 +101,16 @@ const UpdateItemForm = ({ item, onSuccess, onCancel }: UpdateItemFormProps) => {
 
 	const onSubmit: SubmitHandler<UpdateItemInput> = async (values) => {
 		if (isUpdating) return;
-		await edit(item.id, values, { onSuccess });
+		await edit(item.id, values, {
+			onSuccess: (message) => {
+				notify.success({ message });
+				onCancel?.();
+				onSuccess?.(); // ← no message
+			},
+			onError: (error) => {
+				notify.error.fromHttp(error as HttpClientError);
+			},
+		});
 	};
 
 	return (

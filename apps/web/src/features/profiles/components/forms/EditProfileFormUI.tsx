@@ -29,13 +29,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@shared/components/ui/select';
-import {
-	Alert,
-	AlertDescription,
-	AlertTitle,
-} from '@shared/components/ui/alert';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { AlertCircleIcon } from '@hugeicons/core-free-icons';
+import { FormServerError } from '@shared-ui/error';
 
 import { AvatarUrlField } from '@shared-ui/fields';
 
@@ -473,29 +468,10 @@ const EditProfileFormUI = ({
 						</section>
 
 						{/* ── Server-level error (HttpClientError) ─────────── */}
-						{serverError && (
-							// Soft destructive alert pattern from §12.7
-							<Alert
-								variant="destructive"
-								role="alert"
-								aria-live="polite"
-								className="border-destructive/30 bg-destructive/8 text-foreground"
-							>
-								<HugeiconsIcon
-									icon={AlertCircleIcon}
-									size={16}
-									className="text-destructive"
-								/>
-								<AlertTitle className="text-destructive font-semibold">
-									{serverError}
-								</AlertTitle>
-								{serverSuggestion && (
-									<AlertDescription className="text-muted-foreground text-sm">
-										{serverSuggestion}
-									</AlertDescription>
-								)}
-							</Alert>
-						)}
+						<FormServerError
+							message={serverError}
+							suggestion={serverSuggestion}
+						/>
 					</FieldGroup>
 				</CardContent>
 

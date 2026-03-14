@@ -13,10 +13,8 @@ import {
 } from '@shadcn-ui/field';
 import { Input } from '@shadcn-ui/input';
 import { Switch } from '@shadcn-ui/switch';
-import { Alert, AlertDescription, AlertTitle } from '@shadcn-ui/alert';
 import { Label } from '@shadcn-ui/label';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { AlertCircleIcon } from '@hugeicons/core-free-icons';
+import { FormServerError } from '@shared-ui/error';
 
 import { Chips } from '@shared-ui/chips';
 import {
@@ -50,7 +48,9 @@ type CreateItemFormUIProps = {
 	isSubmitting?: boolean;
 	/** Called when the user cancels — closes the dialog if present */
 	onCancel?: () => void;
+	/** Beggy-style error message from HttpClientError.body.message */
 	serverError?: string | null;
+	/** Beggy-style suggestion from HttpClientError.body.suggestion */
 	serverSuggestion?: string | null;
 };
 
@@ -265,29 +265,11 @@ const CreateItemFormUI = ({
 							)}
 						/>
 
-						{/* ── Server error ─────────────────────────────────── */}
-						{serverError && (
-							<Alert
-								variant="destructive"
-								role="alert"
-								aria-live="polite"
-								className="border-destructive/30 bg-destructive/8 text-foreground"
-							>
-								<HugeiconsIcon
-									icon={AlertCircleIcon}
-									size={16}
-									className="text-destructive"
-								/>
-								<AlertTitle className="text-destructive font-semibold">
-									{serverError}
-								</AlertTitle>
-								{serverSuggestion && (
-									<AlertDescription className="text-muted-foreground text-sm">
-										{serverSuggestion}
-									</AlertDescription>
-								)}
-							</Alert>
-						)}
+						{/* ── Server-level error (HttpClientError) ─────────── */}
+						<FormServerError
+							message={serverError}
+							suggestion={serverSuggestion}
+						/>
 					</FieldGroup>
 				</CardContent>
 

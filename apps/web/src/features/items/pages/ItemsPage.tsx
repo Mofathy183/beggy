@@ -3,17 +3,19 @@
 import { useState } from 'react';
 
 import { ListMeta, ListPagination } from '@shared-ui/list';
-import { Dialog, DialogContent } from '@shadcn-ui/dialog';
 
 import {
 	ItemsGrid,
 	ItemsFilters,
 	ItemsOrderBy,
 } from '@features/items/components/list';
-import { UpdateItemForm } from '@features/items/components/forms';
-import { CreateItemDialog } from '@features/items/components/dialogs';
-
+import {
+	CreateItemDialog,
+	UpdateItemDialog,
+} from '@features/items/components/dialogs';
+import { notify } from '@shared/utils';
 import { useItemsList, useItemsActions } from '@features/items/hooks';
+import { useProfileSyncWithAuth } from '@features/profiles/hooks';
 
 import type { ItemDTO } from '@beggy/shared/types';
 
@@ -56,8 +58,11 @@ const ItemsPage = () => {
 	// ── Mutation actions ──────────────────────────────────────────────────────
 	const { remove } = useItemsActions();
 
+	const { syncProfile } = useProfileSyncWithAuth();
+
 	// ── Dialog state ──────────────────────────────────────────────────────────
 	const [itemToEdit, setItemToEdit] = useState<ItemDTO | null>(null);
+	const [editOpen, setEditOpen] = useState(false);
 
 	// ── Derived ───────────────────────────────────────────────────────────────
 	const hasFilters =
@@ -129,25 +134,16 @@ const ItemsPage = () => {
 			)}
 
 			{/* ── Edit dialog ──────────────────────────────────────────────── */}
-			<Dialog
-				open={!!itemToEdit}
-				onOpenChange={(open) => {
-					if (!open) setItemToEdit(null);
+			<UpdateItemDialog
+				item={editOpen ? itemToEdit : null}
+				onClose={() => setEditOpen(false)}
+				onSuccess={(message) => {
+					syncProfile();
+					notify.success({ message });
+					setEditOpen(false);
+					refetch();
 				}}
-			>
-				<DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-					{itemToEdit && (
-						<UpdateItemForm
-							item={itemToEdit}
-							onSuccess={() => {
-								setItemToEdit(null);
-								refetch();
-							}}
-							onCancel={() => setItemToEdit(null)}
-						/>
-					)}
-				</DialogContent>
-			</Dialog>
+			/>
 		</div>
 	);
 };

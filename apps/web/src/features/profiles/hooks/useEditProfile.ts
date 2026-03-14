@@ -21,7 +21,7 @@ export interface UseEditProfileOptions {
 	 *
 	 * @param updatedProfile - The updated ProfileDTO returned by the server
 	 */
-	onSuccess?: (updatedProfile: ProfileDTO) => void;
+	onSuccess?: (updatedProfile: ProfileDTO, message: string) => void;
 }
 
 /**
@@ -93,12 +93,12 @@ const useEditProfile = (
 		useEditProfileMutation();
 
 	const submit = useCallback(
-		async (data: EditProfileInput) => {
+		async (input: EditProfileInput) => {
 			// .unwrap() re-throws the HttpClientError on failure.
 			// React Hook Form's handleSubmit catches it — components can then
 			// call setError('root', { message: err.body.message }) if needed.
-			const response = await editProfile(data).unwrap();
-			options?.onSuccess?.(response.data);
+			const { data, message } = await editProfile(input).unwrap();
+			options?.onSuccess?.(data, message);
 		},
 		[editProfile, options]
 	);

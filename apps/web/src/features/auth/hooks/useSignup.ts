@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { useAppDispatch } from '@shared/store';
 import { authApi, useSignupMutation } from '@features/auth/api';
 import useAuthRedirect from './useAuthRedirect';
 import type { SignUpInput } from '@beggy/shared/types';
-
 import type { HttpClientError } from '@shared/types';
+
+type AuthCallbacks = {
+	onSuccess?: (message: string) => void;
+	onError?: (error: unknown) => void;
+};
 
 /**
  * useSignup
@@ -21,34 +24,35 @@ import type { HttpClientError } from '@shared/types';
  */
 const useSignup = () => {
 	const dispatch = useAppDispatch();
-	const [signupMutation, { isLoading }] = useSignupMutation();
-	const [serverError, setServerError] = useState<string | null>(null);
+	const [signupMutation, { isLoading, error: rawError, reset }] =
+		useSignupMutation();
 
 	useAuthRedirect();
 
-	const signup = async (values: SignUpInput) => {
+	const signup = async (values: SignUpInput, callbacks?: AuthCallbacks) => {
 		if (isLoading) return;
 
-		setServerError(null);
-
 		try {
-			await signupMutation(values).unwrap();
+			const { message } = await signupMutation(values).unwrap();
 			//* This goes through onQueryStarted → dispatches setAuthenticated
 			// authSlice.profile and authSlice.status update → useAuthRedirect fires
 			await dispatch(
 				authApi.endpoints.me.initiate(undefined, { forceRefetch: true })
 			);
-		} catch (err: unknown) {
-			const error = err as HttpClientError;
 
-			setServerError(error.body?.message ?? 'Something went wrong.');
+			callbacks?.onSuccess?.(message);
+		} catch (err: unknown) {
+			callbacks?.onError?.(err as HttpClientError);
 		}
 	};
 
 	return {
 		signup,
+		reset,
 		isLoading,
-		serverError,
+		// baseQuery sets the error as HttpClientError (the BaseQueryFn generic).
+		// RTK Query types rawError as HttpClientError | undefined here.
+		error: (rawError as HttpClientError | undefined) ?? null,
 	};
 };
 

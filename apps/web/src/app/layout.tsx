@@ -3,7 +3,7 @@ import { Geist_Mono, Lora } from 'next/font/google';
 import { AppProvider } from '@shared/store';
 import { ThemeProvider } from '@shared-ui/theme';
 import { TooltipProvider } from '@shadcn-ui/tooltip';
-import { Toaster } from '@shadcn-ui/sonner';
+import { AppToaster } from '@shared-ui/toast';
 import { AuthBootstrap } from '@features/auth/components/ui';
 import './globals.css';
 import { cn } from '@shadcn-lib';
@@ -84,7 +84,7 @@ export default function RootLayout({
 						<TooltipProvider delay={400}>
 							{children}
 						</TooltipProvider>
-						<Toaster />
+						<AppToaster />
 					</AppProvider>
 				</ThemeProvider>
 			</body>

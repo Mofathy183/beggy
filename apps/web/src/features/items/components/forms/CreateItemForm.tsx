@@ -11,6 +11,7 @@ import { WeightUnit, VolumeUnit } from '@beggy/shared/constants';
 import { useItemsActions } from '@features/items/hooks';
 import CreateItemFormUI from './CreateItemFormUI';
 
+import { notify } from '@shared/utils';
 import type { HttpClientError } from '@shared/types';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -66,8 +67,6 @@ const CreateItemForm = ({ onSuccess, onCancel }: CreateItemFormProps) => {
 	const form = useForm<CreateItemInput>({
 		resolver: zodResolver(ItemSchema.create as any),
 		defaultValues: DEFAULT_VALUES,
-		// onTouched: validate on blur — faster feedback without keystroke jitter
-		mode: 'onTouched',
 	});
 
 	// Clear the server error banner when the user edits any field
@@ -82,7 +81,16 @@ const CreateItemForm = ({ onSuccess, onCancel }: CreateItemFormProps) => {
 
 	const onSubmit: SubmitHandler<CreateItemInput> = async (values) => {
 		if (isCreating) return;
-		await create(values, { onSuccess });
+		await create(values, {
+			onSuccess: (message) => {
+				notify.success({ message });
+				onCancel?.();
+				onSuccess?.();
+			},
+			onError: (error) => {
+				notify.error.fromHttp(error as HttpClientError);
+			},
+		});
 	};
 
 	return (

@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@shared/store';
 import { useLogoutMutation, authApi } from '@features/auth/api';
 import { clearPermissions } from '@shared/store/ability';
+import { notify } from '@shared/utils';
+import { SuccessMessages } from '@beggy/shared/constants';
+import type { HttpClientError } from '@shared/types';
 
 /**
  * useLogout
@@ -34,8 +37,13 @@ const useLogout = () => {
 			 * security cleanup.
 			 */
 			await logout().unwrap();
-		} catch (error: unknown) {
+
+			notify.success({ message: SuccessMessages.LOGOUT_SUCCESS });
+		} catch (err: unknown) {
 			// Intentionally ignored
+			const error = err as HttpClientError;
+
+			notify.error.fromHttp(error);
 		} finally {
 			/**
 			 * Clear all permissions immediately.

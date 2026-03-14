@@ -14,6 +14,8 @@ import {
 	type UseEditProfileOptions,
 } from '@features/profiles/hooks';
 
+import { notify } from '@shared/utils';
+
 type EditProfileFormProps = {
 	/**
 	 * Current profile values used to pre-fill the form.
@@ -51,11 +53,16 @@ const EditProfileForm = ({
 		error,
 		reset: resetMutation,
 	} = useEditProfile({
-		onSuccess: (updated) => {
+		onSuccess: (updated, message) => {
 			// Push updated displayName/avatarUrl into authSlice so the
 			// AppShell sidebar/header reflects the change immediately.
 			syncProfile();
-			onSuccess?.(updated);
+
+			// Confirm to the user — personalised if firstName is set
+			notify.success({ message });
+
+			// Notify the parent (close dialog, etc.)
+			onSuccess?.(updated, message);
 		},
 	});
 
@@ -70,9 +77,6 @@ const EditProfileForm = ({
 			country: defaultValues.country ?? undefined,
 			city: defaultValues.city ?? undefined,
 		},
-		// onTouched: validate when the user leaves a field — faster feedback
-		// without the keystroke jitter of onChange.
-		mode: 'onTouched',
 	});
 
 	// Clear the server error banner when the user edits any field

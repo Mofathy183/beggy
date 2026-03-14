@@ -29,6 +29,7 @@ import {
 } from '@features/items/components/badges';
 
 import { useItemDetails, useItemsActions } from '@features/items/hooks';
+import { useProfileSyncWithAuth } from '@features/profiles/hooks';
 import { WEIGHT_UNIT_META, VOLUME_UNIT_META } from '@shared-ui/mappers';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -168,6 +169,8 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 
 	const { item, isLoading, notFound, error, refetch } = useItemDetails(id);
 	const { remove, isDeleting, isUpdating } = useItemsActions();
+
+	const { syncProfile } = useProfileSyncWithAuth();
 
 	const [editOpen, setEditOpen] = useState(false);
 
@@ -410,6 +413,7 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 				item={editOpen ? item : null}
 				onClose={() => setEditOpen(false)}
 				onSuccess={() => {
+					syncProfile();
 					setEditOpen(false);
 					refetch();
 				}}

@@ -5,10 +5,12 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { CompleteOnboardingInput } from '@beggy/shared/types';
+import type { HttpClientError } from '@shared/types';
 import { ProfileSchema } from '@beggy/shared/schemas';
 
 import OnboardingFormUI from './OnboardingFormUI';
 import { useOnboarding } from '@features/profiles/hooks';
+import { notify } from '@shared/utils';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -75,14 +77,36 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 
 	const onSubmit: SubmitHandler<CompleteOnboardingInput> = async (values) => {
 		if (isLoading) return;
-		await submit(values);
+		await submit(values, {
+			onSuccess: (message) => {
+				notify.success({
+					message,
+					duration: 5000,
+				});
+			},
+		});
+	};
+
+	const onSkip = () => {
+		skip({
+			onError: (err) => {
+				const error = err as HttpClientError;
+				notify.warning({
+					message: error.body.message ?? "Couldn't skip right now",
+					description:
+						error.body?.suggestion ??
+						"You'll be prompted again on your next visit. Your data is safe.",
+					duration: 5000,
+				});
+			},
+		});
 	};
 
 	return (
 		<OnboardingFormUI
 			form={form}
 			onSubmit={onSubmit}
-			onSkip={skip}
+			onSkip={onSkip}
 			isSubmitting={isLoading}
 			isSkipping={isSkipping}
 			serverError={error?.body.message ?? null}

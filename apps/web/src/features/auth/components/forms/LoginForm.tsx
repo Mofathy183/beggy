@@ -1,11 +1,13 @@
 'use client';
-
-import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthSchema } from '@beggy/shared/schemas';
 import type { LoginInput } from '@beggy/shared/types';
 import { useLogin } from '@features/auth/hooks';
 import LoginFormUI from './LoginFormUI';
+import type { HttpClientError } from '@shared/types';
+import { notify } from '@shared/utils';
 
 const LoginForm = () => {
 	const form = useForm<LoginInput>({
@@ -17,14 +19,37 @@ const LoginForm = () => {
 		},
 	});
 
-	const { login, isLoading, serverError } = useLogin();
+	const { login, reset, isLoading, error } = useLogin();
+
+	// Clear the server error banner when the user edits any field
+	useEffect(() => {
+		if (!error) return;
+		const subscription = form.watch(() => {
+			// Reset mutation state to clear the error banner
+			reset;
+		});
+		return () => subscription.unsubscribe();
+	}, [form, error, isLoading]);
+
+	const onSubmit: SubmitHandler<LoginInput> = async (values) => {
+		if (isLoading) return;
+		await login(values, {
+			onSuccess: (message) => {
+				notify.success({ message });
+			},
+			onError: (error) => {
+				notify.error.fromHttp(error as HttpClientError);
+			},
+		});
+	};
 
 	return (
 		<LoginFormUI
 			form={form}
-			onSubmit={login}
+			onSubmit={onSubmit}
 			isSubmitting={isLoading}
-			serverError={serverError}
+			serverError={error?.body.message ?? null}
+			serverSuggestion={error?.body.suggestion ?? null}
 		/>
 	);
 };

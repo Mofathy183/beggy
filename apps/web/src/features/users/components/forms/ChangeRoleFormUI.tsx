@@ -26,7 +26,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@shadcn-ui/select';
-
+import { FormServerError } from '@shared-ui/error';
 import { Role } from '@beggy/shared/constants';
 
 import { ROLE_OPTIONS, getEnumLabel } from '@shared-ui/mappers';
@@ -61,11 +61,10 @@ type ChangeRoleFormUIProps = {
 	 */
 	isSubmitting?: boolean;
 
-	/**
-	 * Server-side error returned from mutation.
-	 * Displayed as a form-level error message.
-	 */
-	serverError?: unknown;
+	/** Beggy-style error message from HttpClientError.body.message */
+	serverError?: string | null;
+	/** Beggy-style suggestion from HttpClientError.body.suggestion */
+	serverSuggestion?: string | null;
 
 	onCancel?: () => void;
 };
@@ -87,6 +86,7 @@ const ChangeRoleFormUI = ({
 	onSubmit,
 	isSubmitting,
 	serverError,
+	serverSuggestion,
 	onCancel,
 }: ChangeRoleFormUIProps) => {
 	return (
@@ -196,26 +196,11 @@ const ChangeRoleFormUI = ({
 							}}
 						/>
 
-						{/* 
-							Server error block:
-							Shown only if mutation fails.
-							Kept separate from field validation errors.
-						*/}
-						{serverError &&
-							((
-								<Field data-invalid>
-									<FieldError
-										role="alert"
-										className="text-destructive font-medium mt-1"
-										errors={[
-											{
-												message:
-													'Failed to update role. Please try again.',
-											},
-										]}
-									/>
-								</Field>
-							) as any)}
+						{/* ── Server-level error (HttpClientError) ─────────── */}
+						<FormServerError
+							message={serverError}
+							suggestion={serverSuggestion}
+						/>
 					</FieldGroup>
 				</form>
 			</CardContent>

@@ -10,6 +10,11 @@ import type { HttpClientError } from '@shared/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type OnboardingCallbacks = {
+	onSuccess?: (message: string) => void;
+	onError?: (error: unknown) => void;
+};
+
 export interface UseOnboardingOptions {
 	/**
 	 * Override the redirect destination after onboarding completes or is skipped.
@@ -27,7 +32,10 @@ export interface UseOnboardingResult {
 	 *  2. GET  /auth/me                 → re-bootstrap authSlice
 	 *  3. router.replace()              → navigate to dashboard
 	 */
-	submit: (data: EditProfileInput) => Promise<void>;
+	submit: (
+		data: EditProfileInput,
+		callbacks?: OnboardingCallbacks
+	) => Promise<void>;
 
 	/**
 	 * Call when the user clicks "Skip for now".
@@ -42,7 +50,7 @@ export interface UseOnboardingResult {
 	 * - The gate is opened immediately
 	 * - The pressure to fill data is replaced by a gentle, dismissible checklist
 	 */
-	skip: () => Promise<void>;
+	skip: (callbacks?: OnboardingCallbacks) => Promise<void>;
 
 	/**
 	 * True while either the POST or the /auth/me re-fetch is in-flight.
@@ -131,27 +139,40 @@ const useOnboarding = (options?: UseOnboardingOptions): UseOnboardingResult => {
 
 	// ── Submit: saves profile data + completes onboarding ────────────────────
 	const submit = useCallback(
-		async (data: EditProfileInput) => {
+		async (data: EditProfileInput, callback?: OnboardingCallbacks) => {
 			// .unwrap() re-throws on failure — RHF handleSubmit catches it
-			await completeOnboarding(data).unwrap();
+			const { message } = await completeOnboarding(data).unwrap();
+
 			finalizeOnboarding();
+
+			callback?.onSuccess?.(message);
 		},
 		[completeOnboarding, finalizeOnboarding]
 	);
 
 	// ── Skip: sets the flag only, saves no profile data ──────────────────────
-	const skip = useCallback(async () => {
-		try {
-			// Empty body — service filters out undefined/null values,
-			// only onboardingCompleted: true is written to the database.
-			await completeOnboarding({} as EditProfileInput).unwrap();
-			finalizeOnboarding();
-		} catch {
-			// Silent failure for skip — see JSDoc above for rationale.
-			// The user stays on /onboarding and can try submitting the form
-			// or attempt to skip again.
-		}
-	}, [completeOnboarding, finalizeOnboarding]);
+	const skip = useCallback(
+		async (callback?: OnboardingCallbacks) => {
+			try {
+				// Empty body — service filters out undefined/null values,
+				// only onboardingCompleted: true is written to the database.
+				await completeOnboarding({} as EditProfileInput).unwrap();
+
+				finalizeOnboarding();
+			} catch (err: unknown) {
+				// Silent failure for skip — see JSDoc above for rationale.
+				// The user stays on /onboarding and can try submitting the form
+				// or attempt to skip again.
+				callback?.onError?.(err as HttpClientError);
+				// notify.warning({
+				//     message: "Couldn't skip right now",
+				//     description: "You'll be prompted again on your next visit. Your data is safe.",
+				//     duration: 5000,
+				// });
+			}
+		},
+		[completeOnboarding, finalizeOnboarding]
+	);
 
 	return {
 		submit,

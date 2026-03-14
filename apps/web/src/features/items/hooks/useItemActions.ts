@@ -3,12 +3,15 @@ import useItemMutations from './useItemMutations';
 
 import type { CreateItemInput, UpdateItemInput } from '@beggy/shared/types';
 
+import { SuccessMessages } from '@beggy/shared/constants';
+import { HttpClientError } from '@/shared/types';
+
 /**
  * Optional callbacks executed after a mutation attempt.
  */
 type CallBackOptions = {
 	/** Invoked when the mutation completes successfully. */
-	onSuccess?: () => void;
+	onSuccess?: (messages: string) => void;
 
 	/** Invoked when the mutation fails. */
 	onError?: (err: unknown) => void;
@@ -40,10 +43,10 @@ const useItemActions = () => {
 	const create = useCallback(
 		async (body: CreateItemInput, callbacks?: CallBackOptions) => {
 			try {
-				await createItem(body).unwrap();
-				callbacks?.onSuccess?.();
-			} catch (error: unknown) {
-				callbacks?.onError?.(error);
+				const { message } = await createItem(body).unwrap();
+				callbacks?.onSuccess?.(message);
+			} catch (err: unknown) {
+				callbacks?.onError?.(err as HttpClientError);
 			}
 		},
 		[createItem]
@@ -63,10 +66,10 @@ const useItemActions = () => {
 			callbacks?: CallBackOptions
 		) => {
 			try {
-				await updateItem(id, body).unwrap();
-				callbacks?.onSuccess?.();
-			} catch (error: unknown) {
-				callbacks?.onError?.(error);
+				const { message } = await updateItem(id, body).unwrap();
+				callbacks?.onSuccess?.(message);
+			} catch (err: unknown) {
+				callbacks?.onError?.(err as HttpClientError);
 			}
 		},
 		[updateItem]
@@ -82,9 +85,9 @@ const useItemActions = () => {
 		async (id: string, callbacks?: CallBackOptions) => {
 			try {
 				await deleteItem(id).unwrap();
-				callbacks?.onSuccess?.();
-			} catch (error: unknown) {
-				callbacks?.onError?.(error);
+				callbacks?.onSuccess?.(SuccessMessages.ITEM_DELETED);
+			} catch (err: unknown) {
+				callbacks?.onError?.(err as HttpClientError);
 			}
 		},
 		[deleteItem]

@@ -6,6 +6,8 @@ import { Button } from '@shadcn-ui/button';
 import { Label } from '@shadcn-ui/label';
 import { Checkbox } from '@shadcn-ui/checkbox';
 
+import { FormServerError } from '@shared-ui/error';
+
 import { Field, FieldError, FieldGroup, FieldLabel } from '@shadcn-ui/field';
 import { Input } from '@shadcn-ui/input';
 import { cn } from '@shared/lib/utils';
@@ -32,11 +34,10 @@ type LoginFormUIProps = {
 	 */
 	isSubmitting?: boolean;
 
-	/**
-	 * Server-side error string from useLogin hook.
-	 * Covers: wrong credentials, inactive account, rate limiting.
-	 */
+	/** Beggy-style error message from HttpClientError.body.message */
 	serverError?: string | null;
+	/** Beggy-style suggestion from HttpClientError.body.suggestion */
+	serverSuggestion?: string | null;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -59,6 +60,7 @@ const LoginFormUI = ({
 	onSubmit,
 	isSubmitting,
 	serverError,
+	serverSuggestion,
 }: LoginFormUIProps) => (
 	<form
 		onSubmit={form.handleSubmit(onSubmit)}
@@ -148,16 +150,11 @@ const LoginFormUI = ({
 				)}
 			/>
 
-			{/* ── Server error ──────────────────────────────────────── */}
-			{serverError && (
-				<Field data-invalid>
-					<FieldError
-						role="alert"
-						className="text-destructive font-medium mt-1"
-						errors={[{ message: serverError }]}
-					/>
-				</Field>
-			)}
+			{/* ── Server-level error (HttpClientError) ─────────── */}
+			<FormServerError
+				message={serverError}
+				suggestion={serverSuggestion}
+			/>
 		</FieldGroup>
 
 		{/* ── Submit ────────────────────────────────────────────────── */}

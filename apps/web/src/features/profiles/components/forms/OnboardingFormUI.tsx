@@ -29,15 +29,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@shared/components/ui/select';
-import {
-	Alert,
-	AlertDescription,
-	AlertTitle,
-} from '@shared/components/ui/alert';
 import { Separator } from '@shared/components/ui/separator';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { AlertCircleIcon, Luggage01Icon } from '@hugeicons/core-free-icons';
-
+import { Luggage01Icon } from '@hugeicons/core-free-icons';
+import { FormServerError } from '@shared-ui/error';
 import { AvatarUrlField } from '@shared-ui/fields';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -50,7 +45,7 @@ type OnboardingFormUIProps = {
 	 * Triggers completeOnboarding({}) — sets the flag without saving data.
 	 * This is what converts the Hard Gate into a Soft Nudge.
 	 */
-	onSkip: () => Promise<void>;
+	onSkip: () => void;
 	isSubmitting?: boolean;
 	/** True while the skip action is in-flight — shows spinner on skip button */
 	isSkipping?: boolean;
@@ -497,29 +492,11 @@ const OnboardingFormUI = ({
 							</div>
 						</section>
 
-						{/* ── Server-level error ────────────────────────────── */}
-						{serverError && (
-							<Alert
-								variant="destructive"
-								role="alert"
-								aria-live="polite"
-								className="border-destructive/30 bg-destructive/8 text-foreground"
-							>
-								<HugeiconsIcon
-									icon={AlertCircleIcon}
-									size={16}
-									className="text-destructive"
-								/>
-								<AlertTitle className="text-destructive font-semibold">
-									{serverError}
-								</AlertTitle>
-								{serverSuggestion && (
-									<AlertDescription className="text-muted-foreground text-sm">
-										{serverSuggestion}
-									</AlertDescription>
-								)}
-							</Alert>
-						)}
+						{/* ── Server-level error (HttpClientError) ─────────── */}
+						<FormServerError
+							message={serverError}
+							suggestion={serverSuggestion}
+						/>
 					</FieldGroup>
 				</CardContent>
 

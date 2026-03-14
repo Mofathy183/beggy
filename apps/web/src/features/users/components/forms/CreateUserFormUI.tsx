@@ -20,6 +20,7 @@ import {
 	FieldLabel,
 } from '@shadcn-ui/field';
 import { Input } from '@shadcn-ui/input';
+import { FormServerError } from '@shared-ui/error';
 
 import { PasswordField } from '@shared-ui/fields';
 
@@ -52,11 +53,10 @@ type CreateUserFormUIProps = {
 	 */
 	isSubmitting?: boolean;
 
-	/**
-	 * Server-side error message returned from backend.
-	 * Displayed as a form-level error block.
-	 */
+	/** Beggy-style error message from HttpClientError.body.message */
 	serverError?: string | null;
+	/** Beggy-style suggestion from HttpClientError.body.suggestion */
+	serverSuggestion?: string | null;
 
 	onCancel?: () => void;
 };
@@ -78,6 +78,7 @@ const CreateUserFormUI = ({
 	onSubmit,
 	isSubmitting,
 	serverError,
+	serverSuggestion,
 	onCancel,
 }: CreateUserFormUIProps) => {
 	return (
@@ -253,16 +254,11 @@ const CreateUserFormUI = ({
 							disabled={isSubmitting}
 						/>
 
-						{/* ── Server error ──────────────────────────────────────── */}
-						{serverError && (
-							<Field data-invalid>
-								<FieldError
-									className="text-destructive font-medium mt-1"
-									role="alert"
-									errors={[{ message: serverError }]}
-								/>
-							</Field>
-						)}
+						{/* ── Server-level error (HttpClientError) ─────────── */}
+						<FormServerError
+							message={serverError}
+							suggestion={serverSuggestion}
+						/>
 					</FieldGroup>
 				</CardContent>
 

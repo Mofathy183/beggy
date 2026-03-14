@@ -3,10 +3,13 @@
 import type { ChangeRoleInput } from '@beggy/shared/types';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useUserMutations } from '@features/users/hooks';
 import ChangeRoleFormUI from './ChangeRoleFormUI';
 import { AdminSchema } from '@beggy/shared/schemas';
+
+import { notify } from '@shared/utils';
+import type { HttpClientError } from '@shared/types';
 
 type Props = {
 	/**
@@ -48,11 +51,10 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 	const { changeRole, states } = useUserMutations();
 
 	/**
-	 * Stores API-level errors.
-	 * These differ from client validation errors
-	 * and are displayed separately in the UI.
+	 * Server error from the create mutation.
+	 * Matches EditProfileForm's error?.body.message pattern.
 	 */
-	const [serverError, setServerError] = useState<string | null>(null);
+	const error = states.create.error as HttpClientError | undefined;
 
 	/**
 	 * React Hook Form setup.
@@ -70,6 +72,16 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 		mode: 'onSubmit',
 	});
 
+	// Clear the server error banner when the user edits any field
+	useEffect(() => {
+		if (!error) return;
+		const subscription = form.watch(() => {
+			// Reset mutation state to clear the error banner
+			states.changeRole.reset?.();
+		});
+		return () => subscription.unsubscribe();
+	}, [form, error, states.changeRole]);
+
 	/**
 	 * Handles form submission lifecycle.
 	 *
@@ -85,17 +97,15 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 		if (states.changeRole.isLoading) return;
 
 		try {
-			// Reset previous server error before new attempt
-			setServerError(null);
-
 			// Execute role change mutation
-			await changeRole(userId, values).unwrap();
+			const { message } = await changeRole(userId, values).unwrap();
 
 			// Reset form while preserving selected role
 			form.reset(values);
+
+			notify.success({ message });
 		} catch (error: any) {
-			// Extract backend error message if available
-			setServerError(error?.data?.message || 'Failed to update role.');
+			notify.error.fromHttp(error as HttpClientError);
 		}
 	};
 
@@ -108,7 +118,8 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 			form={form}
 			onSubmit={form.handleSubmit(onSubmit)}
 			isSubmitting={states.changeRole.isLoading}
-			serverError={serverError}
+			serverError={error?.body.message ?? null}
+			serverSuggestion={error?.body.suggestion ?? null}
 			onCancel={onCancel}
 		/>
 	);

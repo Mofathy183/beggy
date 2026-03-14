@@ -12,6 +12,8 @@ import {
 import { Input } from '@shadcn-ui/input';
 import { PasswordField } from '@shared-ui/fields';
 
+import { FormServerError } from '@shared-ui/error';
+
 import type { SignUpInput } from '@beggy/shared/types';
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -30,11 +32,10 @@ type SignupFormUIProps = {
 	/** Mutation loading state. */
 	isSubmitting?: boolean;
 
-	/**
-	 * Server-side error from useSignup hook.
-	 * Covers: email already registered (409), rate limiting, etc.
-	 */
+	/** Beggy-style error message from HttpClientError.body.message */
 	serverError?: string | null;
+	/** Beggy-style suggestion from HttpClientError.body.suggestion */
+	serverSuggestion?: string | null;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -59,6 +60,7 @@ const SignupFormUI = ({
 	onSubmit,
 	isSubmitting,
 	serverError,
+	serverSuggestion,
 }: SignupFormUIProps) => (
 	<form
 		id="signup-form"
@@ -205,16 +207,11 @@ const SignupFormUI = ({
 				disabled={isSubmitting}
 			/>
 
-			{/* ── Server error ──────────────────────────────────────── */}
-			{serverError && (
-				<Field data-invalid>
-					<FieldError
-						role="alert"
-						className="text-destructive font-medium mt-1"
-						errors={[{ message: serverError }]}
-					/>
-				</Field>
-			)}
+			{/* ── Server-level error (HttpClientError) ─────────── */}
+			<FormServerError
+				message={serverError}
+				suggestion={serverSuggestion}
+			/>
 		</FieldGroup>
 
 		{/* ── Submit ────────────────────────────────────────────────── */}
