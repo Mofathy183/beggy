@@ -1111,339 +1111,454 @@ Here's the updated **Section 12. Design System & UI Architecture** with the corr
 
 ---
 
-## 12. Design System & UI Architecture (CRITICAL FOR UI CHANGES)
+# 12. Design System & UI Architecture (CRITICAL FOR UI CHANGES)
 
 Beggy uses a **semantic token-based design system** built on:
 
-- **Tailwind CSS 4** (`@tailwindcss/postcss`)
-- **shadcn/ui** (Nova style, Zinc base, Teal accent)
-- **Base UI** (`@base-ui/react`) — unstyled primitives
-- **Radix UI** (`radix-ui`) — additional accessible primitives
+- **Tailwind CSS v4** (`@tailwindcss/postcss`)
+- **shadcn/ui** (`style: "base-maia"`, `baseColor: "stone"`) — **first choice for all UI**
+- **Base UI** (`@base-ui/react`) — unstyled primitives, only when shadcn has no match
+- **HugeIcons** (`@hugeicons/react`) — **only icon library**, always via `HugeiconsIcon` wrapper
 - **OKLCH color space** throughout — no hsl, no hex inside CSS vars
-- **WCAG 2.1 AA compliant** (after applying audit fixes)
+- **WCAG 2.1 AA compliant** color pairs
 - CSS variables defined in `src/app/globals.css`
 - Light + dark mode via `.dark` class on `<html>` (managed by `next-themes`)
+- **RTL enabled** (`"rtl": true`) — use `start`/`end` logical properties everywhere
 - No hardcoded palette colors inside components — ever
-
-The design system is **brand-driven**: warm, travel-inspired, teal-accented, and calm in dark mode.
-
-All UI must consume tokens. Every color, radius, and semantic state comes from `globals.css`.
 
 ---
 
-### 12.1 Design Philosophy
+## 12.1 Design Philosophy
 
 Beggy is:
 
 - 🌍 **Warm** — travel journal aesthetic, approachable
 - 🧠 **Intelligent** — AI assistant, calm and helpful
 - 🧳 **Structured** — organized packing, clear hierarchy
-- 🌗 **Calm in dark mode** — deep zinc, not aggressive SaaS black
+- 🌗 **Calm in dark mode** — deep stone/zinc tones, not harsh SaaS black
 
 UI must feel: layered, intentional, soft, accessible, consistent.
 
 ---
 
-### 12.2 The Three Non-Negotiable Rules
+## 12.2 The Three Non-Negotiable Rules
 
 ### 🚫 NEVER
 
-1. Use raw Tailwind palette colors (`bg-red-500`, `text-blue-600`, `bg-teal-400`)
+1. Use raw Tailwind palette colors (`bg-red-500`, `text-blue-600`, `bg-rose-400`)
 2. Hardcode `hex`, `rgb`, `hsl`, or `oklch` values inside component files
 3. Write color logic inside components — that belongs in `globals.css`
-4. Mirror light mode values blindly into dark mode (they are intentionally different)
+4. Use `left`/`right` directional classes — always use `start`/`end` (RTL)
 5. Mix color spaces — the entire system is `oklch`, keep it that way
+6. Import icons directly as JSX components — always use `HugeiconsIcon` wrapper
+7. Use any icon library other than `@hugeicons/react`
 
 ### ✅ ALWAYS
 
-1. Consume semantic Tailwind utilities that map to CSS variables
-2. Let `globals.css` own all color decisions
-3. Use the correct semantic token for the correct intent (don't use `destructive` for warnings)
-4. Test in both light and dark mode before shipping
-5. Verify WCAG AA contrast compliance for any new color combinations
+1. Use **shadcn components first** — if shadcn has it, use it
+2. Consume semantic Tailwind utilities that map to CSS variables
+3. Let `globals.css` own all color decisions
+4. Use the correct semantic token for the correct intent
+5. Test in both light and dark mode before shipping
+6. Use `HugeiconsIcon` wrapper for all icons with `className` for sizing
 
 ---
 
-### 12.3 Stack Overview & Package Responsibilities
+## 12.3 How the Token System Works (Tailwind v4)
 
-### UI Component Libraries
+The `globals.css` file has **two layers**:
 
-| Package                           | Version         | Purpose                            | When to Use                                                               |
-| --------------------------------- | --------------- | ---------------------------------- | ------------------------------------------------------------------------- |
-| **`@base-ui/react`**              | ^1.1.0          | Unstyled accessible primitives     | Building custom components from scratch where shadcn doesn't have a match |
-| **`radix-ui`**                    | ^1.4.3          | Additional accessible components   | Dialog, Dropdown Menu, Toast primitives                                   |
-| **`shadcn`**                      | ^3.8.5          | Pre-styled components using tokens | Buttons, Cards, Inputs — use as first choice                              |
-| **`class-variance-authority`**    | ^0.7.1          | Type-safe variant styling          | Creating component variants (e.g., button sizes)                          |
-| **`clsx`** + **`tailwind-merge`** | ^2.1.1 + ^3.4.0 | Conditional className merging      | Combine classes without conflicts                                         |
-| **`next-themes`**                 | ^0.4.6          | Dark mode management               | Automatic `.dark` class application                                       |
-| **`tw-animate-css`**              | ^1.4.0          | CSS animations for Tailwind        | Entry/exit animations, micro-interactions                                 |
-
-### Component Styling Hierarchy
-
-**Priority order when building UI:**
-
-1. **shadcn components** — Use first if available (Button, Card, Input, Badge, etc.)
-2. **Base UI primitives** — Use for headless components (Switch, Slider, NumberField)
-3. **Radix UI** — Use for overlay components (Dialog, DropdownMenu, Toast)
-4. **Custom components** — Only when above don't fit; always use semantic tokens
-
-### Example: Building a Button
-
-```tsx
-// ✅ CORRECT: Use shadcn Button with variants
-import { Button } from '@/shared/components/ui/button';
-
-<Button variant="default">Add to bag</Button>  // Uses bg-primary
-<Button variant="destructive">Delete</Button>  // Uses bg-destructive
-<Button variant="ghost">Cancel</Button>        // Uses transparent bg
-
-// ❌ WRONG: Custom button with hardcoded colors
-<button className="bg-teal-600 text-white px-4 py-2 rounded">
-    Add to bag
-</button>
-```
-
----
-
-### 12.4 Import Order in globals.css (Never Change This)
-
-```css
-@import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
-```
-
-This order is load-order critical. Changing it breaks Tailwind utility generation.
-
----
-
-### 12.5 How the Token System Works (Tailwind v4)
-
-The system has **two separate layers** in `globals.css`:
-
-### Layer 1: `:root` and `.dark` — Define Raw OKLCH Values
+**Layer 1: `:root` and `.dark`** — full `oklch()` values directly
 
 ```css
 :root {
-	--primary: 0.55 0.095 185; /* raw oklch components, no wrapper */
+	--primary: oklch(0.525 0.223 3.958);
 }
 .dark {
-	--primary: 0.7 0.12 183; /* different value in dark — intentional */
+	--primary: oklch(0.459 0.187 3.815);
 }
 ```
 
-**Critical:** Values are **raw components** without `oklch()` wrapper. The wrapper is added in Layer 2.
-
-### Layer 2: `@theme inline` — Map to Tailwind Utilities
+**Layer 2: `@theme inline`** — maps to Tailwind utilities via `var()`
 
 ```css
 @theme inline {
-	--color-primary: oklch(var(--primary)); /* wraps with oklch() */
-	--color-primary-foreground: oklch(var(--primary-foreground));
+	--color-primary: var(--primary);
 }
 ```
 
-This enables Tailwind utilities like `bg-primary`, `text-primary-foreground`, etc.
+This enables `bg-primary`, `text-primary`, etc. in Tailwind.
 
-**Why this matters:** Never add `oklch()` inside `:root` or `.dark` blocks. The values will be double-wrapped and break.
+> **Critical difference from old system:** Values in `:root`/`.dark` are **full `oklch()` values** — not raw components. `@theme inline` just passes them through with `var()`. Never add `oklch()` again inside `@theme inline`.
 
 ---
 
-### 12.6 Complete Token Reference (WCAG AA Compliant)
-
-All tokens below are **WCAG 2.1 AA compliant** after applying accessibility audit fixes.
+## 12.4 Complete Token Reference
 
 ### Surface Tokens
 
-| CSS Variable           | Tailwind Class            | Light Value                      | Dark Value                        | Purpose                      |
-| ---------------------- | ------------------------- | -------------------------------- | --------------------------------- | ---------------------------- |
-| `--background`         | `bg-background`           | `1 0 0` (white)                  | `0.141 0.005 285.823` (deep zinc) | Page background              |
-| `--foreground`         | `text-foreground`         | `0.141 0.005 285.823`            | `0.985 0 0`                       | Body text, headings          |
-| `--card`               | `bg-card`                 | `1 0 0`                          | `0.21 0.006 285.885`              | Card backgrounds             |
-| `--card-foreground`    | `text-card-foreground`    | near black                       | near white                        | Text inside cards            |
-| `--popover`            | `bg-popover`              | white                            | zinc card                         | Dropdowns, tooltips          |
-| `--popover-foreground` | `text-popover-foreground` | near black                       | near white                        | Text in popovers             |
-| `--muted`              | `bg-muted`                | `0.967 0.001 286.375` (zinc 100) | `0.274 0.006 286.033`             | Item rows, subtle containers |
-| `--muted-foreground`   | `text-muted-foreground`   | `0.52 0.017 285.9` ✅ **FIXED**  | `0.705 0.015 286.067`             | Placeholder, secondary text  |
+| CSS Variable           | Tailwind Class            | Light Value                 | Dark Value                   | Purpose                     |
+| ---------------------- | ------------------------- | --------------------------- | ---------------------------- | --------------------------- |
+| `--background`         | `bg-background`           | `oklch(1 0 0)`              | `oklch(0.147 0.004 49.25)`   | Page background             |
+| `--foreground`         | `text-foreground`         | `oklch(0.147 0.004 49.25)`  | `oklch(0.985 0.001 106.423)` | Body text, headings         |
+| `--card`               | `bg-card`                 | `oklch(1 0 0)`              | `oklch(0.216 0.006 56.043)`  | Card backgrounds            |
+| `--card-foreground`    | `text-card-foreground`    | same as foreground          | same as foreground           | Text inside cards           |
+| `--popover`            | `bg-popover`              | `oklch(1 0 0)`              | `oklch(0.216 0.006 56.043)`  | Dropdowns, tooltips         |
+| `--popover-foreground` | `text-popover-foreground` | same as foreground          | same as foreground           | Text in popovers            |
+| `--muted`              | `bg-muted`                | `oklch(0.97 0.001 106.424)` | `oklch(0.268 0.007 34.298)`  | Subtle bg, disabled areas   |
+| `--muted-foreground`   | `text-muted-foreground`   | `oklch(0.553 0.013 58.071)` | `oklch(0.709 0.01 56.259)`   | Placeholder, secondary text |
 
-### Brand Tokens — Teal (WCAG Compliant)
+### Brand / Interactive Tokens
 
-| CSS Variable           | Tailwind Class                | Light Value                   | Dark Value      | Contrast           | Purpose                          |
-| ---------------------- | ----------------------------- | ----------------------------- | --------------- | ------------------ | -------------------------------- |
-| `--primary`            | `bg-primary` / `text-primary` | `0.55 0.095 185` ✅ **FIXED** | `0.7 0.12 183`  | **4.58:1 ✅ AA**   | Buttons, links, active states    |
-| `--primary-foreground` | `text-primary-foreground`     | `0.98 0.01 181`               | `0.28 0.04 193` | —                  | Text on primary bg               |
-| `--accent`             | `bg-accent` / `text-accent`   | `0.96 0.025 185`              | `0.26 0.04 185` | **10.84:1 🌟 AAA** | Hover backgrounds, selected rows |
-| `--accent-foreground`  | `text-accent-foreground`      | `0.32 0.07 185`               | `0.82 0.08 183` | —                  | Text on accent bg                |
-| `--ring`               | `ring` / `outline-ring`       | `0.55 0.095 185` ✅ **FIXED** | `0.7 0.12 183`  | —                  | Focus rings, keyboard nav        |
+| CSS Variable             | Tailwind Class              | Light Value                  | Dark Value                   | Purpose                   |
+| ------------------------ | --------------------------- | ---------------------------- | ---------------------------- | ------------------------- |
+| `--primary`              | `bg-primary` `text-primary` | `oklch(0.525 0.223 3.958)`   | `oklch(0.459 0.187 3.815)`   | CTAs, active states       |
+| `--primary-foreground`   | `text-primary-foreground`   | `oklch(0.971 0.014 343.198)` | same                         | Text on primary bg        |
+| `--secondary`            | `bg-secondary`              | `oklch(0.967 0.001 286.375)` | `oklch(0.274 0.006 286.033)` | Secondary actions         |
+| `--secondary-foreground` | `text-secondary-foreground` | `oklch(0.21 0.006 285.885)`  | `oklch(0.985 0 0)`           | Text on secondary bg      |
+| `--accent`               | `bg-accent`                 | `oklch(0.97 0.001 106.424)`  | `oklch(0.268 0.007 34.298)`  | Hover bg, selected rows   |
+| `--accent-foreground`    | `text-accent-foreground`    | `oklch(0.216 0.006 56.043)`  | `oklch(0.985 0.001 106.423)` | Text on accent bg         |
+| `--border`               | `border-border`             | `oklch(0.923 0.003 48.717)`  | `oklch(1 0 0 / 10%)`         | All borders               |
+| `--input`                | `border-input`              | `oklch(0.923 0.003 48.717)`  | `oklch(1 0 0 / 15%)`         | Input field borders       |
+| `--ring`                 | `ring` `outline-ring`       | `oklch(0.709 0.01 56.259)`   | `oklch(0.553 0.013 58.071)`  | Focus rings, keyboard nav |
 
-### Structural Tokens
+### Semantic State Tokens
 
-| CSS Variable             | Tailwind Class              | Light Value           | Dark Value            | Purpose                        |
-| ------------------------ | --------------------------- | --------------------- | --------------------- | ------------------------------ |
-| `--secondary`            | `bg-secondary`              | `0.967 0.001 286.375` | `0.274 0.006 286.033` | Secondary interactive surfaces |
-| `--secondary-foreground` | `text-secondary-foreground` | `0.21 0.006 285.885`  | `0.985 0 0`           | Text on secondary bg           |
-| `--border`               | `border-border`             | `0.92 0.004 286.32`   | `0.985 0 0 / 10%`     | All borders                    |
-| `--input`                | `border-input`              | `0.92 0.004 286.32`   | `0.985 0 0 / 15%`     | Input field borders            |
-
-### Semantic State Tokens (WCAG Compliant)
-
-| CSS Variable               | Tailwind Class                        | Light Value                  | Dark Value                  | Contrast                  | Use For                      |
-| -------------------------- | ------------------------------------- | ---------------------------- | --------------------------- | ------------------------- | ---------------------------- |
-| `--success`                | `bg-success` / `text-success`         | `0.53 0.14 162`              | `0.62 0.14 162`             | **4.51:1 ✅ AA**          | Item packed, bag complete    |
-| `--success-foreground`     | `text-success-foreground`             | `0.98 0 0`                   | `0.15 0.01 162`             | —                         | Text on success bg           |
-| `--warning`                | `bg-warning` / `text-warning`         | `0.78 0.17 75`               | `0.82 0.17 75`              | **8.84:1 🌟 AAA**         | Near weight limit, reminders |
-| `--warning-foreground`     | `text-warning-foreground`             | `0.2 0.02 75`                | `0.2 0.02 75`               | —                         | Text on warning bg           |
-| `--destructive`            | `bg-destructive` / `text-destructive` | `0.565 0.24 27` ✅ **FIXED** | `0.56 0.22 24` ✅ **FIXED** | **4.67:1 / 5.10:1 ✅ AA** | Errors, remove actions       |
-| `--destructive-foreground` | `text-destructive-foreground`         | `0.98 0 0`                   | `0.985 0 0`                 | —                         | Text on destructive bg       |
-
-**✅ FIXED** markers indicate values adjusted from original shadcn output to meet WCAG AA standards.
+| CSS Variable               | Tailwind Class                | Light Value                  | Dark Value                  | Use For                |
+| -------------------------- | ----------------------------- | ---------------------------- | --------------------------- | ---------------------- |
+| `--destructive`            | `bg-destructive`              | `oklch(0.577 0.245 27.325)`  | `oklch(0.704 0.191 22.216)` | Errors, delete         |
+| `--destructive-foreground` | `text-destructive-foreground` | `oklch(0.971 0.014 343.198)` | `oklch(0.985 0 0)`          | Text on destructive bg |
+| `--success`                | `bg-success`                  | `oklch(0.53 0.14 162)`       | `oklch(0.62 0.14 162)`      | Confirmation, packed   |
+| `--success-foreground`     | `text-success-foreground`     | `oklch(0.98 0 0)`            | `oklch(0.15 0.01 162)`      | Text on success bg     |
+| `--warning`                | `bg-warning`                  | `oklch(0.78 0.17 75)`        | `oklch(0.82 0.17 75)`       | Caution, near limits   |
+| `--warning-foreground`     | `text-warning-foreground`     | `oklch(0.2 0.02 75)`         | `oklch(0.2 0.02 75)`        | Text on warning bg     |
 
 ### Sidebar Tokens
 
-| Token                          | Purpose                   | Note                      |
-| ------------------------------ | ------------------------- | ------------------------- |
-| `--sidebar`                    | Sidebar background        | Teal-tinted in light mode |
-| `--sidebar-foreground`         | Sidebar text              | —                         |
-| `--sidebar-primary`            | Active nav item bg        | Matches `--primary`       |
-| `--sidebar-primary-foreground` | Text on active nav        | —                         |
-| `--sidebar-accent`             | Hover state in sidebar    | Matches `--accent`        |
-| `--sidebar-accent-foreground`  | Text on sidebar hover     | —                         |
-| `--sidebar-border`             | Sidebar dividers          | —                         |
-| `--sidebar-ring`               | Focus ring inside sidebar | —                         |
+Use **only** sidebar-prefixed tokens inside sidebar components. Never use `bg-primary` or `bg-accent` there.
 
-**Rule:** Sidebar tokens are independent. Never use `bg-primary` or `bg-accent` inside the sidebar — use `bg-sidebar-primary` and `bg-sidebar-accent`.
+| Token                          | Light                        | Dark                         |
+| ------------------------------ | ---------------------------- | ---------------------------- |
+| `--sidebar`                    | `oklch(0.985 0.001 106.423)` | `oklch(0.216 0.006 56.043)`  |
+| `--sidebar-foreground`         | `oklch(0.147 0.004 49.25)`   | `oklch(0.985 0.001 106.423)` |
+| `--sidebar-primary`            | `oklch(0.592 0.249 0.584)`   | `oklch(0.656 0.241 354.308)` |
+| `--sidebar-primary-foreground` | `oklch(0.971 0.014 343.198)` | same                         |
+| `--sidebar-accent`             | `oklch(0.97 0.001 106.424)`  | `oklch(0.268 0.007 34.298)`  |
+| `--sidebar-accent-foreground`  | `oklch(0.216 0.006 56.043)`  | `oklch(0.985 0.001 106.423)` |
+| `--sidebar-border`             | `oklch(0.923 0.003 48.717)`  | `oklch(1 0 0 / 10%)`         |
+| `--sidebar-ring`               | `oklch(0.709 0.01 56.259)`   | `oklch(0.553 0.013 58.071)`  |
 
 ### Chart Tokens
 
-| Token       | Value                                | Usage                    |
-| ----------- | ------------------------------------ | ------------------------ |
-| `--chart-1` | `oklch(0.85 0.13 181)`               | Lightest data series     |
-| `--chart-2` | `oklch(0.78 0.13 182)`               | Second data series       |
-| `--chart-3` | `oklch(0.70 0.12 183)`               | Third data series        |
-| `--chart-4` | `oklch(0.55 0.095 185)` ✅ **FIXED** | Fourth (matches primary) |
-| `--chart-5` | `oklch(0.51 0.09 186)`               | Darkest data series      |
+Always use `var(--chart-1)` through `var(--chart-5)` — never invent new chart colors.
 
-Always use `var(--chart-1)` through `var(--chart-5)` in chart components. Never invent new chart colors.
+```
+--chart-1: oklch(0.823 0.12 346.018)   /* lightest */
+--chart-2: oklch(0.656 0.241 354.308)
+--chart-3: oklch(0.592 0.249 0.584)
+--chart-4: oklch(0.525 0.223 3.958)
+--chart-5: oklch(0.459 0.187 3.815)    /* darkest */
+```
 
-### Radius Tokens
+### Radius Scale
 
-| CSS Variable   | Tailwind Class | Value                        |
-| -------------- | -------------- | ---------------------------- |
-| `--radius`     | base           | `0.625rem`                   |
-| `--radius-sm`  | `rounded-sm`   | `calc(var(--radius) - 4px)`  |
-| `--radius-md`  | `rounded-md`   | `calc(var(--radius) - 2px)`  |
-| `--radius-lg`  | `rounded-lg`   | `= --radius` (0.625rem)      |
-| `--radius-xl`  | `rounded-xl`   | `calc(var(--radius) + 4px)`  |
-| `--radius-2xl` | `rounded-2xl`  | `calc(var(--radius) + 8px)`  |
-| `--radius-3xl` | `rounded-3xl`  | `calc(var(--radius) + 12px)` |
-| `--radius-4xl` | `rounded-4xl`  | `calc(var(--radius) + 16px)` |
+Never hardcode `rounded-[8px]`. Always use the scale.
 
-Never hardcode `rounded-[8px]` or similar. Always use the radius scale above.
+| CSS Variable   | Tailwind Class | Value                       |
+| -------------- | -------------- | --------------------------- |
+| `--radius`     | base           | `0.625rem`                  |
+| `--radius-sm`  | `rounded-sm`   | `calc(var(--radius) * 0.6)` |
+| `--radius-md`  | `rounded-md`   | `calc(var(--radius) * 0.8)` |
+| `--radius-lg`  | `rounded-lg`   | `var(--radius)` (0.625rem)  |
+| `--radius-xl`  | `rounded-xl`   | `calc(var(--radius) * 1.4)` |
+| `--radius-2xl` | `rounded-2xl`  | `calc(var(--radius) * 1.8)` |
+| `--radius-3xl` | `rounded-3xl`  | `calc(var(--radius) * 2.2)` |
+| `--radius-4xl` | `rounded-4xl`  | `calc(var(--radius) * 2.6)` |
 
 ---
 
-### 12.7 Component Usage Patterns
+## 12.5 HugeIcons — The Only Icon Library
 
-### Buttons (shadcn)
+**Package:** `@hugeicons/react` + `@hugeicons/core-free-icons`
+
+All icons **must** use the `HugeiconsIcon` wrapper component. Never render icon definitions directly as JSX. This is the consistent pattern used throughout the entire codebase.
+
+### Import Pattern
+
+```tsx
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+	CalendarIcon,
+	Home01Icon,
+	Search01Icon,
+	Add01Icon,
+} from '@hugeicons/core-free-icons';
+```
+
+### Usage — Always `HugeiconsIcon` Wrapper
+
+```tsx
+// ✅ CORRECT — always use HugeiconsIcon wrapper
+<HugeiconsIcon
+    icon={CalendarIcon}
+    className="h-4 w-4"
+/>
+
+// ✅ Color via Tailwind text-* class
+<HugeiconsIcon
+    icon={Home01Icon}
+    className="h-5 w-5 text-primary"
+/>
+
+// ✅ Muted / secondary icon
+<HugeiconsIcon
+    icon={Search01Icon}
+    className="h-4 w-4 text-muted-foreground"
+/>
+
+// ✅ Inside a button (standard pattern)
+<Button variant="ghost" size="icon">
+    <HugeiconsIcon icon={Add01Icon} className="h-4 w-4" />
+</Button>
+
+// ✅ Inside a trigger with conditional state (real codebase pattern)
+<PopoverTrigger
+    type="button"
+    disabled={disabled}
+    aria-expanded={open}
+    className={cn(
+        'w-full inline-flex items-center justify-between rounded-md border px-3 py-2 text-sm font-normal transition-colors',
+        isActive
+            ? 'bg-secondary text-secondary-foreground'
+            : 'bg-background hover:bg-accent hover:text-accent-foreground'
+    )}
+>
+    <span className="flex items-center gap-2 truncate">
+        <HugeiconsIcon
+            icon={CalendarIcon}
+            className="h-4 w-4"
+        />
+        {formattedLabel}
+    </span>
+</PopoverTrigger>
+
+// ❌ WRONG — direct JSX without wrapper
+import { CalendarIcon } from '@hugeicons/core-free-icons';
+<CalendarIcon size={16} />
+
+// ❌ WRONG — any other icon library
+import { Calendar } from 'lucide-react';
+import { FiCalendar } from 'react-icons/fi';
+<Calendar size={16} />
+```
+
+### Sizing Convention
+
+Use Tailwind `h-*`/`w-*` classes via `className`. Icons inherit `currentColor` — color them via `text-*` on the icon or a parent element.
+
+| Context               | className  |
+| --------------------- | ---------- |
+| Inside buttons/inputs | `h-4 w-4`  |
+| Standalone / medium   | `h-5 w-5`  |
+| Large / decorative    | `h-6 w-6`  |
+| Hero / display        | `h-8 w-8`+ |
+
+---
+
+## 12.6 shadcn/ui — First Choice for All UI
+
+**Always reach for shadcn first.** If shadcn has the component, use it. Only fall back to Base UI or custom code when shadcn genuinely doesn't cover the use case.
+
+### Component Resolution Priority
+
+```
+1. shadcn/ui     → Button, Card, Input, Badge, Dialog, Popover, Select, Tabs, etc.
+2. Base UI       → Switch, Slider, NumberField, Progress (when shadcn lacks it)
+3. Custom        → Only when 1 and 2 don't fit — always use semantic tokens
+```
+
+### Core shadcn Patterns
 
 ```tsx
 import { Button } from '@/shared/components/ui/button';
-
-// ✅ Primary action — Add to bag, Save, Confirm
-<Button variant="default">Add to bag</Button>
-
-// ✅ Secondary action — View, Browse
-<Button variant="secondary">View suitcase</Button>
-
-// ✅ Destructive — Remove, Delete
-<Button variant="destructive">Remove item</Button>
-
-// ✅ Ghost — Cancel, Dismiss
-<Button variant="ghost">Cancel</Button>
-
-// ✅ Outline — Less prominent actions
-<Button variant="outline">Edit details</Button>
-
-// ❌ NEVER do this
-<button className="bg-teal-600 text-white">Add</button>
-<button className="bg-[oklch(0.55_0.095_185)] text-white">Add</button>
-```
-
-### Cards
-
-```tsx
-// ✅ CORRECT — semantic tokens
-<div className="bg-card text-card-foreground border border-border rounded-xl p-5">
-    <h3 className="text-foreground font-semibold">Weekend Carry-on</h3>
-    <p className="text-muted-foreground text-sm">Paris · 3 nights</p>
-</div>
-
-// ❌ WRONG — hardcoded colors
-<div className="bg-white border border-gray-200 rounded-xl p-5">
-    <h3 className="text-black font-semibold">Weekend Carry-on</h3>
-    <p className="text-gray-500 text-sm">Paris · 3 nights</p>
-</div>
-```
-
-### Semantic State Feedback (Toasts, Alerts, Badges)
-
-```tsx
-// ✅ Success — item packed, bag complete
-<div className="bg-success text-success-foreground rounded-md px-3 py-2">
-    Passport added! You're all set.
-</div>
-
-// ✅ Warning — near weight limit
-<div className="bg-warning text-warning-foreground rounded-md px-3 py-2">
-    Almost at the limit — want to shift something?
-</div>
-
-// ✅ Error — save failed
-<div className="bg-destructive text-destructive-foreground rounded-md px-3 py-2">
-    Couldn't save. Let's try that again together.
-</div>
-
-// ✅ PREFERRED: Soft semantic (border + tinted bg) — better for toasts
-<div className="border border-success/30 bg-success/8 text-foreground rounded-md px-3 py-2">
-    <span className="text-success font-semibold">Success!</span> Passport added.
-</div>
-```
-
-### Hover / Selected Rows — Use Accent
-
-```tsx
-// ✅ List rows, nav items, selectable items
-<div className="bg-muted hover:bg-accent hover:text-accent-foreground
-                border border-transparent hover:border-primary
-                rounded-lg px-4 py-2 cursor-pointer transition-colors">
-    Weekend carry-on
-</div>
-
-// ✅ Selected state
-<div className="bg-accent text-accent-foreground border border-primary
-                rounded-lg px-4 py-2">
-    Weekend carry-on (selected)
-</div>
-```
-
-### Input Focus Rings — Automatic
-
-The `@layer base` in `globals.css` applies `outline-ring/50` globally. Input focus will automatically render a Teal ring.
-
-```tsx
-// ✅ Just use shadcn Input — ring is automatic
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
+import { Badge } from '@/shared/components/ui/badge';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Add01Icon } from '@hugeicons/core-free-icons';
 
-<Input placeholder="Search items..." />;
-// Focus ring is Teal, matches --ring token, no extra work needed
+// ✅ Buttons — variants map to semantic tokens automatically
+<Button variant="default">Add to bag</Button>       // bg-primary
+<Button variant="secondary">View suitcase</Button>  // bg-secondary
+<Button variant="destructive">Remove item</Button>  // bg-destructive
+<Button variant="outline">Edit details</Button>     // bordered
+<Button variant="ghost">Cancel</Button>             // transparent
+
+// ✅ Button with HugeIcon (standard pattern)
+<Button variant="default">
+    <HugeiconsIcon icon={Add01Icon} className="h-4 w-4" />
+    Add item
+</Button>
+
+// ✅ Icon-only button
+<Button variant="ghost" size="icon">
+    <HugeiconsIcon icon={Add01Icon} className="h-4 w-4" />
+</Button>
+
+// ✅ Cards — use card tokens, not bg-white
+<Card>
+    <CardHeader>
+        <CardTitle>Weekend Carry-on</CardTitle>
+    </CardHeader>
+    <CardContent>
+        <p className="text-muted-foreground text-sm">Paris · 3 nights</p>
+    </CardContent>
+</Card>
+
+// ✅ Input — focus ring is automatic via globals.css
+<Input placeholder="Search items..." />
+
+// ❌ WRONG — never raw <button> with hardcoded colors
+<button className="bg-rose-600 text-white px-4 py-2 rounded">Add</button>
 ```
 
-### Badges — Domain State → Semantic Token Mapping
+### Building Custom Components on shadcn Primitives
+
+Always compose from shadcn primitives + HugeiconsIcon + cn(). This is the canonical pattern:
+
+```tsx
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/shared/components/ui/popover';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CalendarIcon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
+import { cn } from '@/shared/lib/utils';
+
+function DatePickerTrigger({
+	open,
+	disabled,
+	isActive,
+	formattedLabel,
+}: Props) {
+	return (
+		<PopoverTrigger
+			type="button"
+			disabled={disabled}
+			aria-expanded={open}
+			className={cn(
+				'w-full inline-flex items-center justify-between rounded-md border px-3 py-2 text-sm font-normal transition-colors',
+				isActive
+					? 'bg-secondary text-secondary-foreground'
+					: 'bg-background hover:bg-accent hover:text-accent-foreground'
+			)}
+		>
+			<span className="flex items-center gap-2 truncate">
+				<HugeiconsIcon icon={CalendarIcon} className="h-4 w-4" />
+				{formattedLabel}
+			</span>
+			<HugeiconsIcon
+				icon={ArrowDown01Icon}
+				className={cn(
+					'h-4 w-4 text-muted-foreground transition-transform',
+					open && 'rotate-180'
+				)}
+			/>
+		</PopoverTrigger>
+	);
+}
+```
+
+### Adding shadcn Components
+
+```bash
+# Always add via CLI — never copy-paste from docs
+npx shadcn@latest add button
+npx shadcn@latest add card dialog popover select tabs
+
+# Components install to @/shared/components/ui/
+# Do not manually edit generated files — extend via className instead
+```
+
+---
+
+## 12.7 Component Patterns
+
+### cn() — Always for Class Merging
+
+```tsx
+import { cn } from '@/shared/lib/utils';
+
+// ✅ Always use cn() — never string concatenation or template literals for classes
+<div
+	className={cn(
+		'base-class other-class',
+		condition && 'conditional-class',
+		variant === 'active' && 'active-class',
+		className // always expose and forward className prop
+	)}
+/>;
+```
+
+### RTL — Logical Properties Only
+
+```tsx
+// ✅ RTL-safe — logical properties
+<div className="ps-4 pe-2 ms-auto me-4 text-start border-s" />
+<div className="rounded-s-md" />
+<div className="start-0 end-auto" />
+
+// ❌ Not RTL-safe — physical properties
+<div className="pl-4 pr-2 ml-auto mr-4 text-left border-l" />
+<div className="rounded-l-md" />
+<div className="left-0 right-auto" />
+```
+
+### Hover / Selected Rows
+
+```tsx
+// ✅ Selectable list item
+<div
+	className={cn(
+		'rounded-lg px-4 py-2 cursor-pointer transition-colors border',
+		isSelected
+			? 'bg-accent text-accent-foreground border-primary'
+			: 'bg-muted border-transparent hover:bg-accent hover:text-accent-foreground'
+	)}
+>
+	Weekend carry-on
+</div>
+```
+
+### Semantic State Feedback
+
+```tsx
+// ✅ Full bg — toasts, banners where color carries the full message
+<div className="bg-success text-success-foreground rounded-md px-3 py-2">
+    Passport added!
+</div>
+
+// ✅ Soft tinted — preferred for inline alerts, callouts, badges
+<div className="border border-success/30 bg-success/10 text-foreground rounded-md px-3 py-2">
+    <span className="text-success font-semibold">Done!</span> Passport added.
+</div>
+
+<div className="border border-warning/30 bg-warning/10 text-foreground rounded-md px-3 py-2">
+    <span className="text-warning-foreground font-semibold">Heads up</span> — near limit.
+</div>
+
+<div className="border border-destructive/30 bg-destructive/10 text-foreground rounded-md px-3 py-2">
+    <span className="text-destructive font-semibold">Error</span> — save failed.
+</div>
+```
+
+### Badges with CVA
 
 ```tsx
 import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/shared/lib/utils';
 
-// ✅ Define badge variants using semantic tokens
 const badgeVariants = cva(
 	'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
 	{
@@ -1451,18 +1566,16 @@ const badgeVariants = cva(
 			variant: {
 				primary: 'bg-primary/12 text-primary',
 				success: 'bg-success/12 text-success',
-				warning: 'bg-warning/12 text-warning',
+				warning: 'bg-warning/12 text-warning-foreground',
 				destructive: 'bg-destructive/12 text-destructive',
-				secondary: 'bg-secondary/12 text-secondary-foreground',
+				secondary: 'bg-secondary text-secondary-foreground',
 			},
 		},
-		defaultVariants: {
-			variant: 'primary',
-		},
+		defaultVariants: { variant: 'primary' },
 	}
 );
 
-// ✅ Map domain state → badge variant
+// ✅ Map domain state → badge variant (never to raw colors)
 const bagStatusVariant = {
 	PACKED: 'success',
 	NEAR_LIMIT: 'warning',
@@ -1470,107 +1583,61 @@ const bagStatusVariant = {
 	IN_PROGRESS: 'primary',
 } as const;
 
-// ✅ Usage
 function BagStatusBadge({ status }: { status: ContainerStatus }) {
 	return (
-		<span className={badgeVariants({ variant: bagStatusVariant[status] })}>
+		<span
+			className={cn(badgeVariants({ variant: bagStatusVariant[status] }))}
+		>
 			{statusLabel[status]}
 		</span>
 	);
 }
-
-// ❌ NEVER map domain → hardcoded color
-const colorMap = {
-	OVERWEIGHT: 'bg-red-500 text-white', // Wrong
-	PACKED: 'bg-green-500 text-white', // Wrong
-};
 ```
 
 ### Muted Text Hierarchy
 
 ```tsx
-// ✅ Primary content
 <h2 className="text-foreground font-semibold">Weekend Carry-on</h2>
-
-// ✅ Supporting / secondary content
 <p className="text-muted-foreground text-sm">Paris · 3 nights · 7 items</p>
-
-// ✅ Disabled / placeholder
 <span className="text-muted-foreground/60">No items added yet</span>
 ```
 
-### Using Base UI Primitives
+### Opacity Modifier Pattern
 
 ```tsx
-import { Switch } from '@base-ui/react/switch';
-import { cn } from '@/shared/lib/utils';
-
-// ✅ Style Base UI with semantic tokens
-function CustomSwitch() {
-	return (
-		<Switch.Root
-			className={cn(
-				'relative inline-flex h-6 w-11 items-center rounded-full',
-				'bg-muted border border-border',
-				'data-[state=checked]:bg-primary',
-				'transition-colors'
-			)}
-		>
-			<Switch.Thumb
-				className={cn(
-					'inline-block h-4 w-4 rounded-full',
-					'bg-background shadow-sm',
-					'transition-transform',
-					'data-[state=checked]:translate-x-6',
-					'data-[state=unchecked]:translate-x-1'
-				)}
-			/>
-		</Switch.Root>
-	);
-}
+// Use / notation for alpha — works with all CSS var tokens
+<div className="bg-primary/10 border-border/50 text-muted-foreground/70" />
 ```
 
-### Using class-variance-authority for Variants
+### Using Base UI (when shadcn has no match)
 
 ```tsx
-import { cva, type VariantProps } from 'class-variance-authority';
+import * as Switch from '@base-ui/react/switch';
 import { cn } from '@/shared/lib/utils';
 
-// ✅ Define component variants with semantic tokens
-const alertVariants = cva('relative w-full rounded-lg border p-4', {
-	variants: {
-		variant: {
-			default: 'bg-background text-foreground',
-			success: 'border-success/30 bg-success/8 text-foreground',
-			warning: 'border-warning/30 bg-warning/8 text-foreground',
-			destructive:
-				'border-destructive/30 bg-destructive/8 text-foreground',
-		},
-	},
-	defaultVariants: {
-		variant: 'default',
-	},
-});
-
-export interface AlertProps
-	extends
-		React.HTMLAttributes<HTMLDivElement>,
-		VariantProps<typeof alertVariants> {}
-
-function Alert({ className, variant, ...props }: AlertProps) {
+// ✅ Style Base UI primitives with semantic tokens via data-* attributes
+function CustomSwitch({ checked, onChange }: Props) {
 	return (
-		<div className={cn(alertVariants({ variant }), className)} {...props} />
+		<Switch.Root
+			checked={checked}
+			onCheckedChange={onChange}
+			className={cn(
+				'relative inline-flex h-6 w-11 items-center rounded-full border border-border',
+				'bg-muted data-[state=checked]:bg-primary',
+				'transition-colors focus-visible:outline-ring/50'
+			)}
+		>
+			<Switch.Thumb className="block h-4 w-4 rounded-full bg-background shadow transition-transform data-[state=checked]:translate-x-5" />
+		</Switch.Root>
 	);
 }
 ```
 
 ---
 
-### 12.8 Dark Mode Rules
+## 12.8 Dark Mode
 
-Dark mode is applied via the `.dark` class on `<html>`. `next-themes` (^0.4.6) handles this automatically.
-
-### Setting Up next-themes
+Handled automatically by `next-themes` + CSS vars. Components need zero extra work — tokens switch automatically.
 
 ```tsx
 // app/providers.tsx
@@ -1584,67 +1651,63 @@ export function Providers({ children }: { children: React.ReactNode }) {
 		</ThemeProvider>
 	);
 }
-
-// app/layout.tsx
-import { Providers } from './providers';
-
-export default function RootLayout({ children }) {
-	return (
-		<html lang="en" suppressHydrationWarning>
-			<body>
-				<Providers>{children}</Providers>
-			</body>
-		</html>
-	);
-}
 ```
 
-### Theme Toggle Component
+```tsx
+// app/layout.tsx — suppressHydrationWarning is required on <html>
+<html lang="ar" dir="rtl" suppressHydrationWarning>
+	<body>
+		<Providers>{children}</Providers>
+	</body>
+</html>
+```
 
 ```tsx
+// Theme toggle — HugeIcons + shadcn Button
 'use client';
 import { useTheme } from 'next-themes';
 import { Button } from '@/shared/components/ui/button';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Moon01Icon, Sun01Icon } from '@hugeicons/core-free-icons';
 
 export function ThemeToggle() {
 	const { theme, setTheme } = useTheme();
-
 	return (
 		<Button
 			variant="ghost"
 			size="icon"
 			onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
 		>
-			<span className="dark:hidden">🌙</span>
-			<span className="hidden dark:inline">☀️</span>
+			<HugeiconsIcon icon={Moon01Icon} className="h-4 w-4 dark:hidden" />
+			<HugeiconsIcon
+				icon={Sun01Icon}
+				className="h-4 w-4 hidden dark:block"
+			/>
 		</Button>
 	);
 }
 ```
 
-### Key Dark Mode Characteristics
+**Dark mode characteristics:**
 
-- Background: `oklch(0.141 0.005 285.823)` — deep zinc, not pure black
-- Card: `oklch(0.21 0.006 285.885)` — slightly lighter than background (creates layering)
-- Primary (Teal): lightens to `oklch(0.7 0.12 183)` for contrast on dark bg
-- Accent: dark Teal tint `oklch(0.26 0.04 185)` — visible but not glowing
+- Background: deep stone, not pure black — creates a warm dark feel
+- Card: slightly lighter than background — creates layering effect
+- Primary: lightens in dark mode for contrast on dark bg
 - Borders: white/10% transparency — soft, not harsh
 - Warning foreground: stays dark brown in both modes (yellow bg needs dark text)
 
-**Rule:** Dark mode values are **intentionally different** from light. Never copy one to the other.
+**Rule:** Dark mode token values are **intentionally different** from light. Never copy one to the other.
 
 ---
 
-### 12.9 Domain → UI Mapping Rule
+## 12.9 Domain → UI Mapping Rule
 
 ```
 Domain enum → semantic intent → CSS token → Tailwind class
 ```
 
-**Correct:**
-
 ```ts
-// ✅ ContainerStatus.OVERWEIGHT → "destructive intent" → bg-destructive
+// ✅ Correct — domain state maps to semantic intent
 import { ContainerStatus } from '@beggy/shared/constants';
 
 const intentMap: Record<ContainerStatus, string> = {
@@ -1653,320 +1716,88 @@ const intentMap: Record<ContainerStatus, string> = {
 	[ContainerStatus.OVERWEIGHT]: 'bg-destructive text-destructive-foreground',
 	[ContainerStatus.IN_PROGRESS]: 'bg-primary text-primary-foreground',
 };
-```
 
-**Wrong:**
-
-```ts
-// ❌ Domain controlling color directly
+// ❌ Wrong — never map domain directly to raw palette or hex
 const colorMap = {
-	OVERWEIGHT: 'bg-red-500', // raw palette
-	PACKED: '#22c55e', // hardcoded hex
+	OVERWEIGHT: 'bg-red-500',
+	PACKED: '#22c55e',
 };
 ```
 
 ---
 
-### 12.10 Component Pre-Ship Checklist
+## 12.10 Adding New Semantic Tokens
 
-Before merging any UI component PR, verify:
+If a new semantic color is genuinely needed (e.g., `--info`):
+
+```css
+/* Step 1: Add to :root and .dark in globals.css */
+:root {
+	--info: oklch(0.6 0.15 230);
+	--info-foreground: oklch(0.98 0 0);
+}
+.dark {
+	--info: oklch(0.7 0.15 228);
+	--info-foreground: oklch(0.15 0.02 230);
+}
+
+/* Step 2: Map in @theme inline */
+@theme inline {
+	--color-info: var(--info);
+	--color-info-foreground: var(--info-foreground);
+}
+```
+
+Then verify WCAG AA (≥ 4.5:1) for both light and dark before using it anywhere.
+
+---
+
+## 12.11 Pre-Ship Checklist
 
 - [ ] No raw Tailwind palette colors (`bg-red-*`, `text-blue-*`, etc.)
 - [ ] No hardcoded hex, rgb, hsl, or oklch in JSX/TSX
-- [ ] All colors come from semantic utilities (`bg-primary`, `bg-success`, `text-muted-foreground`, etc.)
-- [ ] Hover states use `bg-accent text-accent-foreground`
-- [ ] Focus rings are not manually overridden (global `outline-ring/50` handles it)
-- [ ] Radius uses Tailwind classes from the scale (`rounded-lg`, `rounded-xl`, etc.)
-- [ ] **Dark mode tested** — toggle theme and verify nothing looks broken
-- [ ] Semantic state (success/warning/destructive) matches the actual intent
+- [ ] All colors from semantic utilities only
+- [ ] All icons use `HugeiconsIcon` wrapper — no direct icon JSX, no other libraries
+- [ ] All icon sizing via `className="h-* w-*"` — not `size` prop
+- [ ] Hover/selected states use `bg-accent text-accent-foreground`
+- [ ] Focus rings not manually overridden (global `outline-ring/50` handles it)
+- [ ] Radius uses Tailwind scale only (`rounded-lg`, `rounded-xl`, etc.)
+- [ ] All directional classes use `start`/`end` — RTL-safe
+- [ ] Dark mode tested — toggle and verify nothing breaks
+- [ ] Semantic state (success/warning/destructive) matches actual intent
 - [ ] Chart components use `var(--chart-1)` through `var(--chart-5)` only
-- [ ] Sidebar components use `bg-sidebar-*` tokens, not general tokens
-- [ ] **WCAG AA contrast verified** — use browser DevTools or online checker
+- [ ] Sidebar components use `bg-sidebar-*` tokens exclusively
+- [ ] `cn()` used for all conditional className logic
 
 ---
 
-### 12.11 Accessibility (WCAG 2.1 AA Compliance)
+## 12.2 Component Aliases & Package Summary
 
-### Compliance Status
+### Path Aliases
 
-✅ **WCAG 2.1 Level AA COMPLIANT** — All color combinations meet minimum 4.5:1 contrast for normal text after applying audit fixes.
-
-### Key Fixes Applied
-
-| Token                   | Original              | Fixed              | Contrast Improvement         |
-| ----------------------- | --------------------- | ------------------ | ---------------------------- |
-| `--primary` (light)     | `0.6 0.1 185`         | `0.55 0.095 185`   | 3.56:1 ❌ → **4.58:1 ✅ AA** |
-| `--destructive` (light) | `0.577 0.245 27.325`  | `0.565 0.24 27`    | 4.50:1 ⚠️ → **4.67:1 ✅ AA** |
-| `--destructive` (dark)  | `0.704 0.191 22.216`  | `0.56 0.22 24`     | 2.77:1 ❌ → **5.10:1 ✅ AA** |
-| `--muted-foreground`    | `0.552 0.016 285.938` | `0.52 0.017 285.9` | 4.39:1 ❌ → **4.93:1 ✅ AA** |
-
-### Accessibility Rules
-
-1. **Semantic tokens are tuned for WCAG compliance** — use them as-is
-2. **Do not reduce opacity** on semantic colors (e.g., `bg-success/40`) in ways that break contrast
-3. **`bg-success/12 text-success`** (badge pattern) is fine — pairs light bg with full-chroma text
-4. **`bg-warning text-warning-foreground`** is specifically tuned — yellow bg requires dark brown text
-5. **Always add `aria-label`** to badges and status indicators that convey meaning visually
-6. **Dark mode preserves contrast** — do not override dark mode tokens in components
-
-### Testing Contrast
-
-Use browser DevTools or [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) to verify any new color combinations meet 4.5:1 minimum.
-
----
-
-### 12.12 Animation & Micro-interactions
-
-### Using tw-animate-css
-
-```tsx
-import 'tw-animate-css';
-
-// ✅ Entry animations
-<div className="animate-fade-in">
-    <Card>Content appears smoothly</Card>
-</div>
-
-// ✅ Exit animations
-<div className="animate-fade-out">
-    <Toast>Disappears gracefully</Toast>
-</div>
-
-// ✅ Attention-seeking (use sparingly)
-<Badge className="animate-bounce">New</Badge>
+```
+@/shared/components/ui    → shadcn primitives (don't edit generated files)
+@/shared/components       → shared/custom components
+@/shared/lib/utils        → cn() — always use for class merging
+@/shared/lib              → shared utilities
+@/shared/hooks            → shared React hooks
 ```
 
-### Custom Transitions
+### Package Usage
 
-```tsx
-// ✅ Hover transitions on interactive elements
-<button className="transition-colors hover:bg-accent hover:text-accent-foreground">
-    Hover me
-</button>
-
-// ✅ Transform transitions
-<div className="transition-transform hover:scale-105">
-    Scales on hover
-</div>
-
-// ✅ Multiple properties
-<button className="transition-[background-color,transform,box-shadow]
-                   hover:bg-primary hover:scale-105 hover:shadow-lg">
-    Complex transition
-</button>
-```
-
----
-
-### 12.13 Common Pitfalls & Solutions
-
-### ❌ Problem: Utilities not applying
-
-**Cause:** Missing `@theme inline` mapping or Tailwind not scanning component files.
-
-**Solution:**
-
-- Verify `@theme inline` block includes the token
-- Check `tailwind.config.ts` `content` array includes component paths:
-    ```ts
-    content: [
-    	'./src/app/**/*.{ts,tsx}',
-    	'./src/shared/**/*.{ts,tsx}',
-    	'./src/features/**/*.{ts,tsx}',
-    ];
-    ```
-
-### ❌ Problem: Dark mode not working
-
-**Cause:** Missing `.dark` class on root or incorrect theme provider setup.
-
-**Solution:**
-
-- Ensure `ThemeProvider` wraps app with `attribute="class"`
-- Verify `suppressHydrationWarning` on `<html>` tag
-- Check dark mode variables are defined in `.dark` selector in `globals.css`
-
-### ❌ Problem: Colors look different in production
-
-**Cause:** Tailwind purging classes or build cache issues.
-
-**Solution:**
-
-- Clear `.next` cache: `rm -rf .next && pnpm build`
-- Verify all dynamic classNames use `cn()` or are in safelist
-
-### ❌ Problem: shadcn component overriding custom styles
-
-**Cause:** Higher specificity in shadcn component CSS.
-
-**Solution:**
-
-- Use `!important` sparingly: `className="!bg-accent"`
-- Or increase specificity: `className="[&]:bg-accent"`
-- Or modify the shadcn component file directly in `src/shared/components/ui/`
-
----
-
-### 12.14 Adding New Semantic Tokens
-
-If a new semantic color is needed (e.g., `--info`):
-
-**Step 1:** Add raw oklch values to `:root` and `.dark`
-
-```css
-:root {
-	--info: 0.6 0.15 230; /* sky blue */
-	--info-foreground: 0.98 0 0;
-}
-.dark {
-	--info: 0.7 0.15 228;
-	--info-foreground: 0.15 0.02 230;
-}
-```
-
-**Step 2:** Add Tailwind mapping to `@theme inline`
-
-```css
-@theme inline {
-	--color-info: oklch(var(--info));
-	--color-info-foreground: oklch(var(--info-foreground));
-}
-```
-
-**Step 3:** Verify WCAG contrast
-
-- Light: `info-foreground` on `info` must be ≥ 4.5:1
-- Dark: `info-foreground` on `info` must be ≥ 4.5:1
-
-**Step 4:** Use it
-
-```tsx
-<div className="bg-info text-info-foreground">AI suggestion ready</div>
-```
-
-Never add tokens only in one place.
-
----
-
-### 12.15 Storybook Integration
-
-Storybook (^10.2.8) is configured with theme switching and accessibility testing.
-
-### Preview Configuration
-
-```tsx
-// .storybook/preview.tsx
-import '../src/app/globals.css';
-import { withThemeByClassName } from '@storybook/addon-themes';
-
-export const decorators = [
-	withThemeByClassName({
-		themes: {
-			light: '',
-			dark: 'dark',
-		},
-		defaultTheme: 'light',
-	}),
-];
-```
-
-### Writing Stories with Semantic Tokens
-
-```tsx
-// Button.stories.tsx
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Button } from './button';
-
-const meta: Meta<typeof Button> = {
-	title: 'UI/Button',
-	component: Button,
-	parameters: {
-		layout: 'centered',
-	},
-	tags: ['autodocs'],
-};
-
-export default meta;
-type Story = StoryObj<typeof Button>;
-
-export const Primary: Story = {
-	args: {
-		variant: 'default',
-		children: 'Add to bag',
-	},
-};
-
-export const Destructive: Story = {
-	args: {
-		variant: 'destructive',
-		children: 'Delete item',
-	},
-};
-
-// ✅ Test all variants in both themes automatically
-export const AllVariants: Story = {
-	render: () => (
-		<div className="flex flex-col gap-4">
-			<Button variant="default">Primary</Button>
-			<Button variant="secondary">Secondary</Button>
-			<Button variant="destructive">Destructive</Button>
-			<Button variant="outline">Outline</Button>
-			<Button variant="ghost">Ghost</Button>
-		</div>
-	),
-};
-```
-
-### Accessibility Testing in Storybook
-
-```tsx
-// Enable a11y addon checks
-export const Accessible: Story = {
-	args: {
-		variant: 'default',
-		children: 'Accessible button',
-	},
-	parameters: {
-		a11y: {
-			config: {
-				rules: [
-					{
-						id: 'color-contrast',
-						enabled: true,
-					},
-				],
-			},
-		},
-	},
-};
-```
-
----
-
-### 12.16 Quick Reference — Package Usage Summary
-
-| Package                    | Use For               | Example                           |
-| -------------------------- | --------------------- | --------------------------------- |
-| `shadcn`                   | Pre-styled components | `<Button variant="default">`      |
-| `@base-ui/react`           | Unstyled primitives   | `<Switch.Root>`, `<NumberField>`  |
-| `radix-ui`                 | Overlay components    | `<Dialog>`, `<DropdownMenu>`      |
-| `class-variance-authority` | Component variants    | `const buttonVariants = cva(...)` |
-| `clsx` + `tailwind-merge`  | Conditional classes   | `cn('bg-card', className)`        |
-| `next-themes`              | Dark mode             | `useTheme()` hook                 |
-| `tw-animate-css`           | Animations            | `className="animate-fade-in"`     |
-| `@casl/react`              | Permissions           | `<Can I="update" a="Bag">`        |
-| `react-hook-form` + `zod`  | Forms                 | Validated inputs                  |
-| `date-fns`                 | Date utils            | Format trip dates                 |
-
----
-
-### 12.17 Final Notes
-
-- **Never regenerate `globals.css` from shadcn** without reapplying WCAG fixes
-- **Test every component in both light and dark mode** before shipping
-- **When in doubt, use shadcn components first** — they're pre-configured with semantic tokens
-- **Refer to WCAG audit report** (`wcag-contrast-audit-report.md`) for detailed contrast analysis
-- **Keep this section updated** when adding new tokens or components
+| Package                      | Use For                        | Example                                       |
+| ---------------------------- | ------------------------------ | --------------------------------------------- |
+| `shadcn`                     | **All UI — always first**      | `<Button variant="default">`                  |
+| `@base-ui/react`             | Unstyled primitives (fallback) | `<Switch.Root>`, `<NumberField.Root>`         |
+| `@hugeicons/react`           | Wrapper for all icons          | `<HugeiconsIcon icon={CalendarIcon} />`       |
+| `@hugeicons/core-free-icons` | Icon definitions               | `import { CalendarIcon } from '...'`          |
+| `class-variance-authority`   | Component variant styling      | `const badgeVariants = cva(...)`              |
+| `clsx` + `tailwind-merge`    | Conditional classes via `cn()` | `cn('base', condition && 'extra', className)` |
+| `next-themes`                | Dark mode toggling             | `useTheme()` hook                             |
+| `tw-animate-css`             | Entry/exit animations          | `className="animate-fade-in"`                 |
+| `react-hook-form` + `zod`    | Form state + validation        | Validated inputs                              |
+| `@casl/react`                | Permission-based rendering     | `<Can I="update" a="Bag">`                    |
+| `date-fns`                   | Date formatting                | Format trip dates                             |
 
 ---
 
