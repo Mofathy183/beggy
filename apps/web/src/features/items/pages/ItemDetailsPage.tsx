@@ -9,12 +9,6 @@ import { Badge } from '@shadcn-ui/badge';
 import { Separator } from '@shadcn-ui/separator';
 import { Skeleton } from '@shadcn-ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@shadcn-ui/alert';
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from '@shadcn-ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@shadcn-ui/tooltip';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import {
@@ -28,9 +22,11 @@ import {
 	Edit01Icon,
 } from '@hugeicons/core-free-icons';
 
-import { UpdateItemForm } from '@features/items/components/forms';
-import ItemCategoryBadge from '@features/items/components/badges/ItemCategoryBadge';
-import ItemFragileBadge from '@features/items/components/badges/ItemFragileBadge';
+import { UpdateItemDialog } from '@features/items/components/dialogs';
+import {
+	ItemCategoryBadge,
+	ItemFragileBadge,
+} from '@features/items/components/badges';
 
 import { useItemDetails, useItemsActions } from '@features/items/hooks';
 import { WEIGHT_UNIT_META, VOLUME_UNIT_META } from '@shared-ui/mappers';
@@ -410,21 +406,14 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 			</Card>
 
 			{/* ── Edit dialog ──────────────────────────────────────────────── */}
-			<Dialog open={editOpen} onOpenChange={setEditOpen}>
-				<DialogContent className="sm:max-w-lg overflow-hidden p-0">
-					<DialogHeader className="sr-only">
-						<DialogTitle>Edit {item.name}</DialogTitle>
-					</DialogHeader>
-					<UpdateItemForm
-						item={item}
-						onSuccess={() => {
-							setEditOpen(false);
-							refetch();
-						}}
-						onCancel={() => setEditOpen(false)}
-					/>
-				</DialogContent>
-			</Dialog>
+			<UpdateItemDialog
+				item={editOpen ? item : null}
+				onClose={() => setEditOpen(false)}
+				onSuccess={() => {
+					setEditOpen(false);
+					refetch();
+				}}
+			/>
 		</div>
 	);
 };

@@ -3,16 +3,15 @@
 import { useState } from 'react';
 
 import { ListMeta, ListPagination } from '@shared-ui/list';
-import { Button } from '@shadcn-ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@shadcn-ui/dialog';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Add01Icon } from '@hugeicons/core-free-icons';
+import { Dialog, DialogContent } from '@shadcn-ui/dialog';
 
-import ItemsGrid from '@features/items/components/list/ItemsGrid';
-import ItemsFilters from '@features/items/components/list/ItemsFilters';
-import ItemsOrderBy from '@features/items/components/list/ItemsOrderBy';
-import { CreateItemForm } from '@features/items/components/forms';
+import {
+	ItemsGrid,
+	ItemsFilters,
+	ItemsOrderBy,
+} from '@features/items/components/list';
 import { UpdateItemForm } from '@features/items/components/forms';
+import { CreateItemDialog } from '@features/items/components/dialogs';
 
 import { useItemsList, useItemsActions } from '@features/items/hooks';
 
@@ -58,7 +57,6 @@ const ItemsPage = () => {
 	const { remove } = useItemsActions();
 
 	// ── Dialog state ──────────────────────────────────────────────────────────
-	const [createOpen, setCreateOpen] = useState(false);
 	const [itemToEdit, setItemToEdit] = useState<ItemDTO | null>(null);
 
 	// ── Derived ───────────────────────────────────────────────────────────────
@@ -91,29 +89,8 @@ const ItemsPage = () => {
 					</p>
 				</div>
 
-				{/* Add item — opens create dialog */}
-				<Dialog open={createOpen} onOpenChange={setCreateOpen}>
-					<DialogTrigger
-						render={
-							<Button>
-								<HugeiconsIcon
-									icon={Add01Icon}
-									className="mr-2 size-4"
-								/>
-								Add item
-							</Button>
-						}
-					/>
-					<DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-						<CreateItemForm
-							onSuccess={() => {
-								setCreateOpen(false);
-								refetch();
-							}}
-							onCancel={() => setCreateOpen(false)}
-						/>
-					</DialogContent>
-				</Dialog>
+				{/* Add item — self-contained, owns its own open state */}
+				<CreateItemDialog onSuccess={refetch} />
 			</div>
 
 			{/* ── Toolbar: filters + order-by ──────────────────────────────── */}

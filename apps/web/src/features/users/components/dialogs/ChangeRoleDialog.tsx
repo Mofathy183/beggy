@@ -1,55 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@shadcn-ui/dialog';
-
 import { Button } from '@shadcn-ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Pencil } from '@hugeicons/core-free-icons';
 
 import { ChangeRoleForm } from '@features/users/components/forms';
 import type { ChangeRoleInput } from '@beggy/shared/types';
+import { FormDialog } from '@shared-ui/dialogs';
 
-type Props = {
+type ChangeRoleDialogProps = {
 	userId: string;
 	currentRole?: ChangeRoleInput['role'];
 };
 
-const ChangeRoleDialog = ({ userId, currentRole }: Props) => {
-	const [open, setOpen] = useState(false);
-
+const ChangeRoleDialog = ({ userId, currentRole }: ChangeRoleDialogProps) => {
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
-			{/* Trigger */}
-			<DialogTrigger
-				render={
-					<Button variant="outline" size="sm">
-						<HugeiconsIcon icon={Pencil} className="mr-2 size-4" />
-						Change Role
-					</Button>
-				}
-			/>
-
-			{/* Content */}
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle>Change User Role</DialogTitle>
-				</DialogHeader>
-
+		<FormDialog
+			trigger={
+				<Button variant="outline" size="sm">
+					<HugeiconsIcon icon={Pencil} className="mr-2 size-4" />
+					Change Role
+				</Button>
+			}
+			form={(onCancel) => (
 				<ChangeRoleForm
 					userId={userId}
 					currentRole={currentRole}
-					onCancel={() => setOpen(false)}
+					onCancel={onCancel}
 				/>
-			</DialogContent>
-		</Dialog>
+			)}
+		/>
 	);
 };
 
