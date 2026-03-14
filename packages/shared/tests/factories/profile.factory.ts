@@ -59,7 +59,13 @@ export const profileFactory = (
 	options: ProfileFactoryOptions = {}
 ): Omit<
 	ProfileDTO,
-	'id' | 'createdAt' | 'updatedAt' | 'displayName' | 'age' | 'birthDate'
+	| 'id'
+	| 'createdAt'
+	| 'updatedAt'
+	| 'displayName'
+	| 'age'
+	| 'onboardingCompleted'
+	| 'birthDate'
 > => ({
 	userId,
 
@@ -107,7 +113,10 @@ export const profileFactory = (
 export const buildProfile = (
 	userId: string,
 	overrides: ProfileFactoryOverrides = {}
-): Omit<ProfileDTO, 'birthDate' | 'createdAt' | 'updatedAt'> => {
+): Omit<
+	ProfileDTO,
+	'birthDate' | 'createdAt' | 'updatedAt' | 'onboardingCompleted'
+> => {
 	// const createdAt = faker.date.past().toISOString();
 	// const updatedAt = faker.date.between({ from: createdAt, to: new Date() }).toISOString();
 
@@ -134,5 +143,7 @@ export const buildProfiles = (
 	count: number,
 	userId: string,
 	overrides: ProfileFactoryOverrides = {}
-): Omit<ProfileDTO, 'birthDate' | 'createdAt' | 'updatedAt'>[] =>
-	Array.from({ length: count }, () => buildProfile(userId, overrides));
+): Omit<
+	ProfileDTO,
+	'birthDate' | 'createdAt' | 'updatedAt' | 'onboardingCompleted'
+>[] => Array.from({ length: count }, () => buildProfile(userId, overrides));

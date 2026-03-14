@@ -10,6 +10,7 @@ import {
 	FieldLabel,
 } from '@shadcn-ui/field';
 import { Input } from '@shadcn-ui/input';
+import { PasswordField } from '@shared-ui/fields';
 
 import type { SignUpInput } from '@beggy/shared/types';
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -198,94 +199,10 @@ const SignupFormUI = ({
 				}}
 			/>
 
-			{/* ── Password ──────────────────────────────────────────── */}
-			<Controller
-				name="password"
+			{/* ── Password + Confirm Password ───────────────────────── */}
+			<PasswordField<SignUpInput>
 				control={form.control}
-				render={({ field, fieldState }) => {
-					const errorId = 'signup-password-error';
-					const descId = 'signup-password-desc';
-
-					return (
-						<Field data-invalid={fieldState.invalid}>
-							<FieldLabel htmlFor="signup-password">
-								Password
-							</FieldLabel>
-
-							<Input
-								{...field}
-								id="signup-password"
-								type="password"
-								placeholder="••••••••"
-								autoComplete="new-password"
-								required
-								aria-required="true"
-								aria-invalid={fieldState.invalid}
-								aria-describedby={[
-									descId,
-									fieldState.error ? errorId : null,
-								]
-									.filter(Boolean)
-									.join(' ')}
-								disabled={isSubmitting}
-							/>
-
-							<FieldDescription id={descId}>
-								Must be at least 8 characters.
-							</FieldDescription>
-
-							{fieldState.error && (
-								<FieldError
-									id={errorId}
-									role="alert"
-									className="text-destructive font-medium mt-1"
-									errors={[fieldState.error]}
-								/>
-							)}
-						</Field>
-					);
-				}}
-			/>
-
-			{/* ── Confirm Password ──────────────────────────────────── */}
-			<Controller
-				name="confirmPassword"
-				control={form.control}
-				render={({ field, fieldState }) => {
-					const errorId = 'signup-confirm-password-error';
-
-					return (
-						<Field data-invalid={fieldState.invalid}>
-							<FieldLabel htmlFor="signup-confirm-password">
-								Confirm Password
-							</FieldLabel>
-
-							<Input
-								{...field}
-								id="signup-confirm-password"
-								type="password"
-								placeholder="••••••••"
-								autoComplete="new-password"
-								required
-								aria-required="true"
-								aria-invalid={fieldState.invalid}
-								aria-describedby={
-									fieldState.error ? errorId : undefined
-								}
-								disabled={isSubmitting}
-							/>
-
-							{fieldState.error && (
-								<FieldError
-									id={errorId}
-									role="alert"
-									className="text-destructive font-medium mt-1"
-									errors={[fieldState.error]}
-								/>
-							)}
-						</Field>
-					);
-				}}
+				disabled={isSubmitting}
 			/>
 
 			{/* ── Server error ──────────────────────────────────────── */}

@@ -66,9 +66,9 @@ const MetaRow = ({ icon, label, value, tooltip }: MetaRowProps) => {
 
 	return (
 		<Tooltip>
-			<TooltipTrigger>
-				<div className="cursor-default">{row}</div>
-			</TooltipTrigger>
+			<TooltipTrigger
+				render={<div className="cursor-default">{row}</div>}
+			/>
 			<TooltipContent side="right" className="text-xs">
 				{tooltip}
 			</TooltipContent>
@@ -223,20 +223,22 @@ const ProfileCard = ({
 					{/* Edit button — only rendered when handler is provided */}
 					{onEdit && (
 						<Tooltip>
-							<TooltipTrigger>
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={onEdit}
-									className="shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent"
-									aria-label="Edit profile"
-								>
-									<HugeiconsIcon
-										icon={Edit01Icon}
-										size={16}
-									/>
-								</Button>
-							</TooltipTrigger>
+							<TooltipTrigger
+								render={
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={onEdit}
+										className="shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent"
+										aria-label="Edit profile"
+									>
+										<HugeiconsIcon
+											icon={Edit01Icon}
+											size={16}
+										/>
+									</Button>
+								}
+							/>
 							<TooltipContent side="left" className="text-xs">
 								Edit profile
 							</TooltipContent>

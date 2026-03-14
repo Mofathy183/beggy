@@ -22,12 +22,17 @@ const CreateUserDialog = () => {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{/* Trigger Button */}
-			<DialogTrigger>
-				<Button>
-					<HugeiconsIcon icon={UserPlus} className="mr-2 size-4" />
-					Create User
-				</Button>
-			</DialogTrigger>
+			<DialogTrigger
+				render={
+					<Button>
+						<HugeiconsIcon
+							icon={UserPlus}
+							className="mr-2 size-4"
+						/>
+						Create User
+					</Button>
+				}
+			/>
 
 			{/* Dialog Content */}
 			<DialogContent className="sm:max-w-lg">

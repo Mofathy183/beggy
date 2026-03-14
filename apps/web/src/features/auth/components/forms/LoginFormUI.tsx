@@ -10,6 +10,8 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@shadcn-ui/field';
 import { Input } from '@shadcn-ui/input';
 import { cn } from '@shared/lib/utils';
 
+import { PasswordField } from '@shared-ui/fields';
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 type LoginFormUIProps = {
@@ -105,44 +107,10 @@ const LoginFormUI = ({
 			/>
 
 			{/* ── Password ──────────────────────────────────────────── */}
-			<Controller
-				name="password"
+			<PasswordField
 				control={form.control}
-				render={({ field, fieldState }) => {
-					const errorId = 'login-password-error';
-
-					return (
-						<Field data-invalid={fieldState.invalid}>
-							<FieldLabel htmlFor="login-password">
-								Password
-							</FieldLabel>
-
-							<Input
-								{...field}
-								id="login-password"
-								type="password"
-								placeholder="••••••••"
-								autoComplete="current-password"
-								required
-								aria-required="true"
-								aria-invalid={fieldState.invalid}
-								aria-describedby={
-									fieldState.error ? errorId : undefined
-								}
-								disabled={isSubmitting}
-							/>
-
-							{fieldState.error && (
-								<FieldError
-									id={errorId}
-									role="alert"
-									className="text-destructive font-medium mt-1"
-									errors={[fieldState.error]}
-								/>
-							)}
-						</Field>
-					);
-				}}
+				disabled={isSubmitting}
+				confirmPasswordName={null}
 			/>
 
 			{/* ── RememberMe ────────────────────────────────────────── */}

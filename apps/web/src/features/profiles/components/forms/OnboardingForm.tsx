@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { EditProfileInput } from '@beggy/shared/types';
+import type { CompleteOnboardingInput } from '@beggy/shared/types';
 import { ProfileSchema } from '@beggy/shared/schemas';
 
 import OnboardingFormUI from './OnboardingFormUI';
@@ -25,26 +25,35 @@ type OnboardingFormProps = {
  * Container responsible for:
  * - Form state via React Hook Form + ProfileSchema.editProfile
  * - Running the 3-step onboarding sequence via useOnboarding:
- *     1. PATCH /profiles/me
+ *     1. POST /profiles/me/onboarding
  *     2. GET  /auth/me  (re-bootstraps authSlice so the guard clears)
  *     3. router.replace('/dashboard')
+ * - Wiring the skip action to OnboardingFormUI
  * - Clearing the server error banner when the user starts typing again
  *
- * Architectural role:
+ * Soft Nudge contract:
+ *   submit → saves data + sets onboardingCompleted → /dashboard
+ *   skip   → sets onboardingCompleted only (empty body) → /dashboard
+ *   In both cases the user reaches the dashboard immediately.
+ *   The Getting Started checklist on the dashboard handles the rest.
+ *
+ * Architecture:
  *   OnboardingFormUI  ← presentation only
  *   OnboardingForm    ← logic orchestration  ← you are here
- *   useOnboarding     ← 3-step sequence + HttpClientError
+ *   useOnboarding     ← 3-step sequence + skip + HttpClientError
  */
 const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 	const {
 		submit,
+		skip,
 		isLoading,
+		isSkipping,
 		error,
 		reset: resetMutation,
 	} = useOnboarding({ redirectTo });
 
-	const form = useForm<EditProfileInput>({
-		resolver: zodResolver(ProfileSchema.editProfile as any),
+	const form = useForm<CompleteOnboardingInput>({
+		resolver: zodResolver(ProfileSchema.completeOnboarding as any),
 		defaultValues: {
 			firstName: undefined,
 			lastName: undefined,
@@ -54,7 +63,6 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 			country: undefined,
 			city: undefined,
 		},
-		// onTouched: same pattern as EditProfileForm — validate on blur
 		mode: 'onTouched',
 	});
 
@@ -65,7 +73,7 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 		return () => subscription.unsubscribe();
 	}, [form, error, resetMutation]);
 
-	const onSubmit: SubmitHandler<EditProfileInput> = async (values) => {
+	const onSubmit: SubmitHandler<CompleteOnboardingInput> = async (values) => {
 		if (isLoading) return;
 		await submit(values);
 	};
@@ -74,7 +82,9 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 		<OnboardingFormUI
 			form={form}
 			onSubmit={onSubmit}
+			onSkip={skip}
 			isSubmitting={isLoading}
+			isSkipping={isSkipping}
 			serverError={error?.body.message ?? null}
 			serverSuggestion={error?.body.suggestion ?? null}
 		/>

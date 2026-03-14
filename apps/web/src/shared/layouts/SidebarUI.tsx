@@ -3,12 +3,12 @@ import { ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/shared/lib/utils';
 
 import {
+	// Luggage02Icon,
+	// ShoppingBag01Icon,
+	// CloudSun,
+	// AiMagicIcon,
 	DashboardSquare01Icon,
-	Luggage02Icon,
-	ShoppingBag01Icon,
 	Package01Icon,
-	CloudSun,
-	AiMagicIcon,
 	UserGroupIcon,
 } from '@hugeicons/core-free-icons';
 import type { IconSvgElement } from '@hugeicons/react';
@@ -63,28 +63,28 @@ export const NAV_ITEMS: NavItem[] = [
 		href: '/dashboard',
 		icon: DashboardSquare01Icon,
 	},
-	{
-		key: 'suitcases',
-		label: 'Suitcases',
-		href: '/dashboard/suitcases',
-		icon: Luggage02Icon,
-		permission: {
-			action: Action.READ,
-			subject: Subject.SUITCASE,
-			scope: Scope.OWN,
-		},
-	},
-	{
-		key: 'bags',
-		label: 'Bags',
-		href: '/dashboard/bags',
-		icon: ShoppingBag01Icon,
-		permission: {
-			action: Action.READ,
-			subject: Subject.BAG,
-			scope: Scope.OWN,
-		},
-	},
+	// {
+	// 	key: 'suitcases',
+	// 	label: 'Suitcases',
+	// 	href: '/dashboard/suitcases',
+	// 	icon: Luggage02Icon,
+	// 	permission: {
+	// 		action: Action.READ,
+	// 		subject: Subject.SUITCASE,
+	// 		scope: Scope.OWN,
+	// 	},
+	// },
+	// {
+	// 	key: 'bags',
+	// 	label: 'Bags',
+	// 	href: '/dashboard/bags',
+	// 	icon: ShoppingBag01Icon,
+	// 	permission: {
+	// 		action: Action.READ,
+	// 		subject: Subject.BAG,
+	// 		scope: Scope.OWN,
+	// 	},
+	// },
 	{
 		key: 'items',
 		label: 'Items',
@@ -96,18 +96,18 @@ export const NAV_ITEMS: NavItem[] = [
 			scope: Scope.OWN,
 		},
 	},
-	{
-		key: 'weather',
-		label: 'Weather',
-		href: '/dashboard/weather',
-		icon: CloudSun,
-	},
-	{
-		key: 'ai-assistant',
-		label: 'AI Assistant',
-		href: '/dashboard/ai',
-		icon: AiMagicIcon,
-	},
+	// {
+	// 	key: 'weather',
+	// 	label: 'Weather',
+	// 	href: '/dashboard/weather',
+	// 	icon: CloudSun,
+	// },
+	// {
+	// 	key: 'ai-assistant',
+	// 	label: 'AI Assistant',
+	// 	href: '/dashboard/ai',
+	// 	icon: AiMagicIcon,
+	// },
 	{
 		key: 'users',
 		label: 'Users',
@@ -133,11 +133,11 @@ export const NAV_ITEMS: NavItem[] = [
 export const NAV_GROUPS: Record<string, NavItem['key'][]> = {
 	main: [
 		'dashboard',
-		'suitcases',
-		'bags',
+		// 'suitcases',
+		// 'bags',
 		'items',
-		'weather',
-		'ai-assistant',
+		// 'weather',
+		// 'ai-assistant',
 	],
 	admin: ['users'],
 };

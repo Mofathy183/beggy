@@ -1,16 +1,14 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono, Lora } from 'next/font/google';
 import { AppProvider } from '@shared/store';
-import { ThemeProvider } from '@shadcn-components';
+import { ThemeProvider } from '@shared-ui/theme';
 import { TooltipProvider } from '@shadcn-ui/tooltip';
 import { Toaster } from '@shadcn-ui/sonner';
 import { AuthBootstrap } from '@features/auth/components/ui';
 import './globals.css';
+import { cn } from '@shadcn-lib';
 
-const geistSans = Geist({
-	variable: '--font-geist-sans',
-	subsets: ['latin'],
-});
+const lora = Lora({ subsets: ['latin'], variable: '--font-serif' });
 
 const geistMono = Geist_Mono({
 	variable: '--font-geist-mono',
@@ -60,10 +58,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-			>
+		<html
+			lang="en"
+			suppressHydrationWarning
+			className={cn('font-serif', 'font-serif', lora.variable)}
+		>
+			<body className={`${geistMono.variable} antialiased`}>
 				{/*
 				 * ThemeProvider must be the outermost wrapper so that
 				 * the .dark class on <html> is applied before any component renders.

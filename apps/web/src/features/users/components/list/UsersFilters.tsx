@@ -1,6 +1,7 @@
 import { ListFilters } from '@shared/ui/list';
 import { SearchInput, ToggleFilter, DateRangeFilter } from '@shared/ui/filter';
 import type { UserFilterInput } from '@beggy/shared/types';
+import { Separator } from '@shadcn-ui/separator';
 
 /**
  * Props for `UsersFilters`.
@@ -40,31 +41,32 @@ const UsersFilters = ({
 			onApply={onApply}
 			onReset={onReset}
 		>
-			{/* Search — fixed width, label + input column */}
-			<div className="w-52">
+			<div className="flex flex-col gap-5">
+				{/* ── Search ──────────────────────────────────────────────────────── */}
 				<SearchInput
 					label="Search by email"
 					value={value?.email ?? ''}
 					onChange={(v) => onChange({ ...value, email: v })}
 				/>
-			</div>
 
-			{/*
-			 * Active status — ToggleFilter's own layout is label left +
-			 * pill group right. We don't touch it, just contain it.
-			 * `w-auto` lets it be exactly as wide as its content needs.
-			 */}
-			<div className="w-auto">
+				<Separator />
+
+				{/* ── Toggle ──────────────────────────────────────────────────────── */}
+				{/*
+				 * Active status — ToggleFilter's own layout is label left +
+				 * pill group right. We don't touch it, just contain it.
+				 * `w-auto` lets it be exactly as wide as its content needs.
+				 */}
 				<ToggleFilter
 					label="Active status"
 					showIcons={true}
 					value={value.isActive}
 					onChange={(v) => onChange({ ...value, isActive: v })}
 				/>
-			</div>
 
-			{/* Date range — fixed width, label + popover column */}
-			<div className="w-48">
+				<Separator />
+
+				{/* ── Date Range ──────────────────────────────────────────────────────── */}
 				<DateRangeFilter
 					label="Created between"
 					value={

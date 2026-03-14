@@ -72,6 +72,15 @@ export const requirePermission =
 		 * ran correctly.
 		 */
 		if (!req.ability) {
+			req.log.error(
+				{
+					domain: 'auth',
+					middleware: 'requirePermission',
+					action,
+					subject,
+				},
+				'Ability not initialized before permission check'
+			);
 			throw appErrorMap.serverError(ErrorCode.ABILITY_NOT_INITIALIZED);
 		}
 
@@ -79,6 +88,16 @@ export const requirePermission =
 		 * Enforce authorization using CASL rules.
 		 */
 		if (req.ability.cannot(action, subject)) {
+			req.log.warn(
+				{
+					domain: 'auth',
+					middleware: 'requirePermission',
+					userId: req.user?.id,
+					action,
+					subject,
+				},
+				'Permission denied'
+			);
 			throw appErrorMap.forbidden(ErrorCode.INSUFFICIENT_PERMISSIONS);
 		}
 

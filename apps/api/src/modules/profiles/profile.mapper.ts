@@ -94,6 +94,8 @@ export const ProfileMapper = {
 				profile.age ??
 				(profile.birthDate ? getAge(profile.birthDate) : null),
 
+			onboardingCompleted: profile.onboardingCompleted,
+
 			/** Profile creation timestamp (ISO-8601) */
 			createdAt: toISO(profile.createdAt),
 

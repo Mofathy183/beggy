@@ -17,11 +17,6 @@ const SignupForm = () => {
 			email: '',
 			password: '',
 			confirmPassword: '',
-			avatarUrl: null,
-			gender: null,
-			birthDate: null,
-			country: null,
-			city: null,
 		},
 	});
 

@@ -56,26 +56,30 @@ const MeasurementPill = ({
 	tooltip: string;
 }) => (
 	<Tooltip>
-		<TooltipTrigger>
-			<div
-				className={cn(
-					'flex items-center gap-1.5',
-					'bg-muted rounded-md px-2.5 py-1.5',
-					'cursor-default select-none'
-				)}
-				aria-label={`${tooltip}: ${value} ${symbol}`}
-			>
-				<HugeiconsIcon
-					icon={icon}
-					className="text-muted-foreground size-3.5 flex-shrink-0"
-					aria-hidden="true"
-				/>
-				<span className="text-foreground text-xs font-medium tabular-nums">
-					{value}
-				</span>
-				<span className="text-muted-foreground text-xs">{symbol}</span>
-			</div>
-		</TooltipTrigger>
+		<TooltipTrigger
+			render={
+				<div
+					className={cn(
+						'flex items-center gap-1.5',
+						'bg-muted rounded-md px-2.5 py-1.5',
+						'cursor-default select-none'
+					)}
+					aria-label={`${tooltip}: ${value} ${symbol}`}
+				>
+					<HugeiconsIcon
+						icon={icon}
+						className="text-muted-foreground size-3.5 flex-shrink-0"
+						aria-hidden="true"
+					/>
+					<span className="text-foreground text-xs font-medium tabular-nums">
+						{value}
+					</span>
+					<span className="text-muted-foreground text-xs">
+						{symbol}
+					</span>
+				</div>
+			}
+		/>
 		<TooltipContent side="bottom">
 			<p>{tooltip}</p>
 		</TooltipContent>

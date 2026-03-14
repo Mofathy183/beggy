@@ -66,6 +66,7 @@ yarn-error.log*
 # ⚛️ Next.js (App-specific)
 ############################################################
 .next/
+.next\dev
 /out/
 next-env.d.ts
 

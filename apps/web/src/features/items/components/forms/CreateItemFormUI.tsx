@@ -3,14 +3,7 @@
 import { Controller, UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@shadcn-ui/button';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '@shadcn-ui/card';
+import { Card, CardContent, CardFooter } from '@shadcn-ui/card';
 import {
 	Field,
 	FieldDescription,
@@ -92,15 +85,7 @@ const CreateItemFormUI = ({
 			noValidate
 			aria-describedby="create-item-description"
 		>
-			<Card className="w-full sm:max-w-lg">
-				<CardHeader>
-					<CardTitle>Add item</CardTitle>
-					<CardDescription id="create-item-description">
-						Add a new item to your packing inventory. Physical
-						measurements help Beggy optimize your luggage.
-					</CardDescription>
-				</CardHeader>
-
+			<Card className="w-full sm:max-w-lg" tabIndex={-1}>
 				<CardContent>
 					<FieldGroup>
 						{/* ── Name ─────────────────────────────────────────── */}
@@ -119,6 +104,7 @@ const CreateItemFormUI = ({
 											id="create-item-name"
 											placeholder="e.g. Passport, Travel toothbrush…"
 											autoComplete="off"
+											autoFocus={false}
 											aria-invalid={fieldState.invalid}
 											aria-describedby={
 												fieldState.error

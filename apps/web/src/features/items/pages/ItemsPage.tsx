@@ -14,8 +14,7 @@ import ItemsOrderBy from '@features/items/components/list/ItemsOrderBy';
 import { CreateItemForm } from '@features/items/components/forms';
 import { UpdateItemForm } from '@features/items/components/forms';
 
-import { useItemsList } from '@features/items/hooks';
-import { useItemsActions } from '@features/items/hooks';
+import { useItemsList, useItemsActions } from '@features/items/hooks';
 
 import type { ItemDTO } from '@beggy/shared/types';
 
@@ -94,15 +93,17 @@ const ItemsPage = () => {
 
 				{/* Add item — opens create dialog */}
 				<Dialog open={createOpen} onOpenChange={setCreateOpen}>
-					<DialogTrigger>
-						<Button>
-							<HugeiconsIcon
-								icon={Add01Icon}
-								className="mr-2 size-4"
-							/>
-							Add item
-						</Button>
-					</DialogTrigger>
+					<DialogTrigger
+						render={
+							<Button>
+								<HugeiconsIcon
+									icon={Add01Icon}
+									className="mr-2 size-4"
+								/>
+								Add item
+							</Button>
+						}
+					/>
 					<DialogContent className="sm:max-w-lg p-0 overflow-hidden">
 						<CreateItemForm
 							onSuccess={() => {

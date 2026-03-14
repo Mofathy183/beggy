@@ -28,7 +28,7 @@ function PaginationContent({
 	return (
 		<ul
 			data-slot="pagination-content"
-			className={cn('gap-0.5 flex items-center', className)}
+			className={cn('flex items-center gap-1', className)}
 			{...props}
 		/>
 	);
@@ -76,7 +76,7 @@ function PaginationPrevious({
 		<PaginationLink
 			aria-label="Go to previous page"
 			size="default"
-			className={cn('ps-1.5!', className)}
+			className={cn('ps-2!', className)}
 			{...props}
 		>
 			<HugeiconsIcon
@@ -99,7 +99,7 @@ function PaginationNext({
 		<PaginationLink
 			aria-label="Go to next page"
 			size="default"
-			className={cn('pe-1.5!', className)}
+			className={cn('pe-2!', className)}
 			{...props}
 		>
 			<span className="hidden sm:block">{text}</span>
@@ -122,7 +122,7 @@ function PaginationEllipsis({
 			aria-hidden
 			data-slot="pagination-ellipsis"
 			className={cn(
-				"size-8 [&_svg:not([class*='size-'])]:size-4 flex items-center justify-center",
+				"flex size-9 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
 				className
 			)}
 			{...props}

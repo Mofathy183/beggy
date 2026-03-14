@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppProvider } from '../src/shared/store';
-import { ThemeProvider } from '../src/shared/components';
+import { ThemeProvider } from '../src/shared/ui/theme';
 import type { Preview } from '@storybook/nextjs-vite';
 import '../src/app/globals.css';
 import { withThemeByClassName } from '@storybook/addon-themes';

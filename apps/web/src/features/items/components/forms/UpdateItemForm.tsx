@@ -9,6 +9,7 @@ import type { ItemDTO, UpdateItemInput } from '@beggy/shared/types';
 
 import { useItemsActions } from '@features/items/hooks';
 import UpdateItemFormUI from './UpdateItemFormUI';
+import type { HttpClientError } from '@shared/types';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -47,9 +48,7 @@ const UpdateItemForm = ({ item, onSuccess, onCancel }: UpdateItemFormProps) => {
 	 * Server error from the update mutation.
 	 * Matches EditProfileForm's error?.body.message pattern.
 	 */
-	const error = states.update.error as
-		| { body: { message: string; suggestion?: string } }
-		| undefined;
+	const error = states.update.error as HttpClientError | undefined;
 
 	const form = useForm<UpdateItemInput>({
 		resolver: zodResolver(ItemSchema.update as any),

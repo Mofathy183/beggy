@@ -49,6 +49,7 @@ export const AuthMapper = {
 						age: user.profile.birthDate
 							? getAge(user.profile.birthDate)
 							: null,
+						onboardingCompleted: user.profile.onboardingCompleted,
 						city: user.profile.city,
 						country: user.profile.country,
 					}

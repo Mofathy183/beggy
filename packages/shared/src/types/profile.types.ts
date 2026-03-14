@@ -73,6 +73,14 @@ export interface ProfileDTO {
 	age?: number | null;
 
 	/**
+	 * Indicates whether the user finished the onboarding flow.
+	 *
+	 * Used by the frontend to determine whether
+	 * onboarding nudges or reminders should be shown.
+	 */
+	onboardingCompleted: boolean;
+
+	/**
 	 * Optional city.
 	 */
 	city: string | null;
@@ -115,3 +123,7 @@ export type PublicProfileDTO = Pick<
 // Authenticated user modifying their own data
 
 export type EditProfileInput = z.infer<typeof ProfileSchema.editProfile>;
+
+export type CompleteOnboardingInput = z.infer<
+	typeof ProfileSchema.completeOnboarding
+>;

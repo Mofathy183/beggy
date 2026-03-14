@@ -21,6 +21,8 @@ import {
 } from '@shadcn-ui/field';
 import { Input } from '@shadcn-ui/input';
 
+import { PasswordField } from '@shared-ui/fields';
+
 /**
  * Props for CreateUserFormUI.
  *
@@ -95,101 +97,107 @@ const CreateUserFormUI = ({
 
 				<CardContent>
 					{/* 
-            noValidate disables native browser validation
-            so Zod + RHF fully control validation messaging.
-        */}
+                        noValidate disables native browser validation
+                        so Zod + RHF fully control validation messaging.
+                 */}
 
 					<FieldGroup>
-						{/* =========================
-                   First Name
-                   ========================= */}
-						<Controller
-							name="firstName"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'form-first-name-error';
+						{/* ── Name row ──────────────────────────────────────────── */}
+						<div className="grid grid-cols-2 gap-4">
+							{/* First Name */}
+							<Controller
+								name="firstName"
+								control={form.control}
+								render={({ field, fieldState }) => {
+									const errorId = 'signup-first-name-error';
 
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="form-first-name">
-											First Name
-										</FieldLabel>
+									return (
+										<Field
+											data-invalid={fieldState.invalid}
+										>
+											<FieldLabel htmlFor="signup-first-name">
+												First Name
+											</FieldLabel>
 
-										<Input
-											{...field}
-											id="form-first-name"
-											placeholder="John"
-											autoComplete="given-name"
-											required
-											aria-required="true"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-
-										{/* Field-level validation error */}
-										{fieldState.error && (
-											<FieldError
-												className="text-destructive font-medium mt-1"
-												id={errorId}
-												role="alert"
-												errors={[fieldState.error]}
+											<Input
+												{...field}
+												id="signup-first-name"
+												placeholder="Bruce"
+												autoComplete="given-name"
+												required
+												aria-required="true"
+												aria-invalid={
+													fieldState.invalid
+												}
+												aria-describedby={
+													fieldState.error
+														? errorId
+														: undefined
+												}
+												disabled={isSubmitting}
 											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
 
-						{/* =========================
-                   Last Name
-                   ========================= */}
-						<Controller
-							name="lastName"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'form-last-name-error';
+											{fieldState.error && (
+												<FieldError
+													id={errorId}
+													role="alert"
+													className="text-destructive font-medium mt-1"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
 
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="form-last-name">
-											Last Name
-										</FieldLabel>
+							{/* Last Name */}
+							<Controller
+								name="lastName"
+								control={form.control}
+								render={({ field, fieldState }) => {
+									const errorId = 'signup-last-name-error';
 
-										<Input
-											{...field}
-											id="form-last-name"
-											placeholder="Doe"
-											autoComplete="family-name"
-											required
-											aria-required="true"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
+									return (
+										<Field
+											data-invalid={fieldState.invalid}
+										>
+											<FieldLabel htmlFor="signup-last-name">
+												Last Name
+											</FieldLabel>
 
-										{fieldState.error && (
-											<FieldError
-												className="text-destructive font-medium mt-1"
-												id={errorId}
-												role="alert"
-												errors={[fieldState.error]}
+											<Input
+												{...field}
+												id="signup-last-name"
+												placeholder="Wayne"
+												autoComplete="family-name"
+												required
+												aria-required="true"
+												aria-invalid={
+													fieldState.invalid
+												}
+												aria-describedby={
+													fieldState.error
+														? errorId
+														: undefined
+												}
+												disabled={isSubmitting}
 											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
 
-						{/* =========================
-                   Email
-                   ========================= */}
+											{fieldState.error && (
+												<FieldError
+													id={errorId}
+													role="alert"
+													className="text-destructive font-medium mt-1"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									);
+								}}
+							/>
+						</div>
+
+						{/* ── Email ─────────────────────────────────────────────── */}
 						<Controller
 							name="email"
 							control={form.control}
@@ -239,157 +247,13 @@ const CreateUserFormUI = ({
 							}}
 						/>
 
-						{/* =========================
-                   Password
-                   ========================= */}
-						<Controller
-							name="password"
+						{/* ── Password + Confirm Password ───────────────────────── */}
+						<PasswordField
 							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'form-password-error';
-								const descId = 'form-password-desc';
-
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="form-password">
-											Password
-										</FieldLabel>
-
-										<Input
-											{...field}
-											id="form-password"
-											type="password"
-											placeholder="••••••••"
-											autoComplete="new-password"
-											required
-											aria-required="true"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={[
-												descId,
-												fieldState.error
-													? errorId
-													: null,
-											]
-												.filter(Boolean)
-												.join(' ')}
-										/>
-
-										<FieldDescription id={descId}>
-											Must be at least 8 characters.
-										</FieldDescription>
-
-										{fieldState.error && (
-											<FieldError
-												className="text-destructive font-medium mt-1"
-												id={errorId}
-												role="alert"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
+							disabled={isSubmitting}
 						/>
 
-						{/* =========================
-                   Confirm Password
-                   ========================= */}
-						<Controller
-							name="confirmPassword"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'form-confirm-password-error';
-
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="form-confirm-password">
-											Confirm Password
-										</FieldLabel>
-
-										<Input
-											{...field}
-											id="form-confirm-password"
-											type="password"
-											placeholder="••••••••"
-											autoComplete="new-password"
-											required
-											aria-required="true"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={
-												fieldState.error
-													? errorId
-													: undefined
-											}
-										/>
-
-										{fieldState.error && (
-											<FieldError
-												className="text-destructive font-medium mt-1"
-												id={errorId}
-												role="alert"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						{/* =========================
-                   Avatar URL (Optional)
-                   ========================= */}
-						<Controller
-							name="avatarUrl"
-							control={form.control}
-							render={({ field, fieldState }) => {
-								const errorId = 'form-avatar-url-error';
-								const descId = 'form-avatar-url-desc';
-
-								return (
-									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel htmlFor="form-avatar-url">
-											Avatar URL
-										</FieldLabel>
-
-										<Input
-											{...field}
-											id="form-avatar-url"
-											type="url"
-											value={field.value ?? undefined}
-											placeholder="https://example.com/avatar.png"
-											autoComplete="off"
-											aria-invalid={fieldState.invalid}
-											aria-describedby={[
-												descId,
-												fieldState.error
-													? errorId
-													: null,
-											]
-												.filter(Boolean)
-												.join(' ')}
-										/>
-
-										<FieldDescription id={descId}>
-											Optional. Provide a public image
-											URL.
-										</FieldDescription>
-
-										{fieldState.error && (
-											<FieldError
-												className="text-destructive font-medium mt-1"
-												id={errorId}
-												role="alert"
-												errors={[fieldState.error]}
-											/>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						{/* =========================
-                   Server-Level Error
-                   ========================= */}
+						{/* ── Server error ──────────────────────────────────────── */}
 						{serverError && (
 							<Field data-invalid>
 								<FieldError
@@ -403,18 +267,16 @@ const CreateUserFormUI = ({
 				</CardContent>
 
 				{/* Footer actions separated for layout clarity */}
+				{/* ── Submit ────────────────────────────────────────────────── */}
 				<CardFooter>
 					<Field orientation="horizontal">
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => {
-								form.reset();
-								onCancel?.();
-							}}
+							onClick={onCancel ?? (() => form.reset())}
 							disabled={isSubmitting}
 						>
-							Reset
+							{onCancel ? 'Cancel' : 'Reset'}
 						</Button>
 
 						<Button type="submit" disabled={isSubmitting}>

@@ -111,7 +111,6 @@ export const Default: Story = {
 				email: '',
 				password: '',
 				confirmPassword: '',
-				avatarUrl: '',
 			},
 		});
 
@@ -142,7 +141,6 @@ export const WithValidationErrors: Story = {
 				email: 'invalid-email',
 				password: '123',
 				confirmPassword: '456',
-				avatarUrl: 'not-a-url',
 			},
 			mode: 'onSubmit',
 		});
@@ -179,7 +177,6 @@ export const WithServerError: Story = {
 				email: 'john@example.com',
 				password: 'password123',
 				confirmPassword: 'password123',
-				avatarUrl: '',
 			},
 		});
 
@@ -212,7 +209,6 @@ export const Submitting: Story = {
 				email: 'jane@example.com',
 				password: 'securePassword',
 				confirmPassword: 'securePassword',
-				avatarUrl: '',
 			},
 		});
 
@@ -251,7 +247,6 @@ export const DarkMode: Story = {
 				email: '',
 				password: '',
 				confirmPassword: '',
-				avatarUrl: '',
 			},
 		});
 

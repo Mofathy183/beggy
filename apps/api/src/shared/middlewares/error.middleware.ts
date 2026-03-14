@@ -228,7 +228,7 @@ const zodErrorMap = (err: unknown): AppError | null => {
  */
 export const errorHandler = (
 	err: unknown,
-	_req: Request,
+	req: Request,
 	res: Response,
 	_next: NextFunction
 ) => {
@@ -239,6 +239,17 @@ export const errorHandler = (
 	 * without further inspection.
 	 */
 	if (err instanceof AppError) {
+		req.log.warn(
+			{
+				domain: 'error',
+				middleware: 'errorHandler',
+				code: err.code,
+				status: err.status,
+				cause: err.cause,
+			},
+			'Application error'
+		);
+
 		const response = createResponse.error(
 			err.code,
 			err.status,
@@ -255,6 +266,15 @@ export const errorHandler = (
 	 */
 	const zodError = zodErrorMap(err);
 	if (zodError) {
+		req.log.warn(
+			{
+				domain: 'validation',
+				middleware: 'errorHandler',
+				code: zodError.code,
+				error: err,
+			},
+			'Request validation failed'
+		);
 		return res
 			.status(zodError.status)
 			.json(
@@ -270,6 +290,14 @@ export const errorHandler = (
 	 */
 	const jwtError = jwtErrorMap(err);
 	if (jwtError) {
+		req.log.warn(
+			{
+				domain: 'auth',
+				middleware: 'errorHandler',
+				code: jwtError.code,
+			},
+			'JWT authentication error'
+		);
 		return res
 			.status(jwtError.status)
 			.json(
@@ -289,6 +317,15 @@ export const errorHandler = (
 	 */
 	const prismaError = prismaErrorMap(err);
 	if (prismaError) {
+		req.log.error(
+			{
+				domain: 'database',
+				middleware: 'errorHandler',
+				code: prismaError.code,
+				error: err,
+			},
+			'Database error'
+		);
 		const response = createResponse.error(
 			prismaError.code,
 			prismaError.status,
@@ -309,6 +346,15 @@ export const errorHandler = (
 		ErrorCode.INTERNAL_SERVER_ERROR,
 		STATUS_CODE.INTERNAL_ERROR,
 		err
+	);
+
+	req.log.error(
+		{
+			domain: 'system',
+			middleware: 'errorHandler',
+			error: err,
+		},
+		'Unhandled application error'
 	);
 
 	const response = createResponse.error(

@@ -1,5 +1,5 @@
 import { Button } from '@shadcn-ui/button';
-import { ThemeToggle } from '@shared/components';
+import { ThemeToggle } from '@shared/ui/theme';
 
 export default function Page() {
 	return (

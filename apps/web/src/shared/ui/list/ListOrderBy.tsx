@@ -58,25 +58,30 @@ const ListOrderBy = <Field extends string>({
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger>
-				<Button
-					variant="outline"
-					size="sm"
-					className="gap-2"
-					aria-label="Change sorting order"
-				>
-					<HugeiconsIcon icon={ArrowUpDownIcon} className="h-4 w-4" />
-					Sort
-					{selectedOption && (
-						<Badge
-							variant="secondary"
-							className="ml-1 text-xs font-normal"
-						>
-							{selectedOption.label}
-						</Badge>
-					)}
-				</Button>
-			</DropdownMenuTrigger>
+			<DropdownMenuTrigger
+				render={
+					<Button
+						variant="outline"
+						size="sm"
+						className="gap-2"
+						aria-label="Change sorting order"
+					>
+						<HugeiconsIcon
+							icon={ArrowUpDownIcon}
+							className="h-4 w-4"
+						/>
+						Sort
+						{selectedOption && (
+							<Badge
+								variant="secondary"
+								className="ml-1 text-xs font-normal"
+							>
+								{selectedOption.label}
+							</Badge>
+						)}
+					</Button>
+				}
+			/>
 
 			<DropdownMenuContent align="start">
 				<DropdownMenuRadioGroup
@@ -94,7 +99,12 @@ const ListOrderBy = <Field extends string>({
 							value={toKey(opt.value)}
 							disabled={opt.disabled}
 						>
-							{opt.icon && <opt.icon className="mr-2 h-4 w-4" />}
+							{opt.icon && (
+								<HugeiconsIcon
+									icon={opt.icon}
+									className="mr-2 h-4 w-4"
+								/>
+							)}
 							{opt.label}
 						</DropdownMenuRadioItem>
 					))}

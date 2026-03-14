@@ -42,6 +42,7 @@ export type AuthMeProfileDTO = Pick<
 	| 'avatarUrl'
 	| 'displayName'
 	| 'age'
+	| 'onboardingCompleted'
 	| 'city'
 	| 'country'
 >;
