@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import {
 	Controller,
 	type Control,
@@ -8,12 +9,9 @@ import {
 	type Path,
 } from 'react-hook-form';
 import { HugeiconsIcon } from '@hugeicons/react';
-import {
-	User03Icon,
-	Cancel01Icon,
-	ImageNotFound01Icon,
-} from '@hugeicons/core-free-icons';
+import { Cancel01Icon, ImageNotFound01Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@/shared/components/ui/button';
+import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar';
 import {
 	Field,
 	FieldDescription,
@@ -27,6 +25,21 @@ import { cn } from '@/shared/lib/utils';
 
 /** Debounce delay before attempting to load a new URL (ms) */
 const PREVIEW_DEBOUNCE_MS = 350;
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Derive up to 2 initials from a display name.
+ * "Bruce Wayne" → "BW", "Bruce" → "B", "" → null
+ */
+const getInitials = (name: string): string | null => {
+	const parts = name.trim().split(/\s+/).filter(Boolean);
+	if (!parts.length) return null;
+	return parts
+		.slice(0, 2)
+		.map((p) => p[0]?.toUpperCase())
+		.join('');
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,14 +95,18 @@ type AvatarPreviewProps = {
 /**
  * AvatarPreview
  *
- * Pure visual component responsible for rendering the avatar preview state.
+ * Renders the four visual states of the avatar preview:
+ * - empty   → shadcn AvatarFallback with initials (if displayName set) or icon
+ * - loading → skeleton pulse overlay while Next.js Image fetches
+ * - loaded  → the actual image, crossfaded in with opacity transition
+ * - error   → AvatarFallback with broken-image icon + destructive tint
  *
- * The image element remains mounted whenever a URL exists so the browser
- * can fetch it immediately while the loading skeleton is displayed.
- *
- * @remarks
- * Keeping the `<img>` mounted avoids aborting image fetches during
- * intermediate UI state changes.
+ * Uses shadcn <Avatar> + <AvatarFallback> for the empty/error state so the
+ * fallback matches the app's avatar style everywhere (sidebar, profile card).
+ * Uses Next.js <Image> with unoptimized=true for the preview — unoptimized
+ * is correct here because the URL is user-provided and external, so Next.js
+ * cannot know the domain at build time and optimization would fail.
+ * The image stays mounted while loading so the browser never aborts the fetch.
  */
 const AvatarPreview = ({
 	url,
@@ -98,83 +115,96 @@ const AvatarPreview = ({
 	onError,
 	displayName,
 }: AvatarPreviewProps) => {
-	const isEmpty = previewState === 'empty';
 	const isLoading = previewState === 'loading';
 	const isLoaded = previewState === 'loaded';
 	const isError = previewState === 'error';
 
+	const initials = getInitials(displayName);
+
 	return (
-		<div
+		<Avatar
 			aria-label={
 				isLoaded
 					? `Preview of ${displayName}'s avatar`
 					: 'Avatar preview'
 			}
 			aria-busy={isLoading}
-			role="img"
 			className={cn(
-				// Base — square-ish circle, centered content
-				'relative flex items-center justify-center',
-				'w-20 h-20 rounded-full overflow-hidden shrink-0',
-				'border-2 transition-colors duration-200',
+				'w-20 h-20 border-2 transition-colors duration-200',
 				// State-driven border colour
-				isEmpty && 'border-border bg-muted',
-				isLoading && 'border-border bg-muted',
-				isLoaded && 'border-primary/40 bg-muted',
-				isError && 'border-destructive/40 bg-destructive/5'
+				!isLoaded && !isError && 'border-border',
+				isLoaded && 'border-primary/40',
+				isError && 'border-destructive/40'
 			)}
 		>
-			{/* ── Fallback layer (icon) — shown when empty or error ── */}
-			<span
-				className={cn(
-					'absolute inset-0 flex items-center justify-center transition-opacity duration-200',
-					isLoaded || isLoading ? 'opacity-0' : 'opacity-100'
-				)}
-				aria-hidden="true"
-			>
-				<HugeiconsIcon
-					icon={isError ? ImageNotFound01Icon : User03Icon}
-					className={cn(
-						'h-8 w-8',
-						isError
-							? 'text-destructive/60'
-							: 'text-muted-foreground/40'
-					)}
-				/>
-			</span>
-
-			{/* ── Skeleton pulse — shown while loading ── */}
-			<span
-				className={cn(
-					'absolute inset-0 rounded-full',
-					'bg-muted animate-pulse',
-					'transition-opacity duration-150',
-					isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'
-				)}
-				aria-hidden="true"
-			/>
-
-			{/* ── Actual image — always rendered when URL exists ── */}
+			{/* ── Actual image via Next.js — always mounted when URL exists ── */}
 			{url && (
-				<img
+				<Image
+					key={url}
 					src={url}
 					alt={`${displayName} avatar preview`}
+					fill
+					/*
+					 * unoptimized: user-supplied external URLs have no known
+					 * domain — Next.js image optimization requires domains to
+					 * be allow-listed in next.config. For a live preview of
+					 * arbitrary URLs, unoptimized is the correct approach.
+					 */
+					unoptimized
 					onLoad={onLoad}
 					onError={onError}
 					className={cn(
-						'absolute inset-0 w-full h-full object-cover',
+						'object-cover rounded-full',
 						'transition-opacity duration-300',
 						isLoaded ? 'opacity-100' : 'opacity-0'
 					)}
-					// Prevent the browser from caching broken URLs across attempts
-					key={url}
 				/>
 			)}
-		</div>
+
+			{/* ── Skeleton pulse — shown while loading ── */}
+			{isLoading && (
+				<span
+					className="absolute inset-0 rounded-full bg-muted animate-pulse"
+					aria-hidden="true"
+				/>
+			)}
+
+			{/* ── Fallback — shown when empty or error ── */}
+			<AvatarFallback
+				className={cn(
+					'text-sm font-medium select-none transition-colors',
+					isError
+						? 'bg-destructive/5 text-destructive/60'
+						: 'bg-muted text-muted-foreground'
+				)}
+			>
+				{isError ? (
+					/*
+					 * Broken image icon — tells the user the URL didn't load,
+					 * distinct from the "no URL yet" empty state.
+					 */
+					<HugeiconsIcon
+						icon={ImageNotFound01Icon}
+						className="h-7 w-7 text-destructive/60"
+					/>
+				) : initials ? (
+					/*
+					 * Initials from displayName — shown when the user has
+					 * typed their name but hasn't set a URL yet. Matches how
+					 * the Avatar renders across the rest of the app.
+					 */
+					initials
+				) : (
+					/*
+					 * Generic fallback — shown when displayName is empty.
+					 * Uses shadcn's default Avatar placeholder character.
+					 */
+					<span className="text-lg text-muted-foreground/50">?</span>
+				)}
+			</AvatarFallback>
+		</Avatar>
 	);
 };
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 // ─── Inner component (holds state, separated to keep Controller render clean) ──
 
@@ -193,16 +223,6 @@ type InnerProps = {
 	className?: string;
 };
 
-/**
- * Internal stateful implementation used by the `Controller` render prop.
- *
- * Handles:
- * - debounced preview URL updates
- * - preview state transitions
- * - synchronization with external form changes (e.g. `form.reset`)
- *
- * @internal
- */
 const AvatarUrlFieldInner = ({
 	field,
 	fieldState,
@@ -224,12 +244,6 @@ const AvatarUrlFieldInner = ({
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// ── Debounced preview update ──────────────────────────────────────────────
-	/**
-	 * Schedules a debounced preview update.
-	 *
-	 * @remarks
-	 * Debouncing prevents excessive image requests while the user types.
-	 */
 	const schedulePreview = useCallback((url: string) => {
 		if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -295,18 +309,20 @@ const AvatarUrlFieldInner = ({
 			<FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
 
 			{/* ── Preview + input row ───────────────────────────────── */}
-			<section className="flex flex-col items-center gap-3 w-full">
+			<section className="flex flex-col sm:flex-row sm:items-center gap-3">
 				{/* Avatar preview circle */}
-				<AvatarPreview
-					url={previewUrl}
-					previewState={previewState}
-					onLoad={handleImageLoad}
-					onError={handleImageError}
-					displayName={displayName}
-				/>
+				<div className="flex justify-center sm:justify-start">
+					<AvatarPreview
+						url={previewUrl}
+						previewState={previewState}
+						onLoad={handleImageLoad}
+						onError={handleImageError}
+						displayName={displayName}
+					/>
+				</div>
 
 				{/* Input + clear button */}
-				<div className="relative w-full">
+				<div className="relative w-full sm:flex-1 min-w-0">
 					<Input
 						{...field}
 						id={fieldId}
@@ -389,6 +405,8 @@ const AvatarUrlFieldInner = ({
 		</Field>
 	);
 };
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 /**
  * AvatarUrlField

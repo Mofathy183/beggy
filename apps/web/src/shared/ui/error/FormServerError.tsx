@@ -68,23 +68,23 @@ const FormServerError = ({
 
 	return (
 		<Alert
-			variant="destructive"
+			variant="default"
 			role="alert"
-			aria-live="polite"
-			className={cn(
-				'border-destructive/30 bg-destructive/8 text-foreground',
-				className
-			)}
+			aria-live="assertive"
+			aria-atomic="true"
+			className={cn('border-destructive/30 bg-destructive/8', className)}
 		>
 			<HugeiconsIcon
 				icon={AlertCircleIcon}
-				className="h-4 w-4 text-destructive"
+				className="h-5 w-5 text-destructive"
 			/>
-			<AlertTitle className="text-destructive font-semibold">
+
+			<AlertTitle className="text-destructive font-semibold leading-snug">
 				{message}
 			</AlertTitle>
+
 			{suggestion && (
-				<AlertDescription className="text-muted-foreground text-sm">
+				<AlertDescription className="text-muted-foreground text-sm mt-0.5">
 					{suggestion}
 				</AlertDescription>
 			)}
