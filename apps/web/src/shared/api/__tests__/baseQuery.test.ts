@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { baseQuery } from '../baseQuery';
 
-const mockRawBaseQuery = vi.fn();
-const mockSerializeParams = vi.fn();
-const mockNormalizeError = vi.fn();
+const { mockRawBaseQuery, mockSerializeParams, mockNormalizeError } =
+	vi.hoisted(() => ({
+		mockRawBaseQuery: vi.fn(),
+		mockSerializeParams: vi.fn(),
+		mockNormalizeError: vi.fn(),
+	}));
 
 vi.mock('@reduxjs/toolkit/query/react', async () => {
 	const actual = await vi.importActual<
@@ -17,9 +19,9 @@ vi.mock('@reduxjs/toolkit/query/react', async () => {
 	};
 });
 
-vi.mock('@shared/utils', () => {
+vi.mock('@shared/utils', async () => {
 	const actual =
-		vi.importActual<typeof import('@shared/utils')>('@shared/utils');
+		await vi.importActual<typeof import('@shared/utils')>('@shared/utils');
 
 	return {
 		...actual,
@@ -34,12 +36,14 @@ vi.mock('@/env', () => ({
 	},
 }));
 
-describe('baseQuery()', () => {
+import { baseQuery } from '../baseQuery';
+
+describe('baseQuery', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('returns data when the request succeeds', async () => {
+	it('returns response data when the request succeeds', async () => {
 		const args = '/test';
 		const serializedArgs = '/test?x=1';
 
@@ -52,6 +56,7 @@ describe('baseQuery()', () => {
 		const result = await baseQuery(args, {} as any, {} as any);
 
 		expect(mockSerializeParams).toHaveBeenCalledWith(args);
+
 		expect(mockRawBaseQuery).toHaveBeenCalledWith(
 			serializedArgs,
 			expect.anything(),
@@ -63,7 +68,22 @@ describe('baseQuery()', () => {
 		});
 	});
 
-	it('returns normalized error when the request fails', async () => {
+	it('serializes request arguments before executing the request', async () => {
+		const args = '/users';
+		const serialized = '/users?limit=10';
+
+		mockSerializeParams.mockReturnValueOnce(serialized);
+
+		mockRawBaseQuery.mockResolvedValueOnce({
+			data: { ok: true },
+		});
+
+		await baseQuery(args, {} as any, {} as any);
+
+		expect(mockSerializeParams).toHaveBeenCalledBefore(mockRawBaseQuery);
+	});
+
+	it('returns a normalized error when the request fails', async () => {
 		const rawError: FetchBaseQueryError = {
 			status: 400,
 			data: { message: 'Bad request' },
@@ -87,7 +107,30 @@ describe('baseQuery()', () => {
 		});
 	});
 
-	it('resolves even when the request fails', async () => {
+	it('forwards serialized request arguments to the raw base query', async () => {
+		const args = { url: '/users', method: 'POST' };
+
+		mockSerializeParams.mockReturnValueOnce(args);
+		mockRawBaseQuery.mockResolvedValueOnce({
+			data: { ok: true },
+		});
+
+		const result = await baseQuery(args, {} as any, {} as any);
+
+		expect(mockSerializeParams).toHaveBeenCalledWith(args);
+
+		expect(mockRawBaseQuery).toHaveBeenCalledWith(
+			args,
+			expect.anything(),
+			expect.anything()
+		);
+
+		expect(result).toEqual({
+			data: { ok: true },
+		});
+	});
+
+	it('never throws errors and always resolves with a result object', async () => {
 		mockSerializeParams.mockReturnValueOnce('/test');
 
 		mockRawBaseQuery.mockResolvedValueOnce({
@@ -96,23 +139,11 @@ describe('baseQuery()', () => {
 
 		mockNormalizeError.mockReturnValueOnce({
 			statusCode: 500,
-			body: {} as any,
+			body: {},
 		});
 
 		await expect(
 			baseQuery('/test', {} as any, {} as any)
 		).resolves.toBeDefined();
-	});
-
-	it('forwards fetch arguments unchanged', async () => {
-		const args = { url: '/users', method: 'POST' };
-
-		mockSerializeParams.mockReturnValueOnce(args);
-		mockRawBaseQuery.mockResolvedValueOnce({ data: { ok: true } });
-
-		const result = await baseQuery(args, {} as any, {} as any);
-
-		expect(mockSerializeParams).toHaveBeenCalledWith(args);
-		expect(result).toEqual({ data: { ok: true } });
 	});
 });

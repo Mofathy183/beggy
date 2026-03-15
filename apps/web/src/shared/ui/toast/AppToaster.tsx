@@ -6,14 +6,12 @@ import { Toaster as SonnerToaster } from 'sonner';
  * AppToaster
  *
  * Drop this once in your root layout — it renders the Sonner toast container.
- * Configured to match Beggy's design system:
  *
- * - theme="system"   → follows next-themes dark/light class on <html>
- * - position         → top-right on desktop, top-center on mobile (Sonner default)
- * - richColors        → uses Sonner's semantic color system as the base,
- *                       overridden by our CSS variables below
- * - toastOptions      → className hooks let us apply semantic token classes
- *                       so toasts match the design system exactly
+ * Design decisions:
+ * - richColors OFF       → our CSS variable classes own all color decisions
+ * - position top-left    → renders visually top-right in RTL (dir="rtl" flips it)
+ * - Soft tinted pattern  → matches §12.7: tinted bg + border + semantic title text
+ * - font-serif           → matches Beggy's global html { font-family: serif }
  *
  * Usage:
  * // app/layout.tsx
@@ -34,80 +32,95 @@ const AppToaster = () => {
 	return (
 		<SonnerToaster
 			theme="system"
-			position="top-right"
-			richColors
+			position="top-left"
+			richColors={false}
 			closeButton
-			gap={8}
+			gap={12}
 			toastOptions={{
 				classNames: {
 					/*
-					 * Base toast — uses card surface + foreground text so it
-					 * looks native on both light and dark backgrounds.
-					 * border-border gives the same divider color as cards/inputs.
+					 * Base toast shell — card surface so it feels native
+					 * in both light (white card) and dark (elevated stone card).
+					 * shadow-sm keeps it grounded without being heavy.
 					 */
 					toast: [
 						'font-serif',
 						'bg-card text-card-foreground',
 						'border border-border',
-						'shadow-md',
+						'shadow-sm',
 						'rounded-lg',
+						'w-[360px]',
 					].join(' '),
 
 					/*
-					 * Title — slightly heavier than description for hierarchy.
-					 * Sonner applies this to the first line of text.
+					 * Title — medium weight, foreground color by default.
+					 * Semantic variants override the color via the variant keys below.
 					 */
-					title: 'text-sm font-medium text-foreground',
+					title: 'text-sm font-medium text-foreground leading-snug',
 
 					/*
-					 * Description — muted, smaller, sits below the title.
-					 * Maps to the `suggestion` field from ErrorResponse.
+					 * Description — muted, smaller.
+					 * Maps to `suggestion` from ErrorResponse or `description` elsewhere.
 					 */
-					description: 'text-xs text-muted-foreground mt-0.5',
+					description:
+						'text-xs text-muted-foreground mt-1 leading-relaxed',
 
 					/*
-					 * Close button — ghost-style, uses muted token.
+					 * Icon — vertically centered with the title.
+					 */
+					icon: 'mt-0.5 self-start',
+
+					/*
+					 * Close button — ghost style, consistent with other dismiss controls.
 					 */
 					closeButton: [
 						'bg-muted text-muted-foreground',
 						'border border-border',
 						'hover:bg-accent hover:text-accent-foreground',
+						'transition-colors',
+						'rounded-md',
 					].join(' '),
 
 					/*
-					 * Action button (if used) — primary style.
+					 * Action button — primary CTA style.
 					 */
-					actionButton:
-						'bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium',
-
-					cancelButton:
-						'bg-muted text-muted-foreground hover:bg-accent text-xs',
+					actionButton: [
+						'bg-primary text-primary-foreground',
+						'hover:bg-primary/90',
+						'text-xs font-medium',
+						'rounded-md',
+						'transition-colors',
+					].join(' '),
 
 					/*
-					 * Semantic variants — soft tinted pattern matching §12.7.
-					 * These override Sonner's richColors defaults with our tokens.
+					 * Cancel button — muted/ghost style.
+					 */
+					cancelButton: [
+						'bg-muted text-muted-foreground',
+						'hover:bg-accent hover:text-accent-foreground',
+						'text-xs',
+						'rounded-md',
+						'transition-colors',
+					].join(' '),
+
+					/*
+					 * ── Semantic variants ──────────────────────────────────────────
 					 *
-					 * Pattern: tinted bg + matching border + full-chroma text on title
+					 * Soft tinted pattern from §12.7:
+					 *   bg-{token}/10  → tinted surface (subtle, not alarming)
+					 *   border-{token}/25 → tinted border (visible but calm)
+					 *
+					 * Title color is handled in the `title` classNames key above
+					 * on a per-variant basis — Sonner merges both keys together.
+					 *
+					 * The travel buddy tone lives in the message strings passed to
+					 * notify.success() / notify.error() etc. — not here.
+					 * This is purely the visual shell.
 					 */
-					success: [
-						'bg-success/10 border-success/30',
-						'[&_[data-title]]:text-success',
-					].join(' '),
-
-					error: [
-						'bg-destructive/10 border-destructive/30',
-						'[&_[data-title]]:text-destructive',
-					].join(' '),
-
-					warning: [
-						'bg-warning/10 border-warning/30',
-						'[&_[data-title]]:text-warning-foreground',
-					].join(' '),
-
-					info: [
-						'bg-primary/10 border-primary/30',
-						'[&_[data-title]]:text-primary',
-					].join(' '),
+					success: 'bg-success/10 border-success/25',
+					error: 'bg-destructive/10 border-destructive/25',
+					warning: 'bg-warning/10 border-warning/25',
+					info: 'bg-primary/10 border-primary/25',
 				},
 			}}
 		/>

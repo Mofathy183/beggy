@@ -1,21 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
+
 import useUserActions from '../useUserActions';
+import useUserMutations from '../useUserMutations';
 
 vi.mock('../useUserMutations');
 
-import useUserMutations from '../useUserMutations';
-
 describe('useUserActions', () => {
-	const mockUnwrap = vi.fn();
+	const mockUpdateUnwrap = vi.fn();
+	const mockDeleteUnwrap = vi.fn();
+
 	const mockUpdateStatus = vi.fn();
 	const mockDeleteUser = vi.fn();
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		mockUpdateStatus.mockReturnValue({ unwrap: mockUnwrap });
-		mockDeleteUser.mockReturnValue({ unwrap: mockUnwrap });
+		mockUpdateStatus.mockReturnValue({
+			unwrap: mockUpdateUnwrap,
+		});
+
+		mockDeleteUser.mockReturnValue({
+			unwrap: mockDeleteUnwrap,
+		});
 
 		(useUserMutations as any).mockReturnValue({
 			updateStatus: mockUpdateStatus,
@@ -28,8 +35,8 @@ describe('useUserActions', () => {
 	});
 
 	describe('activate', () => {
-		it('calls updateStatus with isActive true and unwraps result', async () => {
-			mockUnwrap.mockResolvedValueOnce('activated');
+		it('activates a user and returns the mutation result', async () => {
+			mockUpdateUnwrap.mockResolvedValueOnce('activated');
 
 			const { result } = renderHook(() => useUserActions());
 
@@ -39,14 +46,26 @@ describe('useUserActions', () => {
 				isActive: true,
 			});
 
-			expect(mockUnwrap).toHaveBeenCalled();
+			expect(mockUpdateUnwrap).toHaveBeenCalled();
 			expect(response).toBe('activated');
+		});
+
+		it('throws an error when user activation fails', async () => {
+			const error = new Error('mutation failed');
+
+			mockUpdateUnwrap.mockRejectedValueOnce(error);
+
+			const { result } = renderHook(() => useUserActions());
+
+			await expect(result.current.activate('user-1')).rejects.toThrow(
+				error
+			);
 		});
 	});
 
 	describe('deactivate', () => {
-		it('calls updateStatus with isActive false and unwraps result', async () => {
-			mockUnwrap.mockResolvedValueOnce('deactivated');
+		it('deactivates a user and returns the mutation result', async () => {
+			mockUpdateUnwrap.mockResolvedValueOnce('deactivated');
 
 			const { result } = renderHook(() => useUserActions());
 
@@ -56,27 +75,28 @@ describe('useUserActions', () => {
 				isActive: false,
 			});
 
-			expect(mockUnwrap).toHaveBeenCalled();
+			expect(mockUpdateUnwrap).toHaveBeenCalled();
 			expect(response).toBe('deactivated');
 		});
 	});
 
 	describe('remove', () => {
-		it('calls deleteUser and unwraps result', async () => {
-			mockUnwrap.mockResolvedValueOnce('deleted');
+		it('deletes a user and returns the mutation result', async () => {
+			mockDeleteUnwrap.mockResolvedValueOnce('deleted');
 
 			const { result } = renderHook(() => useUserActions());
 
 			const response = await result.current.remove('user-1');
 
 			expect(mockDeleteUser).toHaveBeenCalledWith('user-1');
-			expect(mockUnwrap).toHaveBeenCalled();
+
+			expect(mockDeleteUnwrap).toHaveBeenCalled();
 			expect(response).toBe('deleted');
 		});
 	});
 
-	describe('derived loading state', () => {
-		it('exposes isUpdatingStatus and isDeleting flags', () => {
+	describe('loading state', () => {
+		it('exposes loading flags from the mutation states', () => {
 			(useUserMutations as any).mockReturnValue({
 				updateStatus: mockUpdateStatus,
 				deleteUser: mockDeleteUser,

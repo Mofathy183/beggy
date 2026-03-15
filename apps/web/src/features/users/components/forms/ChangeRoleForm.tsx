@@ -54,7 +54,7 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 	 * Server error from the create mutation.
 	 * Matches EditProfileForm's error?.body.message pattern.
 	 */
-	const error = states.create.error as HttpClientError | undefined;
+	const error = states.changeRole.error as HttpClientError | undefined;
 
 	/**
 	 * React Hook Form setup.

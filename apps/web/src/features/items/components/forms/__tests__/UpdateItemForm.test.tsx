@@ -42,7 +42,7 @@ const item: ItemDTO = {
 	updatedAt: new Date().toISOString(),
 };
 
-describe('CreateItemForm', () => {
+describe('UpdateItemForm', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
@@ -58,7 +58,7 @@ describe('CreateItemForm', () => {
 		});
 	});
 
-	it('renders item values in the form fields', () => {
+	it('renders item values in form fields', () => {
 		render(<UpdateItemForm item={item} />);
 
 		expect(screen.getByDisplayValue('Passport')).toBeInTheDocument();
@@ -70,7 +70,7 @@ describe('CreateItemForm', () => {
 		).toBeInTheDocument();
 	});
 
-	it('submits the updated item values', async () => {
+	it('updates item when form is submitted with modified values', async () => {
 		const user = userEvent.setup();
 
 		render(<UpdateItemForm item={item} />);
@@ -91,7 +91,7 @@ describe('CreateItemForm', () => {
 		);
 	});
 
-	it('shows success notification when update succeeds', async () => {
+	it('shows success notification when item update succeeds', async () => {
 		const user = userEvent.setup();
 
 		editMock.mockImplementation(async (_, __, { onSuccess }) => {
@@ -119,7 +119,7 @@ describe('CreateItemForm', () => {
 		expect(onSuccess).toHaveBeenCalled();
 	});
 
-	it('shows error notification when update fails', async () => {
+	it('shows error notification when item update fails', async () => {
 		const user = userEvent.setup();
 
 		const apiError = {

@@ -1,88 +1,183 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ChangeUserRoleForm from '../ChangeRoleForm';
+
+import ChangeRoleForm from '../ChangeRoleForm';
+
 import { Role } from '@beggy/shared/constants';
+import { notify } from '@shared/utils';
 
-// ---- Mock useUserMutations ----
-const mockChangeRole = vi.fn();
+const changeRoleMock = vi.fn();
 
-let mockIsLoading = false;
+const resetMutationMock = vi.fn();
+
+const statesMock = {
+	changeRole: {
+		isLoading: false,
+		error: null,
+		reset: resetMutationMock,
+	},
+};
 
 vi.mock('@features/users/hooks', () => ({
 	useUserMutations: () => ({
-		changeRole: mockChangeRole,
-		states: {
-			changeRole: {
-				isLoading: mockIsLoading,
-			},
-		},
+		changeRole: changeRoleMock,
+		states: statesMock,
 	}),
 }));
 
-describe('ChangeUserRoleForm', () => {
-	const userId = 'user-123';
+vi.mock('@shared/utils', () => ({
+	notify: {
+		success: vi.fn(),
+		error: {
+			fromHttp: vi.fn(),
+		},
+	},
+}));
 
+describe('ChangeRoleForm', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+
+		statesMock.changeRole.isLoading = false;
+		statesMock.changeRole.error = null;
 	});
 
-	it('calls changeRole on successful submit', async () => {
-		mockChangeRole.mockReturnValue({
-			unwrap: () => Promise.resolve(),
+	describe('rendering', () => {
+		it('renders form with the current role', () => {
+			render(<ChangeRoleForm userId="user-1" currentRole={Role.USER} />);
+
+			expect(screen.getByText(/change user role/i)).toBeInTheDocument();
+			expect(screen.getByText(/update role/i)).toBeInTheDocument();
+		});
+	});
+
+	describe('form submission', () => {
+		it('updates user role when form is submitted', async () => {
+			const user = userEvent.setup();
+
+			changeRoleMock.mockReturnValue({
+				unwrap: vi.fn().mockResolvedValue({
+					message: 'Role updated',
+				}),
+			});
+
+			render(<ChangeRoleForm userId="user-1" currentRole={Role.USER} />);
+
+			await user.click(
+				screen.getByRole('button', { name: /update role/i })
+			);
+
+			await waitFor(() => {
+				expect(changeRoleMock).toHaveBeenCalledWith(
+					'user-1',
+					expect.objectContaining({
+						role: Role.USER,
+					})
+				);
+			});
 		});
 
-		render(<ChangeUserRoleForm userId={userId} currentRole={Role.USER} />);
+		it('does not submit when role update is loading', async () => {
+			const user = userEvent.setup();
 
-		const selectTrigger = screen.getByRole('combobox');
-		await userEvent.click(selectTrigger);
+			statesMock.changeRole.isLoading = true;
 
-		const adminOption = await screen.findByText('ADMIN');
-		await userEvent.click(adminOption);
+			render(<ChangeRoleForm userId="user-1" currentRole={Role.USER} />);
 
-		const submitButton = screen.getByRole('button', {
-			name: /update role/i,
+			await user.click(screen.getByRole('button', { name: /updating/i }));
+
+			expect(changeRoleMock).not.toHaveBeenCalled();
 		});
+	});
 
-		await userEvent.click(submitButton);
+	describe('success flow', () => {
+		it('shows success notification when role update succeeds', async () => {
+			const user = userEvent.setup();
 
-		await waitFor(() => {
-			expect(mockChangeRole).toHaveBeenCalledWith(userId, {
-				role: 'ADMIN',
+			changeRoleMock.mockReturnValue({
+				unwrap: vi.fn().mockResolvedValue({
+					message: 'Role updated',
+				}),
+			});
+
+			render(<ChangeRoleForm userId="user-1" currentRole={Role.USER} />);
+
+			await user.click(
+				screen.getByRole('button', { name: /update role/i })
+			);
+
+			await waitFor(() => {
+				expect(notify.success).toHaveBeenCalledWith({
+					message: 'Role updated',
+				});
 			});
 		});
 	});
 
-	it('shows server error when mutation fails', async () => {
-		mockChangeRole.mockReturnValue({
-			unwrap: () =>
-				Promise.reject({
-					data: { message: 'Role update failed.' },
-				}),
+	describe('error handling', () => {
+		it('shows error notification when role update fails', async () => {
+			const user = userEvent.setup();
+
+			const httpError = {
+				body: {
+					message: 'Conflict',
+				},
+			};
+
+			changeRoleMock.mockReturnValue({
+				unwrap: vi.fn().mockRejectedValue(httpError),
+			});
+
+			render(<ChangeRoleForm userId="user-1" currentRole={Role.USER} />);
+
+			await user.click(
+				screen.getByRole('button', { name: /update role/i })
+			);
+
+			await waitFor(() => {
+				expect(notify.error.fromHttp).toHaveBeenCalledWith(httpError);
+			});
 		});
 
-		render(<ChangeUserRoleForm userId={userId} currentRole={Role.USER} />);
+		it('clears server error when user changes the role', async () => {
+			const user = userEvent.setup();
 
-		const submitButton = screen.getByRole('button', {
-			name: /update role/i,
+			(statesMock.changeRole as any).error = {
+				body: {
+					message: 'Conflict',
+					suggestion: 'Try another role',
+				},
+			};
+
+			render(<ChangeRoleForm userId="user-1" currentRole={Role.USER} />);
+
+			await user.click(screen.getByRole('combobox'));
+			await user.click(screen.getByText(/admin/i));
+
+			await waitFor(() => {
+				expect(resetMutationMock).toHaveBeenCalled();
+			});
 		});
-
-		await userEvent.click(submitButton);
-
-		expect(
-			await screen.findByText(/failed to update role/i)
-		).toBeInTheDocument();
 	});
 
-	it('disables submit button when loading', () => {
-		mockIsLoading = true;
+	describe('cancel behavior', () => {
+		it('calls onCancel when cancel button is clicked', async () => {
+			const user = userEvent.setup();
 
-		render(<ChangeUserRoleForm userId={userId} currentRole={Role.USER} />);
+			const onCancel = vi.fn();
 
-		const submitButton = screen.getByRole('button', {
-			name: /updating.../i,
+			render(
+				<ChangeRoleForm
+					userId="user-1"
+					currentRole={Role.USER}
+					onCancel={onCancel}
+				/>
+			);
+
+			await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+			expect(onCancel).toHaveBeenCalled();
 		});
-
-		expect(submitButton).toBeDisabled();
 	});
 });

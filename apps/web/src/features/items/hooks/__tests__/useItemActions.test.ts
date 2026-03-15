@@ -4,118 +4,136 @@ import { renderHook, act } from '@testing-library/react';
 import useItemActions from '../useItemActions';
 import useItemMutations from '../useItemMutations';
 
+import { SuccessMessages } from '@beggy/shared/constants';
+
 vi.mock('../useItemMutations');
 
-const mockUseItemMutations = vi.mocked(useItemMutations);
+const createItemMock = vi.fn();
+const updateItemMock = vi.fn();
+const deleteItemMock = vi.fn();
 
-describe('useItemActions()', () => {
-	let createItem: any;
-	let updateItem: any;
-	let deleteItem: any;
+const statesMock = {
+	create: { isLoading: false },
+	update: { isLoading: false },
+	delete: { isLoading: false },
+};
 
-	beforeEach(() => {
-		createItem = vi.fn();
-		updateItem = vi.fn();
-		deleteItem = vi.fn();
-
-		mockUseItemMutations.mockReturnValue({
-			createItem,
-			updateItem,
-			deleteItem,
-			isAnyLoading: false,
-			states: {
-				create: { isLoading: false },
-				update: { isLoading: false },
-				delete: { isLoading: false },
-			},
-		} as any);
+beforeEach(() => {
+	vi.clearAllMocks();
+	(useItemMutations as any).mockReturnValue({
+		createItem: createItemMock,
+		updateItem: updateItemMock,
+		deleteItem: deleteItemMock,
+		isAnyLoading: false,
+		states: statesMock,
 	});
+});
 
-	it('calls onSuccess when create succeeds', async () => {
-		const unwrap = vi.fn().mockResolvedValue({});
-		createItem.mockReturnValue({ unwrap });
+describe('useItemActions', () => {
+	describe('create', () => {
+		it('creates an item and calls onSuccess with the success message', async () => {
+			const onSuccess = vi.fn();
 
-		const onSuccess = vi.fn();
-
-		const { result } = renderHook(() => useItemActions());
-
-		await act(async () => {
-			await result.current.create({ name: 'Item' } as any, { onSuccess });
-		});
-
-		expect(createItem).toHaveBeenCalledWith({ name: 'Item' });
-		expect(onSuccess).toHaveBeenCalled();
-	});
-
-	it('calls onError when create fails', async () => {
-		const error = new Error('create failed');
-		const unwrap = vi.fn().mockRejectedValue(error);
-
-		createItem.mockReturnValue({ unwrap });
-
-		const onError = vi.fn();
-
-		const { result } = renderHook(() => useItemActions());
-
-		await act(async () => {
-			await result.current.create({ name: 'Item' } as any, { onError });
-		});
-
-		expect(onError).toHaveBeenCalledWith(error);
-	});
-
-	it('calls update mutation and onSuccess when edit succeeds', async () => {
-		const unwrap = vi.fn().mockResolvedValue({});
-		updateItem.mockReturnValue({ unwrap });
-
-		const onSuccess = vi.fn();
-
-		const { result } = renderHook(() => useItemActions());
-
-		await act(async () => {
-			await result.current.edit('123', { name: 'Updated' } as any, {
-				onSuccess,
+			createItemMock.mockReturnValue({
+				unwrap: vi.fn().mockResolvedValue({
+					message: 'Item created',
+				}),
 			});
+
+			const { result } = renderHook(() => useItemActions());
+
+			await act(async () => {
+				await result.current.create({ name: 'Backpack' } as any, {
+					onSuccess,
+				});
+			});
+
+			expect(createItemMock).toHaveBeenCalledWith({
+				name: 'Backpack',
+			});
+
+			expect(onSuccess).toHaveBeenCalledWith('Item created');
 		});
 
-		expect(updateItem).toHaveBeenCalledWith('123', { name: 'Updated' });
-		expect(onSuccess).toHaveBeenCalled();
-	});
+		it('calls onError when item creation fails', async () => {
+			const onError = vi.fn();
 
-	it('calls delete mutation and onSuccess when remove succeeds', async () => {
-		const unwrap = vi.fn().mockResolvedValue({});
-		deleteItem.mockReturnValue({ unwrap });
+			const error = { message: 'error' };
 
-		const onSuccess = vi.fn();
+			createItemMock.mockReturnValue({
+				unwrap: vi.fn().mockRejectedValue(error),
+			});
 
-		const { result } = renderHook(() => useItemActions());
+			const { result } = renderHook(() => useItemActions());
 
-		await act(async () => {
-			await result.current.remove('123', { onSuccess });
+			await act(async () => {
+				await result.current.create({ name: 'Backpack' } as any, {
+					onError,
+				});
+			});
+
+			expect(onError).toHaveBeenCalledWith(error);
 		});
-
-		expect(deleteItem).toHaveBeenCalledWith('123');
-		expect(onSuccess).toHaveBeenCalled();
 	});
 
-	it('exposes mutation loading states', () => {
-		mockUseItemMutations.mockReturnValue({
-			createItem,
-			updateItem,
-			deleteItem,
-			isAnyLoading: true,
-			states: {
-				create: { isLoading: true },
-				update: { isLoading: false },
-				delete: { isLoading: false },
-			},
-		} as any);
+	describe('edit', () => {
+		it('updates an item and calls onSuccess with the success message', async () => {
+			const onSuccess = vi.fn();
 
-		const { result } = renderHook(() => useItemActions());
+			updateItemMock.mockReturnValue({
+				unwrap: vi.fn().mockResolvedValue({
+					message: 'Item updated',
+				}),
+			});
 
-		expect(result.current.isCreating).toBe(true);
-		expect(result.current.isUpdating).toBe(false);
-		expect(result.current.isDeleting).toBe(false);
-		expect(result.current.isAnyLoading).toBe(true);
+			const { result } = renderHook(() => useItemActions());
+
+			await act(async () => {
+				await result.current.edit(
+					'item-id',
+					{ name: 'New name' } as any,
+					{ onSuccess }
+				);
+			});
+
+			expect(updateItemMock).toHaveBeenCalledWith('item-id', {
+				name: 'New name',
+			});
+
+			expect(onSuccess).toHaveBeenCalledWith('Item updated');
+		});
+	});
+
+	describe('remove', () => {
+		it('deletes an item and calls onSuccess with the delete success message', async () => {
+			const onSuccess = vi.fn();
+
+			deleteItemMock.mockReturnValue({
+				unwrap: vi.fn().mockResolvedValue({}),
+			});
+
+			const { result } = renderHook(() => useItemActions());
+
+			await act(async () => {
+				await result.current.remove('item-id', { onSuccess });
+			});
+
+			expect(deleteItemMock).toHaveBeenCalledWith('item-id');
+
+			expect(onSuccess).toHaveBeenCalledWith(
+				SuccessMessages.ITEM_DELETED
+			);
+		});
+	});
+
+	describe('loading states', () => {
+		it('exposes the mutation loading states', () => {
+			const { result } = renderHook(() => useItemActions());
+
+			expect(result.current.isCreating).toBe(false);
+			expect(result.current.isUpdating).toBe(false);
+			expect(result.current.isDeleting).toBe(false);
+			expect(result.current.isAnyLoading).toBe(false);
+		});
 	});
 });

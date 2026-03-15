@@ -16,6 +16,7 @@ const baseProfile: ProfileDTO = {
 	lastName: 'Doe',
 	avatarUrl: null,
 	gender: null,
+	onboardingCompleted: false,
 	birthDate: null,
 	country: null,
 	city: null,

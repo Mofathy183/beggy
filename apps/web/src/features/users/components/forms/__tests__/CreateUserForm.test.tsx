@@ -1,103 +1,224 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import CreateUserForm from '../CreateUserForm';
-import { useUserMutations } from '@features/users/hooks';
+
+import { notify } from '@shared/utils';
+
+// ─── Mocks ───────────────────────────────────────────────────────────
+
+const createUserMock = vi.fn();
+const resetMutationMock = vi.fn();
+
+const statesMock = {
+	create: {
+		isLoading: false,
+		error: null,
+		reset: resetMutationMock,
+	},
+};
 
 vi.mock('@features/users/hooks', () => ({
-	useUserMutations: vi.fn(),
+	useUserMutations: () => ({
+		createUser: createUserMock,
+		states: statesMock,
+	}),
 }));
 
+vi.mock('@shared/utils', () => ({
+	notify: {
+		success: vi.fn(),
+		error: {
+			fromHttp: vi.fn(),
+		},
+	},
+}));
+
+// ─── Helpers ─────────────────────────────────────────────────────────
+
+const fillForm = async (user: ReturnType<typeof userEvent.setup>) => {
+	await user.type(screen.getByLabelText(/first name/i), 'Bruce');
+	await user.type(screen.getByLabelText(/last name/i), 'Wayne');
+	await user.type(screen.getByLabelText(/email/i), 'bruce@wayne.com');
+
+	await user.type(screen.getByLabelText(/^password$/i), 'Password123@@');
+	await user.type(
+		screen.getByLabelText(/confirm password/i),
+		'Password123@@'
+	);
+};
+
+// ─── Setup ───────────────────────────────────────────────────────────
+
+beforeEach(() => {
+	vi.clearAllMocks();
+
+	statesMock.create.isLoading = false;
+	statesMock.create.error = null;
+});
+
+// ─── Tests ───────────────────────────────────────────────────────────
+
 describe('CreateUserForm', () => {
-	const mockCreateUser = vi.fn();
+	describe('rendering', () => {
+		it('renders create user form fields', () => {
+			render(<CreateUserForm />);
 
-	beforeEach(() => {
-		vi.clearAllMocks();
+			expect(
+				screen.getByRole('button', { name: /create user/i })
+			).toBeInTheDocument();
 
-		(useUserMutations as any).mockReturnValue({
-			createUser: mockCreateUser,
-			states: {
-				create: { isLoading: false },
-			},
+			expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+
+			expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
+
+			expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
 		});
 	});
 
-	const fillForm = async () => {
-		await userEvent.type(screen.getByLabelText(/first name/i), 'John');
-		await userEvent.type(screen.getByLabelText(/last name/i), 'Doe');
-		await userEvent.type(
-			screen.getByLabelText(/email/i),
-			'john@example.com'
-		);
-		await userEvent.type(
-			screen.getByLabelText(/^password$/i),
-			'Password123!'
-		);
-		await userEvent.type(
-			screen.getByLabelText(/confirm password/i),
-			'Password123!'
-		);
-	};
+	describe('form submission', () => {
+		it('creates user when form is submitted with valid input', async () => {
+			const user = userEvent.setup();
 
-	it('calls createUser on successful submit', async () => {
-		mockCreateUser.mockReturnValue({
-			unwrap: () => Promise.resolve({}),
-		});
-
-		render(<CreateUserForm />);
-
-		await fillForm();
-
-		await userEvent.click(
-			screen.getByRole('button', { name: /create user/i })
-		);
-
-		await waitFor(() => {
-			expect(mockCreateUser).toHaveBeenCalledWith(
-				expect.objectContaining({
-					firstName: 'John',
-					lastName: 'Doe',
-					email: 'john@example.com',
-					password: 'Password123!',
-				})
-			);
-		});
-	});
-
-	it('shows server error when mutation fails', async () => {
-		mockCreateUser.mockReturnValue({
-			unwrap: () =>
-				Promise.reject({
-					data: { message: 'Email already exists' },
+			createUserMock.mockReturnValue({
+				unwrap: vi.fn().mockResolvedValue({
+					message: 'User created',
 				}),
+			});
+
+			render(<CreateUserForm />);
+
+			await fillForm(user);
+
+			await user.click(
+				screen.getByRole('button', { name: /create user/i })
+			);
+
+			await waitFor(() => {
+				expect(createUserMock).toHaveBeenCalledWith({
+					firstName: 'Bruce',
+					lastName: 'Wayne',
+					email: 'bruce@wayne.com',
+					password: 'Password123@@',
+					confirmPassword: 'Password123@@',
+				});
+			});
 		});
 
-		render(<CreateUserForm />);
+		it('does not submit when user creation is loading', async () => {
+			const user = userEvent.setup();
 
-		await fillForm();
+			statesMock.create.isLoading = true;
 
-		await userEvent.click(
-			screen.getByRole('button', { name: /create user/i })
-		);
+			render(<CreateUserForm />);
 
-		expect(
-			await screen.findByText(/email already exists/i)
-		).toBeInTheDocument();
+			await user.click(screen.getByRole('button', { name: /creating/i }));
+
+			expect(createUserMock).not.toHaveBeenCalled();
+		});
 	});
 
-	it('disables submit button when loading', () => {
-		(useUserMutations as any).mockReturnValue({
-			createUser: mockCreateUser,
-			states: {
-				create: { isLoading: true },
-			},
+	describe('success flow', () => {
+		it('shows success notification when user creation succeeds', async () => {
+			const user = userEvent.setup();
+
+			createUserMock.mockReturnValue({
+				unwrap: vi.fn().mockResolvedValue({
+					message: 'User created',
+				}),
+			});
+
+			render(<CreateUserForm />);
+
+			await fillForm(user);
+
+			await user.click(
+				screen.getByRole('button', { name: /create user/i })
+			);
+
+			await waitFor(() => {
+				expect(notify.success).toHaveBeenCalledWith({
+					message: 'User created',
+				});
+			});
+		});
+	});
+
+	describe('error handling', () => {
+		it('shows error notification when user creation fails', async () => {
+			const user = userEvent.setup();
+
+			const httpError = {
+				body: {
+					message: 'Conflict',
+				},
+			};
+
+			createUserMock.mockReturnValue({
+				unwrap: vi.fn().mockRejectedValue(httpError),
+			});
+
+			render(<CreateUserForm />);
+
+			await fillForm(user);
+
+			await user.click(
+				screen.getByRole('button', { name: /create user/i })
+			);
+
+			await waitFor(() => {
+				expect(notify.error.fromHttp).toHaveBeenCalledWith(httpError);
+			});
 		});
 
-		render(<CreateUserForm />);
+		it('clears server error when user edits a field', async () => {
+			const user = userEvent.setup();
 
-		expect(
-			screen.getByRole('button', { name: /creating/i })
-		).toBeDisabled();
+			(statesMock.create as any).error = {
+				body: {
+					message: 'Conflict',
+					suggestion: 'Try another email',
+				},
+			};
+
+			render(<CreateUserForm />);
+
+			await user.type(screen.getByLabelText(/first name/i), 'B');
+
+			await waitFor(() => {
+				expect(resetMutationMock).toHaveBeenCalled();
+			});
+		});
+	});
+
+	describe('cancel behavior', () => {
+		it('calls onCancel when cancel button is clicked', async () => {
+			const user = userEvent.setup();
+
+			const onCancel = vi.fn();
+
+			render(<CreateUserForm onCancel={onCancel} />);
+
+			await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+			expect(onCancel).toHaveBeenCalled();
+		});
+
+		it('resets form fields when reset button is clicked and no onCancel is provided', async () => {
+			const user = userEvent.setup();
+
+			render(<CreateUserForm />);
+
+			const firstName = screen.getByLabelText(/first name/i);
+
+			await user.type(firstName, 'Bruce');
+
+			await user.click(screen.getByRole('button', { name: /reset/i }));
+
+			await waitFor(() => {
+				expect(firstName).toHaveValue('');
+			});
+		});
 	});
 });

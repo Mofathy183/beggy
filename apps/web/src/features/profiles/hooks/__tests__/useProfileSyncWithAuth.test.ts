@@ -1,9 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+
 import useProfileSyncWithAuth from '../useProfileSyncWithAuth';
 import { useAppDispatch } from '@shared/store';
+import { authApi } from '@features/auth/api';
 
-vi.mock('@shared/store');
+vi.mock('@shared/store', () => ({
+	useAppDispatch: vi.fn(),
+}));
+
+vi.mock('@features/auth/api', () => ({
+	authApi: {
+		endpoints: {
+			me: {
+				initiate: vi.fn(() => ({ type: 'auth/me' })),
+			},
+		},
+	},
+}));
 
 describe('useProfileSyncWithAuth', () => {
 	const mockDispatch = vi.fn();
@@ -13,20 +27,21 @@ describe('useProfileSyncWithAuth', () => {
 		(useAppDispatch as any).mockReturnValue(mockDispatch);
 	});
 
-	it('syncs profile when syncProfile is called', () => {
+	it('refetches the authenticated user when syncProfile is called', () => {
 		const { result } = renderHook(() => useProfileSyncWithAuth());
 
 		act(() => {
 			result.current.syncProfile();
 		});
 
-		expect(mockDispatch).toHaveBeenCalledTimes(1);
+		expect(authApi.endpoints.me.initiate).toHaveBeenCalledWith(undefined, {
+			forceRefetch: true,
+		});
 
-		const dispatchedArg = (mockDispatch.mock as any).calls[0][0];
-		expect(typeof dispatchedArg).toBe('function');
+		expect(mockDispatch).toHaveBeenCalledTimes(1);
 	});
 
-	it('returns syncProfile function', () => {
+	it('exposes the syncProfile function', () => {
 		const { result } = renderHook(() => useProfileSyncWithAuth());
 
 		expect(typeof result.current.syncProfile).toBe('function');

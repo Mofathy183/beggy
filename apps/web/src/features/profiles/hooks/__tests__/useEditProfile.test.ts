@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+
 import useEditProfile from '../useEditProfile';
 import { useEditProfileMutation } from '@features/profiles/api';
+
 import type { ProfileDTO } from '@beggy/shared/types';
 import type { HttpClientError } from '@shared/types';
 
@@ -18,18 +20,23 @@ const baseProfile: ProfileDTO = {
 	avatarUrl: null,
 	gender: null,
 	birthDate: null,
+	onboardingCompleted: false,
 	country: null,
 	city: null,
 	createdAt: '2024-01-01T00:00:00.000Z',
 	updatedAt: '2024-01-01T00:00:00.000Z',
 };
 
-describe('useEditProfile', () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
+beforeEach(() => {
+	vi.clearAllMocks();
+});
 
-	it('returns loading state', () => {
+// ─────────────────────────────────────────────
+// Tests
+// ─────────────────────────────────────────────
+
+describe('useEditProfile', () => {
+	it('exposes the loading state of the mutation', () => {
 		(useEditProfileMutation as any).mockReturnValue([
 			mockEdit,
 			{ isLoading: true, error: undefined, reset: mockReset },
@@ -40,13 +47,15 @@ describe('useEditProfile', () => {
 		expect(result.current.isLoading).toBe(true);
 	});
 
-	it('calls onSuccess when update succeeds', async () => {
+	it('updates the profile and calls onSuccess when the mutation succeeds', async () => {
 		const onSuccess = vi.fn();
 
 		mockEdit.mockReturnValue({
-			unwrap: vi.fn().mockResolvedValue({ data: baseProfile }),
+			unwrap: vi.fn().mockResolvedValue({
+				data: baseProfile,
+				message: 'Profile updated',
+			}),
 		});
-
 		(useEditProfileMutation as any).mockReturnValue([
 			mockEdit,
 			{ isLoading: false, error: undefined, reset: mockReset },
@@ -59,10 +68,11 @@ describe('useEditProfile', () => {
 		});
 
 		expect(mockEdit).toHaveBeenCalledWith({ firstName: 'Jane' });
-		expect(onSuccess).toHaveBeenCalledWith(baseProfile);
+
+		expect(onSuccess).toHaveBeenCalledWith(baseProfile, 'Profile updated');
 	});
 
-	it('throws when update fails', async () => {
+	it('throws an error when the profile update fails', async () => {
 		const apiError: HttpClientError = {
 			statusCode: 409,
 			body: { message: 'Conflict' },
@@ -71,7 +81,6 @@ describe('useEditProfile', () => {
 		mockEdit.mockReturnValue({
 			unwrap: vi.fn().mockRejectedValue(apiError),
 		});
-
 		(useEditProfileMutation as any).mockReturnValue([
 			mockEdit,
 			{ isLoading: false, error: apiError, reset: mockReset },
@@ -86,7 +95,7 @@ describe('useEditProfile', () => {
 		).rejects.toEqual(apiError);
 	});
 
-	it('returns null when error is undefined', () => {
+	it('returns null when the mutation error is undefined', () => {
 		(useEditProfileMutation as any).mockReturnValue([
 			mockEdit,
 			{ isLoading: false, error: undefined, reset: mockReset },
@@ -97,7 +106,7 @@ describe('useEditProfile', () => {
 		expect(result.current.error).toBeNull();
 	});
 
-	it('returns error when update fails', () => {
+	it('returns the mutation error when the mutation fails', () => {
 		const apiError = {
 			statusCode: 400,
 			body: { message: 'Invalid input' },
@@ -113,7 +122,7 @@ describe('useEditProfile', () => {
 		expect(result.current.error).toEqual(apiError);
 	});
 
-	it('returns reset function', () => {
+	it('exposes the reset function from the mutation', () => {
 		(useEditProfileMutation as any).mockReturnValue([
 			mockEdit,
 			{ isLoading: false, error: undefined, reset: mockReset },

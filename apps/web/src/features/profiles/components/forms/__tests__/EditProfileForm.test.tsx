@@ -51,7 +51,7 @@ beforeEach(() => {
 
 describe('EditProfileForm', () => {
 	describe('rendering', () => {
-		it('should render the edit profile form with default values', () => {
+		it('renders form fields with default values', () => {
 			render(<EditProfileForm defaultValues={defaultValues} />);
 
 			expect(screen.getByDisplayValue('John')).toBeInTheDocument();
@@ -60,7 +60,7 @@ describe('EditProfileForm', () => {
 	});
 
 	describe('form submission', () => {
-		it('should call submit when the form is submitted', async () => {
+		it('submits profile update when form is submitted', async () => {
 			const user = userEvent.setup();
 
 			render(<EditProfileForm defaultValues={defaultValues} />);
@@ -74,7 +74,7 @@ describe('EditProfileForm', () => {
 			});
 		});
 
-		it('should not submit if the mutation is loading', async () => {
+		it('does not submit when mutation is loading', async () => {
 			const user = userEvent.setup();
 
 			useEditProfileMock.mockReturnValue({
@@ -93,7 +93,7 @@ describe('EditProfileForm', () => {
 	});
 
 	describe('success flow', () => {
-		it('should sync the profile and notify the user on success', async () => {
+		it('syncs profile and shows success notification when update succeeds', async () => {
 			const user = userEvent.setup();
 
 			useEditProfileMock.mockImplementation((options) => ({
@@ -124,7 +124,7 @@ describe('EditProfileForm', () => {
 			});
 		});
 
-		it('should call onSuccess prop after a successful update', async () => {
+		it('calls onSuccess callback when profile update succeeds', async () => {
 			const user = userEvent.setup();
 			const onSuccess = vi.fn();
 
@@ -162,7 +162,7 @@ describe('EditProfileForm', () => {
 	});
 
 	describe('server error handling', () => {
-		it('should reset the mutation error when the user edits a field', async () => {
+		it('clears server error when user edits a field', async () => {
 			const user = userEvent.setup();
 
 			useEditProfileMock.mockReturnValue({

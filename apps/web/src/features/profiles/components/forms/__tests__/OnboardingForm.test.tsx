@@ -43,7 +43,7 @@ describe('OnboardingForm', () => {
 		expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
 	});
 
-	it('submits the form when the user clicks submit', async () => {
+	it('submits onboarding data when form is submitted', async () => {
 		const user = userEvent.setup();
 
 		render(<OnboardingForm />);
@@ -77,7 +77,7 @@ describe('OnboardingForm', () => {
 		});
 	});
 
-	it('calls skip when the user clicks skip', async () => {
+	it('skips onboarding when user chooses to complete it later', async () => {
 		const user = userEvent.setup();
 
 		render(<OnboardingForm />);
@@ -89,7 +89,7 @@ describe('OnboardingForm', () => {
 		expect(skipMock).toHaveBeenCalled();
 	});
 
-	it('shows warning notification when skip fails', async () => {
+	it('shows warning notification when skipping onboarding fails', async () => {
 		const user = userEvent.setup();
 
 		skipMock.mockImplementation(async ({ onError }) => {
@@ -136,7 +136,7 @@ describe('OnboardingForm', () => {
 		expect(screen.getByText(/server error/i)).toBeInTheDocument();
 	});
 
-	it('clears server error when the user edits the form', async () => {
+	it('clears server error when user edits the form', async () => {
 		const user = userEvent.setup();
 
 		useOnboardingMock.mockReturnValue({

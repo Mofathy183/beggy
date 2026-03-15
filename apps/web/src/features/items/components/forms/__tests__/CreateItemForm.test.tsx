@@ -52,7 +52,7 @@ describe('CreateItemForm', () => {
 		});
 	});
 
-	it('renders the item creation fields', () => {
+	it('renders item creation fields', () => {
 		render(<CreateItemForm />);
 
 		expect(screen.getByLabelText(/item name/i)).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('CreateItemForm', () => {
 		).toBeInTheDocument();
 	});
 
-	it('submits the form and calls create action', async () => {
+	it('creates item when form is submitted with valid input', async () => {
 		const user = userEvent.setup();
 
 		render(<CreateItemForm />);
@@ -78,7 +78,7 @@ describe('CreateItemForm', () => {
 		expect(createMock).toHaveBeenCalled();
 	});
 
-	it('shows success notification when creation succeeds', async () => {
+	it('shows success notification when item creation succeeds', async () => {
 		const user = userEvent.setup();
 
 		createMock.mockImplementation(async (_, { onSuccess }) => {
@@ -99,7 +99,7 @@ describe('CreateItemForm', () => {
 		expect(onSuccess).toHaveBeenCalled();
 	});
 
-	it('shows error notification when creation fails', async () => {
+	it('shows error notification when item creation fails', async () => {
 		const user = userEvent.setup();
 
 		const apiError = {
