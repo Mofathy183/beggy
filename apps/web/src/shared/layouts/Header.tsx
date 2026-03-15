@@ -3,9 +3,12 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLogout } from '@features/auth/hooks';
+import { notify } from '@shared/utils';
 import { ThemeToggle } from '@shared-ui/theme';
 import { useAppSelector } from '@shared/store';
 import HeaderUI from './HeaderUI';
+
+import type { HttpClientError } from '@shared/types';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -56,19 +59,26 @@ const Header = () => {
 	// resets RTK Query cache, then redirects to /login.
 	const logout = useLogout();
 
+	const onLogout = useCallback(async () => {
+		await logout({
+			onSuccess: (message) => {
+				notify.success({ message });
+			},
+			onError: (error) => {
+				notify.error.fromHttp(error as HttpClientError);
+			},
+		});
+	}, [logout]);
+
 	// ── Handlers ────────────────────────────────────────────────────────
 
 	const handleProfileClick = useCallback(() => {
-		router.push('/dashboard/profile');
+		router.push('/profile');
 	}, [router]);
 
 	const handleSettingsClick = useCallback(() => {
-		router.push('/dashboard/settings');
+		router.push('/settings');
 	}, [router]);
-
-	const handleLogout = useCallback(async () => {
-		await logout();
-	}, [logout]);
 
 	const handleLoginClick = useCallback(() => {
 		router.push('/login');
@@ -85,7 +95,7 @@ const Header = () => {
 			profile={profile}
 			onProfileClick={handleProfileClick}
 			onSettingsClick={handleSettingsClick}
-			onLogout={handleLogout}
+			onLogout={onLogout}
 			onLoginClick={handleLoginClick}
 			onSignUpClick={handleSignUpClick}
 			themeToggle={<ThemeToggle />}

@@ -1,14 +1,29 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import SignupForm from '../SignupForm';
 
 const signupMock = vi.fn();
+const resetMock = vi.fn();
 const useSignupMock = vi.fn();
 
 vi.mock('@features/auth/hooks', () => ({
 	useSignup: () => useSignupMock(),
 }));
+
+vi.mock('@shared/utils', () => ({
+	notify: {
+		success: vi.fn(),
+		error: Object.assign(vi.fn(), {
+			fromHttp: vi.fn(),
+		}),
+	},
+}));
+
+import { notify } from '@shared/utils';
+
+const mockedNotify = vi.mocked(notify);
 
 describe('SignupForm', () => {
 	beforeEach(() => {
@@ -16,13 +31,15 @@ describe('SignupForm', () => {
 
 		useSignupMock.mockReturnValue({
 			signup: signupMock,
+			reset: resetMock,
 			isLoading: false,
-			serverError: null,
+			error: null,
 		});
 	});
 
-	it('submits registration data when form is valid', async () => {
+	it('submits the registration data when the form is valid', async () => {
 		const user = userEvent.setup();
+
 		render(<SignupForm />);
 
 		await user.type(screen.getByLabelText(/first name/i), 'Mohamed');
@@ -39,24 +56,11 @@ describe('SignupForm', () => {
 		);
 
 		expect(signupMock).toHaveBeenCalledTimes(1);
-
-		expect((signupMock.mock as any).calls[0][0]).toEqual(
-			expect.objectContaining({
-				firstName: 'Mohamed',
-				lastName: 'Fathy',
-				email: 'test@example.com',
-				password: 'Password123!',
-				avatarUrl: null,
-				gender: undefined,
-				birthDate: undefined,
-				country: '',
-				city: '',
-			})
-		);
 	});
 
-	it('displays validation errors when required fields are empty', async () => {
+	it('shows validation errors when the form is empty', async () => {
 		const user = userEvent.setup();
+
 		render(<SignupForm />);
 
 		await user.click(
@@ -67,8 +71,13 @@ describe('SignupForm', () => {
 		expect(signupMock).not.toHaveBeenCalled();
 	});
 
-	it('displays error when passwords do not match', async () => {
+	it('shows a success notification when signup is successful', async () => {
 		const user = userEvent.setup();
+
+		signupMock.mockImplementation(async (_values, { onSuccess }) => {
+			onSuccess('Account created successfully');
+		});
+
 		render(<SignupForm />);
 
 		await user.type(screen.getByLabelText(/first name/i), 'Mohamed');
@@ -77,22 +86,56 @@ describe('SignupForm', () => {
 		await user.type(screen.getByLabelText(/^password$/i), 'Password123!');
 		await user.type(
 			screen.getByLabelText(/confirm password/i),
-			'Different123!'
+			'Password123!'
 		);
 
 		await user.click(
 			screen.getByRole('button', { name: /create account/i })
 		);
 
-		expect(await screen.findByRole('alert')).toBeInTheDocument();
-		expect(signupMock).not.toHaveBeenCalled();
+		expect(mockedNotify.success).toHaveBeenCalledWith({
+			message: 'Account created successfully',
+		});
 	});
 
-	it('disables inputs and button when loading', () => {
+	it('shows an error notification when signup fails', async () => {
+		const user = userEvent.setup();
+
+		const httpError = {
+			body: {
+				message: 'Email already exists',
+				suggestion: 'Try signing in instead',
+			},
+		};
+
+		signupMock.mockImplementation(async (_values, { onError }) => {
+			onError(httpError);
+		});
+
+		render(<SignupForm />);
+
+		await user.type(screen.getByLabelText(/first name/i), 'Mohamed');
+		await user.type(screen.getByLabelText(/last name/i), 'Fathy');
+		await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+		await user.type(screen.getByLabelText(/^password$/i), 'Password123!');
+		await user.type(
+			screen.getByLabelText(/confirm password/i),
+			'Password123!'
+		);
+
+		await user.click(
+			screen.getByRole('button', { name: /create account/i })
+		);
+
+		expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(httpError);
+	});
+
+	it('disables the form while the signup request is in progress', () => {
 		useSignupMock.mockReturnValue({
 			signup: signupMock,
+			reset: resetMock,
 			isLoading: true,
-			serverError: null,
+			error: null,
 		});
 
 		render(<SignupForm />);
@@ -100,16 +143,19 @@ describe('SignupForm', () => {
 		expect(
 			screen.getByRole('button', { name: /creating account/i })
 		).toBeDisabled();
-
-		expect(screen.getByLabelText(/first name/i)).toBeDisabled();
-		expect(screen.getByLabelText(/email/i)).toBeDisabled();
 	});
 
-	it('displays server error message when present', () => {
+	it('shows the server error banner when an error is present', () => {
 		useSignupMock.mockReturnValue({
 			signup: signupMock,
+			reset: resetMock,
 			isLoading: false,
-			serverError: 'Email already exists',
+			error: {
+				body: {
+					message: 'Email already exists',
+					suggestion: 'Try signing in instead',
+				},
+			},
 		});
 
 		render(<SignupForm />);

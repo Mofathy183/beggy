@@ -1,97 +1,163 @@
-import { render, screen, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 import OnboardingForm from '../OnboardingForm';
+import { useOnboarding } from '@features/profiles/hooks';
+import { notify } from '@shared/utils';
+import type { HttpClientError } from '@shared/types';
 
-// ─────────────────────────────────────────────
-// Shared Mocks
-// ─────────────────────────────────────────────
-
-const mockSubmit = vi.fn();
-const mockReset = vi.fn();
-
-let mockIsLoading = false;
-let mockError: any = null;
-let capturedRedirectTo: string | undefined;
-
-// Mock useOnboarding properly
-vi.mock('@features/profiles/hooks', () => ({
-	useOnboarding: (options: any) => {
-		capturedRedirectTo = options?.redirectTo;
-
-		return {
-			submit: mockSubmit,
-			isLoading: mockIsLoading,
-			error: mockError,
-			reset: mockReset,
-		};
+vi.mock('@features/profiles/hooks');
+vi.mock('@shared/utils', () => ({
+	notify: {
+		success: vi.fn(),
+		warning: vi.fn(),
 	},
 }));
 
-// Mock UI layer (container-only testing)
-vi.mock('../OnboardingFormUI', () => ({
-	default: ({ onSubmit, serverError, serverSuggestion }: any) => (
-		<div>
-			<button onClick={() => onSubmit({ firstName: 'Jane' })}>
-				submit
-			</button>
-			{serverError && <span>{serverError}</span>}
-			{serverSuggestion && <span>{serverSuggestion}</span>}
-		</div>
-	),
-}));
+const submitMock = vi.fn();
+const skipMock = vi.fn();
+const resetMock = vi.fn();
 
-// ─────────────────────────────────────────────
-// Tests
-// ─────────────────────────────────────────────
+const useOnboardingMock = vi.mocked(useOnboarding);
+const mockedNotify = vi.mocked(notify);
 
 describe('OnboardingForm', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockIsLoading = false;
-		mockError = null;
-		capturedRedirectTo = undefined;
+
+		useOnboardingMock.mockReturnValue({
+			submit: submitMock,
+			skip: skipMock,
+			isLoading: false,
+			isSkipping: false,
+			error: null,
+			reset: resetMock,
+		});
 	});
 
-	it('uses provided redirectTo option', () => {
-		render(<OnboardingForm redirectTo="/custom" />);
-
-		expect(capturedRedirectTo).toBe('/custom');
-	});
-
-	it('submits form values when submitted', async () => {
+	it('renders onboarding form fields', () => {
 		render(<OnboardingForm />);
 
-		await act(async () => {
-			screen.getByText('submit').click();
+		expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
+	});
+
+	it('submits the form when the user clicks submit', async () => {
+		const user = userEvent.setup();
+
+		render(<OnboardingForm />);
+
+		await user.type(screen.getByLabelText(/first name/i), 'John');
+		await user.type(screen.getByLabelText(/last name/i), 'Doe');
+
+		await user.click(screen.getByRole('button', { name: /let's go/i }));
+
+		await waitFor(() => {
+			expect(submitMock).toHaveBeenCalled();
+		});
+	});
+
+	it('shows success notification when onboarding succeeds', async () => {
+		const user = userEvent.setup();
+
+		submitMock.mockImplementation(async (_, { onSuccess }) => {
+			onSuccess?.('Profile completed');
 		});
 
-		expect(mockSubmit).toHaveBeenCalledWith({ firstName: 'Jane' });
+		render(<OnboardingForm />);
+
+		await user.click(screen.getByRole('button', { name: /let's go/i }));
+
+		await waitFor(() => {
+			expect(mockedNotify.success).toHaveBeenCalledWith({
+				message: 'Profile completed',
+				duration: 5000,
+			});
+		});
 	});
 
-	it('does not submit when loading', async () => {
-		mockIsLoading = true;
+	it('calls skip when the user clicks skip', async () => {
+		const user = userEvent.setup();
 
 		render(<OnboardingForm />);
 
-		await act(async () => {
-			screen.getByText('submit').click();
+		await user.click(
+			screen.getByRole('button', { name: /i'll do this later/i })
+		);
+
+		expect(skipMock).toHaveBeenCalled();
+	});
+
+	it('shows warning notification when skip fails', async () => {
+		const user = userEvent.setup();
+
+		skipMock.mockImplementation(async ({ onError }) => {
+			onError?.({
+				body: {
+					message: 'Skip failed',
+					suggestion: 'Try again later',
+				},
+			});
 		});
 
-		expect(mockSubmit).not.toHaveBeenCalled();
+		render(<OnboardingForm />);
+
+		await user.click(
+			screen.getByRole('button', { name: /i'll do this later/i })
+		);
+
+		await waitFor(() => {
+			expect(mockedNotify.warning).toHaveBeenCalledWith({
+				message: 'Skip failed',
+				description: 'Try again later',
+				duration: 5000,
+			});
+		});
 	});
 
-	it('displays server error and suggestion', () => {
-		mockError = {
-			body: {
-				message: 'Server error',
-				suggestion: 'Try again',
-			},
-		};
+	it('renders server error returned from the API', () => {
+		useOnboardingMock.mockReturnValue({
+			submit: submitMock,
+			skip: skipMock,
+			isLoading: false,
+			isSkipping: false,
+			error: {
+				body: {
+					message: 'Server error',
+					suggestion: 'Try again later',
+				},
+			} as HttpClientError,
+			reset: resetMock,
+		});
 
 		render(<OnboardingForm />);
 
-		expect(screen.getByText('Server error')).toBeInTheDocument();
-		expect(screen.getByText('Try again')).toBeInTheDocument();
+		expect(screen.getByText(/server error/i)).toBeInTheDocument();
+	});
+
+	it('clears server error when the user edits the form', async () => {
+		const user = userEvent.setup();
+
+		useOnboardingMock.mockReturnValue({
+			submit: submitMock,
+			skip: skipMock,
+			isLoading: false,
+			isSkipping: false,
+			error: {
+				body: {
+					message: 'Server error',
+				},
+			} as HttpClientError,
+			reset: resetMock,
+		});
+
+		render(<OnboardingForm />);
+
+		await user.type(screen.getByLabelText(/first name/i), 'A');
+
+		await waitFor(() => {
+			expect(resetMock).toHaveBeenCalled();
+		});
 	});
 });

@@ -1,31 +1,49 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import useSignup from '../useSignup';
 
+const dispatchMock = vi.fn();
 const signupTriggerMock = vi.fn();
 const unwrapMock = vi.fn();
+
 const useSignupMutationMock = vi.fn();
+
+vi.mock('@shared/store', () => ({
+	useAppDispatch: () => dispatchMock,
+}));
 
 vi.mock('@features/auth/api', () => ({
 	useSignupMutation: () => useSignupMutationMock(),
+	authApi: {
+		endpoints: {
+			me: {
+				initiate: vi.fn(() => ({ type: 'me/refetch' })),
+			},
+		},
+	},
 }));
 
 vi.mock('../useAuthRedirect', () => ({
 	default: vi.fn(),
 }));
 
-describe('useSignup()', () => {
+describe('useSignup', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
 		useSignupMutationMock.mockReturnValue([
 			signupTriggerMock,
-			{ isLoading: false },
+			{
+				isLoading: false,
+				error: undefined,
+				reset: vi.fn(),
+			},
 		]);
 	});
 
-	it('submits registration data when signup is called', async () => {
-		unwrapMock.mockResolvedValue(undefined);
+	it('submits registration data when signup is invoked', async () => {
+		unwrapMock.mockResolvedValue({ message: 'Account created' });
 
 		signupTriggerMock.mockReturnValue({
 			unwrap: unwrapMock,
@@ -40,11 +58,6 @@ describe('useSignup()', () => {
 				email: 'test@example.com',
 				password: 'Password123!',
 				confirmPassword: 'Password123!',
-				avatarUrl: null,
-				gender: undefined,
-				birthDate: undefined,
-				country: '',
-				city: '',
 			});
 		});
 
@@ -54,14 +67,96 @@ describe('useSignup()', () => {
 				password: 'Password123!',
 			})
 		);
-
-		expect(result.current.serverError).toBeNull();
 	});
 
-	it('denies signup when already loading', async () => {
+	it('dispatches a profile refetch after a successful signup', async () => {
+		unwrapMock.mockResolvedValue({ message: 'Account created' });
+
+		signupTriggerMock.mockReturnValue({
+			unwrap: unwrapMock,
+		});
+
+		const { result } = renderHook(() => useSignup());
+
+		await act(async () => {
+			await result.current.signup({
+				firstName: 'Mohamed',
+				lastName: 'Fathy',
+				email: 'test@example.com',
+				password: 'Password123!',
+				confirmPassword: 'Password123!',
+			});
+		});
+
+		expect(dispatchMock).toHaveBeenCalled();
+	});
+
+	it('calls the success callback when signup succeeds', async () => {
+		unwrapMock.mockResolvedValue({ message: 'Account created' });
+
+		signupTriggerMock.mockReturnValue({
+			unwrap: unwrapMock,
+		});
+
+		const onSuccess = vi.fn();
+
+		const { result } = renderHook(() => useSignup());
+
+		await act(async () => {
+			await result.current.signup(
+				{
+					firstName: 'Mohamed',
+					lastName: 'Fathy',
+					email: 'test@example.com',
+					password: 'Password123!',
+					confirmPassword: 'Password123!',
+				},
+				{ onSuccess }
+			);
+		});
+
+		expect(onSuccess).toHaveBeenCalledWith('Account created');
+	});
+
+	it('calls the error callback when signup fails', async () => {
+		const httpError = {
+			body: { message: 'Email already exists' },
+		};
+
+		unwrapMock.mockRejectedValue(httpError);
+
+		signupTriggerMock.mockReturnValue({
+			unwrap: unwrapMock,
+		});
+
+		const onError = vi.fn();
+
+		const { result } = renderHook(() => useSignup());
+
+		await act(async () => {
+			await result.current.signup(
+				{
+					firstName: 'a',
+					lastName: 'b',
+					email: 'c',
+					password: 'd',
+					confirmPassword: 'd',
+				},
+				{ onError }
+			);
+		});
+
+		expect(onError).toHaveBeenCalledWith(httpError);
+	});
+
+	it('does not trigger signup while the mutation is loading', async () => {
 		useSignupMutationMock.mockReturnValue([
 			signupTriggerMock,
-			{ isLoading: true },
+			{
+				isLoading: true,
+				error: undefined,
+				reset: vi.fn(),
+			},
 		]);
 
 		const { result } = renderHook(() => useSignup());
@@ -73,118 +168,9 @@ describe('useSignup()', () => {
 				email: 'c',
 				password: 'd',
 				confirmPassword: 'd',
-				avatarUrl: null,
-				gender: undefined,
-				birthDate: undefined,
-				country: '',
-				city: '',
 			});
 		});
 
 		expect(signupTriggerMock).not.toHaveBeenCalled();
-	});
-
-	it('returns error message when signup fails', async () => {
-		unwrapMock.mockRejectedValue({
-			body: { message: 'Email already exists' },
-		});
-
-		signupTriggerMock.mockReturnValue({
-			unwrap: unwrapMock,
-		});
-
-		const { result } = renderHook(() => useSignup());
-
-		await act(async () => {
-			await result.current.signup({
-				firstName: 'x',
-				lastName: 'y',
-				email: 'z',
-				password: 'p',
-				confirmPassword: 'p',
-				avatarUrl: null,
-				gender: undefined,
-				birthDate: undefined,
-				country: '',
-				city: '',
-			});
-		});
-
-		expect(result.current.serverError).toBe('Email already exists');
-	});
-
-	it('returns default error message when error has no message', async () => {
-		unwrapMock.mockRejectedValue({});
-
-		signupTriggerMock.mockReturnValue({
-			unwrap: unwrapMock,
-		});
-
-		const { result } = renderHook(() => useSignup());
-
-		await act(async () => {
-			await result.current.signup({
-				firstName: 'x',
-				lastName: 'y',
-				email: 'z',
-				password: 'p',
-				confirmPassword: 'p',
-				avatarUrl: null,
-				gender: undefined,
-				birthDate: undefined,
-				country: '',
-				city: '',
-			});
-		});
-
-		expect(result.current.serverError).toBe('Something went wrong.');
-	});
-
-	it('clears previous error before new signup attempt', async () => {
-		unwrapMock
-			.mockRejectedValueOnce({
-				body: { message: 'Email already exists' },
-			})
-			.mockResolvedValueOnce(undefined);
-
-		signupTriggerMock.mockReturnValue({
-			unwrap: unwrapMock,
-		});
-
-		const { result } = renderHook(() => useSignup());
-
-		await act(async () => {
-			await result.current.signup({
-				firstName: 'a',
-				lastName: 'b',
-				email: 'c',
-				password: 'd',
-				confirmPassword: 'd',
-				avatarUrl: null,
-				gender: undefined,
-				birthDate: undefined,
-				country: '',
-				city: '',
-			});
-		});
-
-		expect(result.current.serverError).toBe('Email already exists');
-
-		await act(async () => {
-			await result.current.signup({
-				firstName: 'a',
-				lastName: 'b',
-				email: 'c',
-				password: 'd',
-				confirmPassword: 'd',
-				avatarUrl: null,
-				gender: undefined,
-				birthDate: undefined,
-				country: '',
-				city: '',
-			});
-		});
-
-		expect(result.current.serverError).toBeNull();
 	});
 });

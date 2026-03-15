@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 import SignupFormUI from './SignupFormUI';
@@ -8,80 +9,91 @@ const meta: Meta<typeof SignupFormUI> = {
 	title: 'Features/Auth/Forms/SignupFormUI',
 	component: SignupFormUI,
 	tags: ['autodocs'],
+
 	parameters: {
+		layout: 'centered',
+
 		docs: {
 			description: {
 				component: `
-**SignupFormUI** is the presentational account-creation form used during initial registration.
+SignupFormUI is the **presentational account creation form** used during registration.
 
-### What it is
-A structured identity-first signup form collecting name, email, and password.
+The component contains **no API calls, routing, or mutation logic**.
+All lifecycle management happens in the container.
 
-### When to use it
-Use during first-time account creation before onboarding or profile enrichment.
+---
 
-### When not to use it
-Do not use for profile editing, password reset, or onboarding flows.
+### Interaction flow
 
-### Interaction model
-- Client validation handled by react-hook-form (visual states only shown here)
-- Submit disabled during loading
-- Server errors appear above the submit button
-- Field-level errors are announced via \`role="alert"\`
+First name → Last name → Email → Password → Confirm password → Submit
 
-### Constraints
-- Password must be confirmed
-- Submission is blocked while loading
-- Required fields communicate required state semantically
+Validation errors appear inline while **server errors appear above the submit button**.
 
-### Accessibility guarantees
-- Proper \`aria-invalid\`
-- Linked \`aria-describedby\`
-- Errors use \`role="alert"\`
-- Fully keyboard navigable
-- Required fields use semantic indicators
+---
 
-### Design-system notes
-- Uses shadcn Field primitives
-- Token-driven spacing and destructive colors
-- No hardcoded colors
-- Dark-mode compatible
+### Design Principles
+
+• Identity-first signup flow  
+• Clear password expectations  
+• Prevent duplicate submissions  
+• Consistent spacing using design tokens  
+
+---
+
+### Accessibility
+
+• aria-invalid for invalid fields  
+• role="alert" for validation errors  
+• label/input associations  
+• keyboard navigable  
+
+---
+
+### Architecture
+
+Container responsibilities:
+
+• validation schema  
+• API requests  
+• error mapping  
+• navigation
+
+UI responsibilities:
+
+• rendering fields  
+• showing validation state  
+• showing loading state
 `,
 			},
 		},
 	},
+
 	argTypes: {
 		isSubmitting: {
 			control: 'boolean',
-			description:
-				'Disables inputs and shows loading state in submit button.',
-			table: {
-				type: { summary: 'boolean' },
-				defaultValue: { summary: 'false' },
-			},
 		},
+
 		serverError: {
 			control: 'text',
-			description: 'Server-side error shown above submit button.',
-			table: {
-				type: { summary: 'string | null' },
-				defaultValue: { summary: 'null' },
-			},
 		},
-		form: { table: { disable: true } },
-		onSubmit: { table: { disable: true } },
+
+		serverSuggestion: {
+			control: 'text',
+		},
+
+		form: { control: false },
+		onSubmit: { control: false },
 	},
 };
 
 export default meta;
-
 type Story = StoryObj<typeof SignupFormUI>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
+	<div className="w-[420px]">{children}</div>
+);
 
-function useSignupForm(initialValues?: Partial<SignUpInput>) {
+function useSignupForm(initial?: Partial<SignUpInput>) {
 	return useForm<SignUpInput>({
 		defaultValues: {
 			firstName: '',
@@ -89,112 +101,110 @@ function useSignupForm(initialValues?: Partial<SignUpInput>) {
 			email: '',
 			password: '',
 			confirmPassword: '',
-			...initialValues,
+			...initial,
 		},
 		mode: 'onBlur',
 	});
 }
 
-/* -------------------------------------------------------------------------- */
-/* Stories                                                                    */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Default state shown when the user first lands on the signup page.
- *
- * The user sees empty required fields and a primary call-to-action.
- * No errors are visible until interaction occurs.
- */
 export const Default: Story = {
 	render: (args) => {
 		const form = useSignupForm();
 
-		return <SignupFormUI {...args} form={form} onSubmit={() => {}} />;
-	},
-	args: {
-		isSubmitting: false,
-		serverError: null,
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Initial empty state before user interaction.',
-			},
-		},
+		return (
+			<Wrapper>
+				<SignupFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
 	},
 };
 
-/**
- * Field validation state after user interaction.
- *
- * Represents a user who attempted submission
- * and triggered client-side validation errors.
- *
- * Demonstrates destructive color tokens and accessible error messaging.
- */
+export const FilledForm: Story = {
+	render: (args) => {
+		const form = useSignupForm({
+			firstName: 'Bruce',
+			lastName: 'Wayne',
+			email: 'bruce@wayneenterprises.com',
+			password: 'IamBatman123',
+			confirmPassword: 'IamBatman123',
+		});
+
+		return (
+			<Wrapper>
+				<SignupFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
+	},
+};
+
 export const WithFieldErrors: Story = {
 	render: (args) => {
 		const form = useSignupForm();
 
-		form.setError('email', { message: 'Invalid email address.' });
-		form.setError('password', {
-			message: 'Must be at least 8 characters.',
-		});
-		form.setError('confirmPassword', {
-			message: 'Passwords do not match.',
-		});
+		useEffect(() => {
+			form.setError('email', {
+				type: 'manual',
+				message: 'Invalid email address.',
+			});
 
-		return <SignupFormUI {...args} form={form} onSubmit={() => {}} />;
-	},
-	args: {
-		isSubmitting: false,
-		serverError: null,
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Shows client-side validation errors after submission attempt.',
-			},
-		},
+			form.setError('password', {
+				type: 'manual',
+				message: 'Must be at least 8 characters.',
+			});
+
+			form.setError('confirmPassword', {
+				type: 'manual',
+				message: 'Passwords do not match.',
+			});
+		}, [form]);
+
+		return (
+			<Wrapper>
+				<SignupFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
 	},
 };
 
-/**
- * Server error state after API rejection.
- *
- * Occurs when the backend rejects the signup attempt
- * (e.g., email already registered).
- *
- * The error appears above the submit button to be visible
- * before retrying.
- */
 export const WithServerError: Story = {
 	render: (args) => {
-		const form = useSignupForm();
+		const form = useSignupForm({
+			email: 'existing@example.com',
+		});
 
-		return <SignupFormUI {...args} form={form} onSubmit={() => {}} />;
-	},
-	args: {
-		isSubmitting: false,
-		serverError: 'An account with this email already exists.',
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Represents a backend rejection (e.g., duplicate email).',
-			},
-		},
+		return (
+			<Wrapper>
+				<SignupFormUI
+					{...args}
+					form={form}
+					serverError="An account with this email already exists."
+					onSubmit={() => {}}
+				/>
+			</Wrapper>
+		);
 	},
 };
 
-/**
- * Loading state during mutation.
- *
- * Inputs become disabled and the submit button
- * communicates progress.
- *
- * Prevents duplicate submissions.
- */
+export const WithServerSuggestion: Story = {
+	render: (args) => {
+		const form = useSignupForm({
+			email: 'existing@example.com',
+		});
+
+		return (
+			<Wrapper>
+				<SignupFormUI
+					{...args}
+					form={form}
+					serverError="We couldn't create your account."
+					serverSuggestion="Try signing in instead or use another email."
+					onSubmit={() => {}}
+				/>
+			</Wrapper>
+		);
+	},
+};
+
 export const Submitting: Story = {
 	render: (args) => {
 		const form = useSignupForm({
@@ -203,45 +213,31 @@ export const Submitting: Story = {
 			email: 'mohamed@example.com',
 		});
 
-		return <SignupFormUI {...args} form={form} onSubmit={() => {}} />;
-	},
-	args: {
-		isSubmitting: true,
-		serverError: null,
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Loading state while account creation request is in progress.',
-			},
-		},
+		return (
+			<Wrapper>
+				<SignupFormUI
+					{...args}
+					form={form}
+					isSubmitting
+					onSubmit={() => {}}
+				/>
+			</Wrapper>
+		);
 	},
 };
 
-/**
- * Dark mode visual parity verification.
- *
- * Ensures destructive tokens, focus states,
- * and spacing maintain contrast and clarity.
- */
 export const DarkMode: Story = {
 	render: (args) => {
 		const form = useSignupForm();
 
-		return <SignupFormUI {...args} form={form} onSubmit={() => {}} />;
+		return (
+			<Wrapper>
+				<SignupFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
 	},
-	args: {
-		isSubmitting: false,
-		serverError: null,
-	},
+
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
-		docs: {
-			description: {
-				story: 'Verifies visual parity and token contrast in dark mode.',
-			},
-		},
+		themes: { default: 'dark' },
 	},
 };

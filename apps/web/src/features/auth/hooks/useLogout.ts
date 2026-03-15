@@ -4,9 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@shared/store';
 import { useLogoutMutation, authApi } from '@features/auth/api';
 import { clearPermissions } from '@shared/store/ability';
-import { notify } from '@shared/utils';
 import { SuccessMessages } from '@beggy/shared/constants';
 import type { HttpClientError } from '@shared/types';
+
+type AuthCallbacks = {
+	onSuccess?: (message: string) => void;
+	onError?: (error: unknown) => void;
+};
 
 /**
  * useLogout
@@ -28,7 +32,7 @@ const useLogout = () => {
 	const dispatch = useAppDispatch();
 	const [logout] = useLogoutMutation();
 
-	return async () => {
+	return async (callback?: AuthCallbacks) => {
 		try {
 			/**
 			 * Attempt server-side logout.
@@ -38,12 +42,9 @@ const useLogout = () => {
 			 */
 			await logout().unwrap();
 
-			notify.success({ message: SuccessMessages.LOGOUT_SUCCESS });
+			callback?.onSuccess?.(SuccessMessages.LOGOUT_SUCCESS);
 		} catch (err: unknown) {
-			// Intentionally ignored
-			const error = err as HttpClientError;
-
-			notify.error.fromHttp(error);
+			callback?.onError?.(err as HttpClientError);
 		} finally {
 			/**
 			 * Clear all permissions immediately.

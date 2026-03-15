@@ -1,119 +1,192 @@
-import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import EditProfileForm from '../EditProfileForm';
-import { Gender } from '@beggy/shared/constants';
 
-// ─────────────────────────────────────────────
-// Shared Mocks
-// ─────────────────────────────────────────────
+import { notify } from '@shared/utils';
 
-const mockSubmit = vi.fn();
-const mockReset = vi.fn();
-const mockSyncProfile = vi.fn();
+// ─── Mocks ───────────────────────────────────────────────────────────
 
-let capturedOnSuccess: any;
-let mockIsLoading = false;
-let mockError: any = null;
+const submitMock = vi.fn();
+const resetMutationMock = vi.fn();
 
-// Proper hook mock with option capture
+const useEditProfileMock = vi.fn();
+const syncProfileMock = vi.fn();
+
 vi.mock('@features/profiles/hooks', () => ({
-	useEditProfile: (options: any) => {
-		capturedOnSuccess = options?.onSuccess;
-
-		return {
-			submit: mockSubmit,
-			isLoading: mockIsLoading,
-			error: mockError,
-			reset: mockReset,
-		};
-	},
+	useEditProfile: (options: any) => useEditProfileMock(options),
 	useProfileSyncWithAuth: () => ({
-		syncProfile: mockSyncProfile,
+		syncProfile: syncProfileMock,
 	}),
 }));
 
-// Mock UI layer
-vi.mock('../EditProfileFormUI', () => ({
-	default: ({ onSubmit, serverError, serverSuggestion }: any) => (
-		<div>
-			<button onClick={() => onSubmit({ firstName: 'Jane' })}>
-				submit
-			</button>
-			{serverError && <span>{serverError}</span>}
-			{serverSuggestion && <span>{serverSuggestion}</span>}
-		</div>
-	),
+vi.mock('@shared/utils', () => ({
+	notify: {
+		success: vi.fn(),
+	},
 }));
 
-// ─────────────────────────────────────────────
-// Tests
-// ─────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────
+
+const defaultValues = {
+	firstName: 'John',
+	lastName: 'Doe',
+};
+
+// ─── Setup ───────────────────────────────────────────────────────────
+
+beforeEach(() => {
+	vi.clearAllMocks();
+
+	useEditProfileMock.mockReturnValue({
+		submit: submitMock,
+		isLoading: false,
+		error: null,
+		reset: resetMutationMock,
+	});
+});
+
+// ─── Tests ───────────────────────────────────────────────────────────
 
 describe('EditProfileForm', () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-		mockIsLoading = false;
-		mockError = null;
+	describe('rendering', () => {
+		it('should render the edit profile form with default values', () => {
+			render(<EditProfileForm defaultValues={defaultValues} />);
+
+			expect(screen.getByDisplayValue('John')).toBeInTheDocument();
+			expect(screen.getByDisplayValue('Doe')).toBeInTheDocument();
+		});
 	});
 
-	const defaultValues = {
-		firstName: 'John',
-		gender: Gender.MALE,
-	};
+	describe('form submission', () => {
+		it('should call submit when the form is submitted', async () => {
+			const user = userEvent.setup();
 
-	it('submits form values when submitted', async () => {
-		render(<EditProfileForm defaultValues={defaultValues} />);
+			render(<EditProfileForm defaultValues={defaultValues} />);
 
-		await act(async () => {
-			screen.getByText('submit').click();
+			await user.click(
+				screen.getByRole('button', { name: /save changes/i })
+			);
+
+			await waitFor(() => {
+				expect(submitMock).toHaveBeenCalled();
+			});
 		});
 
-		expect(mockSubmit).toHaveBeenCalledWith({ firstName: 'Jane' });
+		it('should not submit if the mutation is loading', async () => {
+			const user = userEvent.setup();
+
+			useEditProfileMock.mockReturnValue({
+				submit: submitMock,
+				isLoading: true,
+				error: null,
+				reset: resetMutationMock,
+			});
+
+			render(<EditProfileForm defaultValues={defaultValues} />);
+
+			await user.click(screen.getByRole('button', { name: /saving/i }));
+
+			expect(submitMock).not.toHaveBeenCalled();
+		});
 	});
 
-	it('syncs profile and calls onSuccess when update succeeds', async () => {
-		const onSuccess = vi.fn();
+	describe('success flow', () => {
+		it('should sync the profile and notify the user on success', async () => {
+			const user = userEvent.setup();
 
-		render(
-			<EditProfileForm
-				defaultValues={defaultValues}
-				onSuccess={onSuccess}
-			/>
-		);
+			useEditProfileMock.mockImplementation((options) => ({
+				submit: async () => {
+					options?.onSuccess?.(
+						{ firstName: 'John' } as any,
+						'Profile updated'
+					);
+				},
+				isLoading: false,
+				error: null,
+				reset: resetMutationMock,
+			}));
 
-		// Simulate mutation success by manually calling captured callback
-		await act(async () => {
-			capturedOnSuccess?.({ id: '1' });
+			render(<EditProfileForm defaultValues={{}} />);
+
+			await user.type(screen.getByLabelText(/first name/i), 'John');
+
+			await user.click(
+				screen.getByRole('button', { name: /save changes/i })
+			);
+
+			await waitFor(() => {
+				expect(syncProfileMock).toHaveBeenCalled();
+				expect(notify.success).toHaveBeenCalledWith({
+					message: 'Profile updated',
+				});
+			});
 		});
 
-		expect(mockSyncProfile).toHaveBeenCalledTimes(1);
-		expect(onSuccess).toHaveBeenCalledTimes(1);
-	});
+		it('should call onSuccess prop after a successful update', async () => {
+			const user = userEvent.setup();
+			const onSuccess = vi.fn();
 
-	it('does not submit when loading', async () => {
-		mockIsLoading = true;
+			useEditProfileMock.mockImplementation((options) => ({
+				submit: async () => {
+					options?.onSuccess?.(
+						{ firstName: 'John' } as any,
+						'Profile updated'
+					);
+				},
+				isLoading: false,
+				error: null,
+				reset: resetMutationMock,
+			}));
 
-		render(<EditProfileForm defaultValues={defaultValues} />);
+			render(
+				<EditProfileForm defaultValues={{}} onSuccess={onSuccess} />
+			);
 
-		await act(async () => {
-			screen.getByText('submit').click();
+			await user.type(screen.getByLabelText(/first name/i), 'John');
+
+			await user.click(
+				screen.getByRole('button', { name: /save changes/i })
+			);
+
+			await waitFor(() => {
+				expect(onSuccess).toHaveBeenCalledWith(
+					expect.objectContaining({
+						firstName: 'John',
+					}),
+					'Profile updated'
+				);
+			});
 		});
-
-		expect(mockSubmit).not.toHaveBeenCalled();
 	});
 
-	it('displays server error and suggestion', () => {
-		mockError = {
-			body: {
-				message: 'Server error',
-				suggestion: 'Try again',
-			},
-		};
+	describe('server error handling', () => {
+		it('should reset the mutation error when the user edits a field', async () => {
+			const user = userEvent.setup();
 
-		render(<EditProfileForm defaultValues={defaultValues} />);
+			useEditProfileMock.mockReturnValue({
+				submit: submitMock,
+				isLoading: false,
+				error: {
+					body: {
+						message: 'Conflict',
+						suggestion: 'Try another name',
+					},
+				},
+				reset: resetMutationMock,
+			});
 
-		expect(screen.getByText('Server error')).toBeInTheDocument();
-		expect(screen.getByText('Try again')).toBeInTheDocument();
+			render(<EditProfileForm defaultValues={defaultValues} />);
+
+			const input = screen.getByPlaceholderText('John');
+
+			await user.clear(input);
+			await user.type(input, 'Jane');
+
+			await waitFor(() => {
+				expect(resetMutationMock).toHaveBeenCalled();
+			});
+		});
 	});
 });

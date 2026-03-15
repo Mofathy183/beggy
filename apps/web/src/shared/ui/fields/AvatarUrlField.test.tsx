@@ -15,7 +15,7 @@ function TestForm() {
 }
 
 describe('AvatarUrlField', () => {
-	it('allows users to type an avatar url', () => {
+	it('accepts an avatar url input', () => {
 		render(<TestForm />);
 
 		const input = screen.getByPlaceholderText(
@@ -29,7 +29,7 @@ describe('AvatarUrlField', () => {
 		expect(input).toHaveValue('https://site.com/avatar.jpg');
 	});
 
-	it('shows clear button when input has value', () => {
+	it('shows the clear button when the field has a value', () => {
 		render(<TestForm />);
 
 		const input = screen.getByPlaceholderText(
@@ -45,7 +45,7 @@ describe('AvatarUrlField', () => {
 		expect(clearButton).toBeInTheDocument();
 	});
 
-	it('clears the field when clear button is clicked', () => {
+	it('clears the field when the clear button is clicked', () => {
 		render(<TestForm />);
 
 		const input = screen.getByPlaceholderText(

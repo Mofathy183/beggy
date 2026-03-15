@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
 import { clearPermissions } from '@shared/store/ability';
-import { authApi } from '@features/auth';
+import { authApi } from '@features/auth/api';
+import { SuccessMessages } from '@beggy/shared/constants';
 
 const replaceMock = vi.fn();
 const dispatchMock = vi.fn();
@@ -14,69 +15,73 @@ vi.mock('next/navigation', () => ({
 	}),
 }));
 
-vi.mock('@shared/store/store', () => ({
+vi.mock('@shared/store', () => ({
 	useAppDispatch: () => dispatchMock,
 }));
 
-vi.mock('@features/auth/api', async () => {
-	const actual = await vi.importActual<any>('@features/auth/api');
-
-	return {
-		...actual,
-		useLogoutMutation: () => [
-			vi.fn(() => ({
-				unwrap: () => logoutMock(),
-			})),
-		],
-	};
-});
+vi.mock('@features/auth/api', () => ({
+	useLogoutMutation: () => [
+		vi.fn(() => ({
+			unwrap: logoutMock,
+		})),
+	],
+	authApi: {
+		util: {
+			resetApiState: vi.fn(() => ({ type: 'resetApiState' })),
+		},
+	},
+}));
 
 import useLogout from '../useLogout';
 
-describe('useLogout()', () => {
+describe('useLogout', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	describe('when logout succeeds', () => {
-		it('clears client state and redirects to login', async () => {
-			logoutMock.mockResolvedValueOnce(undefined);
+	it('logs out successfully and calls the success callback', async () => {
+		logoutMock.mockResolvedValueOnce(undefined);
 
-			const { result } = renderHook(() => useLogout());
+		const onSuccess = vi.fn();
 
-			await act(async () => {
-				await result.current();
-			});
+		const { result } = renderHook(() => useLogout());
 
-			expect(logoutMock).toHaveBeenCalled();
-
-			expect(dispatchMock).toHaveBeenCalledWith(clearPermissions());
-			expect(dispatchMock).toHaveBeenCalledWith(
-				authApi.util.resetApiState()
-			);
-
-			expect(replaceMock).toHaveBeenCalledWith('/login');
+		await act(async () => {
+			await result.current({ onSuccess });
 		});
+
+		expect(logoutMock).toHaveBeenCalled();
+
+		expect(onSuccess).toHaveBeenCalledWith(SuccessMessages.LOGOUT_SUCCESS);
+
+		expect(dispatchMock).toHaveBeenCalledWith(clearPermissions());
+
+		expect(dispatchMock).toHaveBeenCalledWith(authApi.util.resetApiState());
+
+		expect(replaceMock).toHaveBeenCalledWith('/login');
 	});
 
-	describe('when logout fails', () => {
-		it('clears client state and redirects to login', async () => {
-			logoutMock.mockRejectedValueOnce(new Error('network error'));
+	it('calls the error callback when logout fails but still clears client state', async () => {
+		const error = new Error('network error');
 
-			const { result } = renderHook(() => useLogout());
+		logoutMock.mockRejectedValueOnce(error);
 
-			await act(async () => {
-				await result.current();
-			});
+		const onError = vi.fn();
 
-			expect(logoutMock).toHaveBeenCalled();
+		const { result } = renderHook(() => useLogout());
 
-			expect(dispatchMock).toHaveBeenCalledWith(clearPermissions());
-			expect(dispatchMock).toHaveBeenCalledWith(
-				authApi.util.resetApiState()
-			);
-
-			expect(replaceMock).toHaveBeenCalledWith('/login');
+		await act(async () => {
+			await result.current({ onError });
 		});
+
+		expect(logoutMock).toHaveBeenCalled();
+
+		expect(onError).toHaveBeenCalledWith(error);
+
+		expect(dispatchMock).toHaveBeenCalledWith(clearPermissions());
+
+		expect(dispatchMock).toHaveBeenCalledWith(authApi.util.resetApiState());
+
+		expect(replaceMock).toHaveBeenCalledWith('/login');
 	});
 });

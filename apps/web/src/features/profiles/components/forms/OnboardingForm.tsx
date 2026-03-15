@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -87,8 +87,8 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 		});
 	};
 
-	const onSkip = () => {
-		skip({
+	const onSkip = useCallback(() => {
+		return skip({
 			onError: (err) => {
 				const error = err as HttpClientError;
 				notify.warning({
@@ -100,7 +100,7 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 				});
 			},
 		});
-	};
+	}, [skip, error]);
 
 	return (
 		<OnboardingFormUI

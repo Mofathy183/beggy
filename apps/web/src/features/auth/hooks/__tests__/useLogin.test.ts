@@ -1,31 +1,49 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import useLogin from '../useLogin';
 
+const dispatchMock = vi.fn();
 const loginTriggerMock = vi.fn();
 const unwrapMock = vi.fn();
+
 const useLoginMutationMock = vi.fn();
+
+vi.mock('@shared/store', () => ({
+	useAppDispatch: () => dispatchMock,
+}));
 
 vi.mock('@features/auth/api', () => ({
 	useLoginMutation: () => useLoginMutationMock(),
+	authApi: {
+		endpoints: {
+			me: {
+				initiate: vi.fn(() => ({ type: 'me/refetch' })),
+			},
+		},
+	},
 }));
 
 vi.mock('../useAuthRedirect', () => ({
 	default: vi.fn(),
 }));
 
-describe('useLogin()', () => {
+describe('useLogin', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
 		useLoginMutationMock.mockReturnValue([
 			loginTriggerMock,
-			{ isLoading: false },
+			{
+				isLoading: false,
+				error: undefined,
+				reset: vi.fn(),
+			},
 		]);
 	});
 
-	it('submits credentials when login is called', async () => {
-		unwrapMock.mockResolvedValue(undefined);
+	it('triggers the login request with the provided credentials', async () => {
+		unwrapMock.mockResolvedValue({ message: 'Welcome back!' });
 
 		loginTriggerMock.mockReturnValue({
 			unwrap: unwrapMock,
@@ -46,102 +64,102 @@ describe('useLogin()', () => {
 			password: 'Password123!',
 			rememberMe: true,
 		});
-
-		expect(result.current.serverError).toBeNull();
 	});
 
-	it('denies login when already loading', async () => {
+	it('refetches the auth profile after a successful login', async () => {
+		unwrapMock.mockResolvedValue({ message: 'Welcome back!' });
+
+		loginTriggerMock.mockReturnValue({
+			unwrap: unwrapMock,
+		});
+
+		const { result } = renderHook(() => useLogin());
+
+		await act(async () => {
+			await result.current.login({
+				email: 'test@example.com',
+				password: 'Password123!',
+				rememberMe: true,
+			});
+		});
+
+		expect(dispatchMock).toHaveBeenCalled();
+	});
+
+	it('calls the success callback when login succeeds', async () => {
+		unwrapMock.mockResolvedValue({ message: 'Welcome back!' });
+
+		loginTriggerMock.mockReturnValue({
+			unwrap: unwrapMock,
+		});
+
+		const onSuccess = vi.fn();
+
+		const { result } = renderHook(() => useLogin());
+
+		await act(async () => {
+			await result.current.login(
+				{
+					email: 'test@example.com',
+					password: 'Password123!',
+					rememberMe: true,
+				},
+				{ onSuccess }
+			);
+		});
+
+		expect(onSuccess).toHaveBeenCalledWith('Welcome back!');
+	});
+
+	it('calls the error callback when login fails', async () => {
+		const httpError = {
+			body: { message: 'Invalid credentials' },
+		};
+
+		unwrapMock.mockRejectedValue(httpError);
+
+		loginTriggerMock.mockReturnValue({
+			unwrap: unwrapMock,
+		});
+
+		const onError = vi.fn();
+
+		const { result } = renderHook(() => useLogin());
+
+		await act(async () => {
+			await result.current.login(
+				{
+					email: 'wrong@example.com',
+					password: 'wrong',
+					rememberMe: false,
+				},
+				{ onError }
+			);
+		});
+
+		expect(onError).toHaveBeenCalledWith(httpError);
+	});
+
+	it('does not trigger a login request while the mutation is loading', async () => {
 		useLoginMutationMock.mockReturnValue([
 			loginTriggerMock,
-			{ isLoading: true },
+			{
+				isLoading: true,
+				error: undefined,
+				reset: vi.fn(),
+			},
 		]);
 
 		const { result } = renderHook(() => useLogin());
 
 		await act(async () => {
 			await result.current.login({
-				email: 'a',
-				password: 'b',
-				rememberMe: false,
+				email: 'test@example.com',
+				password: 'Password123!',
+				rememberMe: true,
 			});
 		});
 
 		expect(loginTriggerMock).not.toHaveBeenCalled();
-	});
-
-	it('returns error message when login fails', async () => {
-		unwrapMock.mockRejectedValue({
-			body: { message: 'Invalid credentials' },
-		});
-
-		loginTriggerMock.mockReturnValue({
-			unwrap: unwrapMock,
-		});
-
-		const { result } = renderHook(() => useLogin());
-
-		await act(async () => {
-			await result.current.login({
-				email: 'wrong@example.com',
-				password: 'wrong',
-				rememberMe: false,
-			});
-		});
-
-		expect(result.current.serverError).toBe('Invalid credentials');
-	});
-
-	it('returns default error message when error has no message', async () => {
-		unwrapMock.mockRejectedValue({});
-
-		loginTriggerMock.mockReturnValue({
-			unwrap: unwrapMock,
-		});
-
-		const { result } = renderHook(() => useLogin());
-
-		await act(async () => {
-			await result.current.login({
-				email: 'x',
-				password: 'y',
-				rememberMe: false,
-			});
-		});
-
-		expect(result.current.serverError).toBe('Something went wrong.');
-	});
-
-	it('clears previous error before new login attempt', async () => {
-		unwrapMock
-			.mockRejectedValueOnce({
-				body: { message: 'Invalid credentials' },
-			})
-			.mockResolvedValueOnce(undefined);
-
-		loginTriggerMock.mockReturnValue({
-			unwrap: unwrapMock,
-		});
-
-		const { result } = renderHook(() => useLogin());
-
-		await act(async () => {
-			await result.current.login({
-				email: 'x',
-				password: 'y',
-				rememberMe: false,
-			});
-		});
-
-		expect(result.current.serverError).toBe('Invalid credentials');
-
-		await act(async () => {
-			await result.current.login({
-				email: 'x',
-				password: 'y',
-				rememberMe: false,
-			});
-		});
-
-		expect(result.current.serverError).toBeNull();
 	});
 });

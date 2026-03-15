@@ -1,4 +1,3 @@
-// SignupForm.tsx
 'use client';
 import { useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';

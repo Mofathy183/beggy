@@ -20,7 +20,7 @@ describe('useAuthRedirect', () => {
 		vi.clearAllMocks();
 	});
 
-	it('does not redirect when auth is not initialized', () => {
+	it('does not redirect when authentication is not initialized', () => {
 		useAppSelectorMock.mockReturnValue({
 			status: 'authenticated',
 			initialized: false,
@@ -32,7 +32,7 @@ describe('useAuthRedirect', () => {
 		expect(replaceMock).not.toHaveBeenCalled();
 	});
 
-	it('does not redirect when user is unauthenticated', () => {
+	it('does not redirect when the user is unauthenticated', () => {
 		useAppSelectorMock.mockReturnValue({
 			status: 'unauthenticated',
 			initialized: true,
@@ -44,7 +44,7 @@ describe('useAuthRedirect', () => {
 		expect(replaceMock).not.toHaveBeenCalled();
 	});
 
-	it('redirects to onboarding when authenticated without profile', () => {
+	it('redirects to onboarding when the user is authenticated without a profile', () => {
 		useAppSelectorMock.mockReturnValue({
 			status: 'authenticated',
 			initialized: true,
@@ -56,11 +56,29 @@ describe('useAuthRedirect', () => {
 		expect(replaceMock).toHaveBeenCalledWith('/onboarding');
 	});
 
-	it('redirects to dashboard when authenticated with profile', () => {
+	it('redirects to onboarding when the profile exists but onboarding is incomplete', () => {
 		useAppSelectorMock.mockReturnValue({
 			status: 'authenticated',
 			initialized: true,
-			profile: { id: '1' },
+			profile: {
+				id: '1',
+				onboardingCompleted: false,
+			},
+		});
+
+		renderHook(() => useAuthRedirect());
+
+		expect(replaceMock).toHaveBeenCalledWith('/onboarding');
+	});
+
+	it('redirects to the dashboard when onboarding is completed', () => {
+		useAppSelectorMock.mockReturnValue({
+			status: 'authenticated',
+			initialized: true,
+			profile: {
+				id: '1',
+				onboardingCompleted: true,
+			},
 		});
 
 		renderHook(() => useAuthRedirect());

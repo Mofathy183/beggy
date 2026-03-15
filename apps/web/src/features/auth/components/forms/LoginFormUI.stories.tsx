@@ -1,111 +1,99 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import type { LoginInput } from '@beggy/shared/types';
+
 import LoginFormUI from './LoginFormUI';
 
 const meta: Meta<typeof LoginFormUI> = {
 	title: 'Features/Auth/Forms/LoginFormUI',
 	component: LoginFormUI,
 	tags: ['autodocs'],
+
 	parameters: {
+		layout: 'centered',
+
 		docs: {
 			description: {
 				component: `
-**LoginFormUI** is the presentational login form used for user authentication.
+LoginFormUI is the **pure presentational authentication form** used by Beggy.
 
-It contains zero business logic and zero API integration.
-Validation and submission lifecycle are owned by the container.
-
----
-
-## What it is
-A controlled authentication form powered by react-hook-form.
-
-## When to use it
-- Login pages
-- Auth modals
-- Session re-auth flows
-
-## When NOT to use it
-- Registration
-- Password reset
-- Social login flows
-- Inline credential prompts
+The component contains **no business logic**, **no API calls**, and **no routing**.
+All lifecycle control is handled by the container layer.
 
 ---
 
-## Interaction Model
-- Email → Password → Remember me → Submit
-- Validation errors appear inline
-- Server error appears above submit
-- All inputs disabled during submission
-- Submit button text changes during loading
+### Interaction flow
+
+Email → Password → Remember me → Submit
+
+Validation errors appear inline while **server errors appear above the submit button**.
 
 ---
 
-## UX Constraints
-- Email is identity-first
-- Password uses secure masking
-- Server error positioned before retry attempt
-- Submit button spans full width
-- Form spacing consistent (gap-5)
+### Design Principles
+
+• Identity-first input ordering  
+• Prevent double submission during requests  
+• Clear error recovery path  
+• Consistent spacing (gap-5)  
 
 ---
 
-## Accessibility Guarantees
-- aria-invalid for invalid fields
-- FieldError uses role="alert"
-- Required fields use aria-required
-- Label + Input properly associated
-- Fully keyboard navigable
+### Accessibility
+
+• aria-invalid for invalid fields  
+• role="alert" for validation errors  
+• required + aria-required for mandatory fields  
+• label/input associations  
 
 ---
 
-## Design System Notes
-- Uses shadcn primitives
-- Token-driven destructive color
-- No browser native validation (noValidate)
-- Dark mode safe
-        `,
+### Architecture
+
+Container component responsibilities:
+
+• validation schema  
+• API mutations  
+• routing  
+• server error mapping  
+
+UI component responsibilities:
+
+• rendering fields  
+• showing validation state  
+• showing loading state  
+• accessibility semantics
+`,
 			},
 		},
 	},
+
 	argTypes: {
 		isSubmitting: {
-			description:
-				'Disables inputs and shows loading state in submit button.',
 			control: 'boolean',
-			table: {
-				type: { summary: 'boolean' },
-				defaultValue: { summary: 'false' },
-			},
 		},
+
 		serverError: {
-			description: 'Server-side error message shown above submit button.',
 			control: 'text',
-			table: {
-				type: { summary: 'string | null' },
-			},
 		},
-		form: {
-			control: false,
-			table: { type: { summary: 'UseFormReturn<LoginInput>' } },
+
+		serverSuggestion: {
+			control: 'text',
 		},
-		onSubmit: {
-			control: false,
-			table: { type: { summary: '(values: LoginInput) => void' } },
-		},
+
+		form: { control: false },
+		onSubmit: { control: false },
 	},
 };
 
 export default meta;
 type Story = StoryObj<typeof LoginFormUI>;
 
-/**
- * Initial state before user interaction.
- * No validation errors.
- * No server errors.
- */
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
+	<div className="w-[420px]">{children}</div>
+);
+
 export const Default: Story = {
 	render: (args) => {
 		const form = useForm<LoginInput>({
@@ -114,17 +102,34 @@ export const Default: Story = {
 				password: '',
 				rememberMe: false,
 			},
-			mode: 'onSubmit',
 		});
 
-		return <LoginFormUI {...args} form={form} onSubmit={() => {}} />;
+		return (
+			<Wrapper>
+				<LoginFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
 	},
 };
 
-/**
- * Represents form after failed validation attempt.
- * Errors are visible inline.
- */
+export const FilledForm: Story = {
+	render: (args) => {
+		const form = useForm<LoginInput>({
+			defaultValues: {
+				email: 'traveler@example.com',
+				password: 'securePassword123',
+				rememberMe: true,
+			},
+		});
+
+		return (
+			<Wrapper>
+				<LoginFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
+	},
+};
+
 export const WithValidationErrors: Story = {
 	render: (args) => {
 		const form = useForm<LoginInput>({
@@ -135,25 +140,26 @@ export const WithValidationErrors: Story = {
 			},
 		});
 
-		// Manually inject errors for visual documentation
-		form.setError('email', {
-			type: 'manual',
-			message: 'Email is required',
-		});
+		useEffect(() => {
+			form.setError('email', {
+				type: 'manual',
+				message: 'Email is required',
+			});
 
-		form.setError('password', {
-			type: 'manual',
-			message: 'Password must be at least 8 characters',
-		});
+			form.setError('password', {
+				type: 'manual',
+				message: 'Password must be at least 8 characters',
+			});
+		}, [form]);
 
-		return <LoginFormUI {...args} form={form} onSubmit={() => {}} />;
+		return (
+			<Wrapper>
+				<LoginFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
 	},
 };
 
-/**
- * Occurs when backend rejects credentials.
- * Shown above submit button.
- */
 export const WithServerError: Story = {
 	render: (args) => {
 		const form = useForm<LoginInput>({
@@ -165,46 +171,65 @@ export const WithServerError: Story = {
 		});
 
 		return (
-			<LoginFormUI
-				{...args}
-				form={form}
-				serverError="Invalid email or password."
-				onSubmit={() => {}}
-			/>
+			<Wrapper>
+				<LoginFormUI
+					{...args}
+					form={form}
+					serverError="Invalid email or password."
+					onSubmit={() => {}}
+				/>
+			</Wrapper>
 		);
 	},
 };
 
-/**
- * Mutation in progress.
- * All inputs disabled.
- * Submit button shows loading label.
- */
-export const Submitting: Story = {
+export const WithServerSuggestion: Story = {
 	render: (args) => {
 		const form = useForm<LoginInput>({
 			defaultValues: {
 				email: 'user@example.com',
-				password: 'password123',
+				password: 'wrong-password',
+				rememberMe: false,
+			},
+		});
+
+		return (
+			<Wrapper>
+				<LoginFormUI
+					{...args}
+					form={form}
+					serverError="We couldn't sign you in."
+					serverSuggestion="Double-check your email and password, then try again."
+					onSubmit={() => {}}
+				/>
+			</Wrapper>
+		);
+	},
+};
+
+export const Submitting: Story = {
+	render: (args) => {
+		const form = useForm<LoginInput>({
+			defaultValues: {
+				email: 'traveler@example.com',
+				password: 'securePassword123',
 				rememberMe: true,
 			},
 		});
 
 		return (
-			<LoginFormUI
-				{...args}
-				form={form}
-				isSubmitting
-				onSubmit={() => {}}
-			/>
+			<Wrapper>
+				<LoginFormUI
+					{...args}
+					form={form}
+					isSubmitting
+					onSubmit={() => {}}
+				/>
+			</Wrapper>
 		);
 	},
 };
 
-/**
- * Validates destructive errors and muted labels
- * in dark theme.
- */
 export const DarkMode: Story = {
 	render: (args) => {
 		const form = useForm<LoginInput>({
@@ -215,11 +240,14 @@ export const DarkMode: Story = {
 			},
 		});
 
-		return <LoginFormUI {...args} form={form} onSubmit={() => {}} />;
+		return (
+			<Wrapper>
+				<LoginFormUI {...args} form={form} onSubmit={() => {}} />
+			</Wrapper>
+		);
 	},
+
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
+		themes: { default: 'dark' },
 	},
 };
