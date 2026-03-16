@@ -3,8 +3,8 @@ import { createElement } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
 	CheckmarkCircle02Icon,
-	AlertCircleIcon,
-	Alert02Icon,
+	AlertTriangle,
+	AlertSquareIcon,
 	InformationCircleIcon,
 } from '@hugeicons/core-free-icons';
 
@@ -15,7 +15,9 @@ import type { HttpClientError } from '@shared/types';
 // Sonner's `icon` option accepts a ReactNode.
 // We use createElement (no JSX in a .ts file) to keep this file importable
 // from both client and server contexts without a 'use client' directive.
-// The icon color is handled by the toast's className — icons inherit currentColor.
+//
+// altColor={false} — disables HugeIcons' dual-tone fill mode so icons
+// reliably inherit currentColor from the toast's className.
 
 const SuccessIcon = () =>
 	createElement(HugeiconsIcon, {
@@ -25,14 +27,14 @@ const SuccessIcon = () =>
 
 const ErrorIcon = () =>
 	createElement(HugeiconsIcon, {
-		icon: AlertCircleIcon,
+		icon: AlertTriangle,
 		className: 'h-4 w-4 text-destructive shrink-0',
 	});
 
 const WarningIcon = () =>
 	createElement(HugeiconsIcon, {
-		icon: Alert02Icon,
-		className: 'h-4 w-4 text-warning-foreground shrink-0',
+		icon: AlertSquareIcon,
+		className: 'h-4 w-4 text-warning-foreground',
 	});
 
 const InfoIcon = () =>
@@ -56,11 +58,13 @@ type NotifyErrorOptions = {
 	/** The main message shown as the toast title. */
 	message: string;
 	/**
-	 * The suggestion shown below the title.
-	 * Maps directly to ErrorResponse.suggestion.
+	 * The actionable suggestion shown below the title.
+	 * Maps directly to HttpClientError.body.suggestion.
+	 * Falsy values (undefined, null, "") are intentionally suppressed —
+	 * Sonner renders an empty description row if passed an empty string.
 	 */
-	suggestion?: string;
-	/** Duration in ms. @default 6000 — errors stay longer */
+	suggestion?: string | null;
+	/** Duration in ms. @default 6000 — errors stay longer so users can read the suggestion */
 	duration?: number;
 };
 
@@ -76,6 +80,11 @@ type NotifyInfoOptions = {
 	duration?: number;
 };
 
+type FromHttpOptions = {
+	/** Duration in ms. @default 6000 */
+	duration?: number;
+};
+
 // ─── notify ───────────────────────────────────────────────────────────────────
 
 /**
@@ -88,19 +97,21 @@ type NotifyInfoOptions = {
  *
  * 1. Type safety — each variant enforces the correct field names
  *    (message/suggestion for errors, message/description elsewhere).
- * 2. Consistency — icon, duration, and field mapping are decided once here.
+ * 2. Consistency — icon, duration defaults, and field mapping are decided once here.
  * 3. HttpClientError integration — `notify.error.fromHttp()` unpacks the
  *    error shape from the API client in one place; components stay clean.
+ * 4. Empty string safety — description/suggestion are suppressed when falsy,
+ *    preventing Sonner from rendering a blank description row.
  *
  * ── Usage ─────────────────────────────────────────────────────────────────────
  *
- * @example — Success (after mutation)
- * notify.success({ message: 'Item added to your bag!' });
+ * @example — Success (after saving packing list)
+ * notify.success({ message: 'Bag packed and ready to go! ✈️' });
  *
  * @example — Success with description
  * notify.success({
  *   message: 'Profile updated',
- *   description: 'Your changes have been saved.',
+ *   description: 'Your travel details have been saved.',
  * });
  *
  * @example — Error from HttpClientError (most common in catch blocks)
@@ -112,20 +123,20 @@ type NotifyInfoOptions = {
  *
  * @example — Error with manual fields
  * notify.error({
- *   message: 'Could not delete item.',
- *   suggestion: 'The item may already be removed. Try refreshing.',
+ *   message: "Couldn't save your bag.",
+ *   suggestion: 'Check your connection and give it another go.',
  * });
  *
  * @example — Warning
  * notify.warning({
- *   message: 'Bag is almost full',
- *   description: 'You have 200g left before reaching the weight limit.',
+ *   message: 'Almost at the weight limit',
+ *   description: 'You have about 200g left — pack the heavy stuff first.',
  * });
  *
  * @example — Info
  * notify.info({
- *   message: 'Tip: add items to your library first',
- *   description: 'Items in your library can be packed into any bag.',
+ *   message: 'Pro tip: add items to your library first',
+ *   description: 'Library items can be quickly dropped into any bag.',
  * });
  */
 export const notify = {
@@ -137,7 +148,8 @@ export const notify = {
 		duration = 4000,
 	}: NotifySuccessOptions) => {
 		toast.success(message, {
-			description,
+			// Suppress empty strings — Sonner renders a blank row otherwise
+			description: description || undefined,
 			icon: createElement(SuccessIcon),
 			duration,
 		});
@@ -150,11 +162,12 @@ export const notify = {
 			toast.error(message, {
 				/*
 				 * `suggestion` maps to Sonner's `description` slot.
-				 * It's shown below the title in a smaller, muted style.
+				 * Shown below the title in a smaller, muted style.
+				 * Suppressed when falsy — prevents blank description rows.
 				 * ErrorCode is intentionally omitted — machine-readable codes
 				 * belong in logs, not in user-facing notifications.
 				 */
-				description: suggestion,
+				description: suggestion || undefined,
 				icon: createElement(ErrorIcon),
 				duration,
 			});
@@ -163,9 +176,11 @@ export const notify = {
 			/**
 			 * fromHttp — unpacks an HttpClientError directly.
 			 *
+			 * Uses named options object for consistency with the rest of the notify API.
+			 *
 			 * Maps:
 			 * - err.body.message    → toast title
-			 * - err.body.suggestion → toast description (below title)
+			 * - err.body.suggestion → toast description (suppressed if falsy)
 			 * - err.body.code       → intentionally ignored in UI
 			 * - err.statusCode      → intentionally ignored in UI
 			 *
@@ -173,10 +188,16 @@ export const notify = {
 			 * catch (err) {
 			 *   if (isHttpClientError(err)) notify.error.fromHttp(err);
 			 * }
+			 *
+			 * @example — with custom duration
+			 * notify.error.fromHttp(err, { duration: 8000 });
 			 */
-			fromHttp: (err: HttpClientError, duration = 6000) => {
+			fromHttp: (
+				err: HttpClientError,
+				{ duration = 6000 }: FromHttpOptions = {}
+			) => {
 				toast.error(err.body.message, {
-					description: err.body.suggestion,
+					description: err.body.suggestion || undefined,
 					icon: createElement(ErrorIcon),
 					duration,
 				});
@@ -192,7 +213,7 @@ export const notify = {
 		duration = 5000,
 	}: NotifyWarningOptions) => {
 		toast.warning(message, {
-			description,
+			description: description || undefined,
 			icon: createElement(WarningIcon),
 			duration,
 		});
@@ -202,7 +223,7 @@ export const notify = {
 
 	info: ({ message, description, duration = 4000 }: NotifyInfoOptions) => {
 		toast.info(message, {
-			description,
+			description: description || undefined,
 			icon: createElement(InfoIcon),
 			duration,
 		});

@@ -19,8 +19,8 @@
 	--muted-foreground: oklch(0.553 0.013 58.071);
 	--accent: oklch(0.97 0.001 106.424);
 	--accent-foreground: oklch(0.216 0.006 56.043);
-    --destructive: oklch(0.38 0.22 12);
-    --destructive-foreground: oklch(0.971 0.014 343.198);
+	--destructive: oklch(0.38 0.22 12);
+	--destructive-foreground: oklch(0.971 0.014 343.198);
 	--border: oklch(0.923 0.003 48.717);
 	--input: oklch(0.923 0.003 48.717);
 	--ring: oklch(0.709 0.01 56.259);
@@ -64,8 +64,8 @@
 	--muted-foreground: oklch(0.709 0.01 56.259);
 	--accent: oklch(0.268 0.007 34.298);
 	--accent-foreground: oklch(0.985 0.001 106.423);
-    --destructive: oklch(0.38 0.22 12);
-    --destructive-foreground: oklch(0.971 0.014 343.198);
+	--destructive: oklch(0.38 0.22 12);
+	--destructive-foreground: oklch(0.971 0.014 343.198);
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 15%);
 	--ring: oklch(0.553 0.013 58.071);
@@ -164,6 +164,36 @@
 	--radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Sonner CSS vars — must be scoped to the toaster element ── */
+[data-sonner-toaster] {
+	--normal-bg: var(--card);
+	--normal-border: var(--border);
+	--normal-text: var(--card-foreground);
+	--success-bg: color-mix(in oklch, var(--success) 10%, var(--card));
+	--success-border: color-mix(in oklch, var(--success) 30%, transparent);
+	--success-text: var(--card-foreground);
+	--error-bg: color-mix(in oklch, var(--destructive) 10%, var(--card));
+	--error-border: color-mix(in oklch, var(--destructive) 30%, transparent);
+	--error-text: var(--card-foreground);
+	--warning-bg: color-mix(in oklch, var(--warning) 10%, var(--card));
+	--warning-border: color-mix(in oklch, var(--warning) 30%, transparent);
+	--warning-text: var(--card-foreground);
+	--info-bg: color-mix(in oklch, var(--primary) 10%, var(--card));
+	--info-border: color-mix(in oklch, var(--primary) 30%, transparent);
+	--info-text: var(--card-foreground);
+}
+
+.dark [data-sonner-toaster] {
+	--success-bg: color-mix(in oklch, var(--success) 22%, var(--card));
+	--success-border: color-mix(in oklch, var(--success) 40%, transparent);
+	--error-bg: color-mix(in oklch, var(--destructive) 24%, var(--card));
+	--error-border: color-mix(in oklch, var(--destructive) 40%, transparent);
+	--warning-bg: color-mix(in oklch, var(--warning) 20%, var(--card));
+	--warning-border: color-mix(in oklch, var(--warning) 40%, transparent);
+	--info-bg: color-mix(in oklch, var(--primary) 24%, var(--card));
+	--info-border: color-mix(in oklch, var(--primary) 40%, transparent);
+}
+
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
@@ -173,5 +203,125 @@
 	}
 	html {
 		@apply font-serif;
+	}
+	/* ════════════════════════════════════════════════════════════════
+	Sonner Toast System
+	════════════════════════════════════════════════════════════════ */
+
+	/* ── 1. Feed Sonner's own CSS vars (light) ────────────────────── */
+	[data-sonner-toaster] {
+		--normal-bg: var(--card);
+		--normal-border: var(--border);
+		--normal-text: var(--card-foreground);
+		--success-bg: color-mix(in oklch, var(--success) 10%, var(--card));
+		--success-border: color-mix(in oklch, var(--success) 30%, transparent);
+		--success-text: var(--card-foreground);
+		--error-bg: color-mix(in oklch, var(--destructive) 10%, var(--card));
+		--error-border: color-mix(
+			in oklch,
+			var(--destructive) 30%,
+			transparent
+		);
+		--error-text: var(--card-foreground);
+		--warning-bg: color-mix(in oklch, var(--warning) 10%, var(--card));
+		--warning-border: color-mix(in oklch, var(--warning) 30%, transparent);
+		--warning-text: var(--card-foreground);
+		--info-bg: color-mix(in oklch, var(--primary) 10%, var(--card));
+		--info-border: color-mix(in oklch, var(--primary) 30%, transparent);
+		--info-text: var(--card-foreground);
+	}
+
+	/* ── 1b. Dark mode — stronger tint ───────────────────────────── */
+	.dark [data-sonner-toaster] {
+		--success-bg: color-mix(in oklch, var(--success) 22%, var(--card));
+		--success-border: color-mix(in oklch, var(--success) 40%, transparent);
+		--error-bg: color-mix(in oklch, var(--destructive) 24%, var(--card));
+		--error-border: color-mix(
+			in oklch,
+			var(--destructive) 40%,
+			transparent
+		);
+		--warning-bg: color-mix(in oklch, var(--warning) 20%, var(--card));
+		--warning-border: color-mix(in oklch, var(--warning) 40%, transparent);
+		--info-bg: color-mix(in oklch, var(--primary) 24%, var(--card));
+		--info-border: color-mix(in oklch, var(--primary) 40%, transparent);
+	}
+
+	/* ── 2. Left accent border per variant ───────────────────────── */
+	[data-sonner-toast].toast-success {
+		border-inline-start: 3px solid var(--success);
+	}
+	[data-sonner-toast].toast-error {
+		border-inline-start: 3px solid var(--destructive);
+	}
+	[data-sonner-toast].toast-warning {
+		border-inline-start: 3px solid var(--warning);
+	}
+	[data-sonner-toast].toast-info {
+		border-inline-start: 3px solid var(--primary);
+	}
+
+	/* ── 3. Semantic title colors (light) ────────────────────────── */
+	[data-sonner-toast].toast-success [data-title] {
+		color: var(--success);
+	}
+	[data-sonner-toast].toast-error [data-title] {
+		color: var(--destructive);
+	}
+	[data-sonner-toast].toast-warning [data-title] {
+		color: var(--warning-foreground);
+	}
+	[data-sonner-toast].toast-info [data-title] {
+		color: var(--primary);
+	}
+
+	/* ── 4. Dark mode title — lightened for contrast ─────────────── */
+	.dark [data-sonner-toast].toast-success [data-title] {
+		color: color-mix(in oklch, var(--success) 80%, white);
+	}
+	.dark [data-sonner-toast].toast-error [data-title] {
+		color: color-mix(in oklch, var(--destructive) 65%, white);
+	}
+	.dark [data-sonner-toast].toast-warning [data-title] {
+		color: var(--warning);
+	}
+	.dark [data-sonner-toast].toast-info [data-title] {
+		color: color-mix(in oklch, var(--primary) 65%, white);
+	}
+
+	/* ── 5. Description — always muted ──────────────────────────── */
+	[data-sonner-toast] [data-description] {
+		color: var(--muted-foreground);
+		font-size: 0.75rem;
+	}
+
+	/* ── 6. Close button ─────────────────────────────────────────── */
+	[data-sonner-toast] {
+		overflow: visible;
+		position: relative;
+	}
+	[data-sonner-toast] [data-close-button] {
+		position: absolute;
+		top: 0.5rem;
+		inset-inline-end: 0.5rem;
+		left: unset;
+		width: 1.375rem;
+		height: 1.375rem;
+		border-radius: 9999px;
+		background-color: var(--muted);
+		border: 1px solid var(--border);
+		color: var(--muted-foreground);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition:
+			background-color 150ms,
+			color 150ms;
+		cursor: pointer;
+		z-index: 1;
+	}
+	[data-sonner-toast] [data-close-button]:hover {
+		background-color: var(--accent);
+		color: var(--accent-foreground);
 	}
 }

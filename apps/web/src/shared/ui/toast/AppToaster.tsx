@@ -1,126 +1,93 @@
 'use client';
 
-import { Toaster as SonnerToaster } from 'sonner';
+import { useTheme } from 'next-themes';
+import { Toaster as SonnerToaster, type ToasterProps } from 'sonner';
 
 /**
  * AppToaster
  *
- * Drop this once in your root layout — it renders the Sonner toast container.
- *
  * Design decisions:
- * - richColors OFF       → our CSS variable classes own all color decisions
- * - position top-left    → renders visually top-right in RTL (dir="rtl" flips it)
- * - Soft tinted pattern  → matches §12.7: tinted bg + border + semantic title text
- * - font-serif           → matches Beggy's global html { font-family: serif }
  *
- * Usage:
- * // app/layout.tsx
- * import { AppToaster } from '@shared-ui/toaster';
+ * - resolvedTheme         → always "light" | "dark", never "system".
+ *                           Sonner only understands these two values.
  *
- * export default function RootLayout({ children }) {
- *   return (
- *     <html lang="ar" dir="rtl" suppressHydrationWarning>
- *       <body>
- *         <Providers>{children}</Providers>
- *         <AppToaster />
- *       </body>
- *     </html>
- *   );
- * }
+ * - richColors={false}    → our CSS variables own all color decisions.
+ *                           Sonner's richColors would override our tokens.
+ *
+ * - position="top-left"   → renders visually top-right in RTL (dir="rtl"
+ *                           flips it automatically via logical properties).
+ *
+ * - expand                → toasts expand on hover to show full description.
+ *
+ * - Tinted bg pattern     → handled in globals.css via Sonner's own
+ *                           --success-bg / --error-bg / etc. CSS vars.
+ *                           Zero !important needed — we feed Sonner's own
+ *                           system rather than fighting its inline styles.
+ *
+ * - Left accent border    → applied in globals.css via
+ *                           [data-sonner-toast].toast-{variant} selectors.
+ *
+ * - pe-10                 → padding-inline-end reserves space so toast text
+ *                           never runs under the close button (RTL-safe).
  */
 const AppToaster = () => {
+	const { resolvedTheme } = useTheme();
+
 	return (
 		<SonnerToaster
-			theme="system"
+			theme={(resolvedTheme ?? 'light') as ToasterProps['theme']}
 			position="top-left"
 			richColors={false}
 			closeButton
-			gap={12}
+			expand
+			gap={10}
+			visibleToasts={4}
 			toastOptions={{
 				classNames: {
 					/*
-					 * Base toast shell — card surface so it feels native
-					 * in both light (white card) and dark (elevated stone card).
-					 * shadow-sm keeps it grounded without being heavy.
+					 * Base toast shell.
+					 * pe-10 → RTL-safe right padding to clear the close button.
+					 * overflow-hidden → clips the left accent border cleanly
+					 *   at the rounded corners.
 					 */
-					toast: [
-						'font-serif',
-						'bg-card text-card-foreground',
-						'border border-border',
-						'shadow-sm',
-						'rounded-lg',
-						'w-[360px]',
-					].join(' '),
+					toast: 'font-serif rounded-xl shadow-sm w-full max-w-sm pe-10',
 
 					/*
-					 * Title — medium weight, foreground color by default.
-					 * Semantic variants override the color via the variant keys below.
+					 * Title — semibold so it reads clearly at small size.
+					 * Color per variant is set in globals.css via [data-title].
 					 */
-					title: 'text-sm font-medium text-foreground leading-snug',
+					title: 'text-sm font-semibold leading-snug',
 
 					/*
-					 * Description — muted, smaller.
-					 * Maps to `suggestion` from ErrorResponse or `description` elsewhere.
+					 * Description — explicitly muted so it never inherits
+					 * the title's semantic color. Reinforced in globals.css.
 					 */
 					description:
-						'text-xs text-muted-foreground mt-1 leading-relaxed',
+						'text-xs text-muted-foreground mt-0.5 leading-relaxed',
 
 					/*
-					 * Icon — vertically centered with the title.
+					 * Icon — top-aligned so it sits next to the first line
+					 * of the title, not vertically centred on the whole toast.
 					 */
-					icon: 'mt-0.5 self-start',
+					icon: 'self-start shrink-0 mt-0.5',
 
 					/*
-					 * Close button — ghost style, consistent with other dismiss controls.
+					 * Close button — positioned and styled entirely in
+					 * globals.css via [data-close-button]. The classes here
+					 * are lightweight helpers only.
 					 */
-					closeButton: [
-						'bg-muted text-muted-foreground',
-						'border border-border',
-						'hover:bg-accent hover:text-accent-foreground',
-						'transition-colors',
-						'rounded-md',
-					].join(' '),
+					closeButton: 'rounded-full transition-colors',
 
 					/*
-					 * Action button — primary CTA style.
+					 * Variant marker classes — consumed by globals.css
+					 * selectors for left accent border and title color.
+					 * Background tinting is handled separately via Sonner's
+					 * own --success-bg / --error-bg CSS vars in :root / .dark.
 					 */
-					actionButton: [
-						'bg-primary text-primary-foreground',
-						'hover:bg-primary/90',
-						'text-xs font-medium',
-						'rounded-md',
-						'transition-colors',
-					].join(' '),
-
-					/*
-					 * Cancel button — muted/ghost style.
-					 */
-					cancelButton: [
-						'bg-muted text-muted-foreground',
-						'hover:bg-accent hover:text-accent-foreground',
-						'text-xs',
-						'rounded-md',
-						'transition-colors',
-					].join(' '),
-
-					/*
-					 * ── Semantic variants ──────────────────────────────────────────
-					 *
-					 * Soft tinted pattern from §12.7:
-					 *   bg-{token}/10  → tinted surface (subtle, not alarming)
-					 *   border-{token}/25 → tinted border (visible but calm)
-					 *
-					 * Title color is handled in the `title` classNames key above
-					 * on a per-variant basis — Sonner merges both keys together.
-					 *
-					 * The travel buddy tone lives in the message strings passed to
-					 * notify.success() / notify.error() etc. — not here.
-					 * This is purely the visual shell.
-					 */
-					success: 'bg-success/10 border-success/25',
-					error: 'bg-destructive/10 border-destructive/25',
-					warning: 'bg-warning/10 border-warning/25',
-					info: 'bg-primary/10 border-primary/25',
+					success: 'toast-success',
+					error: 'toast-error',
+					warning: 'toast-warning',
+					info: 'toast-info',
 				},
 			}}
 		/>
