@@ -54,8 +54,7 @@ describe('AuthService', () => {
 	describe('signupUser()', () => {
 		it('creates a new user with hashed password', async () => {
 			const createdUser = buildUser();
-			const { userId: _ignoreUserId, ...profileData } =
-				profileFactory('user-1');
+			const { firstName, lastName } = profileFactory('user-1');
 
 			(hashPassword as any).mockResolvedValue('hashed-password');
 			(prismaMock.user.create as any).mockResolvedValue(createdUser);
@@ -63,7 +62,8 @@ describe('AuthService', () => {
 			const result = await service.signupUser({
 				email: createdUser.email,
 				password: 'plain-password',
-				...profileData,
+				firstName,
+				lastName,
 			} as SignUpPayload);
 
 			expect(hashPassword).toHaveBeenCalledWith('plain-password');
@@ -79,7 +79,8 @@ describe('AuthService', () => {
 					},
 					profile: {
 						create: {
-							...profileData,
+							firstName,
+							lastName,
 						},
 					},
 				},

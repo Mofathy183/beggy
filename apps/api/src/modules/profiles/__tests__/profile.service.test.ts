@@ -30,7 +30,7 @@ describe('ProfileService', () => {
 	});
 
 	describe('getPrivateProfile()', () => {
-		it('returns profile when it exists', async () => {
+		it('returns the profile when it exists', async () => {
 			const profile = buildProfile('user-1');
 
 			(prismaMock.profile.findUnique as any).mockResolvedValue(profile);
@@ -40,7 +40,7 @@ describe('ProfileService', () => {
 			expect(result).toEqual(profile);
 		});
 
-		it('throws when profile is missing', async () => {
+		it('throws PROFILE_NOT_FOUND when the profile does not exist', async () => {
 			(prismaMock.profile.findUnique as any).mockResolvedValue(null);
 
 			await expect(
@@ -52,7 +52,7 @@ describe('ProfileService', () => {
 	});
 
 	describe('getPublicProfile()', () => {
-		it('returns profile when it exists', async () => {
+		it('returns the profile when it exists', async () => {
 			const profile = buildProfile('user-1');
 
 			(prismaMock.profile.findUnique as any).mockResolvedValue(profile);
@@ -62,7 +62,7 @@ describe('ProfileService', () => {
 			expect(result).toEqual(profile);
 		});
 
-		it('throws when profile is missing', async () => {
+		it('throws PROFILE_NOT_FOUND when the profile does not exist', async () => {
 			(prismaMock.profile.findUnique as any).mockResolvedValue(null);
 
 			await expect(
@@ -74,7 +74,7 @@ describe('ProfileService', () => {
 	});
 
 	describe('updateProfile()', () => {
-		it('updates provided profile fields', async () => {
+		it('updates the profile with the provided fields', async () => {
 			const profile = buildProfile('user-1');
 
 			const input = profileFactory('user-2', {
@@ -92,6 +92,79 @@ describe('ProfileService', () => {
 
 			expect(prismaMock.profile.update).toHaveBeenCalledOnce();
 			expect(result).toEqual(profile);
+		});
+	});
+
+	describe('completeOnboarding()', () => {
+		it('updates the profile and marks onboarding as completed', async () => {
+			const profile = buildProfile('user-1');
+
+			const input = profileFactory('user-1', {
+				firstName: 'John',
+				lastName: 'Doe',
+			});
+
+			(prismaMock.profile.update as any).mockResolvedValue(profile);
+
+			const result = await service.completeOnboarding(
+				profile.userId,
+				input as EditProfileInput
+			);
+
+			expect(prismaMock.profile.update).toHaveBeenCalledWith({
+				where: { userId: profile.userId },
+				data: expect.objectContaining({
+					firstName: 'John',
+					lastName: 'Doe',
+					onboardingCompleted: true,
+				}),
+			});
+
+			expect(result).toEqual(profile);
+		});
+
+		it('ignores undefined and null fields from the onboarding input', async () => {
+			const profile = buildProfile('user-1');
+
+			const input = profileFactory('user-1', {
+				firstName: 'John',
+				lastName: undefined,
+				city: null,
+			});
+
+			(prismaMock.profile.update as any).mockResolvedValue(profile);
+
+			await service.completeOnboarding(
+				profile.userId,
+				input as EditProfileInput
+			);
+
+			expect(prismaMock.profile.update).toHaveBeenCalledWith({
+				where: { userId: profile.userId },
+				data: expect.objectContaining({
+					firstName: 'John',
+					onboardingCompleted: true,
+				}),
+			});
+		});
+
+		it('updates the profile for the provided userId', async () => {
+			const profile = buildProfile('user-123');
+
+			const input = profileFactory('user-123');
+
+			(prismaMock.profile.update as any).mockResolvedValue(profile);
+
+			await service.completeOnboarding(
+				profile.userId,
+				input as EditProfileInput
+			);
+
+			expect(prismaMock.profile.update).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: { userId: 'user-123' },
+				})
+			);
 		});
 	});
 });

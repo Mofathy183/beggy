@@ -83,11 +83,12 @@ describe('Profiles API', () => {
 			getPrivateProfile: vi.fn(),
 			getPublicProfile: vi.fn(),
 			updateProfile: vi.fn(),
+			completeOnboarding: vi.fn(),
 		} as unknown as ProfileService;
 	});
 
 	describe('GET /profiles/me', () => {
-		it('returns the authenticated user profile', async () => {
+		it("returns the authenticated user's profile", async () => {
 			// Arrange
 			const profile = buildProfile('user-123');
 
@@ -139,7 +140,7 @@ describe('Profiles API', () => {
 	});
 
 	describe('PATCH /profiles/me', () => {
-		it('updates the authenticated user profile', async () => {
+		it("updates the authenticated user's profile", async () => {
 			// Arrange
 			const payload = profileFactory('');
 			const updatedProfile = buildProfile('user-123', payload);
@@ -163,6 +164,42 @@ describe('Profiles API', () => {
 
 			expect(profileService.updateProfile).toHaveBeenCalledOnce();
 			expect(profileService.updateProfile).toHaveBeenCalledWith(
+				'user-123',
+				payload
+			);
+		});
+	});
+
+	describe('POST /profiles/me/onboarding', () => {
+		it("completes the authenticated user's onboarding", async () => {
+			// Arrange
+			const payload = profileFactory('');
+			const updatedProfile = buildProfile('user-123', {
+				...payload,
+				onboardingCompleted: true,
+			});
+
+			(profileService.completeOnboarding as any).mockResolvedValue(
+				updatedProfile
+			);
+
+			const app = setupApp(profileService);
+
+			// Act
+			const response = await request(app)
+				.post('/profiles/me/onboarding')
+				.send(payload);
+
+			// Assert
+			expect(response.status).toBe(STATUS_CODE.OK);
+
+			expect(response.body).toMatchObject({
+				data: expect.any(Object),
+			});
+
+			expect(profileService.completeOnboarding).toHaveBeenCalledOnce();
+
+			expect(profileService.completeOnboarding).toHaveBeenCalledWith(
 				'user-123',
 				payload
 			);

@@ -92,6 +92,7 @@ describe('AuthMapper', () => {
 				age: 28,
 				city: profile.city,
 				country: profile.country,
+				onboardingCompleted: false,
 			});
 		});
 

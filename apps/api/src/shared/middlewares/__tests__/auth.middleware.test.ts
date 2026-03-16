@@ -32,15 +32,27 @@ vi.mock('@config', async () => {
 		},
 	};
 });
+
+const mockLogger = {
+	warn: vi.fn(),
+	error: vi.fn(),
+	info: vi.fn(),
+	debug: vi.fn(),
+};
+
 describe('authCookieParser()', () => {
 	let req: Partial<Request>;
 	let res: Partial<Response>;
 	let next: NextFunction;
 
 	beforeEach(() => {
-		req = {};
+		req = {
+			log: mockLogger as any,
+		};
 		res = {};
 		next = vi.fn();
+
+		vi.clearAllMocks();
 	});
 
 	it('extracts tokens from cookies', () => {
@@ -114,7 +126,9 @@ describe('requireAuth', () => {
 	let next: NextFunction;
 
 	beforeEach(() => {
-		req = {};
+		req = {
+			log: mockLogger as any,
+		};
 		res = {};
 		next = vi.fn();
 
@@ -189,7 +203,9 @@ describe('requireRefreshToken', () => {
 	let next: NextFunction;
 
 	beforeEach(() => {
-		req = {};
+		req = {
+			log: mockLogger as any,
+		};
 		res = {};
 		next = vi.fn();
 

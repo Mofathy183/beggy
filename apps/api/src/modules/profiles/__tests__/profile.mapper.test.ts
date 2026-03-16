@@ -25,8 +25,8 @@ describe('ProfileMapper', () => {
 
 	describe('toDTO()', () => {
 		it('returns normalized profile data', () => {
-			// Arrange
 			const userId = 'user-id';
+
 			const profile = buildProfile(userId, {
 				firstName: 'john',
 				lastName: 'doe',
@@ -40,10 +40,8 @@ describe('ProfileMapper', () => {
 				date.toISOString()
 			);
 
-			// Act
 			const result = ProfileMapper.toDTO(profile);
 
-			// Assert — core fields
 			expect(result).toMatchObject({
 				id: profile.id,
 				userId,
@@ -57,20 +55,18 @@ describe('ProfileMapper', () => {
 				age: 30,
 			});
 
-			// Assert — dates normalized
 			expect(toISO).toHaveBeenCalledWith(profile.createdAt);
 			expect(toISO).toHaveBeenCalledWith(profile.updatedAt);
 
-			// Assert — computed fallbacks
 			expect(getDisplayName).toHaveBeenCalledWith(
 				profile.firstName,
 				profile.lastName
 			);
+
 			expect(getAge).toHaveBeenCalledWith(profile.birthDate);
 		});
 
-		it('returns provided display name and age', () => {
-			// Arrange
+		it('uses the provided displayName and age when they exist', () => {
 			const profile = {
 				...buildProfile('user-id'),
 				displayName: 'Precomputed Name',
@@ -81,10 +77,8 @@ describe('ProfileMapper', () => {
 				date.toISOString()
 			);
 
-			// Act
 			const result = ProfileMapper.toDTO(profile);
 
-			// Assert
 			expect(result.displayName).toBe('Precomputed Name');
 			expect(result.age).toBe(42);
 
@@ -92,8 +86,7 @@ describe('ProfileMapper', () => {
 			expect(getAge).not.toHaveBeenCalled();
 		});
 
-		it('returns null age when birth date is missing', () => {
-			// Arrange
+		it('returns null age when birthDate is missing', () => {
 			const profile = {
 				...buildProfile('user-id', { birthDate: null }),
 				age: undefined,
@@ -103,18 +96,49 @@ describe('ProfileMapper', () => {
 				date.toISOString()
 			);
 
-			// Act
 			const result = ProfileMapper.toDTO(profile);
 
-			// Assert
 			expect(result.age).toBeNull();
 			expect(getAge).not.toHaveBeenCalled();
+		});
+
+		it('maps the onboardingCompleted flag correctly', () => {
+			const profile = buildProfile('user-id', {
+				onboardingCompleted: true,
+			});
+
+			(toISO as any).mockImplementation((date: Date) =>
+				date.toISOString()
+			);
+
+			const result = ProfileMapper.toDTO(profile);
+
+			expect(result.onboardingCompleted).toBe(true);
+		});
+
+		it('preserves the onboardingCompleted state', () => {
+			const completedProfile = buildProfile('user-1', {
+				onboardingCompleted: true,
+			});
+
+			const incompleteProfile = buildProfile('user-2', {
+				onboardingCompleted: false,
+			});
+
+			(toISO as any).mockImplementation((date: Date) =>
+				date.toISOString()
+			);
+
+			const completed = ProfileMapper.toDTO(completedProfile);
+			const incomplete = ProfileMapper.toDTO(incompleteProfile);
+
+			expect(completed.onboardingCompleted).toBe(true);
+			expect(incomplete.onboardingCompleted).toBe(false);
 		});
 	});
 
 	describe('toPublicDTO()', () => {
-		it('returns public-safe profile data', () => {
-			// Arrange
+		it('returns only public-safe profile fields', () => {
 			const profile = {
 				...buildProfile('user-id'),
 				displayName: null,
@@ -124,10 +148,8 @@ describe('ProfileMapper', () => {
 			(getDisplayName as any).mockReturnValue('Public Name');
 			(getAge as any).mockReturnValue(null);
 
-			// Act
 			const result = ProfileMapper.toPublicDTO(profile);
 
-			// Assert — exposed fields only
 			expect(result).toEqual({
 				id: profile.id,
 				firstName: profile.firstName,

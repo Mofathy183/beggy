@@ -17,6 +17,7 @@ type ProfileFactoryOverrides = Partial<
 		| 'firstName'
 		| 'lastName'
 		| 'avatarUrl'
+		| 'onboardingCompleted'
 		| 'gender'
 		| 'birthDate'
 		| 'country'
@@ -75,6 +76,8 @@ export const profileFactory = (
 		(options.withDetails
 			? faker.helpers.arrayElement(Object.values(Gender))
 			: null),
+
+	onboardingCompleted: overrides.onboardingCompleted || false,
 
 	birthDate:
 		overrides.birthDate ??

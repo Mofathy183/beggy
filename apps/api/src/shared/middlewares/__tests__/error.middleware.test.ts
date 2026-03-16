@@ -16,7 +16,14 @@ const mockResponse = (): Response => {
 	return res;
 };
 
-const mockRequest = {} as Request;
+const mockRequest = {
+	log: {
+		warn: vi.fn(),
+		error: vi.fn(),
+		info: vi.fn(),
+		debug: vi.fn(),
+	},
+} as unknown as Request;
 const mockNext = vi.fn() as NextFunction;
 
 describe('errorHandler', () => {
