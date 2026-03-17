@@ -411,7 +411,7 @@ pnpm storybook
 Swagger documentation is available at:
 
 ```bash
-/api-docs
+/docs
 ```
 
 after running the API server.

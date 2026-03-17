@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { type CookieOptions, type Request } from 'express';
+import type { CookieOptions, Request } from 'express';
 import type { DoubleCsrfConfig, CsrfIgnoredRequestMethods } from 'csrf-csrf';
 import type { SessionOptions } from 'express-session';
 import type { Secret, SignOptions } from 'jsonwebtoken';
@@ -50,8 +50,6 @@ type StringValue =
 	| `${number}${UnitAnyCase}`
 	| `${number} ${UnitAnyCase}`;
 
-type Environment = 'development' | 'production' | 'test';
-
 const CSRF_IGNORE_METHODS: CsrfIgnoredRequestMethods = [
 	'GET',
 	'HEAD',
@@ -63,21 +61,20 @@ const CSRF_IGNORE_PATHS = [
 	'/api/docs', // API documentation
 ];
 
+type Environment = 'development' | 'production' | 'test';
+
 const NODE_ENV = (process.env.NODE_ENV as Environment) ?? 'development';
 
 const envFileMap: Record<Environment, string> = {
 	development: '.env.local',
 	test: '.env.test',
-	production: '.env.docker',
+	production: '.env.production',
 };
 
 const envFile = envFileMap[NODE_ENV];
 
-if (envFile) {
-	dotenv.config({ path: envFile });
-} else {
-	dotenv.config(); // fallback to .env
-}
+dotenv.config({ path: envFile });
+
 
 // ============================================
 // HELPER FUNCTIONS

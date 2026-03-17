@@ -98,7 +98,7 @@ app.use(pinoHttpLogger);
 //=====================================================
 
 // 12. API Documentation (Swagger UI)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // =====================================================
 //* CSRF (AFTER SESSIONS, BEFORE ROUTES)

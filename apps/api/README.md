@@ -426,13 +426,13 @@ pnpm start
 Swagger documentation is available at:
 
 ```txt
-/api-docs
+/docs
 ```
 
 Example:
 
 ```txt
-http://localhost:3000/api-docs
+http://localhost:3000/docs
 ```
 
 ---
