@@ -1,11 +1,11 @@
 import dotenv from 'dotenv';
 import type { CookieOptions, Request } from 'express';
 import type { DoubleCsrfConfig, CsrfIgnoredRequestMethods } from 'csrf-csrf';
-import type { SessionOptions } from 'express-session';
+// import type { SessionOptions } from 'express-session';
 import type { Secret, SignOptions } from 'jsonwebtoken';
 import type { StrategyOptions as FacebookStrategyOptions } from 'passport-facebook';
 import type { StrategyOptionsWithRequest as GoogleStrategyOptions } from 'passport-google-oauth20';
-import { STATUS_CODE } from '@shared/constants';
+import { STATUS_CODE } from '../shared/constants/status';
 
 // ============================================
 // TYPES
@@ -68,13 +68,30 @@ const NODE_ENV = (process.env.NODE_ENV as Environment) ?? 'development';
 const envFileMap: Record<Environment, string> = {
 	development: '.env.local',
 	test: '.env.test',
-	production: '.env.production',
+	production: '.env.production', // delete it work on it later
 };
 
 const envFile = envFileMap[NODE_ENV];
 
 dotenv.config({ path: envFile });
 
+const buildDatabaseUrl = (): string => {
+	if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+
+	const user = process.env.POSTGRES_USER;
+	const password = process.env.POSTGRES_PASSWORD;
+	const host = process.env.DB_HOST ?? 'localhost';
+	const port = process.env.DB_PORT ?? '5432';
+	const db = process.env.POSTGRES_DB;
+
+	if (!user || !password || !db) {
+		throw new Error(
+			'Missing required DB environment variables: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB'
+		);
+	}
+
+	return `postgresql://${user}:${password}@${host}:${port}/${db}?schema=public`;
+};
 
 // ============================================
 // HELPER FUNCTIONS
@@ -125,6 +142,15 @@ export const env = {
 	NODE_ENV: optional('NODE_ENV', 'development') as Environment,
 	PORT: optionalNumber('PORT', 3000),
 
+	// DB
+	POSTGRES_USER: required('POSTGRES_USER'),
+	POSTGRES_PASSWORD: required('POSTGRES_PASSWORD'),
+	POSTGRES_DB: required('POSTGRES_DB'),
+	DB_HOST: optional('DB_HOST', 'localhost'),
+	DB_PORT: optional('DB_PORT', '5432'),
+
+	// Constructed URL
+	DATABASE_URL: buildDatabaseUrl(),
 	// Security
 	// Must be unique and NEVER shared with refresh tokens.
 	JWT_ACCESS_SECRET: required('JWT_ACCESS_SECRET') as Secret,
@@ -175,7 +201,7 @@ export const env = {
 	// Cookie name used to store the refresh token.
 	JWT_REFRESH_TOKEN_NAME: required('JWT_REFRESH_TOKEN_NAME'),
 
-	SESSION_SECRET: required('SESSION_SECRET'),
+	// SESSION_SECRET: required('SESSION_SECRET'),
 	BCRYPT_SALT_ROUNDS: optionalNumber('BCRYPT_SALT_ROUNDS', 10),
 
 	// CSRF Configuration (for csrf-csrf library)
@@ -515,17 +541,17 @@ export const weatherConfig = {
 //* EXPRESS CONFIGURATIONS
 // ============================================
 // Session Configuration
-export const sessionConfig: SessionOptions = {
-	secret: env.SESSION_SECRET,
-	resave: false,
-	saveUninitialized: false,
-	cookie: {
-		maxAge: 24 * 60 * 60 * 1000, // 24 hours
-		secure: serverConfig.isProduction,
-		httpOnly: true,
-		sameSite: serverConfig.isProduction ? 'strict' : 'lax',
-	},
-};
+// export const sessionConfig: SessionOptions = {
+// 	secret: env.SESSION_SECRET,
+// 	resave: false,
+// 	saveUninitialized: false,
+// 	cookie: {
+// 		maxAge: 24 * 60 * 60 * 1000, // 24 hours
+// 		secure: serverConfig.isProduction,
+// 		httpOnly: true,
+// 		sameSite: serverConfig.isProduction ? 'strict' : 'lax',
+// 	},
+// };
 
 /**
  * Base cookie options shared across all authentication cookies.
