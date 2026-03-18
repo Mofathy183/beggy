@@ -1,418 +1,345 @@
-# BEGGY API
+<div align="center">
 
-Beggy API is the backend service for **Beggy**, an AI-powered smart travel packing assistant. It provides REST endpoints for authentication, users, profiles, and future packing-related resources like bags, suitcases, and items.
+# `@beggy/api`
 
-The API integrates **AI recommendations**, **weather data**, and **structured packing management** to help travelers pack efficiently.
+**The Beggy REST API — authentication, authorization, packing, AI & weather.**
 
----
+[![Express](https://img.shields.io/badge/Express-5.1-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-7.3-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-# Overview
-
-Beggy helps travelers organize luggage intelligently using:
-
-- 🌦 **Weather-based packing recommendations** (OpenWeather)
-- 🤖 **AI-powered suggestions** (Google Gemini)
-- 🧳 **Structured packing containers** (bags, suitcases, items)
-- 🔐 **Secure authentication & RBAC authorization**
-- 📦 **Monorepo architecture with shared types**
-
-The API exposes endpoints used by the Beggy web application and other clients.
+</div>
 
 ---
 
-# Tech Stack
+## Overview
 
-### Runtime & Language
+`@beggy/api` is the backend service for Beggy. It exposes a REST API for authentication, user management, profile management, and (partially implemented) travel packing resources including bags, suitcases, items, AI recommendations, and weather-based packing suggestions.
 
-- Node.js ≥ 18
-- TypeScript
-- SWC (fast compilation)
-
-### Framework
-
-- Express.js 5
-
-### Database
-
-- PostgreSQL
-- Prisma ORM
-
-### Authentication
-
-- JWT (Access + Refresh Tokens)
-- Passport.js
-- Google OAuth
-- Facebook OAuth
-
-### Authorization
-
-- CASL (Role Based Access Control)
-
-### Validation
-
-- Zod schemas (shared with frontend)
-
-### Security
-
-- Helmet
-- CSRF protection
-- Rate limiting
-- XSS sanitization
-- bcrypt password hashing
-
-### Logging
-
-- Pino
-
-### API Documentation
-
-- Swagger
-- swagger-jsdoc
-- swagger-ui-express
-
-### External Integrations
-
-- OpenWeather API
-- Google Gemini AI
-- Resend Email API
+**Base URL:** `/api/beggy`  
+**API Docs:** `/docs` (Swagger UI, available in development)
 
 ---
 
-# API Base URL
+## Tech Stack
 
-```
-/api/beggy
-```
+| Category | Technology |
 
-Example:
-
-```
-http://localhost:3000/api/beggy/users
-```
-
----
-
-# Project Structure
-
-```
-apps/api
-│
-├── src
-│   ├── modules
-│   │   ├── auth
-│   │   ├── users
-│   │   ├── profiles
-│   │   ├── bags
-│   │   ├── items
-│   │   ├── suitcases
-│   │   ├── weather
-│   │   └── gemini
-│   │
-│   ├── shared
-│   │   ├── middlewares
-│   │   ├── utils
-│   │   ├── types
-│   │   └── constants
-│   │
-│   ├── config
-│   │   ├── env.config.ts
-│   │   └── passport.config.ts
-│   │
-│   ├── app.ts
-│   └── server.ts
-│
-├── prisma
-│   ├── schema.prisma
-│   └── models
-│
-└── tests
-```
+|---|---|
+| **Runtime** | Node.js ≥ 18, TypeScript (compiled with SWC) |
+| **Framework** | Express.js 5.1 |
+| **Database** | PostgreSQL via Prisma 7.3 ORM |
+| **Auth** | JWT (access + refresh), Passport.js, Google OAuth, Facebook OAuth |
+| **Authorization** | CASL 6.8 (Role-Based Access Control) |
+| **Validation** | Zod 4 (via `@beggy/shared`) |
+| **Security** | Helmet, csrf-csrf, express-rate-limit, express-xss-sanitizer, bcryptjs |
+| **Logging** | Pino 9.6 + pino-http + pino-pretty (dev) |
+| **API Docs** | swagger-jsdoc + swagger-ui-express |
+| **Email** | Resend 4.2 |
+| **HTTP Client** | axios 1.8 (weather + AI APIs) |
 
 ---
 
-# API Architecture
-
-The API follows a **modular layered architecture**.
-
-```
-Route → Controller → Service → Database
-```
-
-### Route
-
-Defines endpoints and middleware.
-
-### Controller
-
-Handles request and response logic.
-
-### Service
-
-Contains business logic.
-
-### Prisma
-
-Handles database queries.
-
-Example:
-
-```
-users.route.ts
-users.controller.ts
-users.service.ts
-users.mapper.ts
-users.validator.ts
-```
-
----
-
-# Available Modules
-
-### Auth
-
-The Auth domain is responsible for:
-
-- User identity
-- Authentication & authorization context
-- Credential lifecycle (passwords, email, OAuth)
-- Token management
-
-Endpoints include:
-
-```
-POST /auth/signup
-POST /auth/login
-POST /auth/logout
-POST /auth/refresh-token
-GET  /auth/csrf-token
-```
-
-Supports:
-
-- JWT authentication
-- OAuth providers
-- CSRF protection
-
----
-
-### Users
-
-Users are:
-
-- Managed by the system
-- Controlled via roles and permissions
-- Not responsible for authentication logic
-
-Examples:
-
-```
-GET /users
-GET /users/:id
-POST /users
-PATCH /users/:id
-DELETE /users/:id
-```
-
----
-
-### Profiles
-
-Profiles are:
-
-- Separate from authentication
-- Editable by the owning user
-- Publicly readable where allowed
-
-Examples:
-
-```
-GET /profiles/me
-PATCH /profiles/me
-GET /profiles/:id
-```
-
----
-
-### Bags _(planned / partially implemented)_
-
-Manage travel bags.
-
-Examples:
-
-```
-GET /bags
-POST /bags
-GET /bags/:id
-```
-
----
-
-### Items
-
-Items are:
-
-- User-owned (private by default)
-- Reusable across multiple containers
-- Measured using structured physical constraints (weight, volume)
-- Independent from container placement logic
-
-Examples:
+## Project Structure
 
 ```text
-GET /items
-POST /items
-PATCH /items
-GET /items/:id
-DELETE /items/:id
+apps/api/
+│
+├── src/
+│   ├── modules/                   # Feature modules
+│   │   ├── auth/                  # Authentication & token management 
+|   │   │   ├── strategies/        # OAuth Passport Strategies
+│   │   ├── users/                 # User management
+│   │   ├── profiles/              # Profile management
+│   │   ├── bags/                  # Bag containers (implemented, not yet mounted)
+│   │   ├── items/                 # Personal item library
+│   │   ├── suitcases/             # Suitcase containers (planned)
+│   │   ├── bag-items/             # Bag ↔ item relations
+│   │   ├── suitcase-items/        # Suitcase ↔ item relations
+│   │   ├── weather/               # OpenWeather integration
+│   │   └── gemini/                # Google Gemini AI integration
+│   │
+│   ├── shared/
+│   │   ├── middlewares/           # Auth, permission, validator, query, error
+│   │   ├── utils/                 # Cookies, tokens, responses, errors, passwords
+│   │   ├── constants/             # Shared constants
+│   │   └── types/                 # Shared TypeScript types
+│   │
+│   ├── config/
+│   │   ├── env.config.ts          # Environment variable validation
+│   │   └── passport.config.ts     # Passport strategies
+│   │
+│   ├── emails/                    # Transactional email templates
+│   ├── app.ts                     # Express app setup
+│   ├── app.route.ts               # Root router composition
+│   └── server.ts                  # Entry point
+│
+├── prisma/
+│   ├── schema.prisma              # Generator + datasource + enums
+│   ├── models/                    # Model files (user, bag, item, suitcase, etc.)
+│   └── generated/prisma/          # Prisma Client output
+│
+└── docs/                          # Swagger definition
 ```
 
 ---
 
-### Suitcases _(planned)_
+## Module Architecture
 
-Suitcase containers with physical constraints.
+Each domain module follows a strict layered pattern:
 
----
-
-### Weather _(planned)_
-
-Weather integration.
-
-Example:
-
-```txt
-GET /weather/:city
+```text
+Route (factory) → Controller → Service → Prisma → Database
 ```
 
-Uses OpenWeather API.
-
----
-
-### Gemini AI _(planned)_
-
-AI-powered packing recommendations.
-
-Example:
-
-```txt
-POST /gemini/recommendations
+```text
+src/modules/<domain>/
+├── <domain>.route.ts          # Route factory function
+├── <domain>.controller.ts     # Request/response handling
+├── <domain>.service.ts        # Business logic
+├── <domain>.mapper.ts         # Data transformation (optional)
+├── <domain>.validator.ts      # Route-level validation (optional)
+└── __tests__/
+    ├── <domain>.service.test.ts
+    └── <domain>.integration.test.ts
 ```
 
-Uses Google Gemini API.
+**Route factory pattern:**
 
----
-
-# Authentication
-
-Beggy API uses **JWT authentication with refresh tokens**.
-
-### Flow
-
-```txt
-Login → Access Token + Refresh Token
-```
-
-Access token is used for protected routes.
-
-Refresh token generates a new access token when expired.
-
----
-
-# RBAC Authorization
-
-The API uses **CASL** to control permissions.
-
-Roles include:
-
-```txt
-ADMIN
-MODERATOR
-MEMBER
-USER
-```
-
-Permissions follow this model:
-
-```txt
-Action + Subject + Scope
-```
-
-Example:
-
-```txt
-CREATE BAG OWN
-READ USER ANY
+```typescript
+export const createUserRouter = (controller: UserController) => {
+  const router = Router();
+  router.get('/', authenticate, controller.list);
+  router.post('/', authenticate, authorize('CREATE', 'USER'), controller.create);
+  return router;
+};
 ```
 
 ---
 
-# Environment Variables
+## API Endpoints
 
-Create a `.env` file.
+### Mounted routes
 
-Example:
+| Module | Base Path | Description |
 
-```env
-NODE_ENV=development
+|---|---|---|
+| Auth | `/api/beggy/auth` | Signup, login, logout, refresh token, CSRF, OAuth |
+| Users | `/api/beggy/users` | User CRUD, role management |
+| Profiles | `/api/beggy/profiles` | Profile view & update |
 
-DATABASE_URL=postgresql://user:password@localhost:5432/beggy
+### Auth endpoints
 
-JWT_ACCESS_SECRET=secret
-JWT_REFRESH_SECRET=secret
+```text
+POST   /auth/signup              Register with email & password
+POST   /auth/login               Login with email & password
+POST   /auth/logout              Invalidate tokens and clear cookies
+POST   /auth/refresh-token       Generate new access token from refresh token
+GET    /auth/csrf-token          Retrieve CSRF token (required before mutations)
+GET    /auth/me                  Get authenticated user data
+GET    /auth/google              Initiate Google OAuth flow
+GET    /auth/google/callback     Google OAuth callback
+GET    /auth/facebook            Initiate Facebook OAuth flow
+GET    /auth/facebook/callback   Facebook OAuth callback
+```
 
-SESSION_SECRET=session_secret
-CSRF_SECRET_KEY=csrf_secret
+### Users endpoints
 
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+```text
+GET    /users                    List users (paginated, filterable, sortable)
+POST   /users                    Create a new user
+GET    /users/:id                Get user by ID
+PATCH  /users/:id                Update user
+DELETE /users/:id                Delete user
+PATCH  /users/:id/role           Change user role
+```
 
-FACEBOOK_CLIENT_ID=
-FACEBOOK_CLIENT_SECRET=
+### Profiles endpoints
 
-OPENWEATHER_API_KEY=
-AI_API_KEY=
-RESEND_API_KEY=
+```text
+GET    /profiles/me              Get own profile
+PATCH  /profiles/me              Update own profile
+POST   /profiles/me/onboarding   Complete onboarding
+GET    /profiles/:id             Get profile by ID (public)
+```
+
+### Planned / partially implemented
+
+```text
+GET    /bags                     List bags
+POST   /bags                     Create a bag
+GET    /bags/:id                 Get bag by ID
+PATCH  /bags/:id                 Update bag
+DELETE /bags/:id                 Delete bag
+
+GET    /items                    List items
+POST   /items                    Create an item
+GET    /items/:id                Get item by ID
+PATCH  /items/:id                Update item
+DELETE /items/:id                Delete item
+
+GET    /weather/:city            Get weather data for a city
+
+POST   /gemini/recommendations   Get AI packing recommendations
 ```
 
 ---
 
-# Running the API
+## Authentication & Authorization
 
-## Install dependencies
+### Authentication flow
 
-From the monorepo root:
+```text
+POST /auth/login
+  → validates credentials
+  → issues access token (HTTP-only cookie, short-lived)
+  → issues refresh token (HTTP-only cookie, long-lived)
+  → returns user data
+
+POST /auth/refresh-token
+  → validates refresh token from cookie
+  → issues new access token
+  → rotates refresh token
+```
+
+### RBAC model (CASL)
+
+Roles: `ADMIN` → `MODERATOR` → `MEMBER` → `USER`
+
+Permissions are modeled as: **Action + Subject + Scope**
+
+```text
+Action:  CREATE | READ | UPDATE | DELETE | MANAGE
+Subject: BAG | ITEM | SUITCASE | USER | ROLE | PERMISSION
+Scope:   OWN | ANY
+```
+
+Example — a `USER` can `READ BAG OWN` but not `READ BAG ANY`. An `ADMIN` can `MANAGE USER ANY`.
+
+### CSRF protection
+
+All state-mutating requests require a valid CSRF token. Clients must:
+
+1. Call `GET /auth/csrf-token` to obtain the token
+2. Include it in subsequent mutation requests via the `x-csrf-token` header
+
+---
+
+## Database Schema
+
+Managed by Prisma with multi-file models.
+
+### Core models
+
+| Model | Description |
+
+|---|---|
+| `User` | Core user identity, role, status |
+| `Account` | OAuth accounts linked to a user |
+| `UserToken` | Email verification & password reset tokens |
+| `Profile` | User profile (bio, preferences, travel data) |
+| `Permission` | Fine-grained permission records |
+| `Bag` | Travel bag container |
+| `Item` | Packing item with physical attributes |
+| `Suitcase` | Suitcase container |
+| `Container` | Polymorphic container system |
+| `ContainerItem` | Container ↔ item junction with placement data |
+
+### Prisma scripts
 
 ```bash
-pnpm install
+pnpm prisma:generate    # Generate Prisma Client
+pnpm prisma:migrate     # Create and apply a new migration
+pnpm prisma:push        # Push schema to DB (dev, no migration)
+pnpm prisma:deploy      # Apply pending migrations (production)
+pnpm prisma:reset       # Drop + recreate database
+pnpm prisma:seed        # Seed database with initial data
+pnpm prisma:test        # Run migrations against the test database
 ```
 
 ---
 
-## Generate Prisma client
+## Middleware Stack
+
+Applied in this order in `app.ts`:
+
+```text
+1.  Security         helmet, xss-sanitizer, rate-limit, CORS
+2.  Parsing          JSON body, URL-encoded, cookie-parser
+3.  Session          express-session + express-flash
+4.  Passport         (when OAuth is enabled)
+5.  Logging          pino-http
+6.  API Docs         Swagger UI at /docs (bypasses CSRF)
+7.  CSRF             inject token middleware → CSRF protection middleware
+8.  Routes           all module routers mounted here
+9.  Error handling   404 handler → global error handler
+```
+
+---
+
+## Environment Variables
+
+The API loads env from a file based on `NODE_ENV`:
+
+- `development` → `.env.local`
+- `test` → `.env.test`
+- `production` → `.env.production`
+
+| Variable | Required | Description |
+
+|---|---|---|
+| `NODE_ENV` | ✅ | `development` \| `test` \| `production` |
+| `DATABASE_URL` | ✅*| PostgreSQL connection string |
+| `POSTGRES_USER` | ✅* | DB username (used if `DATABASE_URL` not set) |
+| `POSTGRES_PASSWORD` | ✅*| DB password |
+| `POSTGRES_DB` | ✅* | DB name |
+| `DB_HOST` | ✅*| DB host |
+| `DB_PORT` | ✅* | DB port |
+| `JWT_ACCESS_SECRET` | ✅ | Access token signing key |
+| `JWT_REFRESH_SECRET` | ✅ | Refresh token signing key |
+| `JWT_ACCESS_EXPIRES_IN` | ✅ | Access token TTL (e.g., `15m`) |
+| `JWT_REFRESH_EXPIRES_IN` | ✅ | Refresh token TTL (e.g., `7d`) |
+| `JWT_ACCESS_TOKEN_NAME` | ✅ | Cookie name for access token |
+| `JWT_REFRESH_TOKEN_NAME` | ✅ | Cookie name for refresh token |
+| `CSRF_SECRET_KEY` | ✅ | CSRF protection key |
+| `GOOGLE_CLIENT_ID` | ⚙️ | Google OAuth (optional) |
+| `GOOGLE_CLIENT_SECRET` | ⚙️ | Google OAuth (optional) |
+| `FACEBOOK_CLIENT_ID` | ⚙️ | Facebook OAuth (optional) |
+| `FACEBOOK_CLIENT_SECRET` | ⚙️ | Facebook OAuth (optional) |
+| `AI_API_KEY` | ⚙️ | Google Gemini API key (optional) |
+| `OPENWEATHER_API_KEY` | ⚙️ | OpenWeather API key (optional) |
+| `RESEND_API_KEY` | ⚙️ | Resend email API key (optional) |
+
+> `*` — Provide either `DATABASE_URL` **or** the individual `POSTGRES_*` + `DB_*` variables.
+
+---
+
+## Running Locally
+
+### Development (with Docker database)
 
 ```bash
+# From monorepo root: start database
+docker compose -f docker-compose.dev.yml up postgres
+
+# From apps/api
 pnpm prisma:generate
-```
-
----
-
-## Run migrations
-
-```bash
 pnpm prisma:migrate
-```
-
----
-
-## Start development server
-
-```bash
 pnpm dev
 ```
 
----
+### Development (full Docker stack)
 
-## Start production
+```bash
+# From monorepo root
+pnpm docker:dev
+```
+
+> ⚠️ Run `pnpm docker:dev:build` only when dependencies or Docker config change.  
+> For daily development, just use `pnpm docker:dev`.
+
+### Production build
 
 ```bash
 pnpm build
@@ -421,141 +348,74 @@ pnpm start
 
 ---
 
-# API Documentation
-
-Swagger documentation is available at:
-
-```txt
-/docs
-```
-
-Example:
-
-```txt
-http://localhost:3000/docs
-```
-
----
-
-# Testing
-
-Beggy API uses **Vitest**.
-
-### Run tests
+## Testing
 
 ```bash
+# Run all tests
 pnpm test
-```
 
-### Watch mode
-
-```bash
+# Watch mode
 pnpm test:watch
-```
 
-### Coverage
+# Integration tests only (requires test DB)
+pnpm test:integration
 
-```bash
+# Coverage report
 pnpm test:coverage
 ```
 
-Tests include:
+Tests use **Vitest** with **Supertest** for HTTP assertions and **Faker** for test data.
 
-- Unit tests
-- Integration tests
-- HTTP endpoint tests using **Supertest**
-
----
-
-# Database
-
-Database is managed using **Prisma**.
-
-### Commands
-
-Generate client
+Integration tests run against a dedicated `postgres_test` database. Ensure it is running:
 
 ```bash
-pnpm prisma:generate
-```
-
-Run migrations
-
-```bash
-pnpm prisma:migrate
-```
-
-Reset database
-
-```bash
-pnpm prisma:reset
-```
-
-Seed database
-
-```bash
-pnpm prisma:seed
+docker compose -f docker-compose.dev.yml up postgres_test
+pnpm prisma:test
 ```
 
 ---
 
-# Logging
+## Path Aliases
 
-The API uses **Pino** for structured logging.
+| Alias | Resolves to |
 
-Development logs are formatted with **pino-pretty**.
-
----
-
-# Security
-
-Security features include:
-
-- Helmet HTTP headers
-- CSRF protection
-- Rate limiting
-- XSS sanitization
-- Password hashing with bcrypt
-- Secure cookie handling
+|---|---|
+| `@/*` | `src/*` |
+| `@config` | `src/config/index.ts` |
+| `@shared` | `src/shared/index.ts` |
+| `@modules` | `src/modules/index.ts` |
+| `@emails` | `src/emails/index.ts` |
+| `@route` | `app.route.ts` |
+| `@prisma` | `prisma/` |
+| `@prisma-generated/*` | `prisma/generated/prisma/*` |
+| `@beggy/shared` | `../../packages/shared/src` |
 
 ---
 
-# Monorepo Context
+## API Documentation
 
-The API lives inside the **Beggy Turborepo**.
+Swagger UI is available at `/docs` when the server is running in development. OpenAPI definitions are generated via `swagger-jsdoc` from JSDoc annotations throughout route files.
 
-Main packages:
-
-```txt
-apps/
-  api
-  web
-  mcp
-
-packages/
-  shared
-```
-
-Shared types and schemas come from:
-
-```txt
-@beggy/shared
+```url
+http://localhost:4000/docs
 ```
 
 ---
 
-# Contributing
+## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Follow existing architecture patterns
-4. Add tests
-5. Submit a pull request
+Follow the module pattern documented above. When adding a new domain:
 
----
-
-# License
-
-MIT License
+1. Create the module directory under `src/modules/<domain>/`
+2. Implement service → controller → route (factory)
+3. Add Zod schemas to `@beggy/shared`
+4. Add TypeScript types to `@beggy/shared`
+5. Mount the router in `app.route.ts`
+6. Write unit and integration tests
+7. Add Swagger JSDoc annotations to the route file
 
 ---
+
+<div align="center">
+<sub>Part of the <a href="../../README.md">Beggy monorepo</a> · MIT License</sub>
+</div>

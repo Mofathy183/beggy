@@ -1,322 +1,302 @@
-# Beggy Shared
+<div align="center">
 
-Shared **types, schemas, constants, and utilities** for the **Beggy** monorepo.
+# `@beggy/shared`
 
-This package acts as the **single source of truth** for all domain models, validation schemas, and shared logic used across the Beggy ecosystem.
+**The single source of truth for types, Zod schemas, constants, and utilities across Beggy.**
 
-It ensures **type safety, consistency, and maintainability** between the backend (`@beggy/api`) and frontend (`@beggy/web`).
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Zod](https://img.shields.io/badge/Zod-4.1-3E67B1?style=flat-square)](https://zod.dev/)
+[![ESM](https://img.shields.io/badge/Module-ESM-F59E0B?style=flat-square)](https://nodejs.org/api/esm.html)
 
----
-
-# Purpose
-
-The `@beggy/shared` package exists to:
-
-- Prevent **type drift** between API and frontend
-- Provide **centralized Zod validation schemas**
-- Share **constants, enums, and constraints**
-- Provide **utility functions for schemas and container calculations**
-- Maintain **consistent domain models**
-
-Both **backend and frontend import directly from this package**.
+</div>
 
 ---
 
-# Installation (Internal Workspace)
+## What is this package?
 
-This package is **not meant to be installed externally**.  
-It is used via **pnpm workspaces** inside the Beggy monorepo.
+`@beggy/shared` is a workspace package consumed by both `@beggy/api` and `@beggy/web`. It holds everything that must stay in sync between the frontend and backend:
 
-Example usage inside another workspace package:
+- **Zod schemas** — validation rules for API requests and form data
+- **TypeScript types** — shared interfaces derived from schemas and Prisma models
+- **Enums & constants** — domain values, error codes, messages, permissions
+- **Utility functions** — schema helpers and shared logic
 
-```ts
-import { UserRole } from '@beggy/shared/constants';
-import { loginSchema } from '@beggy/shared/schemas';
-import type { User } from '@beggy/shared/types';
+Keeping this as the single source of truth **eliminates type drift** between API validation and frontend form validation.
+
+---
+
+## Package Exports
+
+```typescript
+// Zod schemas
+import { createUserSchema, loginSchema } from '@beggy/shared/schemas';
+
+// TypeScript types
+import type { UserType, BagType } from '@beggy/shared/types';
+
+// Everything (re-exported from index)
+import { createUserSchema, UserType } from '@beggy/shared';
 ```
 
+| Export path | Contents |
+
+|---|---|
+| `@beggy/shared` | All exports (re-exported from index) |
+| `@beggy/shared/schemas` | Zod schemas |
+| `@beggy/shared/types` | TypeScript types |
+
 ---
 
-# Package Structure
+## Package Structure
 
-```
-src/
+```text
+packages/shared/
 │
-├── constants/
+├── src/
+│   ├── constants/              # Enums and constants
+│   │   ├── user.enums.ts
+│   │   ├── suitcase.enums.ts
+│   │   ├── profile.enums.ts
+│   │   ├── item.enums.ts
+│   │   ├── bag.enums.ts
+│   │   ├── auth.enums.ts
+│   │   ├── api.enums.ts
+│   │   ├── constraints.ts       # Validation constraints (min/max values)
+│   │   ├── constraints.enums.ts
+│   │   ├── permissions.ts       # RBAC permission definitions
+│   │   ├── messages.ts          # User-facing message strings
+│   │   └── error.codes.ts       # Error code constants
+│   │
+│   ├── schemas/                 # Zod validation schemas
+│   │   ├── auth.schema.ts       # signup, login, refresh, change-password
+│   │   ├── user.schema.ts       # createUser, updateUser, changeRole
+│   │   ├── profile.schema.ts    # updateProfile, onboarding
+│   │   ├── bag.schema.ts        # createBag, updateBag
+│   │   ├── item.schema.ts       # createItem, updateItem
+│   │   ├── suitcase.schema.ts   # createSuitcase, updateSuitcase
+│   │   ├── api.schema.ts        # Pagination, filter, sort schemas
+│   │   └── fields.schema.ts     # Reusable field-level schemas
+│   │
+│   ├── types/                   # TypeScript type definitions
+│   │   ├── auth.types.ts
+│   │   ├── user.types.ts
+│   │   ├── profile.types.ts
+│   │   ├── bag.types.ts
+│   │   ├── item.types.ts
+│   │   ├── suitcase.types.ts
+│   │   ├── api.types.ts         # Pagination, list response, API error types
+│   │   ├── schema.types.ts      # Schema-derived utility types
+│   │   └── constraints.types.ts
+│   │
+│   ├── containers/              # Container-related utilities
+│   │   ├── status.ts            # Container status helpers
+│   │   └── calculations.ts      # Weight/volume calculation utilities
+│   │
+│   ├── utils/
+│   │   └── schema.util.ts       # Schema utility functions
+│   │
+│   └── index.ts                 # Root re-exports
 │
-├── containers/
-│
-├── schemas/
-│
-├── types/
-│
-├── utils/
-│
-└── index.ts
+├── dist/                        # Compiled output (generated — do not edit)
+├── tests/                       # Vitest tests
+├── tsconfig.json
+└── package.json
 ```
 
 ---
 
-# Exports
+## Usage
 
-The package exposes modular entry points:
+### In the API (`@beggy/api`)
 
-| Export                  | Description             |
-| ----------------------- | ----------------------- |
-| `@beggy/shared`         | Main entry point        |
-| `@beggy/shared/types`   | Shared TypeScript types |
-| `@beggy/shared/schemas` | Zod validation schemas  |
+```typescript
+// Validate incoming request body
+import { createUserSchema } from '@beggy/shared/schemas';
 
-Example:
+const result = createUserSchema.safeParse(req.body);
+if (!result.success) {
+  throw new AppError(result.error);
+}
 
-```ts
-import { loginSchema } from '@beggy/shared/schemas';
-import type { LoginRequest } from '@beggy/shared/types';
+// Use shared types
+import type { CreateUserDto } from '@beggy/shared/types';
+
+class UserService {
+  async createUser(data: CreateUserDto) { ... }
+}
+```
+
+### In the Web (`@beggy/web`)
+
+```typescript
+// Form validation — Zod resolver wires directly into React Hook Form
+import { createUserSchema } from '@beggy/shared/schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const form = useForm({
+  resolver: zodResolver(createUserSchema),
+});
+
+// Typed API responses
+import type { UserType } from '@beggy/shared/types';
+
+const [user, setUser] = useState<UserType | null>(null);
+```
+
+### Using constants and enums
+
+```typescript
+import { Role, AuthProvider } from '@beggy/shared';
+import { MESSAGES, ERROR_CODES } from '@beggy/shared';
+
+// Type-safe domain enums used by both API models and web components
+const adminRole = Role.ADMIN;
 ```
 
 ---
 
-# Key Features
+## Schema Conventions
 
-## Zod Schema Validation
+### Field-level schemas
 
-All API request and response validation is defined with **Zod**.
+Reusable atomic schemas are defined in `fields.schema.ts` and composed into request schemas:
 
-Example:
+```typescript
+// fields.schema.ts — single source for field rules
+export const emailField = z.string().email().max(EMAIL_MAX_LENGTH);
+export const passwordField = z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH);
 
-```ts
-import { loginSchema } from '@beggy/shared/schemas';
-
-const result = loginSchema.parse(request.body);
+// auth.schema.ts — composed from fields
+export const loginSchema = z.object({
+  email: emailField,
+  password: passwordField,
+});
 ```
 
-This ensures:
+### Deriving types from schemas
 
-- API validation
-- Frontend type inference
-- Consistent contracts
+Always derive TypeScript types from Zod schemas using `z.infer` — never write them by hand:
 
----
-
-## Shared Domain Types
-
-Types are defined once and reused everywhere.
-
-Example:
-
-```ts
-import type { User, Suitcase, Bag, Item } from '@beggy/shared/types';
+```typescript
+export type LoginDto = z.infer<typeof loginSchema>;
+export type CreateUserDto = z.infer<typeof createUserSchema>;
 ```
 
----
+### API response types
 
-## Constants & Enums
+```typescript
+import type { PaginatedResponse, ApiError } from '@beggy/shared/types';
 
-Centralized constants improve maintainability.
-
-Examples include:
-
-- User roles
-- API status codes
-- Suitcase statuses
-- Constraint definitions
-- RBAC permissions
-
-Example:
-
-```ts
-import { UserRole } from '@beggy/shared/constants';
+// Typed paginated API response
+type UsersResponse = PaginatedResponse<UserType>;
 ```
 
 ---
 
-## Container Utilities
+## Constraints
 
-Helpers for suitcase and bag calculations.
+Validation constraints (max lengths, min values, etc.) are centralized in `constants/constraints.ts` and imported into schemas:
 
-Example responsibilities:
+```typescript
+import { EMAIL_MAX_LENGTH, PASSWORD_MIN_LENGTH, BAG_NAME_MAX_LENGTH } from '@beggy/shared';
 
-- Capacity calculations
-- Container state updates
-- Packing status
-
-Located in:
-
-```txt
-src/containers/
+export const createBagSchema = z.object({
+  name: z.string().min(1).max(BAG_NAME_MAX_LENGTH),
+  // ...
+});
 ```
+
+This ensures API-level database constraints and client-side form validation stay in sync.
 
 ---
 
-# Build Output
-
-The package compiles into:
-
-```txt
-dist/
-```
-
-Contents include:
-
-- compiled JavaScript
-- TypeScript declaration files (`.d.ts`)
-
-Entry point:
-
-```txt
-dist/index.js
-dist/index.d.ts
-```
-
----
-
-# Development
-
-## Install dependencies
-
-From repository root:
+## Building
 
 ```bash
-pnpm install
+# Compile TypeScript to dist/
+pnpm build
+
+# Watch mode
+pnpm build:watch
+
+# Type checking only
+pnpm type-check
 ```
+
+The build outputs to `dist/` with `.d.ts` declaration files. This is consumed by the API and web via TypeScript path aliases during development (no need to rebuild on every change in dev mode).
 
 ---
 
-## Build package
+## Testing
 
 ```bash
-pnpm --filter @beggy/shared build
+pnpm test
+pnpm test:watch
+pnpm test:coverage
 ```
 
+Tests live in `tests/**/*.test.ts` and use **Vitest** in the Node environment.
+
 ---
 
-## Type checking
+## Adding New Schemas
 
-```bash
-pnpm --filter @beggy/shared type-check
+When adding a new domain (e.g., packing lists):
+
+1. Create `src/schemas/packing-list.schema.ts`
+
+```typescript
+import { z } from 'zod';
+import { NAME_MAX_LENGTH } from '../constants/constraints';
+
+export const createPackingListSchema = z.object({
+  name: z.string().min(1).max(NAME_MAX_LENGTH),
+  tripId: z.string().uuid(),
+});
+
+export type CreatePackingListDto = z.infer<typeof createPackingListSchema>;
 ```
 
----
+2. Create `src/types/packing-list.types.ts` for response types that don't come from schemas
 
-## Linting
+3. Export from the index files:
 
-```bash
-pnpm --filter @beggy/shared lint
+```typescript
+// src/schemas/index.ts
+export * from './packing-list.schema';
+
+// src/types/index.ts
+export * from './packing-list.types';
 ```
 
----
+4. Run `pnpm build` to compile
 
-# Testing
-
-Tests use **Vitest**.
-
-Run tests:
-
-```bash
-pnpm --filter @beggy/shared test
-```
-
-Watch mode:
-
-```bash
-pnpm --filter @beggy/shared test:watch
-```
-
-Coverage:
-
-```bash
-pnpm --filter @beggy/shared test:coverage
-```
-
-Test files are located in:
-
-```txt
-tests/**/*.test.ts
-```
+5. Both `@beggy/api` and `@beggy/web` can immediately import the new schema
 
 ---
 
-# TypeScript Configuration
+## TypeScript Configuration
 
-Important compiler settings:
+| Setting | Value |
 
-| Option            | Value   |
-| ----------------- | ------- |
-| Target            | ES2022  |
-| Module            | ESNext  |
-| Module Resolution | Bundler |
-| Strict Mode       | Enabled |
-| Composite         | true    |
-| Declarations      | true    |
-
-These settings ensure:
-
-- strong type safety
-- compatibility with Turborepo builds
-- generated `.d.ts` for other packages
+|---|---|
+| `target` | ES2022 |
+| `module` | ESNext |
+| `moduleResolution` | Bundler |
+| `strict` | true |
+| `declaration` | true |
+| `composite` | true (incremental builds) |
 
 ---
 
-# Dependencies
+## Key Principle
 
-| Package | Purpose                                      |
-| ------- | -------------------------------------------- |
-| `zod`   | Runtime schema validation and type inference |
+> **If a type or schema exists in both the API and the web, it belongs here.**
 
----
-
-# Best Practices
-
-When working in the Beggy codebase:
-
-✔ Always import shared types and schemas from `@beggy/shared`
-✔ Avoid redefining domain types in apps
-✔ Keep validation schemas inside this package
-✔ Use Zod inference to generate TypeScript types
-
-Example:
-
-```ts
-type LoginRequest = z.infer<typeof loginSchema>;
-```
+Never duplicate validation rules. If the API validates that a bag name must be between 1 and 100 characters, the web form must use the exact same schema. `@beggy/shared` makes this automatic.
 
 ---
 
-# Related Packages
-
-| Package      | Description                  |
-| ------------ | ---------------------------- |
-| `@beggy/api` | Express backend              |
-| `@beggy/web` | Next.js frontend             |
-| `@beggy/mcp` | MCP developer tooling server |
-
----
-
-# Role in Beggy Architecture
-
-`@beggy/shared` is a **core architectural package** in the Beggy monorepo.
-
-It ensures:
-
-- type-safe communication between services
-- centralized validation
-- shared domain logic
-- reduced duplication
-
-Without this package, API and frontend contracts would easily diverge.
-
----
-
-```
-
----
-
-✅ This README now functions as:
-
-- **Developer onboarding guide**
-- **AI assistant context**
-- **Architectural documentation**
-- **Shared package reference**
-
----
-```
+<div align="center">
+<sub>Part of the <a href="../../README.md">Beggy monorepo</a> · MIT License</sub>
+</div>

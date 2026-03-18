@@ -26,6 +26,7 @@
 - **Package manager**: `pnpm` (>= 8.0.0), workspace root at repo root
 - **Orchestration**: **Turborepo** (`turbo.json`) for task orchestration and caching
 - **Package manager version**: `pnpm@10.30.x` at root (see `packageManager` in root `package.json`); individual apps may pin different versions
+- **Workspace catalog**: `pnpm-workspace.yaml` defines a `catalog` for shared dependency versions (notably `zod`). Apps/packages can reference versions via `zod: "catalog:"` for consistency.
 
 ### 2.2 Workspaces (`pnpm-workspace.yaml`)
 
@@ -453,6 +454,9 @@ Feature-based organization. Each feature contains:
 
 **Example Features**:
 
+- **auth** – Authentication UX + session hydration (login/signup forms, OAuth buttons, `/auth/callback`)
+- **profiles** – Profile editing + onboarding completion flow (soft-nudge onboarding)
+- **items** – Personal item library (list, filters, order-by, create/update dialogs)
 - **users** – User management UI (list, create, edit, filters, badges, actions)
 
 **Shared UI** (`src/shared/ui/`):
@@ -512,6 +516,7 @@ Feature-based organization. Each feature contains:
 - **utils/** – Shared utilities:
     - `query.utils.ts` – List/query utilities
     - `error.utils.ts` – API error handling
+    - `notify.utils.ts` – Typed notifications wrapper around Sonner (success/error/warning/info) + `HttpClientError` mapping
 
 **Web path aliases** (`apps/web/tsconfig.json`): `@/*` → `./src/*`, `@shared/*` → `./src/shared/*`, `@features/*` → `./src/features/*`, `@shadcn-ui/*` → `src/shared/components/ui/*`, `@shared-ui/*` → `./src/shared/ui/*`, `@beggy/shared` and `@beggy/shared/*` for the shared package.
 
@@ -634,6 +639,28 @@ Feature-based organization. Each feature contains:
             - Skeleton loaders while fetching.
             - Error card with destructive-colored icon and "Try Again" button (retry via `refetch`).
 
+- **OAuth Callback (`/auth/callback`)**
+    - Transitional client-only landing page after OAuth redirects.
+    - Assumes the API has already set auth cookies; the web app hydrates session state via `AuthBootstrap` (mounted in root layout).
+    - Intended redirect outcomes:
+        - **authenticated + onboarding incomplete** → `/onboarding`
+        - **authenticated + onboarding completed** → `/dashboard`
+        - **unauthenticated** → `/login?error=oauth_failed`
+
+- **Onboarding (`/onboarding`)**
+    - Soft-nudge onboarding flow that collects optional profile info after first login/OAuth.
+    - Uses a single orchestrator hook pattern:
+        - `useOnboarding` performs:
+            - `POST /profiles/me/onboarding`
+            - `GET /auth/me` (rehydrate auth slice)
+            - redirect to dashboard (default `/dashboard`)
+    - Supports “Skip for now” which sets the onboarding completion flag without forcing data entry.
+
+- **Items Library (`/items`)**
+    - Personal item inventory feature (create/update, list, filters, sorting, pagination).
+    - Mirrors the same list + dialog + form patterns used in Users.
+    - Uses `notify` utilities for consistent user feedback.
+
 - **Users CRUD & Role Management (Component-Level Flows)**
     - **Create User**:
         - `CreateUserForm` (container) + `CreateUserFormUI` (presentational) follow the **form pattern**:
@@ -647,6 +674,20 @@ Feature-based organization. Each feature contains:
     - All of these flows are designed to be **copy-paste-ready blueprints** for future domain features (bags, suitcases, items, packing lists) while reusing the same shared list, filters, and badge patterns.
 
 **Takeaway**: The current web app is a **thin but fully structured frontend slice**: landing page, protected dashboard shell, and a complete user-management feature wired to the API. New features (bags, suitcases, packing flows) should follow the same **feature structure, list/detail patterns, forms pattern, and design system rules** documented here.
+
+### 5.7 Notifications & Toast UX (Sonner)
+
+Beggy standardizes notifications via:
+
+- `Toaster` from Sonner (mounted once at the app root)
+- `notify` from `src/shared/utils/notify.utils.ts` as the **single API** components should call
+
+UX rules:
+
+- **Consistency**: icon, duration defaults, and message shape are centralized.
+- **Error hygiene**: user-facing copy is `message + suggestion`; machine-readable codes stay out of toasts.
+- **Theme + tokens**: Sonner is configured so the semantic token system owns colors in light/dark mode (no “rich colors” overrides).
+- **RTL-friendly positioning**: toast position relies on logical behavior to render correctly under RTL.
 
 ---
 
@@ -696,6 +737,11 @@ Feature-based organization. Each feature contains:
 - `test` / `test:coverage` – `turbo run test` / `test:coverage`
 - `clean` – `turbo run clean && rm -rf node_modules`
 - `format` / `format:check` – Prettier on `**/*.{ts,tsx,js,jsx,json,md,mjs}`
+- `docker:dev` – `docker compose -f docker-compose.dev.yml up --build`
+- `docker:dev:down` – `docker compose -f docker-compose.dev.yml down`
+- `docker:dev:reset` – `docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up --build`
+- `docker:prod` – `docker compose -f docker-compose.prod.yml up --build`
+- `docker:prod:down` – `docker compose -f docker-compose.prod.yml down`
 
 ### 7.2 ESLint Configuration (`eslint.config.mjs`)
 
@@ -834,7 +880,7 @@ Feature-based organization. Each feature contains:
 - Depends on: `^build` (build dependencies first)
 - Inputs: `$TURBO_DEFAULT$`, `.env*`
 - Outputs: `dist/**`, `build/**`, `.next/**`
-- Env: `NODE_ENV`, `DATABASE_URL`, `VITE_API_URL`
+- Env: `NODE_ENV`, `DATABASE_URL`, `NEXT_PUBLIC_API_URL`
 
 **dev**:
 
@@ -935,7 +981,28 @@ Feature-based organization. Each feature contains:
 
 **Web**:
 
-- `VITE_API_URL` – API URL for web app (if needed)
+- `NEXT_PUBLIC_API_URL` – API URL for the Next.js web app (build-time + runtime client usage)
+
+### 8.1 Environment files (current convention)
+
+**Repo root**:
+
+- `.env.example` exists to document a minimal set of database variables for local/dev container use.
+
+**API (`apps/api`)**:
+
+- `apps/api/.env.example` documents the full API environment surface area (auth, CSRF, OAuth, AI, weather, DB).
+- The API currently loads an env file based on `NODE_ENV` via a simple mapping in `apps/api/src/config/env.config.ts`:
+    - `development` → `.env.local`
+    - `test` → `.env.test`
+    - `production` → `.env.production` (noted as WIP in code)
+- **Database URL behavior**:
+    - If `DATABASE_URL` is set, it is used.
+    - Otherwise the API **constructs** `DATABASE_URL` from `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DB_HOST`, `DB_PORT`, `POSTGRES_DB`.
+
+**Web (`apps/web`)**:
+
+- Docker development expects `apps/web/.env.local` (loaded via compose `env_file`) for local envs like `NEXT_PUBLIC_API_URL`.
 
 ---
 
@@ -1104,6 +1171,64 @@ export const createUserRouter = (controller: UserController) => {
 - Adding new environment variables
 
 **Keep it current**: This document should reflect the actual state of the codebase.
+
+---
+
+## 11.5 Docker, Compose, and Deployment (current setup)
+
+Beggy now supports **Docker-first** development and production runs at the monorepo root.
+
+### Development compose (`docker-compose.dev.yml`)
+
+- **Services**:
+    - `postgres` (port `5432:5432`) with a named volume `postgres_dev_data`
+    - `postgres_test` (port `5433:5432`) with a named volume `postgres_test_data`
+    - `api` (port `4000:4000` + Node inspector `9229:9229`)
+    - `web` (port `3000:3000`)
+- **Hot reload strategy**:
+    - Source is mounted into containers (`.:/app`)
+    - `node_modules` paths are excluded from bind mount via anonymous volumes (`/app/node_modules`, etc.) to avoid Windows bind-mount performance issues and host/container mismatch
+    - Watch mode is stabilized with polling envs (`WATCHPACK_POLLING`, `CHOKIDAR_USEPOLLING`)
+- **Env files**:
+    - API uses `env_file: ./apps/api/.env.local`
+    - Web uses `env_file: ./apps/web/.env.local`
+    - Web also sets `NEXT_PUBLIC_API_URL` to `http://localhost:4000` in compose for local dev
+
+### Production compose (`docker-compose.prod.yml`)
+
+- **Services**:
+    - `postgres` (no host ports exposed; internal network only) with named volume `postgres_prod_data`
+    - `api` (port `4000:4000`) built from `apps/api/Dockerfile`
+    - `web` (port `3000:3000`) built from `apps/web/Dockerfile`
+- **Configuration**:
+    - `api` reads secrets from environment variables passed by compose (JWT, CSRF, OAuth, AI, weather, origins/URLs, DB variables)
+    - `web` receives `NEXT_PUBLIC_API_URL` at **build time** as a Docker build arg (Next.js public env requirement)
+
+### Dockerfiles
+
+- **API**:
+    - `apps/api/Dockerfile.dev`: installs dependencies, runs `pnpm dev` (source mounted by compose)
+    - `apps/api/Dockerfile`: multi-stage build, compiles the API, ships a smaller runtime image containing `dist/` + Prisma assets
+- **Web**:
+    - `apps/web/Dockerfile.dev`: installs dependencies, runs `pnpm dev` (source mounted by compose)
+    - `apps/web/Dockerfile`: multi-stage build, outputs Next.js `standalone` runtime and runs `node server.js`
+
+### Deployment script (`deploy.sh`)
+
+There is a server-side helper script `deploy.sh` intended to be run on the deployment machine:
+
+- Loads secrets from `/etc/beggy/secrets.env`
+- Pulls latest `main`
+- Brings up production compose in detached mode
+- Runs Prisma migrations inside the `api` container (`npx prisma migrate deploy`)
+
+### Ignore rules for Docker build context (`.dockerignore`)
+
+The `.dockerignore` is configured to:
+
+- Exclude build outputs (`dist`, `.next`, `out`, `coverage`, `.turbo`)
+- Exclude all `.env*` files by default while explicitly allowing `!.env.example` and `!**/.env.example`
+- Exclude IDE/git metadata and Storybook build output
 
 ---
 

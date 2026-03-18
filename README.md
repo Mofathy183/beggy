@@ -1,468 +1,412 @@
-# Beggy — AI-Powered Smart Travel Packing Assistant 🧳
+# Title
 
-**Beggy is an intelligent travel packing assistant that helps users organize bags and suitcases efficiently using AI, weather insights, and smart container management.**
+<div align="center">
 
----
+```text
 
-# ✨ Overview
-
-Travelers often **overpack, underpack, or pack inefficiently**.
-
-**Beggy solves this problem** by combining:
-
-- structured packing management
-- intelligent AI estimations
-- weather-aware recommendations
-- container capacity tracking
-
-Users can create **bags or suitcases**, add **items**, and visually manage everything with **drag-and-drop interactions** while the system tracks:
-
-- weight usage
-- capacity
-- container status (available / full / overloaded)
-
-Beggy is built as a **production-ready full-stack monorepo** with modern architecture, strong typing, and scalable design patterns.
-
----
-
-# 🧠 Smart AI Features
-
-Beggy integrates **Google Gemini AI** to assist users automatically.
-
-### AI Capabilities
-
-**Smart Bag Estimation**
-
-AI estimates:
-
-- maximum weight
-- internal capacity
-- size characteristics
-
-based on **bag brand and model**.
-
-**Item Intelligence**
-
-Users only type something like:
-
-```txt
-Nike Running Shoes
+██████╗ ███████╗ ██████╗  ██████╗ ██╗   ██╗
+██╔══██╗██╔════╝██╔════╝ ██╔════╝ ╚██╗ ██╔╝
+██████╔╝█████╗  ██║  ███╗██║  ███╗ ╚████╔╝
+██╔══██╗██╔══╝  ██║   ██║██║   ██║  ╚██╔╝
+██████╔╝███████╗╚██████╔╝╚██████╔╝   ██║
+╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝    ╚═╝
 ```
 
-Beggy automatically estimates:
+**Your seasoned travel buddy for smarter packing.**
 
-- weight
-- volume
-- item category
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-≥18-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-workspaces-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io/)
+[![Turborepo](https://img.shields.io/badge/Turborepo-2.6-EF4444?style=flat-square&logo=turborepo&logoColor=white)](https://turbo.build/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=flat-square)](LICENSE)
 
-**Form Autofill**
-
-AI prefills data fields to reduce manual work.
+</div>
 
 ---
 
-# 🌦 Weather-Aware Packing
+## What is Beggy?
 
-Beggy integrates the **OpenWeather API** to help travelers pack smarter.
+Beggy is an **AI-powered smart travel packing assistant** that eliminates the guesswork from packing. It combines weather intelligence, AI recommendations, and structured container management to help travelers pack the right things — nothing more, nothing less.
 
-Workflow:
-
-```txt
-User enters destination
-        ↓
-Weather data fetched
-        ↓
-AI analyzes conditions
-        ↓
-Beggy suggests what to pack
+```text
+Destination entered  →  Weather fetched  →  AI analyzes  →  Smart suggestions delivered
 ```
 
-Examples:
+**Core capabilities:**
 
-- Bring **rain jacket**
-- Pack **warm clothing**
-- Add **sunscreen**
-- Include **umbrella**
-
-Users receive **packing suggestions via notifications**.
+- 🌦 **Weather-aware packing** via OpenWeather API
+- 🤖 **AI-powered suggestions** via Google Gemini
+- 🧳 **Container management** — bags & suitcases with physical constraints (weight, volume, capacity)
+- 🔐 **Production-grade auth** — JWT, OAuth (Google + Facebook), CSRF, rate limiting
+- 🛡 **RBAC authorization** — fine-grained permissions via CASL
 
 ---
 
-# 🧳 Container System
+## Monorepo Structure
 
-Beggy models luggage using a **flexible container architecture**.
+This repository is a **Turborepo + pnpm workspaces** monorepo.
 
-Containers include:
-
-- Bags
-- Suitcases
-
-Each container tracks:
-
-- **maximum capacity**
-- **maximum weight**
-- **current usage**
-
-Status indicators:
-
-```txt
-AVAILABLE
-FULL
-OVERLOADED
+```text
+beggy/
+├── apps/
+│   ├── api/          → @beggy/api     Express 5 REST API backend
+│   ├── web/          → @beggy/web     Next.js 16 frontend
+│   └── mcp/          → @beggy/mcp     MCP dev tooling server
+│
+├── packages/
+│   └── shared/       → @beggy/shared  Shared types, Zod schemas, constants
+│
+├── turbo.json                          Turborepo task orchestration
+├── pnpm-workspace.yaml                 Workspace + catalog definitions
+└── docker-compose.dev.yml              Docker development setup
 ```
 
-This prevents:
+| Package | Description | Docs |
 
-- overweight luggage
-- inefficient packing
-- forgotten items
-
----
-
-# 🔐 Authentication & Security
-
-Beggy implements a **production-grade authentication system**.
-
-### Authentication Methods
-
-- Email & Password
-- Google OAuth
-- Facebook OAuth
-
-### Security Features
-
-- JWT access & refresh tokens
-- HTTP-only secure cookies
-- CSRF protection
-- rate limiting
-- XSS sanitization
-- password hashing with bcrypt
-- secure email flows
-
-### Email Flows
-
-Handled using **Resend + React Email**:
-
-- Email verification
-- Password reset
-- Change email confirmation
+|---|---|---|
+| `@beggy/api` | Express 5 REST API — auth, users, bags, AI, weather | [apps/api/README.md](apps/api/README.md) |
+| `@beggy/web` | Next.js 16 frontend with full design system | [apps/web/README.md](apps/web/README.md) |
+| `@beggy/shared` | Single source of truth for types & schemas | [packages/shared/README.md](packages/shared/README.md) |
+| `@beggy/mcp` | Model Context Protocol dev tooling server | [apps/mcp/README.md](apps/mcp/README.md) |
 
 ---
 
-# 🏗 Monorepo Architecture
+## Tech Stack at a Glance
 
-Beggy uses a **modern monorepo architecture** powered by **Turborepo + pnpm workspaces**.
+| Layer | Technology |
+
+|---|---|
+| **Monorepo** | Turborepo 2.6, pnpm workspaces |
+| **API** | Express 5, Prisma 7, PostgreSQL, SWC, Pino, Swagger |
+| **Auth** | JWT, Passport.js, Google OAuth, Facebook OAuth, CASL |
+| **Web** | Next.js 16, React 19, Tailwind CSS v4, shadcn/ui, Redux Toolkit |
+| **Validation** | Zod 4 (shared across API + Web) |
+| **AI** | Google Gemini API |
+| **Weather** | OpenWeather API |
+| **Email** | Resend |
+| **Testing** | Vitest, React Testing Library, Playwright, Storybook |
+| **Code Quality** | TypeScript 5.9 (strict), ESLint 9 flat config, Prettier |
+
+---
+
+## Prerequisites
+
+- **Node.js** >= 18.0.0
+- **pnpm** >= 8.0.0 (`npm install -g pnpm`)
+- **Docker** (recommended for local database)
+- **PostgreSQL** (if not using Docker)
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
 
 ```bash
-beggy
-│
-├─ apps
-│  ├─ api        → Express backend
-│  ├─ web        → Next.js frontend
-│  └─ mcp        → MCP development tooling
-│
-├─ packages
-│  └─ shared     → shared types, schemas, utilities
-│
-└─ tooling
-   ├─ eslint
-   ├─ prettier
-   ├─ vitest
-   └─ turbo
-```
-
----
-
-# 🧩 Architecture Diagram
-
-```bash
-                 ┌───────────────────────┐
-                 │       Next.js Web     │
-                 │  React + Tailwind UI  │
-                 └───────────┬───────────┘
-                             │
-                             │ API Requests
-                             ▼
-                 ┌───────────────────────┐
-                 │      Express API      │
-                 │   Controllers/Services│
-                 └───────────┬───────────┘
-                             │
-                    Prisma ORM
-                             │
-                             ▼
-                     PostgreSQL DB
-                             │
-          ┌──────────────────┴─────────────────┐
-          │                                    │
-          ▼                                    ▼
-   Google Gemini AI                     OpenWeather API
- AI packing suggestions               Weather-based advice
-```
-
----
-
-# 📦 Monorepo Packages
-
-| Package           | Description                                |
-| ----------------- | ------------------------------------------ |
-| **@beggy/api**    | Express backend API                        |
-| **@beggy/web**    | Next.js frontend                           |
-| **@beggy/shared** | Shared types, Zod schemas, constants       |
-| **@beggy/mcp**    | Model Context Protocol development tooling |
-
-The **shared package** ensures **type safety across frontend and backend**.
-
----
-
-# 🧰 Tech Stack
-
-## Backend
-
-- Express 5
-- Prisma ORM
-- PostgreSQL
-- Passport (OAuth)
-- JWT authentication
-- CASL authorization
-- Zod validation
-- Pino logging
-- Swagger API docs
-
----
-
-## Frontend
-
-- Next.js 16
-- React 19
-- Tailwind CSS 4
-- shadcn/ui
-- Radix UI
-- Redux Toolkit
-- React Hook Form
-- CASL permissions
-
----
-
-## AI & Integrations
-
-- Google Gemini AI
-- OpenWeather API
-- Resend Email API
-
----
-
-## Developer Tooling
-
-- Turborepo
-- pnpm workspaces
-- TypeScript
-- Vitest
-- Testing Library
-- Storybook
-- ESLint
-- Prettier
-- SWC
-
----
-
-# 🧪 Testing
-
-Beggy includes **multiple testing layers**.
-
-### Backend
-
-- Unit tests
-- Integration tests
-- Supertest HTTP testing
-
-### Frontend
-
-- Component tests
-- React Testing Library
-- Storybook interaction tests
-
-### Shared
-
-- Utility tests
-
----
-
-# 🎨 UI System
-
-Beggy uses a **token-based design system** built with:
-
-- Tailwind CSS v4
-- shadcn/ui
-- Radix UI
-- OKLCH color tokens
-- dark mode via `next-themes`
-
-Features:
-
-- WCAG AA accessibility
-- semantic color tokens
-- consistent design primitives
-- reusable UI patterns
-
----
-
-# 🚀 Getting Started
-
-## 1. Clone Repository
-
-```bash
-git clone https://github.com/your-username/beggy.git
+git clone https://github.com/Mofathy183/Beggy-backend.git
 cd beggy
 ```
 
----
-
-## 2. Install Dependencies
+### 2. Install dependencies
 
 ```bash
 pnpm install
 ```
 
----
+### 3. Configure environment variables
 
-## 3. Setup Environment Variables
-
-Create environment files:
+Each app has its own env file. Start from the examples:
 
 ```bash
-.env
-.env.local
-.env.test
+# API environment
+cp apps/api/.env.example apps/api/.env.local
+
+# Web environment
+cp apps/web/.env.example apps/web/.env.local
 ```
 
-Example variables:
+Minimum required variables:
 
-```bash
-DATABASE_URL=
-JWT_ACCESS_SECRET=
-JWT_REFRESH_SECRET=
+```env
+# apps/api/.env.local
+DATABASE_URL=postgresql://user:password@localhost:5432/beggy
+JWT_ACCESS_SECRET=your-super-secret-key
+JWT_REFRESH_SECRET=your-refresh-secret-key
+SESSION_SECRET=your-session-secret
+CSRF_SECRET_KEY=your-csrf-secret
 
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-FACEBOOK_CLIENT_ID=
-FACEBOOK_CLIENT_SECRET=
-
-OPENWEATHER_API_KEY=
-AI_API_KEY=
-RESEND_API_KEY=
+# apps/web/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
----
+> See [Environment Variables](#environment-variables) for the full reference.
 
-## 4. Run Database
+### 4. Start the database
 
 ```bash
-pnpm prisma migrate dev
+# Recommended: use Docker
+pnpm docker:dev
+
+# Or run only the database service
+docker compose -f docker-compose.dev.yml up postgres
 ```
 
----
-
-## 5. Start Development
+### 5. Run database migrations
 
 ```bash
+cd apps/api
+pnpm prisma:migrate
+pnpm prisma:generate
+```
+
+### 6. Start development
+
+```bash
+# From the root — starts all apps in parallel
 pnpm dev
 ```
 
+| Service | URL |
+
+|---|---|
+| API | `http://localhost:4000` |
+| API Docs (Swagger) | `http://localhost:4000/docs` |
+| Web | `http://localhost:3000` |
+
 ---
 
-# 📚 Available Scripts
+## Available Scripts
+
+Run from the **monorepo root** — Turborepo handles task orchestration and caching.
+
+```bash
+# Development
+pnpm dev                    # Start all apps in watch mode
+
+# Building
+pnpm build                  # Build all packages and apps
+
+# Testing
+pnpm test                   # Run all test suites
+pnpm test:coverage          # Run tests with coverage reports
+
+# Code quality
+pnpm lint                   # Lint all packages
+pnpm lint:fix               # Lint and auto-fix
+pnpm format                 # Format all files with Prettier
+pnpm format:check           # Check formatting without writing
+pnpm type-check             # TypeScript type checking across all packages
+
+# Docker
+pnpm docker:dev:build      # Build development images (run after dependency/Dockerfile changes)
+pnpm docker:dev            # Start development Docker stack
+pnpm docker:dev:down       # Stop development stack
+pnpm docker:dev:reset      # Reset development stack (removes volumes + rebuilds)
+
+pnpm docker:prod           # Build & start production Docker stack
+pnpm docker:prod:down      # Stop production stack
+```
+
+---
+
+## Docker
 
 ### Development
 
 ```bash
-pnpm dev
+pnpm docker:dev
 ```
 
-### Build
+Starts:
+
+- `postgres` on port `5432`
+- `postgres_test` on port `5433`
+- `api` on port `4000` (with Node inspector on `9229`)
+- `web` on port `3000`
+
+> ⚠️ Run `pnpm docker:dev:build` only when dependencies or Docker config change.  
+> For daily development, just use `pnpm docker:dev`.
+
+Source files are mounted into containers with hot reload via polling.
+
+### Production
 
 ```bash
-pnpm build
+pnpm docker:prod
 ```
 
-### Lint
+Builds optimized production images for `api` and `web`. The `api` image uses multi-stage build with `dist/` output; the `web` image uses Next.js `standalone` output.
 
-```bash
-pnpm lint
+---
+
+## Environment Variables
+
+### Required for API
+
+| Variable | Description |
+
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_ACCESS_SECRET` | JWT access token signing secret |
+| `JWT_REFRESH_SECRET` | JWT refresh token signing secret |
+| `SESSION_SECRET` | Express session secret |
+| `CSRF_SECRET_KEY` | CSRF protection secret |
+
+### Optional / Feature-specific
+
+| Variable | Description |
+
+|---|---|
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `FACEBOOK_CLIENT_ID` | Facebook OAuth app ID |
+| `FACEBOOK_CLIENT_SECRET` | Facebook OAuth app secret |
+| `AI_API_KEY` | Google Gemini AI API key |
+| `OPENWEATHER_API_KEY` | OpenWeather API key |
+| `RESEND_API_KEY` | Resend email service API key |
+
+### Required for Web
+
+| Variable | Description |
+
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Base URL of the API (used client-side) |
+
+> **Never commit `.env` files.** Use `.env.example` as documentation only.
+
+---
+
+## Architecture
+
+```text
+┌─────────────────────────┐
+│     Next.js Web App     │   React 19 · Tailwind v4 · shadcn/ui
+│    (apps/web · :3000)   │   Redux Toolkit · CASL · React Hook Form
+└────────────┬────────────┘
+             │ HTTP (fetch / RTK Query)
+             ▼
+┌─────────────────────────┐
+│     Express 5 API       │   Prisma ORM · Pino · Swagger · SWC
+│    (apps/api · :4000)   │   JWT · CASL · Passport · csrf-csrf
+└────────────┬────────────┘
+             │
+         Prisma ORM
+             │
+             ▼
+┌─────────────────────────┐
+│       PostgreSQL        │
+└──────────┬──────┬───────┘
+           │      │
+     ┌─────▼──┐ ┌─▼──────────────┐
+     │ Gemini │ │  OpenWeather   │
+     │   AI   │ │      API       │
+     └────────┘ └────────────────┘
+
+  ┌──────────────────────────┐
+  │     @beggy/shared        │  Zod schemas · TypeScript types
+  │   (packages/shared)      │  Constants · Enums · Utilities
+  └──────────────────────────┘
+         consumed by both api + web
 ```
 
-### Tests
+---
+
+## Project Conventions
+
+### Module structure (API)
+
+Each domain module follows: `service → controller → route (factory)`.
+
+```text
+
+src/modules/users/
+├── users.service.ts       # Business logic
+├── users.controller.ts    # Request/response handling
+├── users.route.ts         # Route factory function
+├── users.mapper.ts        # Data transformation
+├── users.validator.ts     # Route-level validation
+└── __tests__/
+    └── users.service.test.ts
+```
+
+### Feature structure (Web)
+
+```text
+
+src/features/users/
+├── components/            # UI components
+│   ├── list/              # List views
+│   ├── details/           # Detail views
+│   ├── forms/             # Form components (container + UI split)
+│   └── actions/           # Action components
+├── hooks/                 # Feature hooks
+├── api/                   # API client functions
+└── index.ts               # Feature exports
+```
+
+### Shared types
+
+Always import from `@beggy/shared` — never duplicate types between API and Web.
+
+```typescript
+import type { UserType } from '@beggy/shared/types';
+import { createUserSchema } from '@beggy/shared/schemas';
+```
+
+---
+
+## Testing Strategy
+
+| Layer | Tool | Coverage |
+
+|---|---|---|
+| API unit tests | Vitest + Faker | Services, controllers, mappers |
+| API integration tests | Vitest + Supertest | Full HTTP request/response cycle |
+| Web component tests | Vitest + Testing Library | React components, hooks |
+| Web Storybook tests | Playwright (Chromium) | Browser-rendered stories + a11y |
+| Shared unit tests | Vitest | Utility functions, schemas |
 
 ```bash
+# Run all tests
 pnpm test
+
+# API only
+cd apps/api && pnpm test
+
+# Web only (with browser)
+cd apps/web && pnpm test:storybook
 ```
 
-### Storybook
+---
 
-```bash
-pnpm storybook
-```
+## Deployment
+
+The `deploy.sh` script at the repo root handles server-side deployment:
+
+1. Loads secrets from `/etc/beggy/secrets.env`
+2. Pulls latest `main`
+3. Brings up production Docker stack (`--detach`)
+4. Runs `prisma migrate deploy` inside the `api` container
 
 ---
 
-# 📖 API Documentation
+## Contributing
 
-Swagger documentation is available at:
-
-```bash
-/docs
-```
-
-after running the API server.
-
----
-
-# 🧭 Project Goals
-
-Beggy focuses on demonstrating **real-world engineering practices**:
-
-- scalable monorepo architecture
-- strong typing across frontend & backend
-- clean separation of concerns
-- testable systems
-- secure authentication
-- AI integrations
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Follow the existing architecture patterns for your target app
+4. Write tests for new functionality
+5. Ensure `pnpm lint`, `pnpm type-check`, and `pnpm test` all pass
+6. Open a pull request against `main`
 
 ---
 
-# 🛠 Roadmap
+## License
 
-Upcoming features:
-
-- drag-and-drop packing UI
-- packing analytics
-- travel checklist generator
-- trip management
-- AI packing assistant chat
-- mobile optimization
-- collaborative packing lists
-- ***
-
-# 🤝 Contributing
-
-Contributions are welcome.
-
-Steps:
-
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Submit pull request
+[MIT](LICENSE) — Mohamed Fathy · [mofathy1833@gmail.com](mailto:mofathy1833@gmail.com)
 
 ---
 
-# 📜 License
-
-MIT License
-
----
-
-# 🧳 Beggy
-
-**Your seasoned travel buddy for smarter packing.**
+<div align="center">
+    <sub>Built with TypeScript · Powered by Turborepo · Designed for travelers</sub>
+</div>
