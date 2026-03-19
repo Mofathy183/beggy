@@ -1,4 +1,4 @@
-import { envConfig } from '@/config';
+import { envConfig, env } from '@/config';
 import { Prisma, PrismaClient } from '@prisma-generated/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { getAge, getDisplayName } from '@prisma/prisma.util';
@@ -25,7 +25,7 @@ export const profileExtensions = Prisma.defineExtension({
 	},
 });
 
-const connectionString = `${process.env.DATABASE_URL}`;
+const connectionString = `${env.DATABASE_URL}`;
 
 const adapter = new PrismaPg({ connectionString });
 

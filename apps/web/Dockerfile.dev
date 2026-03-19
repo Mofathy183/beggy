@@ -1,19 +1,53 @@
+# -----------------------------------------------------------------------------
+# Beggy Web - Development Dockerfile
+# -----------------------------------------------------------------------------
+# Purpose:
+# - Provides a fast, cache-efficient development image for the Next.js app
+# - Works with Docker Compose `develop.watch` for instant file syncing
+#
+# Key characteristics:
+# - Dependency layer is cached via selective manifest copying
+# - Source code is overridden at runtime by file sync
+# - Uses pnpm workspaces for monorepo consistency
+# -----------------------------------------------------------------------------
+
 FROM node:20-alpine
 
-RUN corepack enable && corepack prepare pnpm@10.27.0 --activate
+# Enable pnpm via Corepack (ensures consistent package manager version)
+RUN corepack enable
 
+# Root workspace directory
 WORKDIR /app
 
+# ---------------------------------------------------------------------------
+# Dependency installation layer (cache-optimized)
+# Only manifests are copied to preserve cache across source changes
+# ---------------------------------------------------------------------------
+
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+
+# Workspace manifests required for pnpm resolution
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY apps/api/package.json ./apps/api/package.json
 COPY apps/web/package.json ./apps/web/package.json
 
+# Install dependencies for the workspace
 RUN pnpm install --frozen-lockfile
 
-# Source NOT copied — mounted as volume for hot reload
+# ---------------------------------------------------------------------------
+# Source code layer
+# In development, this is overridden by Docker Compose sync
+# ---------------------------------------------------------------------------
+
+COPY apps/web/ ./apps/web/
+COPY packages/shared/ ./packages/shared/
+COPY tsconfig.json ./tsconfig.json
+
+# Switch to web app workspace
 WORKDIR /app/apps/web
 
+# Expose Next.js dev server port
 EXPOSE 3000
 
+# Default command (Next.js dev server with HMR)
 CMD ["pnpm", "dev"]

@@ -1,7 +1,24 @@
+# -----------------------------------------------------------------------------
+# Beggy - Development Docker Compose
+# -----------------------------------------------------------------------------
+# Orchestrates the full local development environment:
+# - PostgreSQL (dev + test)
+# - API service (Prisma + Node/Nest)
+# - Web app (Next.js)
+#
+# Focus:
+# - Fast developer feedback loop (file sync + hot reload)
+# - Deterministic startup (healthcheck + dependency ordering)
+# - Isolation between dev and test environments
+# -----------------------------------------------------------------------------
+
 name: beggy-dev
 
 services:
 
+  # ---------------------------------------------------------------------------
+  # Primary development database
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
     environment:
@@ -11,21 +28,29 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      # Persistent dev data (survives container restarts)
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
+      # Ensures DB is ready before dependent services start (e.g. Prisma)
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
+  # ---------------------------------------------------------------------------
+  # Isolated test database (only started when profile "test" is enabled)
+  # Usage: docker compose --profile test up
+  # ---------------------------------------------------------------------------
   postgres_test:
     image: postgres:18-alpine
+    profiles: ["test"]
     environment:
       POSTGRES_DB: ${POSTGRES_DB}_test
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
+      # Avoid collision with dev DB
       - "5433:5432"
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
@@ -36,55 +61,146 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # ---------------------------------------------------------------------------
+  # Backend API (Node/Nest + Prisma)
+  # ---------------------------------------------------------------------------
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile.dev
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/apps/api/node_modules
-      - /app/packages/shared/node_modules
+
+    # Boot sequence:
+    # 1. Generate Prisma client
+    # 2. Apply migrations (deploy mode for consistency)
+    # 3. Start dev server (tsx / watch mode)
+    command: sh -c "pnpm prisma generate && pnpm prisma migrate deploy && pnpm dev"
+
     env_file:
       - ./apps/api/.env.local
+
     environment:
-      NODE_ENV: development
-      PORT: 4000
+      # Internal Docker network host
       DB_HOST: postgres
       DB_PORT: 5432
-      CHOKIDAR_USEPOLLING: "true"
+
+      # Ensures tsx resolves correct TS config in monorepo
+      TSX_TSCONFIG_PATH: /app/apps/api/tsconfig.json
+
     ports:
-      - "4000:4000"
-      - "9229:9229"
+      - "4000:4000"   # API
+      - "9229:9229"   # Node inspector (debugging)
+
     depends_on:
       postgres:
+        # Prevent API from starting before DB is actually ready
         condition: service_healthy
+
     restart: unless-stopped
 
+    develop:
+      watch:
+        # ---------------------------------------------------------------------
+        # Source sync (low-latency DX)
+        # ---------------------------------------------------------------------
+
+        # API source → tsx handles hot reload
+        - action: sync
+          path: ./apps/api
+          target: /app/apps/api
+          ignore:
+            - node_modules/
+            - dist/
+            - .env*
+
+        # Shared package (monorepo)
+        - action: sync
+          path: ./packages/shared
+          target: /app/packages/shared
+          ignore:
+            - node_modules/
+            - dist/
+
+        # ---------------------------------------------------------------------
+        # Rebuild triggers (dependency graph changes)
+        # ---------------------------------------------------------------------
+
+        - action: rebuild
+          path: ./apps/api/package.json
+
+        - action: rebuild
+          path: ./package.json
+
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+
+        # ---------------------------------------------------------------------
+        # Restart triggers (config-level changes)
+        # ---------------------------------------------------------------------
+
+        # tsconfig affects module resolution → requires restart
+        - action: sync+restart
+          path: ./apps/api/tsconfig.json
+          target: /app/apps/api/tsconfig.json
+
+        - action: sync+restart
+          path: ./tsconfig.json
+          target: /app/tsconfig.json
+
+  # ---------------------------------------------------------------------------
+  # Frontend (Next.js)
+  # ---------------------------------------------------------------------------
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile.dev
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/apps/web/node_modules
-      - /app/packages/shared/node_modules
-      - /app/apps/web/.next
+
     env_file:
       - ./apps/web/.env.local
+
     environment:
-      NODE_ENV: development
-      PORT: 3000
-      NEXT_PUBLIC_API_URL: "http://localhost:4000"
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
+      # Required for containerized Next.js to bind externally
+      HOSTNAME: "0.0.0.0"
+
     ports:
       - "3000:3000"
+
     depends_on:
       - api
+
     restart: unless-stopped
 
+    develop:
+      watch:
+        # Web source → Next.js HMR handles updates
+        - action: sync
+          path: ./apps/web
+          target: /app/apps/web
+          ignore:
+            - node_modules/
+            - .next/
+            - .env*
+
+        # Shared package sync
+        - action: sync
+          path: ./packages/shared
+          target: /app/packages/shared
+          ignore:
+            - node_modules/
+            - dist/
+
+        # Rebuild on dependency changes
+        - action: rebuild
+          path: ./apps/web/package.json
+
+        - action: rebuild
+          path: ./package.json
+
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+
+# ---------------------------------------------------------------------------
+# Persistent volumes
+# ---------------------------------------------------------------------------
 volumes:
   postgres_dev_data:
   postgres_test_data:

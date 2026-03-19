@@ -39,6 +39,5 @@
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"type-check": "tsc --noEmit"
-	},
-	"packageManager": "pnpm@10.24.0"
+	}
 }

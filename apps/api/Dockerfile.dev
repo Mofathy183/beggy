@@ -1,20 +1,58 @@
+# -----------------------------------------------------------------------------
+# Beggy API - Development Dockerfile
+# -----------------------------------------------------------------------------
+# Purpose:
+# - Provides a fast, cache-efficient development image for the API service
+# - Works with Docker Compose `develop.watch` for near-instant file syncing
+#
+# Key characteristics:
+# - Dependency layer is cached via selective manifest copying
+# - Source code is copied once, then overridden by live sync
+# - Uses pnpm via Corepack for workspace consistency
+# -----------------------------------------------------------------------------
+
 FROM node:20-alpine
 
-RUN corepack enable && corepack prepare pnpm@10.27.0 --activate
+# Enable pnpm via Corepack (ensures consistent package manager version)
+RUN corepack enable
+
+# Install minimal system dependencies
+# - wget: useful for debugging, health checks, or future tooling
 RUN apk add --no-cache wget
 
+# Root workspace directory
 WORKDIR /app
 
+# ---------------------------------------------------------------------------
+# Dependency installation layer (cache-optimized)
+# Only copy manifest files to avoid invalidating cache on source changes
+# ---------------------------------------------------------------------------
+
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+
+# Copy workspace package manifests (required for pnpm workspaces resolution)
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY apps/api/package.json ./apps/api/package.json
 COPY apps/web/package.json ./apps/web/package.json
 
+# Install all workspace dependencies
+# --frozen-lockfile ensures deterministic installs (fails if lockfile is out of sync)
 RUN pnpm install --frozen-lockfile
 
-# Source NOT copied — mounted as volume for hot reload
+# ---------------------------------------------------------------------------
+# Source code layer
+# In development, this will be overridden by Docker Compose file sync
+# ---------------------------------------------------------------------------
+
+COPY apps/api/ ./apps/api/
+COPY packages/shared/ ./packages/shared/
+COPY tsconfig.json ./tsconfig.json
+
+# Switch to API workspace
 WORKDIR /app/apps/api
 
+# Expose API port (used by Docker Compose)
 EXPOSE 4000
 
+# Default command (development server with hot reload)
 CMD ["pnpm", "dev"]
