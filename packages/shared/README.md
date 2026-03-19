@@ -134,7 +134,7 @@ import { createUserSchema } from '@beggy/shared/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 const form = useForm({
-  resolver: zodResolver(createUserSchema),
+	resolver: zodResolver(createUserSchema),
 });
 
 // Typed API responses
@@ -164,12 +164,15 @@ Reusable atomic schemas are defined in `fields.schema.ts` and composed into requ
 ```typescript
 // fields.schema.ts — single source for field rules
 export const emailField = z.string().email().max(EMAIL_MAX_LENGTH);
-export const passwordField = z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH);
+export const passwordField = z
+	.string()
+	.min(PASSWORD_MIN_LENGTH)
+	.max(PASSWORD_MAX_LENGTH);
 
 // auth.schema.ts — composed from fields
 export const loginSchema = z.object({
-  email: emailField,
-  password: passwordField,
+	email: emailField,
+	password: passwordField,
 });
 ```
 
@@ -198,11 +201,15 @@ type UsersResponse = PaginatedResponse<UserType>;
 Validation constraints (max lengths, min values, etc.) are centralized in `constants/constraints.ts` and imported into schemas:
 
 ```typescript
-import { EMAIL_MAX_LENGTH, PASSWORD_MIN_LENGTH, BAG_NAME_MAX_LENGTH } from '@beggy/shared';
+import {
+	EMAIL_MAX_LENGTH,
+	PASSWORD_MIN_LENGTH,
+	BAG_NAME_MAX_LENGTH,
+} from '@beggy/shared';
 
 export const createBagSchema = z.object({
-  name: z.string().min(1).max(BAG_NAME_MAX_LENGTH),
-  // ...
+	name: z.string().min(1).max(BAG_NAME_MAX_LENGTH),
+	// ...
 });
 ```
 
@@ -250,8 +257,8 @@ import { z } from 'zod';
 import { NAME_MAX_LENGTH } from '../constants/constraints';
 
 export const createPackingListSchema = z.object({
-  name: z.string().min(1).max(NAME_MAX_LENGTH),
-  tripId: z.string().uuid(),
+	name: z.string().min(1).max(NAME_MAX_LENGTH),
+	tripId: z.string().uuid(),
 });
 
 export type CreatePackingListDto = z.infer<typeof createPackingListSchema>;

@@ -48,7 +48,7 @@ apps/api/
 │
 ├── src/
 │   ├── modules/                   # Feature modules
-│   │   ├── auth/                  # Authentication & token management 
+│   │   ├── auth/                  # Authentication & token management
 |   │   │   ├── strategies/        # OAuth Passport Strategies
 │   │   ├── users/                 # User management
 │   │   ├── profiles/              # Profile management
@@ -109,10 +109,15 @@ src/modules/<domain>/
 
 ```typescript
 export const createUserRouter = (controller: UserController) => {
-  const router = Router();
-  router.get('/', authenticate, controller.list);
-  router.post('/', authenticate, authorize('CREATE', 'USER'), controller.create);
-  return router;
+	const router = Router();
+	router.get('/', authenticate, controller.list);
+	router.post(
+		'/',
+		authenticate,
+		authorize('CREATE', 'USER'),
+		controller.create
+	);
+	return router;
 };
 ```
 

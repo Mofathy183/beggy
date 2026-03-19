@@ -114,12 +114,12 @@ Configure your AI assistant to use this MCP server by pointing it at the compile
 
 ```json
 {
-  "mcpServers": {
-    "beggy": {
-      "command": "node",
-      "args": ["/path/to/beggy/apps/mcp/dist/src/index.js"]
-    }
-  }
+	"mcpServers": {
+		"beggy": {
+			"command": "node",
+			"args": ["/path/to/beggy/apps/mcp/dist/src/index.js"]
+		}
+	}
 }
 ```
 
