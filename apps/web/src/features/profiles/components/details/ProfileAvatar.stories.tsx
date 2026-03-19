@@ -9,6 +9,7 @@ const MOCK_PROFILE: ProfileDTO = {
 	lastName: 'Fathy',
 	displayName: 'Mohamed Fathy',
 	avatarUrl: 'https://i.pravatar.cc/300?img=12',
+	onboardingCompleted: false,
 	gender: null,
 	birthDate: null,
 	country: null,
@@ -24,6 +25,7 @@ const MOCK_NO_IMAGE: ProfileDTO = {
 	lastName: 'Hassan',
 	displayName: 'Layla Hassan',
 	avatarUrl: null,
+	onboardingCompleted: false,
 	gender: null,
 	birthDate: null,
 	country: null,
@@ -39,6 +41,7 @@ const MOCK_DISPLAY_ONLY: ProfileDTO = {
 	lastName: '',
 	displayName: 'Sound Scene',
 	avatarUrl: null,
+	onboardingCompleted: false,
 	gender: null,
 	birthDate: null,
 	country: null,
@@ -276,14 +279,14 @@ export const DarkMode: Story = {
 		showOnline: true,
 	},
 	parameters: {
-		themes: {
-			themeOverride: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Validates token contrast and fallback readability in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
 

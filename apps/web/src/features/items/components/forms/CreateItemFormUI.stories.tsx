@@ -312,12 +312,13 @@ export const DarkMode: Story = {
 	),
 
 	parameters: {
-		themes: { default: 'dark' },
-
 		docs: {
 			description: {
 				story: 'Validates contrast and layout in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

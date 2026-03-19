@@ -182,13 +182,13 @@ export const DarkMode: Story = {
 		</DataGrid>
 	),
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Dark mode validation ensuring layout tokens and spacing remain visually consistent.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

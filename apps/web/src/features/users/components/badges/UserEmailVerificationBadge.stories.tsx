@@ -109,13 +109,13 @@ export const DarkMode: Story = {
 		isEmailVerified: true,
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Dark mode verification ensuring status contrast and readability.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

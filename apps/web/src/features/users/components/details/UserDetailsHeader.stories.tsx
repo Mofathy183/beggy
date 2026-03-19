@@ -156,11 +156,7 @@ export const DarkMode: Story = {
 	args: {
 		user: mockUser,
 	},
-	decorators: [
-		(Story) => (
-			<div className="dark bg-background p-6">
-				<Story />
-			</div>
-		),
-	],
+	globals: {
+		theme: 'dark',
+	},
 };

@@ -89,7 +89,7 @@ const mapToBoolean = (value: string): ToggleFilterValue => {
 	return value === 'true';
 };
 
-const toggleItemClasses = `  
+const toggleItemClasses = `
 flex items-center gap-1
 rounded-full px-3 py-1
 text-xs font-medium

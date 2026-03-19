@@ -287,11 +287,13 @@ export const DarkMode: Story = {
 		onDelete: noop,
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates card contrast, badge visibility, and elevation styles in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

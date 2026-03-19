@@ -173,7 +173,8 @@ export const WithServerError: Story = {
 		return (
 			<ChangeRoleFormUI
 				form={form}
-				serverError={new Error('Update failed')}
+				serverError={'Update failed'}
+				serverSuggestion={'try to check the data you add.'}
 				onSubmit={form.handleSubmit(() => {})}
 			/>
 		);
@@ -225,16 +226,6 @@ export const Submitting: Story = {
  * and select dropdown readability in dark mode.
  */
 export const DarkMode: Story = {
-	parameters: {
-		themes: {
-			default: 'dark',
-		},
-		docs: {
-			description: {
-				story: 'Validates visual parity and accessibility in dark theme.',
-			},
-		},
-	},
 	render: () => {
 		const form = useForm<ChangeRoleInput>({
 			defaultValues: {
@@ -248,5 +239,15 @@ export const DarkMode: Story = {
 				onSubmit={form.handleSubmit(() => {})}
 			/>
 		);
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Validates visual parity and accessibility in dark theme.',
+			},
+		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

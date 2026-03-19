@@ -227,12 +227,13 @@ export const DarkMode: Story = {
 	},
 
 	parameters: {
-		themes: { default: 'dark' },
-
 		docs: {
 			description: {
 				story: 'Validates swatch contrast, borders, and focus states in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

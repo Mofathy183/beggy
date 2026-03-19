@@ -227,11 +227,13 @@ export const DarkMode: Story = {
 		category: ItemCategory.SPORTS,
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates color tokens and contrast in dark mode to ensure readability and icon clarity.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

@@ -275,8 +275,8 @@ export const DarkMode: Story = {
 			</ListFilters>
 		);
 	},
-	parameters: {
-		themes: { themeOverride: 'dark' },
+	globals: {
+		theme: 'dark',
 	},
 };
 

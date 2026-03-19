@@ -97,26 +97,10 @@ type Story = StoryObj;
 type TriggerVariant = 'success' | 'error' | 'warning' | 'info';
 
 const variantStyles: Record<TriggerVariant, string> = {
-	success: [
-		'bg-success/10 text-success',
-		'border border-success/25',
-		'hover:bg-success/20',
-	].join(' '),
-	error: [
-		'bg-destructive/10 text-destructive',
-		'border border-destructive/25',
-		'hover:bg-destructive/20',
-	].join(' '),
-	warning: [
-		'bg-warning/10 text-warning-foreground',
-		'border border-warning/25',
-		'hover:bg-warning/20',
-	].join(' '),
-	info: [
-		'bg-muted text-muted-foreground',
-		'border border-border',
-		'hover:bg-accent hover:text-accent-foreground',
-	].join(' '),
+	success: ['bg-success/10 text-success'].join(' '),
+	error: ['bg-destructive/10 text-destructive'].join(' '),
+	warning: ['bg-warning/10 text-warning'].join(' '),
+	info: ['bg-info/10 text-info'].join(' '),
 };
 
 // Named icon components — anonymous arrows break Storybook-Vite HMR
@@ -377,12 +361,7 @@ export const Info: Story = {
 export const DarkMode: Story = {
 	name: 'Dark mode',
 	render: AllTypes.render,
-	parameters: {
-		themes: { default: 'dark' },
-		docs: {
-			description: {
-				story: 'Dark theme validation — icons, tinted surfaces, and text must all remain readable.',
-			},
-		},
+	globals: {
+		theme: 'dark',
 	},
 };

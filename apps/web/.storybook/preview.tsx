@@ -1,9 +1,10 @@
 import React from 'react';
 import { AppProvider } from '../src/shared/store';
 import { ThemeProvider } from '../src/shared/ui/theme';
+import { TooltipProvider } from '../src/shared/components/ui/tooltip';
+import { AppToaster } from '../src/shared/ui/toast';
 import type { Preview } from '@storybook/nextjs-vite';
 import '../src/app/globals.css';
-import { withThemeByClassName } from '@storybook/addon-themes';
 
 const preview: Preview = {
 	parameters: {
@@ -21,21 +22,42 @@ const preview: Preview = {
 			test: 'todo',
 		},
 	},
-	decorators: [
-		(Story) => (
-			<ThemeProvider>
-				<AppProvider>
-					<Story />
-				</AppProvider>
-			</ThemeProvider>
-		),
-		withThemeByClassName({
-			themes: {
-				light: '',
-				dark: 'dark',
+
+	globalTypes: {
+		theme: {
+			name: 'Theme',
+			description: 'App theme',
+			defaultValue: 'light',
+			toolbar: {
+				icon: 'circlehollow',
+				items: [
+					{ value: 'light', title: 'Light' },
+					{ value: 'dark', title: 'Dark' },
+				],
+				dynamicTitle: true,
 			},
-			defaultTheme: 'light',
-		}),
+		},
+	},
+
+	decorators: [
+		(Story, context) => {
+			const theme = context.globals.theme;
+
+			return (
+				<ThemeProvider
+					forcedTheme={theme}
+					attribute="class"
+					enableSystem={false}
+				>
+					<AppProvider>
+						<TooltipProvider delay={400}>
+							<Story />
+						</TooltipProvider>
+						<AppToaster />
+					</AppProvider>
+				</ThemeProvider>
+			);
+		},
 	],
 };
 

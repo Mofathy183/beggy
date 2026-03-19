@@ -223,13 +223,13 @@ export const DarkMode: Story = {
 		onLogout: noop,
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Dark mode verification ensuring token-based contrast and visual parity.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

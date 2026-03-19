@@ -293,11 +293,13 @@ export const DarkMode: Story = {
 		return <ToggleFilter {...args} value={value} onChange={setValue} />;
 	},
 	parameters: {
-		themes: { theme: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates visual parity, contrast ratios, and token consistency in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

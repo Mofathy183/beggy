@@ -16,6 +16,7 @@ const BASE_PROFILE: ProfileDTO = {
 	lastName: 'Fathy',
 	displayName: 'Mohamed Fathy',
 	avatarUrl: 'https://i.pravatar.cc/300?img=12',
+	onboardingCompleted: false,
 	gender: Gender.MALE,
 	city: 'Cairo',
 	country: 'Egypt',
@@ -321,14 +322,14 @@ export const DarkMode: Story = {
 		showGender: true,
 	},
 	parameters: {
-		themes: {
-			themeOverride: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Validates token usage and contrast in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
 

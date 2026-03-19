@@ -230,14 +230,14 @@ export const DarkMode: Story = {
 		gender: Gender.OTHER,
 	},
 	parameters: {
-		themes: {
-			themeOverride: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Validates token contrast and semantic mapping in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
 

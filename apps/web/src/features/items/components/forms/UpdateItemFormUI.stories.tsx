@@ -317,12 +317,13 @@ export const DarkMode: Story = {
 	render: (args) => <FormWrapper {...args} />,
 
 	parameters: {
-		themes: { default: 'dark' },
-
 		docs: {
 			description: {
 				story: 'Validates contrast, focus states, and token usage in dark theme.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

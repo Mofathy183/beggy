@@ -247,7 +247,7 @@ export const DarkMode: Story = {
 		);
 	},
 
-	parameters: {
-		themes: { default: 'dark' },
+	globals: {
+		theme: 'dark',
 	},
 };

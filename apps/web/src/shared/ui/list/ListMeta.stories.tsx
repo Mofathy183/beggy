@@ -128,9 +128,7 @@ export const DarkMode: StoryObj<typeof ListMeta> = {
 			<ListMeta {...args} />
 		</div>
 	),
-	parameters: {
-		themes: {
-			default: 'dark',
-		},
+	globals: {
+		theme: 'dark',
 	},
 };

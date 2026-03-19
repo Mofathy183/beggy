@@ -207,13 +207,13 @@ export const DarkMode: Story = {
 	},
 	parameters: {
 		layout: 'fullscreen',
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Verifies token contrast, brand panel depth, and readability in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

@@ -372,7 +372,7 @@ export const DarkMode: MultipleStory = {
 
 		return <Chips {...args} value={value} onChange={setValue} />;
 	},
-	parameters: {
-		themes: { default: 'dark' },
+	globals: {
+		theme: 'dark',
 	},
 };

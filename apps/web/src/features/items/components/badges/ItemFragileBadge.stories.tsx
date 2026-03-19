@@ -236,11 +236,13 @@ export const DarkMode: Story = {
 		isFragile: true,
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates the soft destructive token pattern in dark mode to ensure proper contrast and visual clarity.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

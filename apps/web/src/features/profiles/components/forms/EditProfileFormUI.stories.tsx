@@ -231,11 +231,13 @@ export const DarkMode: Story = {
 		serverSuggestion: 'Please verify your information and try again.',
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Dark mode rendering to verify token-based styling and contrast.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

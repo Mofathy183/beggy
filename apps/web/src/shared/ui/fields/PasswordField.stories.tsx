@@ -260,11 +260,13 @@ export const NarrowContainer: Story = {
 export const DarkMode: Story = {
 	render: (args) => <FormWrapper {...args} />,
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Dark theme validation ensuring icons, focus rings, and text remain readable.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

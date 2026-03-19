@@ -216,11 +216,13 @@ export const DarkMode: Story = {
 		onToggleCollapse: noop,
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Dark mode validation for sidebar token integrity and contrast.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

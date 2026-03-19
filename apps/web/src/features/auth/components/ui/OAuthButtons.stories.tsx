@@ -129,13 +129,13 @@ export const DarkMode: Story = {
 		mode: 'login',
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Verifies token contrast and hover states in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

@@ -201,11 +201,13 @@ export const DarkMode: Story = {
 		onHome: () => {},
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates boarding-pass contrast and readability in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

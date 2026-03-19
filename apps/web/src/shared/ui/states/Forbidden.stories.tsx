@@ -157,11 +157,13 @@ export const DarkMode: Story = {
 		onBack: () => {},
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates warning tokens maintain contrast in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

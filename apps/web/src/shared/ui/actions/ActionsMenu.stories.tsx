@@ -168,13 +168,13 @@ export const DarkMode: Story = {
 		items: baseItems,
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Dark mode verification ensuring destructive color tokens and focus states maintain contrast.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

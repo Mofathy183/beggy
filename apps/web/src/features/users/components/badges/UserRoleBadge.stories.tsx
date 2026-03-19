@@ -117,14 +117,14 @@ export const DarkMode: Story = {
 		role: Role.ADMIN,
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Ensures semantic color contrast and readability in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
 

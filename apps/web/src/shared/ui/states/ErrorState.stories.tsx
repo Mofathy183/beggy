@@ -282,11 +282,13 @@ export const DarkMode: Story = {
 		}),
 	},
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates destructive, muted, and accent tokens in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

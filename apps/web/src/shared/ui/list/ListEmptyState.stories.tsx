@@ -231,12 +231,14 @@ export const DarkMode: Story = {
 		},
 	},
 	parameters: {
-		themes: { themeOverride: 'dark' },
 		docs: {
 			description: {
 				story: 'Ensures visual parity and accessible contrast in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
 

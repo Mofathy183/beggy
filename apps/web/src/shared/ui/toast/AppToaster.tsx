@@ -4,90 +4,85 @@ import { useTheme } from 'next-themes';
 import { Toaster as SonnerToaster, type ToasterProps } from 'sonner';
 
 /**
- * AppToaster
+ * Global toast provider aligned with the application's design system.
  *
- * Design decisions:
+ * @description
+ * Wraps Sonner's `Toaster` to enforce consistent theming, spacing, and styling
+ * across the app. This acts as the single integration point with the toast library.
  *
- * - resolvedTheme         → always "light" | "dark", never "system".
- *                           Sonner only understands these two values.
- *
- * - richColors={false}    → our CSS variables own all color decisions.
- *                           Sonner's richColors would override our tokens.
- *
- * - position="top-left"   → renders visually top-right in RTL (dir="rtl"
- *                           flips it automatically via logical properties).
- *
- * - expand                → toasts expand on hover to show full description.
- *
- * - Tinted bg pattern     → handled in globals.css via Sonner's own
- *                           --success-bg / --error-bg / etc. CSS vars.
- *                           Zero !important needed — we feed Sonner's own
- *                           system rather than fighting its inline styles.
- *
- * - Left accent border    → applied in globals.css via
- *                           [data-sonner-toast].toast-{variant} selectors.
- *
- * - pe-10                 → padding-inline-end reserves space so toast text
- *                           never runs under the close button (RTL-safe).
+ * @remarks
+ * - Uses `resolvedTheme` to avoid passing unsupported `"system"` to Sonner.
+ * - Styling is driven via Tailwind + CSS variables (see `globals.css`),
+ *   avoiding overrides of Sonner's internal styles.
+ * - Position is RTL-aware via logical properties (mirrored automatically).
  */
 const AppToaster = () => {
 	const { resolvedTheme } = useTheme();
 
+	const theme: ToasterProps['theme'] =
+		resolvedTheme === 'light' ? 'light' : 'dark';
+
 	return (
 		<SonnerToaster
-			theme={(resolvedTheme ?? 'light') as ToasterProps['theme']}
-			position="top-left"
-			richColors={false}
-			closeButton
+			theme={theme}
+			position="top-right"
 			expand
-			gap={10}
-			visibleToasts={4}
+			gap={8}
+			richColors={false}
 			toastOptions={{
 				classNames: {
-					/*
-					 * Base toast shell.
-					 * pe-10 → RTL-safe right padding to clear the close button.
-					 * overflow-hidden → clips the left accent border cleanly
-					 *   at the rounded corners.
+					/**
+					 * Base toast container.
+					 *
+					 * @remarks
+					 * - Uses semantic tokens (`bg-card`, `text-foreground`, etc.)
+					 * - Variant styling is applied via `data-[type=*]` attributes
+					 *   provided by Sonner.
 					 */
-					toast: 'font-serif rounded-xl shadow-sm w-full max-w-sm pe-10',
+					toast: [
+						'group font-sans rounded-xl border shadow-lg',
+						'bg-card text-card-foreground border-border',
+						'data-[type=success]:border-success/30 data-[type=success]:bg-success/8',
+						'data-[type=error]:border-destructive/30 data-[type=error]:bg-destructive/8',
+						'data-[type=warning]:border-warning/30 data-[type=warning]:bg-warning/8',
+						'data-[type=info]:border-primary/30 data-[type=info]:bg-primary/8',
+					].join(' '),
 
-					/*
-					 * Title — semibold so it reads clearly at small size.
-					 * Color per variant is set in globals.css via [data-title].
-					 */
-					title: 'text-sm font-semibold leading-snug',
+					/** Toast title (primary message) */
+					title: 'text-sm font-semibold text-foreground leading-snug',
 
-					/*
-					 * Description — explicitly muted so it never inherits
-					 * the title's semantic color. Reinforced in globals.css.
-					 */
+					/** Secondary message or suggestion */
 					description:
 						'text-xs text-muted-foreground mt-0.5 leading-relaxed',
 
-					/*
-					 * Icon — top-aligned so it sits next to the first line
-					 * of the title, not vertically centred on the whole toast.
+					/**
+					 * Icon container.
+					 *
+					 * @remarks
+					 * Inherits color via `currentColor`, mapped per variant.
 					 */
-					icon: 'self-start shrink-0 mt-0.5',
+					icon: [
+						'shrink-0',
+						'group-data-[type=success]:text-success',
+						'group-data-[type=error]:text-destructive',
+						'group-data-[type=warning]:text-warning',
+						'group-data-[type=info]:text-primary',
+					].join(' '),
 
-					/*
-					 * Close button — positioned and styled entirely in
-					 * globals.css via [data-close-button]. The classes here
-					 * are lightweight helpers only.
-					 */
-					closeButton: 'rounded-full transition-colors',
+					/** Dismiss button */
+					closeButton: [
+						'rounded-md border border-border bg-background/80',
+						'text-muted-foreground hover:text-foreground',
+						'transition-colors',
+					].join(' '),
 
-					/*
-					 * Variant marker classes — consumed by globals.css
-					 * selectors for left accent border and title color.
-					 * Background tinting is handled separately via Sonner's
-					 * own --success-bg / --error-bg CSS vars in :root / .dark.
-					 */
-					success: 'toast-success',
-					error: 'toast-error',
-					warning: 'toast-warning',
-					info: 'toast-info',
+					/** Primary action button (optional) */
+					actionButton:
+						'bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium',
+
+					/** Secondary/cancel action */
+					cancelButton:
+						'bg-muted text-muted-foreground rounded-lg px-3 py-1.5 text-xs font-medium',
 				},
 			}}
 		/>

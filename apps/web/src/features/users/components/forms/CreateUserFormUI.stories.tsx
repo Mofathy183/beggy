@@ -229,16 +229,6 @@ export const Submitting: Story = {
  */
 export const DarkMode: Story = {
 	args: {},
-	parameters: {
-		themes: {
-			default: 'dark',
-		},
-		docs: {
-			description: {
-				story: 'Validates visual parity and contrast in dark mode.',
-			},
-		},
-	},
 	render: () => {
 		const form = useForm<CreateUserInput>({
 			defaultValues: {
@@ -251,5 +241,15 @@ export const DarkMode: Story = {
 		});
 
 		return <CreateUserFormUI form={form} onSubmit={() => {}} />;
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Validates visual parity and contrast in dark mode.',
+			},
+		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

@@ -186,10 +186,10 @@ The design system is RTL-enabled. Always use logical properties:
 
 ```tsx
 // ✅ RTL-safe
-className="ps-4 pe-2 ms-auto text-start border-s"
+className = 'ps-4 pe-2 ms-auto text-start border-s';
 
 // ❌ Not RTL-safe
-className="pl-4 pr-2 ml-auto text-left border-l"
+className = 'pl-4 pr-2 ml-auto text-left border-l';
 ```
 
 ### Domain → semantic state mapping
@@ -197,10 +197,10 @@ className="pl-4 pr-2 ml-auto text-left border-l"
 ```typescript
 // Always map domain state to semantic intent, then to tokens
 const intentMap = {
-  PACKED:      'bg-success text-success-foreground',
-  NEAR_LIMIT:  'bg-warning text-warning-foreground',
-  OVERWEIGHT:  'bg-destructive text-destructive-foreground',
-  IN_PROGRESS: 'bg-primary text-primary-foreground',
+	PACKED: 'bg-success text-success-foreground',
+	NEAR_LIMIT: 'bg-warning text-warning-foreground',
+	OVERWEIGHT: 'bg-destructive text-destructive-foreground',
+	IN_PROGRESS: 'bg-primary text-primary-foreground',
 };
 ```
 
@@ -230,8 +230,8 @@ store/
 import { Can } from '@shared/store/ability/Can';
 
 <Can I="create" a="User">
-  <CreateUserButton />
-</Can>
+	<CreateUserButton />
+</Can>;
 ```
 
 ---
@@ -243,20 +243,20 @@ All forms follow the **container + UI split**:
 ```tsx
 // Container — handles logic
 function CreateUserForm({ onSuccess }: Props) {
-  const form = useForm({ resolver: zodResolver(createUserSchema) });
-  const { mutate } = useCreateUser();
+	const form = useForm({ resolver: zodResolver(createUserSchema) });
+	const { mutate } = useCreateUser();
 
-  return <CreateUserFormUI form={form} onSubmit={mutate} />;
+	return <CreateUserFormUI form={form} onSubmit={mutate} />;
 }
 
 // UI — pure presentation (Storybook-friendly)
 function CreateUserFormUI({ form, onSubmit }: UIProps) {
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <Input {...form.register('email')} />
-      <Button type="submit">Create</Button>
-    </form>
-  );
+	return (
+		<form onSubmit={form.handleSubmit(onSubmit)}>
+			<Input {...form.register('email')} />
+			<Button type="submit">Create</Button>
+		</form>
+	);
 }
 ```
 

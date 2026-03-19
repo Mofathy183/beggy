@@ -157,10 +157,8 @@ export const DarkMode: Story = {
 			<ListOrderBy {...args} />
 		</div>
 	),
-	parameters: {
-		themes: {
-			default: 'dark',
-		},
+	globals: {
+		theme: 'dark',
 	},
 };
 

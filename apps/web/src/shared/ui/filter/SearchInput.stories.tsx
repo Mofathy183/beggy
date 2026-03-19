@@ -240,14 +240,14 @@ export const DarkMode: Story = {
 		);
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Ensures proper token contrast and icon visibility in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
 

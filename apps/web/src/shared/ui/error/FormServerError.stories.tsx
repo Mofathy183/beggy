@@ -233,12 +233,13 @@ export const DarkMode: Story = {
 	},
 
 	parameters: {
-		themes: { default: 'dark' },
-
 		docs: {
 			description: {
 				story: 'Dark theme validation ensuring destructive colors remain readable.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

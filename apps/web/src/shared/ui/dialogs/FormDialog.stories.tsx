@@ -340,12 +340,13 @@ export const DarkMode: Story = {
 	},
 
 	parameters: {
-		themes: { default: 'dark' },
-
 		docs: {
 			description: {
 				story: 'Validates contrast, focus rings, and dialog surface tokens in dark mode.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

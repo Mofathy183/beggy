@@ -205,18 +205,19 @@ export const DarkMode: Story = {
 		const totalPages = 5;
 
 		return (
-			<div className="dark bg-background p-6">
-				<ListPagination
-					meta={{
-						...baseMeta,
-						page,
-						totalPages,
-						hasNextPage: page < totalPages,
-						hasPreviousPage: page > 1,
-					}}
-					onPageChange={setPage}
-				/>
-			</div>
+			<ListPagination
+				meta={{
+					...baseMeta,
+					page,
+					totalPages,
+					hasNextPage: page < totalPages,
+					hasPreviousPage: page > 1,
+				}}
+				onPageChange={setPage}
+			/>
 		);
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

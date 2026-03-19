@@ -249,10 +249,8 @@ export const DarkMode: Story = {
 			</div>
 		);
 	},
-	parameters: {
-		themes: {
-			default: 'dark',
-		},
+	globals: {
+		theme: 'dark',
 	},
 };
 

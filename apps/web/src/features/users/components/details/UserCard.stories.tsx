@@ -211,13 +211,13 @@ export const DarkMode: Story = {
 		user: baseUser,
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Dark mode verification ensuring proper contrast and badge clarity.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

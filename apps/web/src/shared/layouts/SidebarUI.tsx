@@ -1,12 +1,20 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import {
+	ArrowLeft01Icon,
+	ArrowRight01Icon,
+	Luggage01Icon,
+} from '@hugeicons/core-free-icons';
 import { cn } from '@/shared/lib/utils';
+import { Button } from '@/shared/components/ui/button';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@/shared/components/ui/tooltip';
+import { Separator } from '@/shared/components/ui/separator';
 
 import {
-	// Luggage02Icon,
-	// ShoppingBag01Icon,
-	// CloudSun,
-	// AiMagicIcon,
 	DashboardSquare01Icon,
 	Package01Icon,
 	UserGroupIcon,
@@ -43,19 +51,6 @@ export interface NavItem {
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
 
-/**
- * The full sidebar navigation definition for Beggy.
- *
- * Order here is the render order. Grouped logically:
- *  1. Overview
- *  2. Core packing entities (Suitcases → Bags → Items)
- *  3. Smart features (Weather, AI)
- *  4. Admin-only (Users)
- *
- * To add a new nav item: add an entry here.
- * To restrict it: add a `permission` field.
- * Everything else (rendering, filtering, active state) is handled elsewhere.
- */
 export const NAV_ITEMS: NavItem[] = [
 	{
 		key: 'dashboard',
@@ -63,32 +58,10 @@ export const NAV_ITEMS: NavItem[] = [
 		href: '/dashboard',
 		icon: DashboardSquare01Icon,
 	},
-	// {
-	// 	key: 'suitcases',
-	// 	label: 'Suitcases',
-	// 	href: '/dashboard/suitcases',
-	// 	icon: Luggage02Icon,
-	// 	permission: {
-	// 		action: Action.READ,
-	// 		subject: Subject.SUITCASE,
-	// 		scope: Scope.OWN,
-	// 	},
-	// },
-	// {
-	// 	key: 'bags',
-	// 	label: 'Bags',
-	// 	href: '/dashboard/bags',
-	// 	icon: ShoppingBag01Icon,
-	// 	permission: {
-	// 		action: Action.READ,
-	// 		subject: Subject.BAG,
-	// 		scope: Scope.OWN,
-	// 	},
-	// },
 	{
 		key: 'items',
 		label: 'Items',
-		href: '/dashboard/items',
+		href: '/items',
 		icon: Package01Icon,
 		permission: {
 			action: Action.READ,
@@ -96,24 +69,11 @@ export const NAV_ITEMS: NavItem[] = [
 			scope: Scope.OWN,
 		},
 	},
-	// {
-	// 	key: 'weather',
-	// 	label: 'Weather',
-	// 	href: '/dashboard/weather',
-	// 	icon: CloudSun,
-	// },
-	// {
-	// 	key: 'ai-assistant',
-	// 	label: 'AI Assistant',
-	// 	href: '/dashboard/ai',
-	// 	icon: AiMagicIcon,
-	// },
 	{
 		key: 'users',
 		label: 'Users',
-		href: '/dashboard/users',
+		href: '/users',
 		icon: UserGroupIcon,
-		// Only ADMIN and MODERATOR can READ USER — enforced by CASL
 		permission: {
 			action: Action.READ,
 			subject: Subject.USER,
@@ -122,65 +82,23 @@ export const NAV_ITEMS: NavItem[] = [
 	},
 ];
 
-/**
- * Groups for visual separation in the sidebar.
- *
- * 'main'  → Dashboard + core packing entities + smart features
- * 'admin' → Role-restricted items (Users, Roles, Permissions in the future)
- *
- * Items without a group are implicitly 'main'.
- */
 export const NAV_GROUPS: Record<string, NavItem['key'][]> = {
-	main: [
-		'dashboard',
-		// 'suitcases',
-		// 'bags',
-		'items',
-		// 'weather',
-		// 'ai-assistant',
-	],
+	main: ['dashboard', 'items'],
 	admin: ['users'],
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface SidebarUIProps {
-	/**
-	 * The filtered, permission-checked list of nav items to render.
-	 *
-	 * The smart Sidebar container is responsible for filtering by CASL ability.
-	 * SidebarUI receives only items the current user is allowed to see.
-	 * It has zero awareness of permissions, roles, or CASL.
-	 */
 	navItems: NavItem[];
-
-	/**
-	 * The current route pathname (from usePathname in the container).
-	 * Used to derive the active state of each nav item.
-	 */
 	currentPath: string;
-
-	/**
-	 * Whether the sidebar is in its collapsed (icon-only) state.
-	 * Controlled externally by Sidebar.tsx.
-	 */
 	isCollapsed: boolean;
-
-	/** Fires when the collapse/expand toggle button is clicked. */
 	onToggleCollapse: () => void;
-
-	/** Optional className forwarded to the root <aside> element. */
 	className?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Determines whether a nav item is active given the current path.
- *
- * Dashboard uses exact match to avoid matching everything that starts with '/dashboard'.
- * All other routes use startsWith so child routes (e.g. /dashboard/bags/123) stay active.
- */
 const isNavItemActive = (href: string, currentPath: string): boolean => {
 	if (href === '/dashboard') return currentPath === '/dashboard';
 	return currentPath.startsWith(href);
@@ -197,15 +115,13 @@ interface NavLinkProps {
 /**
  * A single sidebar navigation link.
  *
+ * When collapsed: wraps in a Tooltip so the label is still accessible.
  * Active state    → bg-sidebar-primary text-sidebar-primary-foreground
  * Hover state     → bg-sidebar-accent  text-sidebar-accent-foreground
  * Default state   → text-sidebar-foreground
- *
- * Sidebar tokens are always used here — never bg-primary or bg-accent
- * (those are for the main content area per design system §12.6).
  */
-const NavLink = ({ item, isActive, isCollapsed }: NavLinkProps) => (
-	<li>
+const NavLink = ({ item, isActive, isCollapsed }: NavLinkProps) => {
+	const linkContent = (
 		<a
 			href={item.href}
 			aria-label={isCollapsed ? item.label : undefined}
@@ -217,32 +133,43 @@ const NavLink = ({ item, isActive, isCollapsed }: NavLinkProps) => (
 				'transition-colors duration-150',
 				// Focus ring — uses sidebar-ring token
 				'focus-visible:outline-2 focus-visible:outline-sidebar-ring focus-visible:outline-offset-2',
-				// Collapsed: center icon, no gap needed
+				// Collapsed: center icon
 				isCollapsed && 'justify-center px-2',
-				// State: active
+				// Active state
 				isActive
-					? 'bg-sidebar-primary text-sidebar-primary-foreground'
+					? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
 					: [
-							// State: default + hover
 							'text-sidebar-foreground',
 							'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
 						]
 			)}
 		>
-			{/* Icon — always visible */}
 			<HugeiconsIcon
 				icon={item.icon}
 				size={18}
-				strokeWidth={1.8}
+				strokeWidth={isActive ? 2 : 1.6}
 				className="shrink-0"
 				aria-hidden="true"
 			/>
-
-			{/* Label — hidden when collapsed */}
 			{!isCollapsed && <span className="truncate">{item.label}</span>}
 		</a>
-	</li>
-);
+	);
+
+	if (isCollapsed) {
+		return (
+			<li>
+				<Tooltip>
+					<TooltipTrigger render={linkContent} />
+					<TooltipContent side="right" sideOffset={8}>
+						{item.label}
+					</TooltipContent>
+				</Tooltip>
+			</li>
+		);
+	}
+
+	return <li>{linkContent}</li>;
+};
 
 // ─── NavGroup ─────────────────────────────────────────────────────────────────
 
@@ -253,13 +180,6 @@ interface NavGroupProps {
 	isCollapsed: boolean;
 }
 
-/**
- * A labelled group of nav items with an optional separator.
- *
- * The group label is hidden when the sidebar is collapsed
- * (there's no space to show it) but the divider line stays
- * to preserve visual grouping.
- */
 const NavGroup = ({
 	label,
 	items,
@@ -270,14 +190,15 @@ const NavGroup = ({
 
 	return (
 		<div className="flex flex-col gap-0.5">
-			{/* Group label */}
-			{!isCollapsed && (
-				<p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50">
+			{/* Group label — hidden when collapsed, replaced by a divider */}
+			{!isCollapsed ? (
+				<p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 select-none">
 					{label}
 				</p>
-			)}
-			{isCollapsed && (
-				<hr className="mx-2 border-sidebar-border" aria-hidden="true" />
+			) : (
+				<div className="px-2 py-1" aria-hidden="true">
+					<Separator className="bg-sidebar-border" />
+				</div>
 			)}
 
 			<ul role="list" className="flex flex-col gap-0.5">
@@ -294,6 +215,43 @@ const NavGroup = ({
 	);
 };
 
+// ─── Logo ─────────────────────────────────────────────────────────────────────
+
+interface LogoProps {
+	isCollapsed: boolean;
+}
+
+/**
+ * Sidebar logo / wordmark.
+ * Collapses to icon-only when sidebar is collapsed.
+ */
+const Logo = ({ isCollapsed }: LogoProps) => (
+	<div
+		className={cn(
+			'flex items-center gap-2.5 px-3 py-3',
+			isCollapsed && 'justify-center px-2'
+		)}
+	>
+		{/* Icon mark — always visible */}
+		<div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
+			<HugeiconsIcon
+				icon={Luggage01Icon}
+				size={15}
+				strokeWidth={2}
+				className="text-sidebar-primary-foreground"
+				aria-hidden="true"
+			/>
+		</div>
+
+		{/* Wordmark — hidden when collapsed */}
+		{!isCollapsed && (
+			<span className="text-base font-semibold tracking-tight text-sidebar-foreground">
+				Beggy
+			</span>
+		)}
+	</div>
+);
+
 // ─── SidebarUI ────────────────────────────────────────────────────────────────
 
 /**
@@ -306,19 +264,16 @@ const NavGroup = ({
  * │ 🧳 Beggy        │  ← Logo + wordmark
  * ├─────────────────┤
  * │ MAIN            │
- * │ ⊞ Dashboard     │  ← Nav items (main group)
- * │ 🧳 Suitcases    │
- * │ 👜 Bags         │
+ * │ ⊞ Dashboard     │
  * │ 📦 Items        │
- * │ ☁  Weather      │
- * │ ✨ AI Assistant  │
  * ├─────────────────┤
  * │ ADMIN           │
- * │ 👥 Users        │  ← Admin-only (already filtered by container)
+ * │ 👥 Users        │
  * └─────────────────┘
  *   [◀ Collapse]
  *
- * When collapsed: icon-only, 64px wide, labels hidden, groups show a divider line.
+ * When collapsed: 64 px wide, icon-only, group labels replaced by Separator,
+ * nav items wrapped in Tooltip for label accessibility.
  */
 const SidebarUI = ({
 	navItems,
@@ -327,7 +282,6 @@ const SidebarUI = ({
 	onToggleCollapse,
 	className,
 }: SidebarUIProps) => {
-	// Split nav items into groups using their key
 	const mainItems = navItems.filter((i) =>
 		[
 			'dashboard',
@@ -341,84 +295,119 @@ const SidebarUI = ({
 	const adminItems = navItems.filter((i) => ['users'].includes(i.key));
 
 	return (
-		<aside
-			aria-label="Main navigation"
-			data-collapsed={isCollapsed}
-			className={cn(
-				// Sidebar-specific tokens — NEVER bg-background or bg-card here
-				'bg-sidebar text-sidebar-foreground',
-				'border-r border-sidebar-border',
-				// Height: full viewport
-				'flex h-full flex-col',
-				// Width transitions between expanded and collapsed
-				'transition-[width] duration-200 ease-in-out',
-				isCollapsed ? 'w-16' : 'w-60',
-				// No text overflow during collapse animation
-				'overflow-hidden',
-				className
-			)}
-		>
-			{/* ── Navigation ────────────────────────────────────────── */}
-			<nav
-				aria-label="Dashboard navigation"
-				className="flex flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-3"
+		<TooltipProvider delay={200}>
+			<aside
+				aria-label="Main navigation"
+				data-collapsed={isCollapsed}
+				className={cn(
+					// Sidebar-scoped tokens — never bg-background or bg-card here
+					'bg-sidebar text-sidebar-foreground',
+					'border-e border-sidebar-border',
+					// Full height, flex column
+					'flex h-full flex-col',
+					// Smooth width transition
+					'transition-[width] duration-200 ease-in-out',
+					isCollapsed ? 'w-16' : 'w-60',
+					'overflow-hidden',
+					className
+				)}
 			>
-				{/* Main group — always present */}
-				<NavGroup
-					label="Main"
-					items={mainItems}
-					currentPath={currentPath}
-					isCollapsed={isCollapsed}
-				/>
+				{/* ── Logo ──────────────────────────────────────────────── */}
+				<div className="border-b border-sidebar-border">
+					<Logo isCollapsed={isCollapsed} />
+				</div>
 
-				{/* Admin group — only renders when adminItems is non-empty */}
-				{adminItems.length > 0 && (
-					<>
-						{/* Separator between groups */}
-						{!isCollapsed && (
-							<hr
-								className="border-sidebar-border"
+				{/* ── Navigation ────────────────────────────────────────── */}
+				<nav
+					aria-label="Dashboard navigation"
+					className="flex flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-3"
+				>
+					{/* Main group — always present */}
+					<NavGroup
+						label="Main"
+						items={mainItems}
+						currentPath={currentPath}
+						isCollapsed={isCollapsed}
+					/>
+
+					{/* Admin group — only renders when adminItems is non-empty */}
+					{adminItems.length > 0 && (
+						<>
+							{!isCollapsed && (
+								<Separator
+									className="bg-sidebar-border"
+									aria-hidden="true"
+								/>
+							)}
+							<NavGroup
+								label="Admin"
+								items={adminItems}
+								currentPath={currentPath}
+								isCollapsed={isCollapsed}
+							/>
+						</>
+					)}
+				</nav>
+
+				{/* ── Collapse toggle ───────────────────────────────────── */}
+				<div className="border-t border-sidebar-border p-3">
+					{isCollapsed ? (
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										onClick={onToggleCollapse}
+										aria-label="Expand sidebar"
+										aria-expanded={false}
+										className={cn(
+											'w-full text-sidebar-foreground',
+											'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+											'focus-visible:outline-sidebar-ring'
+										)}
+									>
+										<HugeiconsIcon
+											icon={ArrowRight01Icon}
+											size={16}
+											strokeWidth={1.8}
+											aria-hidden="true"
+										/>
+									</Button>
+								}
+							/>
+							<TooltipContent side="right" sideOffset={8}>
+								Expand sidebar
+							</TooltipContent>
+						</Tooltip>
+					) : (
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={onToggleCollapse}
+							aria-label="Collapse sidebar"
+							aria-expanded={true}
+							className={cn(
+								'w-full justify-start gap-2.5',
+								'text-sm font-medium text-sidebar-foreground',
+								'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+								'focus-visible:outline-sidebar-ring'
+							)}
+						>
+							<HugeiconsIcon
+								icon={ArrowLeft01Icon}
+								size={16}
+								strokeWidth={1.8}
+								className="shrink-0"
 								aria-hidden="true"
 							/>
-						)}
-						<NavGroup
-							label="Admin"
-							items={adminItems}
-							currentPath={currentPath}
-							isCollapsed={isCollapsed}
-						/>
-					</>
-				)}
-			</nav>
-
-			{/* ── Collapse toggle ───────────────────────────────────── */}
-			<div className="border-t border-sidebar-border p-3">
-				<button
-					type="button"
-					onClick={onToggleCollapse}
-					aria-label={
-						isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
-					}
-					aria-expanded={!isCollapsed}
-					className={cn(
-						'flex w-full items-center gap-2.5 rounded-lg px-3 py-2',
-						'text-sm font-medium text-sidebar-foreground',
-						'transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-						'focus-visible:outline-2 focus-visible:outline-sidebar-ring focus-visible:outline-offset-2',
-						isCollapsed && 'justify-center px-2'
+							<span>Collapse</span>
+						</Button>
 					)}
-				>
-					<HugeiconsIcon
-						icon={isCollapsed ? ArrowRight01Icon : ArrowLeft01Icon}
-						size={16}
-						strokeWidth={1.8}
-						className="shrink-0"
-						aria-hidden="true"
-					/>
-					{!isCollapsed && <span>Collapse</span>}
-				</button>
-			</div>
-		</aside>
+				</div>
+			</aside>
+		</TooltipProvider>
 	);
 };
 

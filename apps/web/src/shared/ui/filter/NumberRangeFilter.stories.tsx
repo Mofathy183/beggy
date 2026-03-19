@@ -326,17 +326,11 @@ export const DarkMode: Story = {
 		});
 
 		return (
-			<div className="dark bg-background p-6">
-				<NumberRangeFilter
-					{...args}
-					value={value}
-					onChange={setValue}
-				/>
-			</div>
+			<NumberRangeFilter {...args} value={value} onChange={setValue} />
 		);
 	},
-	parameters: {
-		themes: { default: 'dark' },
+	globals: {
+		theme: 'dark',
 	},
 };
 

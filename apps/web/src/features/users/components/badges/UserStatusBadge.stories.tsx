@@ -104,14 +104,14 @@ export const DarkMode: Story = {
 		isActive: true,
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Validates success and muted tokens under dark theme conditions.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
 

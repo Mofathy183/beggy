@@ -274,12 +274,13 @@ export const DarkMode: Story = {
 	render: (args) => <FormWrapper {...args} />,
 
 	parameters: {
-		themes: { default: 'dark' },
-
 		docs: {
 			description: {
 				story: 'Dark theme validation ensuring avatar fallback and borders remain visible.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };

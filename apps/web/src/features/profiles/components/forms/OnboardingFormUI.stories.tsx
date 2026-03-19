@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useForm } from 'react-hook-form';
-import type { EditProfileInput } from '@beggy/shared/types';
+import type { CompleteOnboardingInput } from '@beggy/shared/types';
 import { Gender } from '@beggy/shared/constants';
 
 import OnboardingFormUI from './OnboardingFormUI';
@@ -88,8 +88,8 @@ type Story = StoryObj<typeof OnboardingFormUI>;
 /* Controlled Form Wrapper                                                    */
 /* -------------------------------------------------------------------------- */
 
-const ControlledRender = (args: any) => {
-	const form = useForm<EditProfileInput>({
+const ControlledRender = (args: Story['args']) => {
+	const form = useForm<CompleteOnboardingInput>({
 		defaultValues: {
 			firstName: '',
 			lastName: '',
@@ -100,7 +100,14 @@ const ControlledRender = (args: any) => {
 		},
 	});
 
-	return <OnboardingFormUI {...args} form={form} onSubmit={() => {}} />;
+	return (
+		<OnboardingFormUI
+			{...args}
+			form={form}
+			onSubmit={() => {}}
+			onSkip={() => {}}
+		/>
+	);
 };
 
 /* -------------------------------------------------------------------------- */
@@ -110,16 +117,14 @@ const ControlledRender = (args: any) => {
 /**
  * Default onboarding state.
  *
- * Occurs when a new user first lands on profile setup.
- * No validation errors.
- * No server feedback.
- *
- * The user sees a calm, structured welcome form.
+ * First-time user lands on onboarding.
+ * No validation or server feedback is shown.
  */
 export const Default: Story = {
 	render: ControlledRender,
 	args: {
 		isSubmitting: false,
+		isSkipping: false,
 		serverError: null,
 		serverSuggestion: null,
 	},
@@ -133,43 +138,59 @@ export const Default: Story = {
 };
 
 /**
- * Loading state after submission.
+ * Form submission in progress.
  *
- * Triggered when the user submits the form
- * and the system is processing profile creation.
- *
- * The button communicates progress and prevents resubmission.
+ * Primary CTA shows loading state and disables interaction.
  */
 export const Submitting: Story = {
 	render: ControlledRender,
 	args: {
 		isSubmitting: true,
+		isSkipping: false,
 		serverError: null,
 		serverSuggestion: null,
 	},
 	parameters: {
 		docs: {
 			description: {
-				story: 'Submit button enters loading state and becomes disabled.',
+				story: 'Submit button enters loading state and prevents duplicate submissions.',
 			},
 		},
 	},
 };
 
 /**
- * Server-level error state.
+ * Skip action in progress.
  *
- * Occurs when backend validation or profile creation fails.
+ * Occurs when user chooses "I'll do this later".
+ */
+export const Skipping: Story = {
+	render: ControlledRender,
+	args: {
+		isSubmitting: false,
+		isSkipping: true,
+		serverError: null,
+		serverSuggestion: null,
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Skip button shows loading state while onboarding is being completed without data.',
+			},
+		},
+	},
+};
+
+/**
+ * Server-level failure.
  *
- * The alert must:
- * - Be visually distinct
- * - Announce via aria-live
- * - Provide helpful recovery guidance
+ * Occurs when backend rejects onboarding submission.
  */
 export const ServerErrorState: Story = {
 	render: ControlledRender,
 	args: {
 		isSubmitting: false,
+		isSkipping: false,
 		serverError: 'We couldn’t complete your setup.',
 		serverSuggestion: 'Please check your information and try again.',
 	},
@@ -183,15 +204,13 @@ export const ServerErrorState: Story = {
 };
 
 /**
- * Filled example state.
+ * Midway filled state.
  *
- * Represents a realistic user midway through filling the form.
- *
- * Useful for layout verification and Chromatic visual stability.
+ * Represents a realistic user filling the form.
  */
 export const PartiallyFilled: Story = {
 	render: () => {
-		const form = useForm<EditProfileInput>({
+		const form = useForm<CompleteOnboardingInput>({
 			defaultValues: {
 				firstName: 'Mohamed',
 				lastName: 'Fathy',
@@ -206,7 +225,9 @@ export const PartiallyFilled: Story = {
 			<OnboardingFormUI
 				form={form}
 				onSubmit={() => {}}
+				onSkip={() => {}}
 				isSubmitting={false}
+				isSkipping={false}
 				serverError={null}
 				serverSuggestion={null}
 			/>
@@ -215,10 +236,33 @@ export const PartiallyFilled: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story: 'Example filled state for layout validation and visual regression stability.',
+				story: 'Pre-filled state used for layout and visual regression stability.',
 			},
 		},
 	},
+};
+
+/**
+ * Narrow container stress test.
+ *
+ * Ensures layout holds on small screens.
+ */
+export const NarrowContainer: Story = {
+	render: ControlledRender,
+	args: {
+		isSubmitting: false,
+		isSkipping: false,
+	},
+	parameters: {
+		layout: 'padded',
+	},
+	decorators: [
+		(Story) => (
+			<div className="max-w-sm mx-auto">
+				<Story />
+			</div>
+		),
+	],
 };
 
 /**
@@ -235,13 +279,14 @@ export const DarkMode: Story = {
 		serverSuggestion: 'Please check your information and try again.',
 	},
 	parameters: {
-		themes: {
-			default: 'dark',
-		},
 		docs: {
 			description: {
 				story: 'Dark mode rendering with alert visibility and token contrast verification.',
 			},
 		},
+	},
+
+	globals: {
+		theme: 'dark',
 	},
 };

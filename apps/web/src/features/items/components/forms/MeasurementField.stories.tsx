@@ -389,11 +389,13 @@ export const DarkMode: Story = {
 	),
 
 	parameters: {
-		themes: { default: 'dark' },
 		docs: {
 			description: {
 				story: 'Validates color tokens, contrast, and focus states when the component is rendered in dark theme.',
 			},
 		},
+	},
+	globals: {
+		theme: 'dark',
 	},
 };
