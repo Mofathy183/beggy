@@ -77,9 +77,9 @@ jobs:
             - name: Check formatting
               run: pnpm format:check
 
-            - name: Build DATABASE_URL
+            - name: Set DATABASE_URL
               run: |
-                echo "DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}?schema=public" >> $GITHUB_EN
+                echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
 
             - name: Generate Prisma Client
               run: pnpm turbo run prisma:generate --filter=@beggy/api
