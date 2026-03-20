@@ -28,7 +28,11 @@ jobs:
 
         env:
             NODE_ENV: test
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+            DB_HOST: postgres
+            DB_PORT: 5432
             JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
             JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
             SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
