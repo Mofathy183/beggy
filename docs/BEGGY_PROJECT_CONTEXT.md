@@ -201,7 +201,7 @@
 **API Documentation**:
 
 - **swagger-jsdoc**: ^6.2.8 (Swagger/OpenAPI docs generation)
-- **swagger-ui-express**: ^5.0.1 (Swagger UI at `/api-docs`)
+- **swagger-ui-express**: ^5.0.1 (Swagger UI at `/docs`)
 
 **Email**:
 
@@ -240,6 +240,7 @@
 - `/users` – User management (create, list, get, update, delete, etc.)
 - `/profiles` – Profile management (`GET/PATCH /profiles/me`, `GET /profiles/:id`)
 - `/auth` – Authentication (signup, login, logout, refresh-token, csrf-token, OAuth callbacks)
+- `/items` – Item inventory management (CRUD for user-owned items)
 
 **Module Structure** (`src/modules/`):
 
@@ -254,8 +255,8 @@ Each module follows a consistent pattern:
 
 **Modules present in codebase**:
 
-- **Mounted in router**: **auth**, **users**, **profiles** (see `app.route.ts`).
-- **Implemented but not mounted** (routes exist in code and Swagger/docs; add to `app.route.ts` when needed): **bags**, **bag-items**, **items**, **suitcases**, **suitcase-items**, **weather**, **gemini**.
+- **Mounted in router**: **auth**, **users**, **profiles**, **items** (see `app.route.ts`).
+- **Implemented but not mounted** (routes exist in code and Swagger/docs; add to `app.route.ts` when needed): **bags**, **bag-items**, **suitcases**, **suitcase-items**, **weather**, **gemini**.
 
 **Shared Infrastructure** (`src/shared/`):
 
@@ -348,7 +349,7 @@ Each module follows a consistent pattern:
 
 **Test Patterns**:
 
-- **Unit tests**: Next to modules (e.g., `auth.service.test.ts`, `users.routes.test.ts`)
+- **Unit tests**: Next to modules and shared utilities (e.g., `auth.service.test.ts`, `users.routes.test.ts`, `password.util.test.ts`, `token.util.test.ts`, middleware tests, and items mapper/service tests)
 - **Integration tests**: Full API testing (e.g., `auth.integration.test.ts`, `users.integration.test.ts`, `profiles.integration.test.ts`, bags, bag-items, items, suitcases, suitcase-items, weather, gemini)
 - **Test utilities**: `@faker-js/faker` for test data, `supertest` for HTTP testing
 
@@ -533,6 +534,10 @@ Feature-based organization. Each feature contains:
 - **Coverage**: `src/**/*.{ts,tsx}`, report dir `coverage/vitest/web`
 - **File parallelism**: false (for stability)
 
+**Test Patterns**:
+
+- Unit/component tests cover notification UX (`notify.utils.ts`), onboarding hook/form behavior, and items/users list flows (filters/pagination/dialog forms).
+
 **Test Libraries**:
 
 - `@testing-library/react` ^16.3.2
@@ -606,17 +611,22 @@ Feature-based organization. Each feature contains:
 
 ### 5.6 Key Screens & Flows (Current Web UI)
 
-**High-level UX**: A small but production-style admin UI for managing Beggy users, built to showcase the **design system, layout shell, RBAC patterns, and data-fetching patterns** that future bags/suitcases/packing features will follow.
+**High-level UX**: A production-style UI that currently demonstrates auth/onboarding + dashboard shell, and complete **users** and **items** list flows, built to showcase the **design system, layout patterns, RBAC/CASL patterns, and data-fetching patterns** for future packing features.
 
 - **Public Landing (`/`)**
     - Simple marketing-style entry point rendered from `src/app/page.tsx`.
     - Uses the shared `ThemeToggle` and shadcn `Button` components.
-    - Copy: "Beggy – Discover the perfect bag for your journey", with primary calls-to-action like **"Browse Bags"** and **"Add New Bag"** (currently stubbed – wiring into real flows is future work).
+    - Current heading copy: **"Beggy with Docker here beby"** with supporting text **"Discover the perfect bag for your journey."**
+    - Includes CTA buttons **"Browse Bags"** and **"Add New Bag"** (still stubbed).
+    - Includes a small in-page notification demo (click triggers) using the project `notify`/Sonner toast UX.
 
 - **Protected Area Layout (`src/app/(protected)/layout.tsx`)**
-    - Wraps all authenticated routes in `AuthGate` and renders the `AppShell` from `@shared/layouts` (Header + Sidebar).
+    - Provides the dashboard chrome by rendering the `AppShell` for all routes under `(protected)`.
+    - Session enforcement is intentionally split:
+        - `AuthGate` is enforced in `src/app/(dashboard)/layout.tsx` (for dashboard pages)
+        - `/onboarding` is guarded by `src/app/onboarding/layout.tsx`
+        - OAuth callback is handled via the dedicated `/auth/callback` route
     - Intended responsibilities:
-        - **Auth boundary** via `AuthGate` (`@shared/guards`) to check session and redirect if unauthenticated.
         - Provide a consistent dashboard chrome (header/sidebar) for admin-style pages.
     - Future-proofed so that some authenticated pages can opt out of the dashboard shell if needed (e.g., wizards, print views).
 
@@ -673,7 +683,7 @@ Feature-based organization. Each feature contains:
         - `ChangeRoleDialog` wraps the form in a dialog for inline admin actions.
     - All of these flows are designed to be **copy-paste-ready blueprints** for future domain features (bags, suitcases, items, packing lists) while reusing the same shared list, filters, and badge patterns.
 
-**Takeaway**: The current web app is a **thin but fully structured frontend slice**: landing page, protected dashboard shell, and a complete user-management feature wired to the API. New features (bags, suitcases, packing flows) should follow the same **feature structure, list/detail patterns, forms pattern, and design system rules** documented here.
+**Takeaway**: The current web app is a **thin but fully structured frontend slice**: landing page, authenticated dashboard/onboarding guards, and complete **users + items** feature flows wired to the API. New features (bags, suitcases, packing flows) should follow the same **feature structure, list/detail patterns, forms pattern, and design system rules** documented here.
 
 ### 5.7 Notifications & Toast UX (Sonner)
 
@@ -946,7 +956,10 @@ UX rules:
 **Core**:
 
 - `NODE_ENV` – Environment (development, production, test)
-- `DATABASE_URL` – PostgreSQL connection string
+- `PORT` – API server listen port
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` – PostgreSQL credentials
+- `DB_HOST`, `DB_PORT` – PostgreSQL host/port (optional; defaults exist in code)
+- `DATABASE_URL` – PostgreSQL connection string (if missing, API constructs it from the DB vars)
 
 **JWT**:
 
@@ -955,29 +968,41 @@ UX rules:
 - `JWT_ACCESS_EXPIRES_IN` – Access token expiration
 - `JWT_REFRESH_EXPIRES_IN` – Refresh token expiration
 - `JWT_REFRESH_REMEMBER_EXPIRES_IN` – "Remember me" refresh token expiration
+- `JWT_ACCESS_MAX_AGE_MS` – Access token cookie lifetime (ms)
+- `JWT_REFRESH_MAX_AGE_MS` – Refresh token cookie lifetime (ms)
+- `JWT_REFRESH_REMEMBER_MAX_AGE_MS` – "Remember me" refresh token cookie lifetime (ms)
 - `JWT_ACCESS_TOKEN_NAME` – Access token cookie name
 - `JWT_REFRESH_TOKEN_NAME` – Refresh token cookie name
 
 **Session**:
 
-- `SESSION_SECRET` – Session secret
+- `SESSION_SECRET` – Session secret (currently optional: `express-session` middleware is commented out in `apps/api/app.ts`)
 
 **CSRF**:
 
 - `CSRF_SECRET_KEY` – CSRF secret key
+- `CSRF_TOKEN_LENGTH` – CSRF token byte length (defaulted in code)
+- `CSRF_COOKIE_NAME` – CSRF cookie name (defaults to `XSRF-TOKEN` in code)
 
 **OAuth**:
 
 - `GOOGLE_CLIENT_ID` – Google OAuth client ID
 - `GOOGLE_CLIENT_SECRET` – Google OAuth client secret
+- `GOOGLE_CALLBACK_URL` – Google OAuth callback URL
 - `FACEBOOK_CLIENT_ID` – Facebook OAuth app ID
 - `FACEBOOK_CLIENT_SECRET` – Facebook OAuth app secret
+- `FACEBOOK_CALLBACK_URL` – Facebook OAuth callback URL
+- `FRONTEND_OAUTH_SUCCESS_URL` – redirect URL after OAuth success
+- `FRONTEND_OAUTH_FAILED_URL` – redirect URL after OAuth failure
 
 **External Services**:
 
 - `RESEND_API_KEY` – Resend email API key
 - `AI_API_KEY` – Google Gemini AI API key
+- `AI_API_URL` – AI provider base URL (optional; defaults in code)
+- `AI_API_MODEL` – AI provider model id/name (optional; defaults in code)
 - `OPENWEATHER_API_KEY` – OpenWeather API key
+- `OPENWEATHER_API_URL` – OpenWeather base URL (optional; defaults in code)
 
 **Web**:
 
@@ -1940,6 +1965,6 @@ Then verify WCAG AA (≥ 4.5:1) for both light and dark before using it anywhere
 
 ---
 
-**Last Updated**: Based on current codebase state (February 2026)
+**Last Updated**: Based on current codebase state (March 2026)
 
 **Version**: 1.0.0

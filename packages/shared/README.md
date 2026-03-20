@@ -5,7 +5,7 @@
 **The single source of truth for types, Zod schemas, constants, and utilities across Beggy.**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Zod](https://img.shields.io/badge/Zod-4.1-3E67B1?style=flat-square)](https://zod.dev/)
+[![Zod](https://img.shields.io/badge/Zod-4.3-3E67B1?style=flat-square)](https://zod.dev/)
 [![ESM](https://img.shields.io/badge/Module-ESM-F59E0B?style=flat-square)](https://nodejs.org/api/esm.html)
 
 </div>

@@ -4,8 +4,8 @@
 
 **The Beggy REST API — authentication, authorization, packing, AI & weather.**
 
-[![Express](https://img.shields.io/badge/Express-5.1-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-7.3-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Express](https://img.shields.io/badge/Express-5.2-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-7.4-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
@@ -15,7 +15,7 @@
 
 ## Overview
 
-`@beggy/api` is the backend service for Beggy. It exposes a REST API for authentication, user management, profile management, and (partially implemented) travel packing resources including bags, suitcases, items, AI recommendations, and weather-based packing suggestions.
+`@beggy/api` is the backend service for Beggy. It exposes a REST API for authentication, user management, profile management, and **currently implemented** inventory primitives like **items** (with additional packing domains such as bags/suitcases partially implemented).
 
 **Base URL:** `/api/beggy`  
 **API Docs:** `/docs` (Swagger UI, available in development)
@@ -28,8 +28,8 @@
 
 |---|---|
 | **Runtime** | Node.js ≥ 18, TypeScript (compiled with SWC) |
-| **Framework** | Express.js 5.1 |
-| **Database** | PostgreSQL via Prisma 7.3 ORM |
+| **Framework** | Express.js 5.2 |
+| **Database** | PostgreSQL via Prisma 7.4 ORM |
 | **Auth** | JWT (access + refresh), Passport.js, Google OAuth, Facebook OAuth |
 | **Authorization** | CASL 6.8 (Role-Based Access Control) |
 | **Validation** | Zod 4 (via `@beggy/shared`) |
@@ -133,6 +133,7 @@ export const createUserRouter = (controller: UserController) => {
 | Auth | `/api/beggy/auth` | Signup, login, logout, refresh token, CSRF, OAuth |
 | Users | `/api/beggy/users` | User CRUD, role management |
 | Profiles | `/api/beggy/profiles` | Profile view & update |
+| Items | `/api/beggy/items` | CRUD for user-owned items |
 
 ### Auth endpoints
 
@@ -177,12 +178,6 @@ POST   /bags                     Create a bag
 GET    /bags/:id                 Get bag by ID
 PATCH  /bags/:id                 Update bag
 DELETE /bags/:id                 Delete bag
-
-GET    /items                    List items
-POST   /items                    Create an item
-GET    /items/:id                Get item by ID
-PATCH  /items/:id                Update item
-DELETE /items/:id                Delete item
 
 GET    /weather/:city            Get weather data for a city
 
@@ -272,7 +267,7 @@ Applied in this order in `app.ts`:
 ```text
 1.  Security         helmet, xss-sanitizer, rate-limit, CORS
 2.  Parsing          JSON body, URL-encoded, cookie-parser
-3.  Session          express-session + express-flash
+3.  Session/Flash   (optional for now; `express-session` is commented out in `apps/api/app.ts`)
 4.  Passport         (when OAuth is enabled)
 5.  Logging          pino-http
 6.  API Docs         Swagger UI at /docs (bypasses CSRF)
@@ -295,6 +290,7 @@ The API loads env from a file based on `NODE_ENV`:
 
 |---|---|---|
 | `NODE_ENV` | ✅ | `development` \| `test` \| `production` |
+| `PORT` | ✅ | API server listen port |
 | `DATABASE_URL` | ✅*| PostgreSQL connection string |
 | `POSTGRES_USER` | ✅* | DB username (used if `DATABASE_URL` not set) |
 | `POSTGRES_PASSWORD` | ✅*| DB password |
@@ -308,6 +304,8 @@ The API loads env from a file based on `NODE_ENV`:
 | `JWT_ACCESS_TOKEN_NAME` | ✅ | Cookie name for access token |
 | `JWT_REFRESH_TOKEN_NAME` | ✅ | Cookie name for refresh token |
 | `CSRF_SECRET_KEY` | ✅ | CSRF protection key |
+| `CSRF_TOKEN_LENGTH` | ⚙️ | CSRF token byte length (defaulted in code) |
+| `CSRF_COOKIE_NAME` | ⚙️ | CSRF cookie name (defaulted in code) |
 | `GOOGLE_CLIENT_ID` | ⚙️ | Google OAuth (optional) |
 | `GOOGLE_CLIENT_SECRET` | ⚙️ | Google OAuth (optional) |
 | `FACEBOOK_CLIENT_ID` | ⚙️ | Facebook OAuth (optional) |

@@ -17,7 +17,7 @@
 
 `@beggy/web` is the frontend for Beggy. It is built with **Next.js 16 App Router**, **React 19**, and a **semantic token-based design system** on Tailwind CSS v4 + shadcn/ui.
 
-The current UI implements a structured admin dashboard — user management, profile editing, and onboarding — as a fully wired blueprint that new features (bags, suitcases, packing flows) will follow.
+The current UI implements a structured admin dashboard — auth/OAuth session hydration, onboarding, user management, and the personal item library — as a fully wired blueprint that new packing features will follow.
 
 ---
 
@@ -275,10 +275,19 @@ All notifications go through the centralized `notify` utility — never call Son
 ```typescript
 import { notify } from '@shared/utils/notify.utils';
 
-notify.success('User created successfully');
-notify.error('Failed to save changes');
-notify.warning('Approaching weight limit');
-notify.info('Packing suggestion ready');
+notify.success({ message: 'User created successfully' });
+notify.error({
+	message: 'Failed to save changes',
+	suggestion: 'Check your connection and try again.',
+});
+notify.warning({
+	message: 'Approaching weight limit',
+	description: 'Pack heavier items first to stay within limits.',
+});
+notify.info({
+	message: 'Packing suggestion ready',
+	description: 'You can review the tip in your packing list.',
+});
 ```
 
 ---
