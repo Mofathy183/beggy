@@ -120,7 +120,8 @@
 
 		"prisma:generate": {
 			"cache": false,
-			"outputs": ["node_modules/.prisma/**"]
+			"outputs": ["node_modules/.prisma/**"],
+			"env": ["DATABASE_URL"]
 		},
 
 		"prisma:migrate": {
