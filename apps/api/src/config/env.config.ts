@@ -93,6 +93,8 @@ const buildDatabaseUrl = (): string => {
 	return `postgresql://${user}:${password}@${host}:${port}/${db}?schema=public`;
 };
 
+const hasDatabaseUrl = !!process.env.DATABASE_URL;
+
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
@@ -143,9 +145,18 @@ export const env = {
 	PORT: optionalNumber('PORT', 3000),
 
 	// DB
-	POSTGRES_USER: required('POSTGRES_USER'),
-	POSTGRES_PASSWORD: required('POSTGRES_PASSWORD'),
-	POSTGRES_DB: required('POSTGRES_DB'),
+	POSTGRES_USER: hasDatabaseUrl
+		? optional('POSTGRES_USER')
+		: required('POSTGRES_USER'),
+
+	POSTGRES_PASSWORD: hasDatabaseUrl
+		? optional('POSTGRES_PASSWORD')
+		: required('POSTGRES_PASSWORD'),
+
+	POSTGRES_DB: hasDatabaseUrl
+		? optional('POSTGRES_DB')
+		: required('POSTGRES_DB'),
+
 	DB_HOST: optional('DB_HOST', 'localhost'),
 	DB_PORT: optional('DB_PORT', '5432'),
 

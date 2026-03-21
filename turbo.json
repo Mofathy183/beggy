@@ -10,11 +10,6 @@
 			"outputs": ["dist/**", "build/**", ".next/**"],
 			"env": [
 				"NODE_ENV",
-				"POSTGRES_USER",
-				"POSTGRES_PASSWORD",
-				"POSTGRES_DB",
-				"DB_HOST",
-				"DB_PORT",
 				"DATABASE_URL",
 				"VITE_API_URL"
 			]
@@ -25,12 +20,6 @@
 			"persistent": true,
 			"env": [
 				"NODE_ENV",
-
-				"POSTGRES_USER",
-				"POSTGRES_PASSWORD",
-				"POSTGRES_DB",
-				"DB_HOST",
-				"DB_PORT",
 				"DATABASE_URL",
 
 				"JWT_ACCESS_SECRET",
@@ -96,11 +85,6 @@
 			"env": [
 				"NODE_ENV",
 
-				"POSTGRES_USER",
-				"POSTGRES_PASSWORD",
-				"POSTGRES_DB",
-				"DB_HOST",
-				"DB_PORT",
 				"DATABASE_URL",
 
 				"JWT_ACCESS_SECRET",
@@ -146,11 +130,6 @@
 		"prisma:migrate": {
 			"cache": false,
 			"env": [
-				"POSTGRES_USER",
-				"POSTGRES_PASSWORD",
-				"POSTGRES_DB",
-				"DB_HOST",
-				"DB_PORT",
 				"DATABASE_URL"
 			]
 		},
@@ -159,11 +138,6 @@
 			"cache": false,
 			"persistent": true,
 			"env": [
-				"POSTGRES_USER",
-				"POSTGRES_PASSWORD",
-				"POSTGRES_DB",
-				"DB_HOST",
-				"DB_PORT",
 				"DATABASE_URL"
 			]
 		}
