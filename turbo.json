@@ -8,11 +8,7 @@
 			"dependsOn": ["^build"],
 			"inputs": ["$TURBO_DEFAULT$", ".env*"],
 			"outputs": ["dist/**", "build/**", ".next/**"],
-			"env": [
-				"NODE_ENV",
-				"DATABASE_URL",
-				"VITE_API_URL"
-			]
+			"env": ["NODE_ENV", "DATABASE_URL", "VITE_API_URL"]
 		},
 
 		"dev": {
@@ -129,17 +125,13 @@
 
 		"prisma:migrate": {
 			"cache": false,
-			"env": [
-				"DATABASE_URL"
-			]
+			"env": ["DATABASE_URL"]
 		},
 
 		"prisma:studio": {
 			"cache": false,
 			"persistent": true,
-			"env": [
-				"DATABASE_URL"
-			]
+			"env": ["DATABASE_URL"]
 		}
 	},
 
