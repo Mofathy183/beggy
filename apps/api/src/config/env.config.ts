@@ -73,24 +73,26 @@ const envFileMap: Record<Environment, string> = {
 
 const envFile = envFileMap[NODE_ENV];
 
-dotenv.config({ path: envFile });
+dotenv.config({ path: envFile, override: false });
 
 const buildDatabaseUrl = (): string => {
-	if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+	const directUrl = process.env.DATABASE_URL;
+	// if the url is exists return it
+	if (directUrl) return directUrl;
 
-	const user = process.env.POSTGRES_USER;
-	const password = process.env.POSTGRES_PASSWORD;
-	const host = process.env.DB_HOST ?? 'localhost';
-	const port = process.env.DB_PORT ?? '5432';
-	const db = process.env.POSTGRES_DB;
+	const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
 
-	if (!user || !password || !db) {
+	//! Only throw if we REALLY need to build URL
+	if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
 		throw new Error(
-			'Missing required DB environment variables: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB'
+			'DATABASE_URL is not set and POSTGRES_* variables are missing'
 		);
 	}
 
-	return `postgresql://${user}:${password}@${host}:${port}/${db}?schema=public`;
+	const host = process.env.DB_HOST ?? 'localhost';
+	const port = process.env.DB_PORT ?? '5432';
+
+	return `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${host}:${port}/${POSTGRES_DB}?schema=public`;
 };
 
 // ============================================
@@ -154,6 +156,7 @@ export const env = {
 
 	// Constructed URL
 	DATABASE_URL: buildDatabaseUrl(),
+
 	// Security
 	// Must be unique and NEVER shared with refresh tokens.
 	JWT_ACCESS_SECRET: required('JWT_ACCESS_SECRET') as Secret,
