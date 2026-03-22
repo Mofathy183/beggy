@@ -8,16 +8,13 @@
 			"dependsOn": ["^build"],
 			"inputs": ["$TURBO_DEFAULT$", ".env*"],
 			"outputs": ["dist/**", "build/**", ".next/**"],
-			"env": ["NODE_ENV", "DATABASE_URL", "VITE_API_URL"]
+			"env": ["VITE_API_URL"]
 		},
 
 		"dev": {
 			"cache": false,
 			"persistent": true,
 			"env": [
-				"NODE_ENV",
-				"DATABASE_URL",
-
 				"JWT_ACCESS_SECRET",
 				"JWT_REFRESH_SECRET",
 				"SESSION_SECRET",
@@ -79,32 +76,21 @@
 			],
 			"outputs": [],
 			"env": [
-				"NODE_ENV",
-
-				"DATABASE_URL",
-
 				"JWT_ACCESS_SECRET",
 				"JWT_REFRESH_SECRET",
-
 				"SESSION_SECRET",
 				"CSRF_SECRET_KEY",
-
 				"JWT_ACCESS_EXPIRES_IN",
 				"JWT_ACCESS_TOKEN_NAME",
 				"JWT_REFRESH_EXPIRES_IN",
 				"JWT_REFRESH_REMEMBER_EXPIRES_IN",
 				"JWT_REFRESH_TOKEN_NAME",
-
 				"GOOGLE_CLIENT_ID",
 				"GOOGLE_CLIENT_SECRET",
-
 				"FACEBOOK_CLIENT_ID",
 				"FACEBOOK_CLIENT_SECRET",
-
 				"RESEND_API_KEY",
-
 				"AI_API_KEY",
-
 				"OPENWEATHER_API_KEY"
 			]
 		},
@@ -120,26 +106,33 @@
 
 		"prisma:generate": {
 			"cache": false,
-			"outputs": ["node_modules/.prisma/**"],
-			"env": ["DATABASE_URL"]
+			"outputs": ["node_modules/.prisma/**"]
 		},
 
 		"prisma:migrate": {
-			"cache": false,
-			"env": ["DATABASE_URL"]
+			"cache": false
 		},
 
 		"prisma:studio": {
 			"cache": false,
-			"persistent": true,
-			"env": ["DATABASE_URL"]
+			"persistent": true
 		}
 	},
 
-	"globalEnv": ["NODE_ENV", "CI"],
+	"globalEnv": [
+		"NODE_ENV",
+		"CI",
+		"DATABASE_URL",
+		"POSTGRES_USER",
+		"POSTGRES_PASSWORD",
+		"POSTGRES_DB",
+		"DB_HOST",
+		"DB_PORT"
+	],
 
 	"globalDependencies": [
 		"**/.env.*local",
+		"**/.env.test",
 		"**/.env",
 		".eslintrc.js",
 		"eslint.config.mjs",

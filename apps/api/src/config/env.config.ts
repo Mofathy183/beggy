@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import { DATABASE_URL, type Environment } from './db.config';
 import type { CookieOptions, Request } from 'express';
 import type { DoubleCsrfConfig, CsrfIgnoredRequestMethods } from 'csrf-csrf';
 // import type { SessionOptions } from 'express-session';
@@ -61,39 +61,35 @@ const CSRF_IGNORE_PATHS = [
 	'/api/docs', // API documentation
 ];
 
-type Environment = 'development' | 'production' | 'test';
+// const envFileMap: Record<Environment, string> = {
+// 	development: '.env.local',
+// 	test: '.env.test',
+// 	production: '.env.production', // delete it work on it later
+// };
 
-const NODE_ENV = (process.env.NODE_ENV as Environment) ?? 'development';
+// const envFile = envFileMap[NODE_ENV];
 
-const envFileMap: Record<Environment, string> = {
-	development: '.env.local',
-	test: '.env.test',
-	production: '.env.production', // delete it work on it later
-};
+// dotenv.config({ path: envFile, override: false });
 
-const envFile = envFileMap[NODE_ENV];
+// const buildDatabaseUrl = (): string => {
+// 	const directUrl = process.env.DATABASE_URL;
+// 	// if the url is exists return it
+// 	if (directUrl) return directUrl;
 
-dotenv.config({ path: envFile, override: false });
+// 	const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
 
-const buildDatabaseUrl = (): string => {
-	const directUrl = process.env.DATABASE_URL;
-	// if the url is exists return it
-	if (directUrl) return directUrl;
+// 	//! Only throw if we REALLY need to build URL
+// 	if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
+// 		throw new Error(
+// 			'DATABASE_URL is not set and POSTGRES_* variables are missing'
+// 		);
+// 	}
 
-	const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
+// 	const host = process.env.DB_HOST ?? 'localhost';
+// 	const port = process.env.DB_PORT ?? '5432';
 
-	//! Only throw if we REALLY need to build URL
-	if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
-		throw new Error(
-			'DATABASE_URL is not set and POSTGRES_* variables are missing'
-		);
-	}
-
-	const host = process.env.DB_HOST ?? 'localhost';
-	const port = process.env.DB_PORT ?? '5432';
-
-	return `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${host}:${port}/${POSTGRES_DB}?schema=public`;
-};
+// 	return `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${host}:${port}/${POSTGRES_DB}?schema=public`;
+// };
 
 // ============================================
 // HELPER FUNCTIONS
@@ -155,7 +151,7 @@ export const env = {
 	DB_PORT: optional('DB_PORT', '5432'),
 
 	// Constructed URL
-	DATABASE_URL: buildDatabaseUrl(),
+	DATABASE_URL,
 
 	// Security
 	// Must be unique and NEVER shared with refresh tokens.

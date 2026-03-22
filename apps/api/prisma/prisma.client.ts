@@ -1,4 +1,5 @@
-import { envConfig, DATABASE_URL } from '@/config';
+import { DATABASE_URL } from '@config/db.config';
+import { envConfig } from '@config/env.config';
 import { Prisma, PrismaClient } from '@prisma-generated/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { getAge, getDisplayName } from '@prisma/prisma.util';
