@@ -43,8 +43,8 @@ export default function ProtectedLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		// <AuthGate>
-		<AppShell>{children}</AppShell>
-		// </AuthGate>
+		<AuthGate>
+			<AppShell>{children}</AppShell>
+		</AuthGate>
 	);
 }

@@ -32,6 +32,35 @@ export interface ItemDTO {
 	userId?: string | null;
 }
 
+/**
+ * Aggregated item counts for a user.
+ */
+export interface ItemStatsDto {
+	totalItems: number;
+	totalFragileItems: number;
+}
+
+/**
+ * Represents a recently created item.
+ *
+ * @remarks
+ * - `createdAt` is normalized to ISO format for transport consistency
+ */
+export interface RecentItemDto {
+	id: string;
+	name: string;
+	category: ItemCategory;
+	createdAt: ISODateString;
+}
+
+/**
+ * Item distribution grouped by category.
+ */
+export interface ItemCategoryStatsDto {
+	category: ItemCategory;
+	count: number;
+}
+
 // ─────────────────────────────────────────────
 // Schemas with identical input & output
 // (No transforms → input === payload)

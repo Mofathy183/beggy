@@ -84,8 +84,15 @@ export const SuccessMessages = {
 	PREFERENCES_SAVED:
 		'Got it! I’ll remember these packing preferences next time wanderlust strikes.',
 
+	// Onboarding
 	ONBOARDING_COMPLETED:
 		'Nice work — onboarding complete! You’ve got everything set up now, so packing your next trip should feel a whole lot easier. From here on, I’ll help keep things organized while you focus on the adventure.',
+	ONBOARDING_INCOMPLETE:
+		'Looks like we’ve got a few setup steps left. No rush — finishing them now will make everything a lot smoother once you start packing. I’ll walk with you through the rest.',
+
+	// Dashboard
+	DASHBOARD_OVERVIEW_RETRIEVED:
+		'All set — here’s your travel overview! Everything’s laid out clearly, so you can see what’s packed, what’s left, and where things stand at a glance. Makes planning the next step a whole lot easier.',
 
 	// ============================================================================
 	// BAGS

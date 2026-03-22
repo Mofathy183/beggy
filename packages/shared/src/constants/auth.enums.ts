@@ -32,6 +32,7 @@ export enum AuthProvider {
 export enum Subject {
 	USER = 'USER',
 	PROFILE = 'PROFILE',
+	DASHBOARD = 'DASHBOARD',
 	BAG = 'BAG',
 	ITEM = 'ITEM',
 	SUITCASE = 'SUITCASE',
