@@ -61,36 +61,6 @@ const CSRF_IGNORE_PATHS = [
 	'/api/docs', // API documentation
 ];
 
-// const envFileMap: Record<Environment, string> = {
-// 	development: '.env.local',
-// 	test: '.env.test',
-// 	production: '.env.production', // delete it work on it later
-// };
-
-// const envFile = envFileMap[NODE_ENV];
-
-// dotenv.config({ path: envFile, override: false });
-
-// const buildDatabaseUrl = (): string => {
-// 	const directUrl = process.env.DATABASE_URL;
-// 	// if the url is exists return it
-// 	if (directUrl) return directUrl;
-
-// 	const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
-
-// 	//! Only throw if we REALLY need to build URL
-// 	if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
-// 		throw new Error(
-// 			'DATABASE_URL is not set and POSTGRES_* variables are missing'
-// 		);
-// 	}
-
-// 	const host = process.env.DB_HOST ?? 'localhost';
-// 	const port = process.env.DB_PORT ?? '5432';
-
-// 	return `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${host}:${port}/${POSTGRES_DB}?schema=public`;
-// };
-
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
@@ -120,16 +90,6 @@ const optionalNumber = (key: string, defaultValue: number): number => {
 	}
 	return parsed;
 };
-
-// // Regular optionalArray for string arrays (like paths)
-// const optionalArray = <T extends string>(key: string, defaultValue: T[], separator: string = ','): T[] => {
-//     const value = process.env[key];
-//     if (!value) return defaultValue;
-//     return value
-//         .split(separator)
-//         .map(item => item.trim())
-//         .filter(item => item.length > 0) as T[];
-// }
 
 // ============================================
 // ENVIRONMENT VALIDATION

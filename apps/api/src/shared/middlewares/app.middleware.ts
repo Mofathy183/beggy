@@ -223,31 +223,31 @@ export const injectCsrfToken = (
 };
 
 //*==========================={Route Error Handler}=====================================
+
 /**
- * Middleware for handling requests to undefined routes.
- * If the route does not exist, it returns a 404 error response.
+ * Handles requests to undefined routes.
  *
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} next - The next middleware function in the stack.
+ * @description
+ * Acts as a fallback middleware when no route matches the incoming request.
+ * Returns a standardized 404 response with helpful debugging context.
+ *
+ * @param req - Express request
+ * @param res - Express response
+ *
+ * @remarks
+ * - Should be registered after all route definitions
+ * - Includes request metadata to aid debugging and observability
  */
-export const routeNotFoundHandler = (
-	req: Request,
-	res: Response,
-	_next: NextFunction
-) => {
-	// Create error details object
+export const routeNotFoundHandler = (req: Request, res: Response) => {
 	const errorDetails = {
 		requestedPath: req.path,
 		method: req.method,
-		hint: `The route '${req.path}' doesn't seem to be on our packing map. 
-            Check the endpoint URL or refer to the API documentation.`,
+		hint: `The route '${req.path}' doesn't seem to be on our packing map. Check the endpoint URL or refer to the API documentation.`,
 	};
 
-	// Log the 404 for monitoring (optional but recommended)
+	// Log for observability (can be replaced with structured logger)
 	console.warn('404 Route Not Found:', errorDetails);
 
-	// Return the error response
 	return res
 		.status(STATUS_CODE.NOT_FOUND)
 		.json(apiResponseMap.notFound(ErrorCode.ROUTE_NOT_FOUND, errorDetails));
