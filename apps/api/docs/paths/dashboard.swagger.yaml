@@ -1,0 +1,43 @@
+tags:
+  - name: Dashboard
+
+paths:
+  /dashboard:
+    get:
+      summary: Get dashboard overview
+      description: |
+        Returns the full aggregated dashboard overview for the authenticated user.
+
+        This endpoint composes multiple domain datasets into a single optimized payload:
+        - Profile onboarding state
+        - Item statistics (total & fragile counts)
+        - Recent items (latest 5)
+        - Item category distribution
+
+        Designed for dashboard initial load to avoid multiple API calls.
+      tags:
+        - Dashboard
+      security:
+        - cookieAuth: []
+
+      responses:
+        "200":
+          description: Dashboard overview retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DashboardOverviewData"
+
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"

@@ -15,6 +15,7 @@ export const TagTypes = {
 	AUTH: 'Auth',
 	USER: 'User',
 	PROFILE: 'Profile',
+	DASHBOARD: 'Dashboard',
 	ITEM: 'Item',
 } as const;
 

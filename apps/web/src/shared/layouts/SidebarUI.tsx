@@ -47,6 +47,12 @@ export interface NavItem {
 	 * If present → shown only when ability.can(action, subject) is true.
 	 */
 	permission?: Permission;
+
+	/**
+	 * When true, renders a dot indicator on this nav item.
+	 * Set on the onboarding item while profile is incomplete.
+	 */
+	showDot?: boolean;
 }
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
@@ -94,6 +100,8 @@ export interface SidebarUIProps {
 	currentPath: string;
 	isCollapsed: boolean;
 	onToggleCollapse: () => void;
+	/** When true, renders a dot on the onboarding nav item */
+	showOnboardingDot: boolean;
 	className?: string;
 }
 
@@ -144,14 +152,35 @@ const NavLink = ({ item, isActive, isCollapsed }: NavLinkProps) => {
 						]
 			)}
 		>
-			<HugeiconsIcon
-				icon={item.icon}
-				size={18}
-				strokeWidth={isActive ? 2 : 1.6}
-				className="shrink-0"
-				aria-hidden="true"
-			/>
-			{!isCollapsed && <span className="truncate">{item.label}</span>}
+			{/* Icon — relative so the dot can anchor to it when collapsed */}
+			<span className="relative shrink-0">
+				<HugeiconsIcon
+					icon={item.icon}
+					size={18}
+					strokeWidth={isActive ? 2 : 1.6}
+					aria-hidden="true"
+				/>
+				{/* Dot when collapsed — anchors to top-right of icon */}
+				{item.showDot && isCollapsed && (
+					<span
+						className="bg-primary border-sidebar absolute -end-1 -top-1 h-2 w-2 rounded-full border"
+						aria-label="Action required"
+					/>
+				)}
+			</span>
+
+			{/* Label + dot when expanded */}
+			{!isCollapsed && (
+				<>
+					<span className="flex-1 truncate">{item.label}</span>
+					{item.showDot && (
+						<span
+							className="bg-primary ms-auto h-2 w-2 shrink-0 rounded-full"
+							aria-label="Action required"
+						/>
+					)}
+				</>
+			)}
 		</a>
 	);
 
@@ -162,6 +191,11 @@ const NavLink = ({ item, isActive, isCollapsed }: NavLinkProps) => {
 					<TooltipTrigger render={linkContent} />
 					<TooltipContent side="right" sideOffset={8}>
 						{item.label}
+						{item.showDot && (
+							<span className="text-muted-foreground ms-1 text-xs">
+								· action required
+							</span>
+						)}
 					</TooltipContent>
 				</Tooltip>
 			</li>
@@ -280,8 +314,17 @@ const SidebarUI = ({
 	currentPath,
 	isCollapsed,
 	onToggleCollapse,
+	showOnboardingDot,
 	className,
 }: SidebarUIProps) => {
+	// Inject showDot onto the dashboard item (the entry point to onboarding)
+	// This keeps NavItem config clean — dot state is not hardcoded in config
+	const itemsWithDot: NavItem[] = navItems.map((item) =>
+		item.key === 'dashboard' && showOnboardingDot
+			? { ...item, showDot: true }
+			: item
+	);
+
 	const mainItems = navItems.filter((i) =>
 		[
 			'dashboard',
@@ -292,7 +335,7 @@ const SidebarUI = ({
 			'ai-assistant',
 		].includes(i.key)
 	);
-	const adminItems = navItems.filter((i) => ['users'].includes(i.key));
+	const adminItems = itemsWithDot.filter((i) => ['users'].includes(i.key));
 
 	return (
 		<TooltipProvider delay={200}>

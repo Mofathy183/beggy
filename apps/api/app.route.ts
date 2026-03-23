@@ -25,83 +25,116 @@ import {
 	ItemService,
 } from './src/modules/items';
 
+import {
+	createDashboardRouter,
+	DashboardController,
+	DashboardService,
+} from './src/modules/dashboard';
+
+enum ROUTES {
+	USERS = '/users',
+	PROFILES = '/profiles',
+	AUTH = '/auth',
+	ITEMS = '/items',
+	DASHBOARD = '/dashboard',
+}
+
 /**
  * Root application router.
  *
  * @description
- * Acts as the top-level routing composition layer for the API.
- * Each domain module registers its own router here.
+ * Central composition layer responsible for wiring domain modules
+ * into HTTP routes. Acts as the boundary between infrastructure
+ * (Express, Prisma) and application modules.
  *
  * @remarks
- * Responsibilities:
- * - Instantiate controllers with their required services
- * - Inject infrastructure dependencies (e.g., Prisma)
- * - Mount feature routers under their route prefixes
+ * - All dependencies are instantiated here (composition root pattern)
+ * - Each module is mounted under a dedicated route prefix
+ * - This router should be mounted once in `app.ts`
  *
- * This router should be mounted once in `app.ts`.
- *
- * Example:
- * ```ts
+ * @example
  * app.use('/api', rootRouter);
- * ```
  */
 export const rootRouter = Router();
 
+/* -------------------------------------------------------------------------- */
+/*                                Users Module                                */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Users module composition.
+ * Handles system-level user management operations.
+ */
+const userService = new UserService(prisma);
+const userController = new UserController(userService);
+
+/**
+ * @route /users
+ */
+rootRouter.use(ROUTES.USERS, createUserRouter(userController));
+
+/* -------------------------------------------------------------------------- */
+/*                               Profiles Module                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Profiles represent user-facing identity and personal data.
+ */
+const profileService = new ProfileService(prisma);
+const profileController = new ProfileController(profileService);
+
+/**
+ * @route /profiles
+ */
+rootRouter.use(ROUTES.PROFILES, createProfileRouter(profileController));
+
+/* -------------------------------------------------------------------------- */
+/*                                 Auth Module                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Handles authentication flows and session management.
  *
- * Handles administrative user management and system-level user operations.
+ * @remarks
+ * Depends on both AuthService and UserService due to user lifecycle coupling.
  */
-const userController = new UserController(new UserService(prisma));
+const authService = new AuthService(prisma);
+const authController = new AuthController(authService, userService);
 
 /**
- * Mounts Users routes under `/users`.
+ * @route /auth
  */
-rootRouter.use('/users', createUserRouter(userController));
+rootRouter.use(ROUTES.AUTH, createAuthRouter(authController));
+
+/* -------------------------------------------------------------------------- */
+/*                                 Items Module                               */
+/* -------------------------------------------------------------------------- */
 
 /**
- * Profiles module composition.
+ * Items represent physical objects that can be packed into containers.
+ */
+const itemService = new ItemService(prisma);
+const itemController = new ItemController(itemService);
+
+/**
+ * @route /items
+ */
+rootRouter.use(ROUTES.ITEMS, createItemRouter(itemController));
+
+/* -------------------------------------------------------------------------- */
+/*                              Dashboard Module                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Aggregates cross-domain data for dashboard views.
  *
- * Profiles represent user-facing identity and personal information
- * separate from the system-level User entity.
+ * @remarks
+ * Typically composes multiple domain queries into a single response
+ * optimized for frontend consumption.
  */
-const profileController = new ProfileController(new ProfileService(prisma));
+const dashboardService = new DashboardService(prisma);
+const dashboardController = new DashboardController(dashboardService);
 
 /**
- * Mounts Profile routes under `/profiles`.
- *
- * Typical routes include:
- * - GET   /profiles/me
- * - PATCH /profiles/me
- * - GET   /profiles/:id
+ * @route /dashboard
  */
-rootRouter.use('/profiles', createProfileRouter(profileController));
-
-/**
- * Auth module composition.
- *
- * Handles authentication flows such as login, registration,
- * and token/session management.
- */
-const authController = new AuthController(
-	new AuthService(prisma),
-	new UserService(prisma)
-);
-
-/**
- * Mounts authentication routes under `/auth`.
- */
-rootRouter.use('/auth', createAuthRouter(authController));
-
-/**
- * Items module composition.
- *
- * Items represent reusable physical objects that can be packed
- * into containers such as bags or suitcases.
- */
-const itemController = new ItemController(new ItemService(prisma));
-
-/**
- * Mounts item management routes under `/items`.
- */
-rootRouter.use('/items', createItemRouter(itemController));
+rootRouter.use(ROUTES.DASHBOARD, createDashboardRouter(dashboardController));

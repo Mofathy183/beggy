@@ -3,6 +3,8 @@
 import { useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAbility } from '@shared/store/ability';
+import { useAppSelector } from '@shared/store/hooks';
+import { selectShowOnboardingIndicator } from '@features/dashboard/store/dashboard.slice';
 import SidebarUI, { type NavItem, NAV_ITEMS } from './SidebarUI';
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -36,6 +38,7 @@ import SidebarUI, { type NavItem, NAV_ITEMS } from './SidebarUI';
 const Sidebar = () => {
 	const pathname = usePathname();
 	const ability = useAbility();
+	const showOnboardingDot = useAppSelector(selectShowOnboardingIndicator);
 
 	// ── Collapse state — local, no Redux needed ──────────────────────────
 	const [isCollapsed, setIsCollapsed] = useState(false);
@@ -67,6 +70,7 @@ const Sidebar = () => {
 			currentPath={pathname}
 			isCollapsed={isCollapsed}
 			onToggleCollapse={handleToggleCollapse}
+			showOnboardingDot={showOnboardingDot}
 		/>
 	);
 };

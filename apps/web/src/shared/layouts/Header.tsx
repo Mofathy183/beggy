@@ -10,6 +10,14 @@ import HeaderUI from './HeaderUI';
 
 import type { HttpClientError } from '@shared/types';
 
+// ─── Route constants ───────────────────────────────────────────────────────────
+
+const ROUTES = {
+	settings: '/dashboard/settings/profile',
+	login: '/login',
+	signup: '/signup',
+} as const;
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 /**
@@ -71,21 +79,23 @@ const Header = () => {
 	}, [logout]);
 
 	// ── Handlers ────────────────────────────────────────────────────────
+	// Profile click and settings both go to settings/profile —
+	// there is no standalone /profile route in the current app router.
 
 	const handleProfileClick = useCallback(() => {
-		router.push('/profile');
+		router.push(ROUTES.settings);
 	}, [router]);
 
 	const handleSettingsClick = useCallback(() => {
-		router.push('/settings');
+		router.push(ROUTES.settings);
 	}, [router]);
 
 	const handleLoginClick = useCallback(() => {
-		router.push('/login');
+		router.push(ROUTES.login);
 	}, [router]);
 
 	const handleSignUpClick = useCallback(() => {
-		router.push('/signup');
+		router.push(ROUTES.signup);
 	}, [router]);
 
 	// ── Render ──────────────────────────────────────────────────────────
