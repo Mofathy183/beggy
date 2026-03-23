@@ -27,24 +27,24 @@ describe('useRecentItemActions', () => {
 		});
 	});
 
-	it('navigates to items page', () => {
+	it('navigates to items page from view all', () => {
 		const { result } = renderHook(() => useRecentItemActions());
 
 		act(() => {
 			result.current.onViewAll();
 		});
 
-		expect(pushMock).toHaveBeenCalledWith('/items');
+		expect(pushMock).toHaveBeenCalledWith('/dashboard/items');
 	});
 
-	it('navigates to items page', () => {
+	it('navigates to items page from add item', () => {
 		const { result } = renderHook(() => useRecentItemActions());
 
 		act(() => {
 			result.current.onAddItem();
 		});
 
-		expect(pushMock).toHaveBeenCalledWith('/items');
+		expect(pushMock).toHaveBeenCalledWith('/dashboard/items');
 	});
 
 	it('navigates to item details page', () => {
@@ -54,7 +54,7 @@ describe('useRecentItemActions', () => {
 			result.current.onEdit('123');
 		});
 
-		expect(pushMock).toHaveBeenCalledWith('/items/123');
+		expect(pushMock).toHaveBeenCalledWith('/dashboard/items/123');
 	});
 
 	it('calls remove mutation', () => {
@@ -76,5 +76,15 @@ describe('useRecentItemActions', () => {
 		const { result } = renderHook(() => useRecentItemActions());
 
 		expect(result.current.isDeleting).toBe(true);
+	});
+
+	it('does not navigate when deleting item', () => {
+		const { result } = renderHook(() => useRecentItemActions());
+
+		act(() => {
+			result.current.onDelete('123');
+		});
+
+		expect(pushMock).not.toHaveBeenCalled();
 	});
 });
