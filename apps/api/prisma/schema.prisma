@@ -84,28 +84,28 @@ enum Scope {
 }
 
 /// ------------------------------------------------------------
-/// Subject (system resources)
+/// Subject (RBAC Resource Types)
 /// ------------------------------------------------------------
-/// The type of resource a permission applies to.
+/// Represents the system resource a permission targets.
+///
+/// Used as part of the RBAC permission model:
+///   Permission = Action + Scope + Subject
 ///
 /// Example:
-/// - BAG        → packing bag
-/// - ITEM       → item within a bag
-/// - SUITCASE   → suitcase configuration
-/// - USER       → user account
-/// - PROFILE    → profile of the user
-/// - ROLE       → system roles
-/// - PERMISSION → RBAC permissions
-///
-/// A permission always ties:
-///    Action + Scope + Subject
-/// For example:
 ///   READ + OWN + BAG
+///
+/// Keep this enum synchronized with:
+/// - Authorization logic (backend guards/policies)
+/// - Any client-side permission checks
+///
+/// Adding new subjects requires updating permission mappings
+/// and potentially seeding default roles.
 enum Subject {
     BAG
     ITEM
     SUITCASE
     PROFILE
+    DASHBOARD
     USER
     ROLE
     PERMISSION
