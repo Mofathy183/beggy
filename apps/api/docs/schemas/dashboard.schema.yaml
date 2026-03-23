@@ -1,0 +1,87 @@
+components:
+  schemas:
+    DashboardProfile:
+      type: object
+      additionalProperties: false
+      properties:
+        onboardingCompleted:
+          type: boolean
+      required:
+        - onboardingCompleted
+
+    DashboardItemStats:
+      type: object
+      additionalProperties: false
+      properties:
+        totalItems:
+          type: integer
+          example: 10
+        totalFragileItems:
+          type: integer
+          example: 3
+      required:
+        - totalItems
+        - totalFragileItems
+
+    DashboardRecentItem:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - category
+        - createdAt
+
+    DashboardItemCategoryStats:
+      type: object
+      additionalProperties: false
+      properties:
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        count:
+          type: integer
+          example: 5
+      required:
+        - category
+        - count
+
+    DashboardItemsSection:
+      type: object
+      additionalProperties: false
+      properties:
+        stats:
+          $ref: "#/components/schemas/DashboardItemStats"
+        recent:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardRecentItem"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardItemCategoryStats"
+      required:
+        - stats
+        - recent
+
+    DashboardOverviewData:
+      type: object
+      additionalProperties: false
+      properties:
+        profile:
+          $ref: "#/components/schemas/DashboardProfile"
+        items:
+          $ref: "#/components/schemas/DashboardItemsSection"
+      required:
+        - profile
+        - items

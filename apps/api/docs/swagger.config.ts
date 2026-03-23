@@ -18,14 +18,51 @@ const swaggerDefinition: SwaggerDefinition = {
 	],
 
 	tags: [
-		{ name: 'Auth', description: 'Authentication & identity management' },
-		{ name: 'Users', description: 'User management' },
-		{ name: 'Profiles', description: 'User profiles' },
-		// { name: 'Bags', description: 'Bag management' },
-		{ name: 'Items', description: 'Item management' },
-		// { name: 'Suitcases', description: 'Suitcase management' },
-		// { name: 'Weather', description: 'Weather integration' },
-		// { name: 'AI', description: 'Gemini AI recommendations' },
+		{
+			name: 'Auth',
+			description:
+				'Authentication & identity management including login, registration, and session handling',
+		},
+		{
+			name: 'Users',
+			description:
+				'User account management including retrieval, updates, and administrative operations',
+		},
+		{
+			name: 'Profiles',
+			description:
+				'User profile management including personal details and onboarding state',
+		},
+		// {
+		//   name: 'Bags',
+		//   description:
+		//     'Bag management including creation, organization, and capacity tracking',
+		// },
+		{
+			name: 'Items',
+			description:
+				'Item management including CRUD operations, categorization, and inventory tracking',
+		},
+		{
+			name: 'Dashboard',
+			description:
+				'Aggregated dashboard overview combining profile state, item insights, and recent activity',
+		},
+		// {
+		//   name: 'Suitcases',
+		//   description:
+		//     'Suitcase management including packing configurations and travel preparation',
+		// },
+		// {
+		//   name: 'Weather',
+		//   description:
+		//     'Weather integration for travel context and environmental insights',
+		// },
+		// {
+		//   name: 'AI',
+		//   description:
+		//     'AI-powered recommendations for packing and travel optimization',
+		// },
 	],
 
 	components: {
