@@ -45,71 +45,170 @@ The current UI implements a structured admin dashboard — auth/OAuth session hy
 apps/web/
 │
 ├── src/
-│   ├── app/                           # Next.js App Router
-│   │   ├── (protected)/               # Authenticated route group
-│   │   │   ├── layout.tsx             # AuthGate + AppShell wrapper
-│   │   │   ├── users/
-│   │   │   │   ├── page.tsx           # /users
-│   │   │   │   └── [id]/page.tsx      # /users/[id]
-│   │   │   ├── items/page.tsx         # /items
-│   │   │   └── onboarding/page.tsx    # /onboarding
-│   │   ├── auth/callback/page.tsx     # OAuth callback landing
-│   │   ├── globals.css                # Design tokens + Tailwind v4 imports
-│   │   └── layout.tsx                 # Root layout
+│   ├── app/                                    # Next.js App Router
+│   │   ├── layout.tsx                          # Root layout — Redux Provider, ThemeProvider, Sonner Toaster
+│   │   ├── globals.css                         # Design tokens, Tailwind v4 imports, Sonner overrides
+│   │   ├── page.tsx                            # / landing page (public, no auth)
+│   │   ├── not-found.tsx                       # Global 404
+│   │   ├── global-error.tsx                    # Global error boundary (Next.js)
+│   │   ├── favicon.ico
+│   │   │
+│   │   ├── auth/
+│   │   │   └── callback/
+│   │   │       └── page.tsx                    # /auth/callback — OAuth redirect landing
+│   │   │
+│   │   ├── (public)/                           # No auth, minimal shell
+│   │   │   ├── layout.tsx                      # Public layout (logo, ThemeToggle only)
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx                    # /login
+│   │   │   └── signup/
+│   │   │       └── page.tsx                    # /signup
+│   │   │
+│   │   └── (protected)/                        # Auth boundary — AuthGate runs once here
+│   │       ├── layout.tsx                      # AuthGate only — no visual shell
+│   │       │
+│   │       ├── onboarding/                     # Isolated wizard flow — no AppShell
+│   │       │   ├── layout.tsx                  # Wizard shell (centered, step indicators)
+│   │       │   ├── page.tsx                    # /onboarding
+│   │       │   └── error.tsx
+│   │       │
+│   │       └── (dashboard)/                    # Full dashboard shell
+│   │           ├── layout.tsx                  # AppShell — Header + Sidebar
+│   │           ├── error.tsx
+│   │           ├── dashboard/
+│   │           │   └── page.tsx                # /dashboard — stats, recent items, nudge
+│   │           ├── users/
+│   │           │   ├── page.tsx                # /users
+│   │           │   ├── [id]/
+│   │           │   │   └── page.tsx            # /users/[id]
+│   │           │   └── error.tsx
+│   │           ├── items/
+│   │           │   ├── page.tsx                # /items
+│   │           │   ├── [id]/
+│   │           │   │   └── page.tsx            # /items/[id]
+│   │           │   └── error.tsx
+│   │           └── settings/
+│   │               └── profile/
+│   │                   └── page.tsx            # /settings/profile
 │   │
-│   ├── features/                      # Business features (self-contained)
-│   │   ├── auth/                      # Auth UX, session hydration, OAuth
-│   │   ├── profiles/                  # Profile editing, onboarding flow
-│   │   ├── users/                     # User management UI
-│   │   └── items/                     # Personal item library
+│   ├── features/                               # Business features — each fully self-contained
+│   │   ├── auth/                               # Auth UX, session hydration, OAuth callback
+│   │   ├── dashboard/                          # Dashboard overview, stats, recent items, nudge
+│   │   ├── items/                              # Personal item library — CRUD, filters, badges
+│   │   ├── profiles/                           # Profile editing, onboarding flow
+│   │   └── users/                             # User management — list, detail, roles
 │   │
 │   └── shared/
-│       ├── api/                       # Base fetch + RTK slice setup
-│       ├── components/ui/             # shadcn/ui primitives
-│       ├── layouts/                   # AppShell, Header, Sidebar
-│       ├── store/                     # Redux store, Provider, ability slice
-│       ├── guards/                    # ProtectedRoute, AuthGate
-│       ├── hooks/                     # useLogout, useListQuery
-│       ├── ui/                        # Shared reusable UI patterns
-│       │   ├── list/                  # ListPagination, ListMeta, ListFilters, etc.
-│       │   ├── filter/                # SearchInput, ToggleFilter, DateRangeFilter
-│       │   ├── chips/                 # Chips + Chip components
-│       │   ├── actions/               # ActionsMenu
-│       │   ├── grid/                  # DataGrid
-│       │   └── states/                # ErrorState, Forbidden, NotFoundState
-│       ├── mappers/                   # sort.mapper, filters.mapper
-│       ├── lib/                       # cn() utility
-│       ├── types/                     # Shared web types
-│       └── utils/                     # query.utils, error.utils, notify.utils
+│       ├── api/                                # Base fetch setup + RTK apiSlice
+│       ├── components/
+│       │   └── ui/                             # shadcn/ui primitives (never edit directly)
+│       ├── guards/                             # AuthGate, ProtectedRoute
+│       ├── hooks/                              # useLogout, useListQuery
+│       ├── layouts/                            # AppShell, Header, Sidebar, SidebarUI
+│       ├── lib/                                # cn() utility
+│       ├── store/                              # Redux store, Provider, hooks, ability slice
+│       ├── types/                              # Shared web-layer TypeScript types
+│       ├── ui/                                 # Shared reusable UI patterns
+│       │   ├── actions/                        # ActionsMenu
+│       │   ├── chips/                          # Chips + Chip
+│       │   ├── dialogs/                        # Shared dialog wrappers
+│       │   ├── error/                          # ticket.primitives, error boundary wrappers
+│       │   ├── fields/                         # Shared form field components
+│       │   ├── filter/                         # SearchInput, ToggleFilter, DateRangeFilter
+│       │   ├── grid/                           # DataGrid
+│       │   ├── list/                           # ListPagination, ListMeta, ListFilters, ListEmptyState, ListOrderBy
+│       │   ├── mappers/                        # ITEM_CATEGORY_OPTIONS, getEnumLabel, sort/filter mappers
+│       │   ├── states/                         # ErrorState, Forbidden, NotFoundState
+│       │   ├── theme/                          # ThemeToggle
+│       │   ├── toast/                          # Toaster mount point
+│       │   └── index.ts
+│       └── utils/                              # query.utils, error.utils, notify.utils
 │
-├── .storybook/                        # Storybook configuration
-├── tests/                             # Test setup files
-└── public/                            # Static assets
+├── .storybook/                                 # Storybook configuration
+├── tests/                                      # Vitest setup files
+└── public/                                     # Static assets
 ```
 
 ---
 
-## Feature Architecture
+## Route group layout chain
 
-Each feature is **fully self-contained**:
+Each route group adds one layout layer. The chain for any given URL is:
+
+```text
+/                    →  root layout only
+/login               →  root + (public) layout
+/onboarding          →  root + (protected) [AuthGate] + onboarding layout
+/dashboard           →  root + (protected) [AuthGate] + (dashboard) layout [AppShell]
+/dashboard/users     →  root + (protected) [AuthGate] + (dashboard) layout [AppShell]
+/auth/callback       →  root layout only  (outside all groups)
+```
+
+The key constraint: `(protected)/layout.tsx` runs `AuthGate` exactly once. Both `onboarding/` and `(dashboard)/` inherit it without repeating auth logic. `onboarding/` deliberately opts out of the `AppShell` — it is a focused wizard, not a dashboard page.
+
+---
+
+## Feature architecture
+
+Each feature is fully self-contained. No feature imports from another feature — only from `@shared/*` and `@beggy/shared`.
 
 ```text
 src/features/<feature>/
+├── api/
+│   └── <feature>.api.ts        # RTK Query endpoint injection + tag types
 ├── components/
-│   ├── list/          # List views (grid, filters, order-by, empty state)
-│   ├── details/       # Detail views (cards, metadata)
-│   ├── forms/         # Forms — always split into container + UI
-│   │   ├── <Name>Form.tsx         # Container: logic, submission, errors
-│   │   └── <Name>FormUI.tsx       # Presentational: pure UI, no side effects
-│   ├── actions/       # Action components (menus, dialogs)
-│   └── badges/        # Domain-specific badge components
-├── hooks/             # Feature hooks (useListQuery, useMutations, useActions)
-├── api/               # API client functions
-├── pages/             # Page-level components (consumed by app router)
-└── index.ts           # Named exports
+│   ├── list/                   # Grid, filters, order-by, empty state
+│   ├── details/                # Detail cards, metadata displays
+│   ├── forms/                  # Always split: <Name>Form.tsx (container) + <Name>FormUI.tsx (presenter)
+│   ├── actions/                # Action menus, confirm dialogs
+│   └── badges/                 # Domain-specific badge components (CVA-driven)
+├── hooks/
+│   ├── use<Feature>Actions.ts  # Mutation wrappers with onSuccess/onError callbacks (no notify)
+│   ├── use<Feature>Mutations.ts # Raw RTK Query mutation hooks, grouped by operation
+│   └── use<Feature>Overview.ts # Query hooks — unwrap SuccessResponse envelope here
+├── pages/
+│   └── <Feature>Page.tsx       # Page orchestrator — owns notify, wires actions to components
+├── store/                      # Feature-scoped Redux slices (if needed)
+└── index.ts                    # Named exports
 ```
 
 The container/presenter split (e.g., `CreateUserForm` + `CreateUserFormUI`) keeps logic testable and UI stories clean in Storybook.
+
+---
+
+### Container / presenter split
+
+Every form and every list section with side effects follows this pattern:
+
+```text
+<FeaturePage>             ← owns: useRouter, notify, mutation callbacks
+    └── <FeatureList>     ← pure props: onEdit, onDelete, onAdd — no hooks, Storybook-able
+            └── <FeatureCard>   ← pure props: item data + action callbacks
+```
+
+`notify` is always called in the page or container — never inside hooks. Hooks expose `onSuccess`/`onError` callback slots; the component decides what feedback to show.
+
+---
+
+## Shared layer conventions
+
+### `shared/ui/mappers/`
+
+Single source of truth for enum → UI metadata. Always use `ITEM_CATEGORY_OPTIONS` + `getEnumLabel()` — never a separate label map.
+
+### `shared/ui/states/`
+
+`ErrorState` takes `reset?: () => void` (Next.js error boundary pattern) and optional `error`, `title`, `description`, `suggestion` overrides. Never pass `onRetry` — the prop is `reset`.
+
+### `shared/utils/notify.utils.ts`
+
+`notify` is the only entry point for toasts. Call it in page components and container components — never inside hooks or API functions.
+
+```ts
+notify.success({ message: 'Item saved' });
+notify.error({ message: 'Save failed', suggestion: 'Try again.' });
+notify.error.fromHttp(err); // HttpClientError → auto-maps body.message + body.suggestion
+```
 
 ---
 

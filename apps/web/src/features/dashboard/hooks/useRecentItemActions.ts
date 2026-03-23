@@ -10,10 +10,14 @@ export interface UseRecentItemActionsResult {
 	isDeleting: boolean;
 }
 
+// ─── Route constants ───────────────────────────────────────────────────────────
+// All dashboard routes are prefixed with /dashboard — matches the
+// (protected)/(dashboard)/ route group in the App Router.
+
 const ROUTES = {
-	items: '/items',
-	itemDetail: (id: string) => `/items/${id}`,
-};
+	items: '/dashboard/items',
+	itemDetail: (id: string) => `/dashboard/items/${id}`,
+} as const;
 
 /**
  * @description
@@ -36,17 +40,18 @@ const useRecentItemActions = (): UseRecentItemActionsResult => {
 	}, [router]);
 
 	/**
-	 * Navigates to the item creation flow.
+	 * Navigates to the items page.
 	 *
 	 * @remarks
-	 * Currently routes to the items page; assumes creation is handled there.
+	 * Update to a dedicated /dashboard/items/new route once
+	 * the creation flow is moved to its own page.
 	 */
 	const onAddItem = useCallback(() => {
 		router.push(ROUTES.items);
 	}, [router]);
 
 	/**
-	 * Navigates to the item detail/edit page.
+	 * Navigates to the item detail / edit page.
 	 */
 	const onEdit = useCallback(
 		(id: string) => {
@@ -59,8 +64,8 @@ const useRecentItemActions = (): UseRecentItemActionsResult => {
 	 * Triggers item deletion.
 	 *
 	 * @remarks
-	 * - Delegates to {@link useItemActions.remove}.
-	 * - Error handling and user feedback must be handled by the caller.
+	 * Delegates to {@link useItemActions.remove}.
+	 * Error handling and user feedback are handled by the caller.
 	 */
 	const onDelete = useCallback((id: string) => remove(id), [remove]);
 
