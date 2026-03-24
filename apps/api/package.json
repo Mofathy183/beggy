@@ -105,7 +105,6 @@
 		"@casl/ability": "^6.7.5",
 		"@prisma/adapter-pg": "^7.4.2",
 		"@prisma/client": "^7.5.0",
-		"axios": "^1.13.6",
 		"bcryptjs": "^3.0.3",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.6",
