@@ -1,14 +1,10 @@
-<div align="center">
-
-# `@beggy/shared`
+# Beggy Shared Package
 
 **The single source of truth for types, Zod schemas, constants, and utilities across Beggy.**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Zod](https://img.shields.io/badge/Zod-4.3-3E67B1?style=flat-square)](https://zod.dev/)
 [![ESM](https://img.shields.io/badge/Module-ESM-F59E0B?style=flat-square)](https://nodejs.org/api/esm.html)
-
-</div>
 
 ---
 
@@ -38,12 +34,11 @@ import type { UserType, BagType } from '@beggy/shared/types';
 import { createUserSchema, UserType } from '@beggy/shared';
 ```
 
-| Export path | Contents |
-
-|---|---|
-| `@beggy/shared` | All exports (re-exported from index) |
-| `@beggy/shared/schemas` | Zod schemas |
-| `@beggy/shared/types` | TypeScript types |
+| Export path             | Contents                             |
+| ----------------------- | ------------------------------------ |
+| `@beggy/shared`         | All exports (re-exported from index) |
+| `@beggy/shared/schemas` | Zod schemas                          |
+| `@beggy/shared/types`   | TypeScript types                     |
 
 ---
 
@@ -264,9 +259,9 @@ export const createPackingListSchema = z.object({
 export type CreatePackingListDto = z.infer<typeof createPackingListSchema>;
 ```
 
-2. Create `src/types/packing-list.types.ts` for response types that don't come from schemas
+1. Create `src/types/packing-list.types.ts` for response types that don't come from schemas
 
-3. Export from the index files:
+2. Export from the index files:
 
 ```typescript
 // src/schemas/index.ts
@@ -276,23 +271,22 @@ export * from './packing-list.schema';
 export * from './packing-list.types';
 ```
 
-4. Run `pnpm build` to compile
+1. Run `pnpm build` to compile
 
-5. Both `@beggy/api` and `@beggy/web` can immediately import the new schema
+2. Both `@beggy/api` and `@beggy/web` can immediately import the new schema
 
 ---
 
 ## TypeScript Configuration
 
-| Setting | Value |
-
-|---|---|
-| `target` | ES2022 |
-| `module` | ESNext |
-| `moduleResolution` | Bundler |
-| `strict` | true |
-| `declaration` | true |
-| `composite` | true (incremental builds) |
+| Setting            | Value                     |
+| ------------------ | ------------------------- |
+| `target`           | ES2022                    |
+| `module`           | ESNext                    |
+| `moduleResolution` | Bundler                   |
+| `strict`           | true                      |
+| `declaration`      | true                      |
+| `composite`        | true (incremental builds) |
 
 ---
 
@@ -304,6 +298,6 @@ Never duplicate validation rules. If the API validates that a bag name must be b
 
 ---
 
-<div align="center">
-<sub>Part of the <a href="../../README.md">Beggy monorepo</a> · MIT License</sub>
-</div>
+**Shared core of the Beggy ecosystem** · API ↔ Web contract layer
+
+Part of the [Beggy monorepo](https://github.com/Mofathy183/Beggy-backend) · MIT License

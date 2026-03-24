@@ -1,15 +1,20 @@
-<div align="center">
+# Beggy Web
 
-# `@beggy/web`
+**Production-grade Next.js dashboard with a semantic design system.**
 
-**The Beggy frontend — a production-grade Next.js dashboard with a semantic design system.**
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+---
 
-</div>
+## Quick Links
+
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Running Locally](#running-locally)
 
 ---
 
@@ -23,19 +28,18 @@ The current UI implements a structured admin dashboard — auth/OAuth session hy
 
 ## Tech Stack
 
-| Category | Technology |
-
-|---|---|
-| **Framework** | Next.js 16 (App Router), React 19, React Compiler |
-| **Styling** | Tailwind CSS v4, shadcn/ui, Radix UI, Base UI |
-| **State** | Redux Toolkit, React Redux |
-| **Forms** | React Hook Form, Zod resolver, `@beggy/shared` schemas |
-| **Authorization** | CASL (`@casl/ability`, `@casl/react`) |
-| **Icons** | HugeIcons (`@hugeicons/react`, `@hugeicons/core-free-icons`) |
-| **Dark mode** | next-themes |
-| **Dates** | react-day-picker, date-fns |
-| **Notifications** | Sonner (via centralized `notify` utility) |
-| **Testing** | Vitest, React Testing Library, Storybook 10, Playwright |
+| Category          | Technology                                                   |
+| ----------------- | ------------------------------------------------------------ |
+| **Framework**     | Next.js 16 (App Router), React 19, React Compiler            |
+| **Styling**       | Tailwind CSS v4, shadcn/ui, Radix UI, Base UI                |
+| **State**         | Redux Toolkit, React Redux                                   |
+| **Forms**         | React Hook Form, Zod resolver, `@beggy/shared` schemas       |
+| **Authorization** | CASL (`@casl/ability`, `@casl/react`)                        |
+| **Icons**         | HugeIcons (`@hugeicons/react`, `@hugeicons/core-free-icons`) |
+| **Dark mode**     | next-themes                                                  |
+| **Dates**         | react-day-picker, date-fns                                   |
+| **Notifications** | Sonner (via centralized `notify` utility)                    |
+| **Testing**       | Vitest, React Testing Library, Storybook 10, Playwright      |
 
 ---
 
@@ -214,15 +218,14 @@ notify.error.fromHttp(err); // HttpClientError → auto-maps body.message + body
 
 ## Current Screens
 
-| Route | Description |
-
-|---|---|
-| `/` | Public landing page |
-| `/users` | Paginated user list with filters, sorting, actions |
-| `/users/[id]` | User detail — status, role, verification badges |
-| `/onboarding` | Post-login profile onboarding flow |
-| `/items` | Personal item library — CRUD, filters, sorting |
-| `/auth/callback` | OAuth redirect landing (session hydration) |
+| Route            | Description                                        |
+| ---------------- | -------------------------------------------------- |
+| `/`              | Public landing page                                |
+| `/users`         | Paginated user list with filters, sorting, actions |
+| `/users/[id]`    | User detail — status, role, verification badges    |
+| `/onboarding`    | Post-login profile onboarding flow                 |
+| `/items`         | Personal item library — CRUD, filters, sorting     |
+| `/auth/callback` | OAuth redirect landing (session hydration)         |
 
 ---
 
@@ -239,17 +242,16 @@ Beggy uses a **semantic token design system** built on Tailwind CSS v4. All colo
 
 ### Token categories
 
-| Category | Examples |
-
-|---|---|
-| **Surfaces** | `bg-background`, `bg-card`, `bg-muted`, `bg-popover` |
-| **Text** | `text-foreground`, `text-muted-foreground`, `text-card-foreground` |
-| **Brand** | `bg-primary`, `bg-secondary`, `bg-accent` |
-| **Semantic states** | `bg-success`, `bg-warning`, `bg-destructive` |
-| **Borders** | `border-border`, `border-input` |
-| **Focus** | `ring`, `outline-ring` |
-| **Sidebar** | `bg-sidebar`, `bg-sidebar-primary`, `bg-sidebar-accent` |
-| **Charts** | `var(--chart-1)` through `var(--chart-5)` |
+| Category            | Examples                                                           |
+| ------------------- | ------------------------------------------------------------------ |
+| **Surfaces**        | `bg-background`, `bg-card`, `bg-muted`, `bg-popover`               |
+| **Text**            | `text-foreground`, `text-muted-foreground`, `text-card-foreground` |
+| **Brand**           | `bg-primary`, `bg-secondary`, `bg-accent`                          |
+| **Semantic states** | `bg-success`, `bg-warning`, `bg-destructive`                       |
+| **Borders**         | `border-border`, `border-input`                                    |
+| **Focus**           | `ring`, `outline-ring`                                             |
+| **Sidebar**         | `bg-sidebar`, `bg-sidebar-primary`, `bg-sidebar-accent`            |
+| **Charts**          | `var(--chart-1)` through `var(--chart-5)`                          |
 
 ### shadcn/ui — always first
 
@@ -409,25 +411,23 @@ UsersPage
 
 ## Path Aliases
 
-| Alias | Resolves to |
-
-|---|---|
-| `@/*` | `src/*` |
-| `@shared/*` | `src/shared/*` |
-| `@features/*` | `src/features/*` |
-| `@shadcn-ui/*` | `src/shared/components/ui/*` |
-| `@shared-ui/*` | `src/shared/ui/*` |
-| `@shadcn-lib` | `src/shared/lib/utils.ts` |
-| `@beggy/shared` | `../../packages/shared/src` |
+| Alias           | Resolves to                  |
+| --------------- | ---------------------------- |
+| `@/*`           | `src/*`                      |
+| `@shared/*`     | `src/shared/*`               |
+| `@features/*`   | `src/features/*`             |
+| `@shadcn-ui/*`  | `src/shared/components/ui/*` |
+| `@shared-ui/*`  | `src/shared/ui/*`            |
+| `@shadcn-lib`   | `src/shared/lib/utils.ts`    |
+| `@beggy/shared` | `../../packages/shared/src`  |
 
 ---
 
 ## Environment Variables
 
-| Variable | Required | Description |
-
-|---|---|---|
-| `NEXT_PUBLIC_API_URL` | ✅ | Base URL of the Beggy API |
+| Variable              | Required | Description               |
+| --------------------- | -------- | ------------------------- |
+| `NEXT_PUBLIC_API_URL` | ✅       | Base URL of the Beggy API |
 
 Create `apps/web/.env.local`:
 
@@ -507,6 +507,6 @@ When building a new feature (e.g., bags), follow this checklist:
 
 ---
 
-<div align="center">
-<sub>Part of the <a href="../../README.md">Beggy monorepo</a> · MIT License</sub>
-</div>
+Production-grade frontend · UI architecture · Design system
+
+Part of the [Beggy monorepo](https://github.com/Mofathy183/Beggy-backend) · MIT License

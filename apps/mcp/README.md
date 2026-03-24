@@ -1,14 +1,10 @@
-<div align="center">
-
-# `@beggy/mcp`
+# Beggy MCP
 
 **The Beggy Model Context Protocol server — AI-assisted development tooling for the monorepo.**
 
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-1.24-6366F1?style=flat-square)](https://github.com/modelcontextprotocol/typescript-sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-≥18-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
-
-</div>
 
 ---
 
@@ -36,28 +32,26 @@ Beggy monorepo (file system, APIs, code gen)
 
 ## Capabilities
 
-| Tool | Description |
-
-|---|---|
-| TypeScript conversion | Convert JavaScript files to TypeScript automatically |
-| Component scaffolding | Generate new feature modules following Beggy conventions |
-| API testing | Run and inspect API endpoint tests programmatically |
-| Code generation | Scaffold boilerplate for new domains (service, controller, route, schema, types) |
+| Tool                  | Description                                                                      |
+| --------------------- | -------------------------------------------------------------------------------- |
+| TypeScript conversion | Convert JavaScript files to TypeScript automatically                             |
+| Component scaffolding | Generate new feature modules following Beggy conventions                         |
+| API testing           | Run and inspect API endpoint tests programmatically                              |
+| Code generation       | Scaffold boilerplate for new domains (service, controller, route, schema, types) |
 
 ---
 
 ## Tech Stack
 
-| Category | Technology |
-
-|---|---|
-| **Runtime** | Node.js ≥ 18, ESM |
-| **Protocol** | `@modelcontextprotocol/sdk` 1.24.3 |
-| **Compilation** | SWC (`@swc/cli`, `@swc/core`) |
-| **Dev mode** | `tsx` (watch mode) |
-| **HTTP** | `axios` 1.7 |
-| **Validation** | `zod` 4.1 |
-| **Shared** | `@beggy/shared` (workspace) |
+| Category        | Technology                         |
+| --------------- | ---------------------------------- |
+| **Runtime**     | Node.js ≥ 18, ESM                  |
+| **Protocol**    | `@modelcontextprotocol/sdk` 1.24.3 |
+| **Compilation** | SWC (`@swc/cli`, `@swc/core`)      |
+| **Dev mode**    | `tsx` (watch mode)                 |
+| **HTTP**        | `axios` 1.7                        |
+| **Validation**  | `zod` 4.1                          |
+| **Shared**      | `@beggy/shared` (workspace)        |
 
 ---
 
@@ -152,6 +146,6 @@ Create `apps/mcp/.env` as needed.
 
 ---
 
-<div align="center">
-<sub>Part of the <a href="../../README.md">Beggy monorepo</a> · MIT License</sub>
-</div>
+**Beggy MCP** — AI-assisted development tooling · Model Context Protocol server
+
+Part of the [Beggy monorepo](../../README.md) · MIT License

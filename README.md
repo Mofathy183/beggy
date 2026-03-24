@@ -61,31 +61,29 @@ beggy/
 └── docker-compose.dev.yml              Docker development setup
 ```
 
-| Package | Description | Docs |
-
-|---|---|---|
-| `@beggy/api` | Express 5 REST API — auth, users, bags, AI, weather | [apps/api/README.md](apps/api/README.md) |
-| `@beggy/web` | Next.js 16 frontend with full design system | [apps/web/README.md](apps/web/README.md) |
-| `@beggy/shared` | Single source of truth for types & schemas | [packages/shared/README.md](packages/shared/README.md) |
-| `@beggy/mcp` | Model Context Protocol dev tooling server | [apps/mcp/README.md](apps/mcp/README.md) |
+| Package         | Description                                         | Docs                                                   |
+| --------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| `@beggy/api`    | Express 5 REST API — auth, users, bags, AI, weather | [apps/api/README.md](apps/api/README.md)               |
+| `@beggy/web`    | Next.js 16 frontend with full design system         | [apps/web/README.md](apps/web/README.md)               |
+| `@beggy/shared` | Single source of truth for types & schemas          | [packages/shared/README.md](packages/shared/README.md) |
+| `@beggy/mcp`    | Model Context Protocol dev tooling server           | [apps/mcp/README.md](apps/mcp/README.md)               |
 
 ---
 
 ## Tech Stack at a Glance
 
-| Layer | Technology |
-
-|---|---|
-| **Monorepo** | Turborepo 2.6, pnpm workspaces |
-| **API** | Express 5, Prisma 7, PostgreSQL, SWC, Pino, Swagger |
-| **Auth** | JWT, Passport.js, Google OAuth, Facebook OAuth, CASL |
-| **Web** | Next.js 16, React 19, Tailwind CSS v4, shadcn/ui, Redux Toolkit |
-| **Validation** | Zod 4 (shared across API + Web) |
-| **AI** | Google Gemini API |
-| **Weather** | OpenWeather API |
-| **Email** | Resend |
-| **Testing** | Vitest, React Testing Library, Playwright, Storybook |
-| **Code Quality** | TypeScript 5.9 (strict), ESLint 9 flat config, Prettier |
+| Layer            | Technology                                                      |
+| ---------------- | --------------------------------------------------------------- |
+| **Monorepo**     | Turborepo 2.6, pnpm workspaces                                  |
+| **API**          | Express 5, Prisma 7, PostgreSQL, SWC, Pino, Swagger             |
+| **Auth**         | JWT, Passport.js, Google OAuth, Facebook OAuth, CASL            |
+| **Web**          | Next.js 16, React 19, Tailwind CSS v4, shadcn/ui, Redux Toolkit |
+| **Validation**   | Zod 4 (shared across API + Web)                                 |
+| **AI**           | Google Gemini API                                               |
+| **Weather**      | OpenWeather API                                                 |
+| **Email**        | Resend                                                          |
+| **Testing**      | Vitest, React Testing Library, Playwright, Storybook            |
+| **Code Quality** | TypeScript 5.9 (strict), ESLint 9 flat config, Prettier         |
 
 ---
 
@@ -166,12 +164,11 @@ pnpm prisma:generate
 pnpm dev
 ```
 
-| Service | URL |
-
-|---|---|
-| API | `http://localhost:4000` |
+| Service            | URL                          |
+| ------------------ | ---------------------------- |
+| API                | `http://localhost:4000`      |
 | API Docs (Swagger) | `http://localhost:4000/docs` |
-| Web | `http://localhost:3000` |
+| Web                | `http://localhost:3000`      |
 
 ---
 
@@ -243,33 +240,30 @@ Builds optimized production images for `api` and `web`. The `api` image uses mul
 
 ### Required for API
 
-| Variable | Description |
-
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_ACCESS_SECRET` | JWT access token signing secret |
+| Variable             | Description                      |
+| -------------------- | -------------------------------- |
+| `DATABASE_URL`       | PostgreSQL connection string     |
+| `JWT_ACCESS_SECRET`  | JWT access token signing secret  |
 | `JWT_REFRESH_SECRET` | JWT refresh token signing secret |
-| `SESSION_SECRET` | Express session secret |
-| `CSRF_SECRET_KEY` | CSRF protection secret |
+| `SESSION_SECRET`     | Express session secret           |
+| `CSRF_SECRET_KEY`    | CSRF protection secret           |
 
 ### Optional / Feature-specific
 
-| Variable | Description |
-
-|---|---|
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `FACEBOOK_CLIENT_ID` | Facebook OAuth app ID |
-| `FACEBOOK_CLIENT_SECRET` | Facebook OAuth app secret |
-| `AI_API_KEY` | Google Gemini AI API key |
-| `OPENWEATHER_API_KEY` | OpenWeather API key |
-| `RESEND_API_KEY` | Resend email service API key |
+| Variable                 | Description                  |
+| ------------------------ | ---------------------------- |
+| `GOOGLE_CLIENT_ID`       | Google OAuth client ID       |
+| `GOOGLE_CLIENT_SECRET`   | Google OAuth client secret   |
+| `FACEBOOK_CLIENT_ID`     | Facebook OAuth app ID        |
+| `FACEBOOK_CLIENT_SECRET` | Facebook OAuth app secret    |
+| `AI_API_KEY`             | Google Gemini AI API key     |
+| `OPENWEATHER_API_KEY`    | OpenWeather API key          |
+| `RESEND_API_KEY`         | Resend email service API key |
 
 ### Required for Web
 
-| Variable | Description |
-
-|---|---|
+| Variable              | Description                            |
+| --------------------- | -------------------------------------- |
 | `NEXT_PUBLIC_API_URL` | Base URL of the API (used client-side) |
 
 > **Never commit `.env` files.** Use `.env.example` as documentation only.
@@ -357,14 +351,13 @@ import { createUserSchema } from '@beggy/shared/schemas';
 
 ## Testing Strategy
 
-| Layer | Tool | Coverage |
-
-|---|---|---|
-| API unit tests | Vitest + Faker | Services, controllers, mappers |
-| API integration tests | Vitest + Supertest | Full HTTP request/response cycle |
-| Web component tests | Vitest + Testing Library | React components, hooks |
-| Web Storybook tests | Playwright (Chromium) | Browser-rendered stories + a11y |
-| Shared unit tests | Vitest | Utility functions, schemas |
+| Layer                 | Tool                     | Coverage                         |
+| --------------------- | ------------------------ | -------------------------------- |
+| API unit tests        | Vitest + Faker           | Services, controllers, mappers   |
+| API integration tests | Vitest + Supertest       | Full HTTP request/response cycle |
+| Web component tests   | Vitest + Testing Library | React components, hooks          |
+| Web Storybook tests   | Playwright (Chromium)    | Browser-rendered stories + a11y  |
+| Shared unit tests     | Vitest                   | Utility functions, schemas       |
 
 ```bash
 # Run all tests
@@ -407,6 +400,14 @@ The `deploy.sh` script at the repo root handles server-side deployment:
 
 ---
 
-<div align="center">
-    <sub>Built with TypeScript · Powered by Turborepo · Designed for travelers</sub>
-</div>
+<p align="center">
+  <sub>
+    Built with TypeScript · Powered by Turborepo · Designed for travelers
+  </sub>
+</p>
+
+<p align="center">
+  <sub>
+    Part of the <a href="https://github.com/Mofathy183/Beggy-backend">Beggy monorepo</a>
+  </sub>
+</p>

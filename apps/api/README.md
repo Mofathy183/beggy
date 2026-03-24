@@ -1,15 +1,11 @@
-<div align="center">
-
-# `@beggy/api`
+# Beggy API
 
 **The Beggy REST API — authentication, authorization, packing, AI & weather.**
 
-[![Express](https://img.shields.io/badge/Express-5.2-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-7.4-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-
-</div>
+[Express](https://expressjs.com/)
+[Prisma](https://www.prisma.io/)
+[PostgreSQL](https://www.postgresql.org/)
+[TypeScript](https://www.typescriptlang.org/)
 
 ---
 
@@ -24,20 +20,19 @@
 
 ## Tech Stack
 
-| Category | Technology |
-
-|---|---|
-| **Runtime** | Node.js ≥ 18, TypeScript (compiled with SWC) |
-| **Framework** | Express.js 5.2 |
-| **Database** | PostgreSQL via Prisma 7.4 ORM |
-| **Auth** | JWT (access + refresh), Passport.js, Google OAuth, Facebook OAuth |
-| **Authorization** | CASL 6.8 (Role-Based Access Control) |
-| **Validation** | Zod 4 (via `@beggy/shared`) |
-| **Security** | Helmet, csrf-csrf, express-rate-limit, express-xss-sanitizer, bcryptjs |
-| **Logging** | Pino 9.6 + pino-http + pino-pretty (dev) |
-| **API Docs** | swagger-jsdoc + swagger-ui-express |
-| **Email** | Resend 4.2 |
-| **HTTP Client** | axios 1.8 (weather + AI APIs) |
+| Category          | Technology                                                             |
+| ----------------- | ---------------------------------------------------------------------- |
+| **Runtime**       | Node.js ≥ 18, TypeScript (compiled with SWC)                           |
+| **Framework**     | Express.js 5.2                                                         |
+| **Database**      | PostgreSQL via Prisma 7.4 ORM                                          |
+| **Auth**          | JWT (access + refresh), Passport.js, Google OAuth, Facebook OAuth      |
+| **Authorization** | CASL 6.8 (Role-Based Access Control)                                   |
+| **Validation**    | Zod 4 (via `@beggy/shared`)                                            |
+| **Security**      | Helmet, csrf-csrf, express-rate-limit, express-xss-sanitizer, bcryptjs |
+| **Logging**       | Pino 9.6 + pino-http + pino-pretty (dev)                               |
+| **API Docs**      | swagger-jsdoc + swagger-ui-express                                     |
+| **Email**         | Resend 4.2                                                             |
+| **HTTP Client**   | axios 1.8 (weather + AI APIs)                                          |
 
 ---
 
@@ -127,13 +122,12 @@ export const createUserRouter = (controller: UserController) => {
 
 ### Mounted routes
 
-| Module | Base Path | Description |
-
-|---|---|---|
-| Auth | `/api/beggy/auth` | Signup, login, logout, refresh token, CSRF, OAuth |
-| Users | `/api/beggy/users` | User CRUD, role management |
-| Profiles | `/api/beggy/profiles` | Profile view & update |
-| Items | `/api/beggy/items` | CRUD for user-owned items |
+| Module   | Base Path             | Description                                       |
+| -------- | --------------------- | ------------------------------------------------- |
+| Auth     | `/api/beggy/auth`     | Signup, login, logout, refresh token, CSRF, OAuth |
+| Users    | `/api/beggy/users`    | User CRUD, role management                        |
+| Profiles | `/api/beggy/profiles` | Profile view & update                             |
+| Items    | `/api/beggy/items`    | CRUD for user-owned items                         |
 
 ### Auth endpoints
 
@@ -211,7 +205,7 @@ Permissions are modeled as: **Action + Subject + Scope**
 
 ```text
 Action:  CREATE | READ | UPDATE | DELETE | MANAGE
-Subject: BAG | ITEM | SUITCASE | USER | ROLE | PERMISSION
+Subject: BAG | ITEM | SUITCASE | USER | ROLE | PERMISSION | DASHBOARD | PROFILE
 Scope:   OWN | ANY
 ```
 
@@ -232,18 +226,17 @@ Managed by Prisma with multi-file models.
 
 ### Core models
 
-| Model | Description |
-
-|---|---|
-| `User` | Core user identity, role, status |
-| `Account` | OAuth accounts linked to a user |
-| `UserToken` | Email verification & password reset tokens |
-| `Profile` | User profile (bio, preferences, travel data) |
-| `Permission` | Fine-grained permission records |
-| `Bag` | Travel bag container |
-| `Item` | Packing item with physical attributes |
-| `Suitcase` | Suitcase container |
-| `Container` | Polymorphic container system |
+| Model           | Description                                   |
+| --------------- | --------------------------------------------- |
+| `User`          | Core user identity, role, status              |
+| `Account`       | OAuth accounts linked to a user               |
+| `UserToken`     | Email verification & password reset tokens    |
+| `Profile`       | User profile (bio, preferences, travel data)  |
+| `Permission`    | Fine-grained permission records               |
+| `Bag`           | Travel bag container                          |
+| `Item`          | Packing item with physical attributes         |
+| `Suitcase`      | Suitcase container                            |
+| `Container`     | Polymorphic container system                  |
 | `ContainerItem` | Container ↔ item junction with placement data |
 
 ### Prisma scripts
@@ -286,35 +279,34 @@ The API loads env from a file based on `NODE_ENV`:
 - `test` → `.env.test`
 - `production` → `.env.production`
 
-| Variable | Required | Description |
+| Variable                 | Required | Description                                  |
+| ------------------------ | -------- | -------------------------------------------- | ------ | ------------ |
+| `NODE_ENV`               | ✅       | `development`                                | `test` | `production` |
+| `PORT`                   | ✅       | API server listen port                       |
+| `DATABASE_URL`           | ✅       | PostgreSQL connection string                 |
+| `POSTGRES_USER`          | ✅       | DB username (used if `DATABASE_URL` not set) |
+| `POSTGRES_PASSWORD`      | ✅       | DB password                                  |
+| `POSTGRES_DB`            | ✅       | DB name                                      |
+| `DB_HOST`                | ✅       | DB host                                      |
+| `DB_PORT`                | ✅       | DB port                                      |
+| `JWT_ACCESS_SECRET`      | ✅       | Access token signing key                     |
+| `JWT_REFRESH_SECRET`     | ✅       | Refresh token signing key                    |
+| `JWT_ACCESS_EXPIRES_IN`  | ✅       | Access token TTL (e.g., `15m`)               |
+| `JWT_REFRESH_EXPIRES_IN` | ✅       | Refresh token TTL (e.g., `7d`)               |
+| `JWT_ACCESS_TOKEN_NAME`  | ✅       | Cookie name for access token                 |
+| `JWT_REFRESH_TOKEN_NAME` | ✅       | Cookie name for refresh token                |
+| `CSRF_SECRET_KEY`        | ✅       | CSRF protection key                          |
+| `CSRF_TOKEN_LENGTH`      | ⚙️       | CSRF token byte length (defaulted in code)   |
+| `CSRF_COOKIE_NAME`       | ⚙️       | CSRF cookie name (defaulted in code)         |
+| `GOOGLE_CLIENT_ID`       | ⚙️       | Google OAuth (optional)                      |
+| `GOOGLE_CLIENT_SECRET`   | ⚙️       | Google OAuth (optional)                      |
+| `FACEBOOK_CLIENT_ID`     | ⚙️       | Facebook OAuth (optional)                    |
+| `FACEBOOK_CLIENT_SECRET` | ⚙️       | Facebook OAuth (optional)                    |
+| `AI_API_KEY`             | ⚙️       | Google Gemini API key (optional)             |
+| `OPENWEATHER_API_KEY`    | ⚙️       | OpenWeather API key (optional)               |
+| `RESEND_API_KEY`         | ⚙️       | Resend email API key (optional)              |
 
-|---|---|---|
-| `NODE_ENV` | ✅ | `development` \| `test` \| `production` |
-| `PORT` | ✅ | API server listen port |
-| `DATABASE_URL` | ✅*| PostgreSQL connection string |
-| `POSTGRES_USER` | ✅* | DB username (used if `DATABASE_URL` not set) |
-| `POSTGRES_PASSWORD` | ✅*| DB password |
-| `POSTGRES_DB` | ✅* | DB name |
-| `DB_HOST` | ✅*| DB host |
-| `DB_PORT` | ✅* | DB port |
-| `JWT_ACCESS_SECRET` | ✅ | Access token signing key |
-| `JWT_REFRESH_SECRET` | ✅ | Refresh token signing key |
-| `JWT_ACCESS_EXPIRES_IN` | ✅ | Access token TTL (e.g., `15m`) |
-| `JWT_REFRESH_EXPIRES_IN` | ✅ | Refresh token TTL (e.g., `7d`) |
-| `JWT_ACCESS_TOKEN_NAME` | ✅ | Cookie name for access token |
-| `JWT_REFRESH_TOKEN_NAME` | ✅ | Cookie name for refresh token |
-| `CSRF_SECRET_KEY` | ✅ | CSRF protection key |
-| `CSRF_TOKEN_LENGTH` | ⚙️ | CSRF token byte length (defaulted in code) |
-| `CSRF_COOKIE_NAME` | ⚙️ | CSRF cookie name (defaulted in code) |
-| `GOOGLE_CLIENT_ID` | ⚙️ | Google OAuth (optional) |
-| `GOOGLE_CLIENT_SECRET` | ⚙️ | Google OAuth (optional) |
-| `FACEBOOK_CLIENT_ID` | ⚙️ | Facebook OAuth (optional) |
-| `FACEBOOK_CLIENT_SECRET` | ⚙️ | Facebook OAuth (optional) |
-| `AI_API_KEY` | ⚙️ | Google Gemini API key (optional) |
-| `OPENWEATHER_API_KEY` | ⚙️ | OpenWeather API key (optional) |
-| `RESEND_API_KEY` | ⚙️ | Resend email API key (optional) |
-
-> `*` — Provide either `DATABASE_URL` **or** the individual `POSTGRES_*` + `DB_*` variables.
+> `*` — Provide either `DATABASE_URL` **or** the individual `POSTGRES_`_ + `DB\__` variables.
 
 ---
 
@@ -380,18 +372,17 @@ pnpm prisma:test
 
 ## Path Aliases
 
-| Alias | Resolves to |
-
-|---|---|
-| `@/*` | `src/*` |
-| `@config` | `src/config/index.ts` |
-| `@shared` | `src/shared/index.ts` |
-| `@modules` | `src/modules/index.ts` |
-| `@emails` | `src/emails/index.ts` |
-| `@route` | `app.route.ts` |
-| `@prisma` | `prisma/` |
+| Alias                 | Resolves to                 |
+| --------------------- | --------------------------- |
+| `@/*`                 | `src/*`                     |
+| `@config`             | `src/config/index.ts`       |
+| `@shared`             | `src/shared/index.ts`       |
+| `@modules`            | `src/modules/index.ts`      |
+| `@emails`             | `src/emails/index.ts`       |
+| `@route`              | `app.route.ts`              |
+| `@prisma`             | `prisma/`                   |
 | `@prisma-generated/*` | `prisma/generated/prisma/*` |
-| `@beggy/shared` | `../../packages/shared/src` |
+| `@beggy/shared`       | `../../packages/shared/src` |
 
 ---
 
@@ -419,6 +410,6 @@ Follow the module pattern documented above. When adding a new domain:
 
 ---
 
-<div align="center">
-<sub>Part of the <a href="../../README.md">Beggy monorepo</a> · MIT License</sub>
-</div>
+**Beggy API** — Authentication · Authorization · Packing · AI · Weather
+
+Part of the [Beggy monorepo](../../README.md) · MIT License
