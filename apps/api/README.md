@@ -306,7 +306,7 @@ The API loads env from a file based on `NODE_ENV`:
 | `OPENWEATHER_API_KEY`    | ⚙️       | OpenWeather API key (optional)               |
 | `RESEND_API_KEY`         | ⚙️       | Resend email API key (optional)              |
 
-> `*` — Provide either `DATABASE_URL` **or** the individual `POSTGRES_`_ + `DB\__` variables.
+> `*` — Provide either `DATABASE_URL` **or** the individual `POSTGRES_`\_ + `DB\__` variables.
 
 ---
 
