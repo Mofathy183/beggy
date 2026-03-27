@@ -25,6 +25,8 @@ import {
 	ItemService,
 } from './src/modules/items';
 
+import { createBagRouter, BagController, BagService } from './src/modules/bags';
+
 import {
 	createDashboardRouter,
 	DashboardController,
@@ -37,6 +39,7 @@ enum ROUTES {
 	AUTH = '/auth',
 	ITEMS = '/items',
 	DASHBOARD = '/dashboard',
+	BAGS = '/bags',
 }
 
 /**
@@ -48,9 +51,9 @@ enum ROUTES {
  * (Express, Prisma) and application modules.
  *
  * @remarks
- * - All dependencies are instantiated here (composition root pattern)
- * - Each module is mounted under a dedicated route prefix
- * - This router should be mounted once in `app.ts`
+ * - Follows the composition root pattern
+ * - Instantiates services and controllers once
+ * - Mounts each domain under a dedicated route prefix
  *
  * @example
  * app.use('/api', rootRouter);
@@ -128,8 +131,8 @@ rootRouter.use(ROUTES.ITEMS, createItemRouter(itemController));
  * Aggregates cross-domain data for dashboard views.
  *
  * @remarks
- * Typically composes multiple domain queries into a single response
- * optimized for frontend consumption.
+ * Composes multiple domain queries into a single response optimized
+ * for frontend consumption.
  */
 const dashboardService = new DashboardService(prisma);
 const dashboardController = new DashboardController(dashboardService);
@@ -138,3 +141,22 @@ const dashboardController = new DashboardController(dashboardService);
  * @route /dashboard
  */
 rootRouter.use(ROUTES.DASHBOARD, createDashboardRouter(dashboardController));
+
+/* -------------------------------------------------------------------------- */
+/*                                Bags Module                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Bags represent user-owned travel containers with physical constraints.
+ *
+ * @remarks
+ * - Backed by a Container (1:1)
+ * - Includes computed packing status (metrics + state)
+ */
+const bagService = new BagService(prisma);
+const bagController = new BagController(bagService);
+
+/**
+ * @route /bags
+ */
+rootRouter.use(ROUTES.BAGS, createBagRouter(bagController));

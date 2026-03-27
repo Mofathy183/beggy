@@ -33,11 +33,11 @@ const swaggerDefinition: SwaggerDefinition = {
 			description:
 				'User profile management including personal details and onboarding state',
 		},
-		// {
-		//   name: 'Bags',
-		//   description:
-		//     'Bag management including creation, organization, and capacity tracking',
-		// },
+		{
+			name: 'Bags',
+			description:
+				'Bag management including creation, organization, and capacity tracking',
+		},
 		{
 			name: 'Items',
 			description:

@@ -1,0 +1,182 @@
+tags:
+  - name: Bags
+
+paths:
+  /bags:
+    get:
+      summary: Get user bags
+      description: Returns a paginated list of bags belonging to the authenticated user with filtering, ordering, and pagination support.
+      tags:
+        - Bags
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: pagination
+          required: false
+          schema:
+            $ref: "#/components/schemas/Pagination"
+
+        - in: query
+          name: filter
+          required: false
+          schema:
+            $ref: "#/components/schemas/BagFilter"
+
+        - in: query
+          name: order
+          required: false
+          schema:
+            $ref: "#/components/schemas/BagOrderBy"
+      responses:
+        "200":
+          description: Bags fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/BagListResponseData"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    post:
+      summary: Create a bag
+      description: Creates a new bag along with its backing container.
+      tags:
+        - Bags
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBagRequest"
+      responses:
+        "201":
+          description: Bag created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/BagSingleResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /bags/{id}:
+    get:
+      summary: Get bag by ID
+      description: Returns a single bag owned by the authenticated user.
+      tags:
+        - Bags
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      responses:
+        "200":
+          description: Bag fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/BagSingleResponseData"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    patch:
+      summary: Update bag
+      description: Partially updates a user-owned bag and its container constraints.
+      tags:
+        - Bags
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBagRequest"
+      responses:
+        "200":
+          description: Bag updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/BagSingleResponseData"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+    delete:
+      summary: Delete bag
+      description: Deletes a user-owned bag and its backing container.
+      tags:
+        - Bags
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      responses:
+        "204":
+          description: Bag deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
