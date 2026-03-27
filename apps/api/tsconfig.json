@@ -14,6 +14,8 @@
 			"@/*": ["src/*"],
 			"@prisma/*": ["prisma/*"],
 			"@prisma": ["prisma"],
+			"@app": ["./app.ts"],
+			"@tests": ["./tests/utils/index.ts"],
 			"@route": ["app.route.ts"],
 			"@doc": ["docs/swaggerDef.doc"],
 

@@ -355,18 +355,39 @@ pnpm test:watch
 # Integration tests only (requires test DB)
 pnpm test:integration
 
+# Integration tests — watch mode
+pnpm test:integration:watch
+
+# Apply pending migrations to the test database (run once before first integration run)
+pnpm test:integration:setup
+
+# Reset the test database (drops and re-applies all migrations)
+pnpm test:integration:reset
+
 # Coverage report
 pnpm test:coverage
 ```
 
 Tests use **Vitest** with **Supertest** for HTTP assertions and **Faker** for test data.
 
-Integration tests run against a dedicated `postgres_test` database. Ensure it is running:
+### Integration test database
+
+Integration tests run against a dedicated `postgres_test` database and load environment variables from `.env.test`. Ensure it is running before executing integration tests:
 
 ```bash
 docker compose -f docker-compose.dev.yml up postgres_test
-pnpm prisma:test
+pnpm test:integration:setup
 ```
+
+Each integration test suite calls `truncateAllTables()` in `beforeEach` to guarantee a clean slate. No data leaks between tests.
+
+### Test types
+
+| Type        | File pattern            | Runs against            |
+| ----------- | ----------------------- | ----------------------- |
+| Unit        | `*.test.ts`             | No DB, mocked deps      |
+| Route       | `*.routes.test.ts`      | No DB, mocked service   |
+| Integration | `*.integration.test.ts` | Real DB via `.env.test` |
 
 ---
 
