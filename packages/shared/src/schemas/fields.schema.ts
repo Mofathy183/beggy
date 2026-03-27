@@ -272,6 +272,8 @@ export const FieldsSchema = {
 	 *
 	 * @returns A Zod schema validating an array of elements
 	 */
-	array: (elementSchema: z.ZodTypeAny, isRequired: boolean = true) =>
-		createArrayField(elementSchema, isRequired),
+	array: <T extends z.ZodTypeAny>(
+		elementSchema: T,
+		isRequired: boolean = true
+	) => createArrayField(elementSchema, isRequired),
 };

@@ -57,7 +57,6 @@ export enum Material {
  * - `NONE` should be treated as a UX/default state, not combined with others
  */
 export enum BagFeature {
-	NONE = 'NONE',
 	WATERPROOF = 'WATERPROOF',
 	PADDED_LAPTOP_COMPARTMENT = 'PADDED_LAPTOP_COMPARTMENT',
 	USB_PORT = 'USB_PORT',
@@ -68,6 +67,7 @@ export enum BagFeature {
 	REINFORCED_STRAPS = 'REINFORCED_STRAPS',
 	TROLLEY_SLEEVE = 'TROLLEY_SLEEVE',
 	HIDDEN_POCKET = 'HIDDEN_POCKET',
+	RFID_BLOCKING = 'RFID_BLOCKING',
 }
 
 /**

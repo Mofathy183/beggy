@@ -72,7 +72,7 @@ export interface BagDTO {
 	 * - Represents the bag's own weight without contents
 	 * - Used when calculating total and remaining capacity
 	 */
-	bagWeight: number;
+	emptyWeight: number;
 
 	/**
 	 * Bag material.
@@ -134,6 +134,7 @@ export type CreateBagInput = Override<
 		size: Size;
 		maxCapacity: number;
 		maxWeight: number;
+		features?: BagFeature[];
 	}
 >;
 export type UpdateBagInput = z.infer<typeof BagSchema.update>;

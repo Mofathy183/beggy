@@ -16,7 +16,7 @@ type BagFactoryOverrides = Partial<
 		| 'size'
 		| 'maxCapacity'
 		| 'maxWeight'
-		| 'bagWeight'
+		| 'emptyWeight'
 		| 'material'
 		| 'features'
 	>
@@ -85,8 +85,8 @@ export const bagFactory = (
 		overrides.maxWeight ??
 		faker.number.float({ min: 5, max: 32, fractionDigits: 2 }),
 
-	bagWeight:
-		overrides.bagWeight ??
+	emptyWeight:
+		overrides.emptyWeight ??
 		faker.number.float({ min: 1, max: 5, fractionDigits: 2 }),
 
 	color:

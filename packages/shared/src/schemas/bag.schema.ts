@@ -45,6 +45,16 @@ export const BagSchema = {
 		/** Maximum safe weight the bag can carry */
 		maxWeight: FieldsSchema.number('bag', 'weight'),
 
+		/**
+		 * Optional empty bag weight in kilograms.
+		 *
+		 * @remarks
+		 * - Used when calculating total carried weight
+		 * - Defaults to 0 if the user doesn't know it
+		 * - Can be updated later via PATCH
+		 */
+		emptyWeight: FieldsSchema.number('bag', 'weight', false).default(0),
+
 		/** Optional bag material */
 		material: FieldsSchema.enum<typeof Material>(Material, false),
 
@@ -87,6 +97,16 @@ export const BagSchema = {
 
 		/** Updated maximum weight limit */
 		maxWeight: FieldsSchema.number('bag', 'weight', false),
+
+		/**
+		 * Optional empty bag weight in kilograms.
+		 *
+		 * @remarks
+		 * - Used when calculating total carried weight
+		 * - Defaults to 0 if the user doesn't know it
+		 * - Can be updated later via PATCH
+		 */
+		emptyWeight: FieldsSchema.number('bag', 'weight', false).default(0),
 
 		/** Updated bag material */
 		material: FieldsSchema.enum<typeof Material>(Material, false),
