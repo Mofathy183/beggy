@@ -152,8 +152,8 @@ export const createNumberField = <M extends NumericEntity>(
  *
  * @returns A Zod array schema with appropriate validation rules applied
  */
-export const createArrayField = (
-	elementSchema: z.ZodTypeAny,
+export const createArrayField = <T extends z.ZodTypeAny>(
+	elementSchema: T,
 	isRequired: boolean = true
 ) => {
 	/**

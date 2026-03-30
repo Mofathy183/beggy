@@ -283,6 +283,7 @@ export const QuerySchema = {
 	 */
 	bagFilter: z
 		.strictObject({
+			name: FieldsSchema.name('Bag Name', 'product', false),
 			type: FieldsSchema.enum(BagType, false),
 			size: FieldsSchema.enum(Size, false),
 			material: FieldsSchema.enum(Material, false),

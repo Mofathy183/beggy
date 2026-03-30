@@ -30,7 +30,7 @@ model Container {
     /// Weight of the empty container itself.
     ///
     /// Used when calculating total carried weight.
-    emptyWeight Float
+    emptyWeight Float @default(0)
 
     /// Optional owner of the container.
     ///

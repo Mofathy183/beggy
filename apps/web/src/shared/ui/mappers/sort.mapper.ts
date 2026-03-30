@@ -5,6 +5,7 @@ import {
 	UserOrderByField,
 	ProfileOrderByField,
 	ItemOrderByField,
+	BagOrderByField,
 } from '@beggy/shared/constants';
 
 type SortValue<E extends string> = {
@@ -113,5 +114,56 @@ export const ITEM_SORT_OPTIONS: UiOrderByOption<ItemOrderByField>[] = [
 			direction: OrderDirection.ASC,
 		},
 		label: 'Weight',
+	},
+];
+
+/**
+ * Bag-specific sort options (name, maxWeight, maxCapacity).
+ *
+ * @remarks
+ * These supplement the base createdAt/updatedAt options composed below.
+ */
+export const BAG_SORT_OPTIONS: UiOrderByOption<BagOrderByField>[] = [
+	{
+		value: {
+			orderBy: BagOrderByField.NAME,
+			direction: OrderDirection.ASC,
+		},
+		label: 'Name A–Z',
+	},
+	{
+		value: {
+			orderBy: BagOrderByField.NAME,
+			direction: OrderDirection.DESC,
+		},
+		label: 'Name Z–A',
+	},
+	{
+		value: {
+			orderBy: BagOrderByField.MAX_WEIGHT,
+			direction: OrderDirection.ASC,
+		},
+		label: 'Lightest first',
+	},
+	{
+		value: {
+			orderBy: BagOrderByField.MAX_WEIGHT,
+			direction: OrderDirection.DESC,
+		},
+		label: 'Heaviest first',
+	},
+	{
+		value: {
+			orderBy: BagOrderByField.MAX_CAPACITY,
+			direction: OrderDirection.ASC,
+		},
+		label: 'Smallest capacity',
+	},
+	{
+		value: {
+			orderBy: BagOrderByField.MAX_CAPACITY,
+			direction: OrderDirection.DESC,
+		},
+		label: 'Largest capacity',
 	},
 ];

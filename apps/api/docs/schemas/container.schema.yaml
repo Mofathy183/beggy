@@ -1,0 +1,125 @@
+components:
+  schemas:
+    ContainerItem:
+      type: object
+      additionalProperties: false
+      required:
+        - quantity
+        - item
+      properties:
+        quantity:
+          type: number
+        item:
+          type: object
+          additionalProperties: false
+          required:
+            - weight
+            - weightUnit
+            - volume
+            - volumeUnit
+          properties:
+            weight:
+              type: number
+            weightUnit:
+              $ref: "#/components/schemas/WeightUnit"
+            volume:
+              type: number
+            volumeUnit:
+              $ref: "#/components/schemas/VolumeUnit"
+
+    ContainerStatusResult:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - reasons
+      properties:
+        status:
+          $ref: "#/components/schemas/ContainerStatus"
+        reasons:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContainerStatusReason"
+
+    ContainerStatusParams:
+      type: object
+      additionalProperties: false
+      required:
+        - isOverweight
+        - isOverCapacity
+        - isWeightNearLimit
+        - isCapacityNearLimit
+        - itemCount
+      properties:
+        isOverweight:
+          type: boolean
+        isOverCapacity:
+          type: boolean
+        isWeightNearLimit:
+          type: boolean
+        isCapacityNearLimit:
+          type: boolean
+        itemCount:
+          type: number
+
+    ContainerMetrics:
+      type: object
+      additionalProperties: false
+      required:
+        - currentWeight
+        - currentCapacity
+        - remainingWeight
+        - remainingCapacity
+        - weightPercentage
+        - capacityPercentage
+        - itemCount
+      properties:
+        currentWeight:
+          type: number
+        currentCapacity:
+          type: number
+        remainingWeight:
+          type: number
+        remainingCapacity:
+          type: number
+        weightPercentage:
+          type: number
+        capacityPercentage:
+          type: number
+        itemCount:
+          type: number
+
+    ContainerState:
+      type: object
+      additionalProperties: false
+      required:
+        - isOverweight
+        - isOverCapacity
+        - isFull
+        - status
+        - reasons
+      properties:
+        isOverweight:
+          type: boolean
+        isOverCapacity:
+          type: boolean
+        isFull:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/ContainerStatus"
+        reasons:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContainerStatusReason"
+
+    ContainerStatusDTO:
+      type: object
+      additionalProperties: false
+      required:
+        - metrics
+        - state
+      properties:
+        metrics:
+          $ref: "#/components/schemas/ContainerMetrics"
+        state:
+          $ref: "#/components/schemas/ContainerState"

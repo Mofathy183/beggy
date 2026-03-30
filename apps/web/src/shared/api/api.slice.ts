@@ -17,6 +17,7 @@ export const TagTypes = {
 	PROFILE: 'Profile',
 	DASHBOARD: 'Dashboard',
 	ITEM: 'Item',
+	BAG: 'BAG',
 } as const;
 
 /**

@@ -93,7 +93,6 @@ components:
       type: string
       description: Optional functional or structural features of a bag.
       enum:
-        - NONE
         - WATERPROOF
         - PADDED_LAPTOP_COMPARTMENT
         - USB_PORT
@@ -229,3 +228,21 @@ components:
         - updatedAt
         - email
         - role
+
+    ContainerStatus:
+      type: string
+      enum:
+        - ok
+        - full
+        - empty
+        - overweight
+        - over_capacity
+
+    ContainerStatusReason:
+      type: string
+      enum:
+        - weight_over_limit
+        - weight_near_limit
+        - capacity_over_limit
+        - capacity_near_limit
+        - empty

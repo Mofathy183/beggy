@@ -1,0 +1,114 @@
+components:
+  schemas:
+    Bag:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/BagType"
+        color:
+          type: string
+          nullable: true
+        size:
+          $ref: "#/components/schemas/Size"
+        maxCapacity:
+          type: number
+        maxWeight:
+          type: number
+        bagWeight:
+          type: number
+        material:
+          allOf:
+            - $ref: "#/components/schemas/Material"
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/BagFeature"
+        status:
+          $ref: "#/components/schemas/ContainerStatusDTO"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+
+    CreateBagRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - type
+        - size
+        - maxCapacity
+        - maxWeight
+      properties:
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/BagType"
+        color:
+          type: string
+          default: black
+        size:
+          $ref: "#/components/schemas/Size"
+        maxCapacity:
+          type: number
+        maxWeight:
+          type: number
+        emptyWeight:
+          type: number
+          default: 0
+        material:
+          allOf:
+            - $ref: "#/components/schemas/Material"
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/BagFeature"
+
+    UpdateBagRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/BagType"
+        color:
+          type: string
+        size:
+          $ref: "#/components/schemas/Size"
+        maxCapacity:
+          type: number
+        maxWeight:
+          type: number
+        emptyWeight:
+          type: number
+        material:
+          allOf:
+            - $ref: "#/components/schemas/Material"
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/BagFeature"
+
+    BagListResponseData:
+      type: array
+      items:
+        $ref: "#/components/schemas/Bag"
+
+    BagSingleResponseData:
+      $ref: "#/components/schemas/Bag"

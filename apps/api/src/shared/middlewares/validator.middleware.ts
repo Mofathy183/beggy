@@ -51,9 +51,8 @@ export const validateRequest =
 			 * - Express typings are structural and intentionally loose
 			 */
 			if (schema.query) {
-				req.query = (await schema.query.parseAsync(
-					req.query
-				)) as typeof req.query;
+				const parsedQuery = await schema.query.parseAsync(req.query);
+				Object.assign(req.query, parsedQuery);
 			}
 
 			/**

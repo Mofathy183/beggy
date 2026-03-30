@@ -54,7 +54,10 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:integration": "pnpm prisma:test && vitest run",
+		"test:integration": "dotenv -e .env.test -- vitest run",
+		"test:integration:watch": "dotenv -e .env.test -- vitest",
+		"test:integration:setup": "dotenv -e .env.test -- prisma migrate deploy",
+		"test:integration:reset": "dotenv -e .env.test -- prisma migrate reset",
 		"test:coverage": "vitest run --coverage",
 		"build": "swc src -d dist/src --config-file .swcrc && swc server.ts app.ts -d dist --config-file .swcrc",
 		"build:watch": "swc src -d dist --config-file .swcrc --watch",
@@ -71,8 +74,7 @@
 		"prisma:deploy": "pnpm prisma migrate deploy",
 		"prisma:reset": "pnpm prisma migrate reset",
 		"prisma:studio": "pnpm prisma studio",
-		"prisma:seed": "tsx prisma/prisma.seed.ts",
-		"prisma:test": "dotenv -e .env.test -- pnpm prisma migrate deploy"
+		"prisma:seed": "tsx prisma/prisma.seed.ts"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^9.9.0",

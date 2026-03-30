@@ -1,5 +1,3 @@
-import type { PrismaClientType } from '@prisma';
-
 // ============================================================================
 // USER STATUS & DISPLAY HELPERS
 // ============================================================================
@@ -37,28 +35,4 @@ export function getAge(
 	}
 
 	return age;
-}
-
-/**
- * Completely resets the test database.
- *
- * IMPORTANT:
- * - Must be called before each integration test
- * - Order matters due to foreign key constraints
- * - Uses deleteMany (NOT truncate) for Prisma safety
- */
-export async function truncateAllTables(
-	prisma: PrismaClientType
-): Promise<void> {
-	// Leaf tables (depend on User)
-	await prisma.item.deleteMany();
-	await prisma.bag.deleteMany();
-	await prisma.suitcase.deleteMany();
-
-	// 1:1 relations
-	await prisma.account.deleteMany();
-	await prisma.profile.deleteMany();
-
-	// Root table
-	await prisma.user.deleteMany();
 }
