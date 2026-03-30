@@ -9,22 +9,23 @@ import { ChipList } from '@shared/ui/chips';
 export interface BagFeatureChipsProps {
 	/**
 	 * Array of BagFeature values from BagDTO.
-	 * Renders nothing when empty or undefined.
+	 * Renders nothing when empty or undefined — no placeholder rendered.
 	 */
 	features: BagFeature[] | null | undefined;
 
 	/**
 	 * Maximum number of feature chips to display before collapsing.
-	 * Remaining count is shown as a "+N more" overflow chip.
+	 * Remaining count shown as "+N more" overflow chip.
+	 * Pass `Infinity` to show all (detail page).
 	 *
 	 * @defaultValue 3
 	 */
 	maxVisible?: number;
 
 	/**
-	 * Controls label display mode:
-	 * - `short` (default): shortLabel ("Laptop slot", "USB port") — card context
-	 * - `full`: full label ("Padded laptop compartment") — detail page
+	 * Controls label verbosity:
+	 * - `'short'` — shortLabel with fallback to label. For cards and compact rows.
+	 * - `'full'`  — always uses label. For detail pages and popovers.
 	 *
 	 * @defaultValue 'short'
 	 */
@@ -38,25 +39,28 @@ export interface BagFeatureChipsProps {
 /**
  * BagFeatureChips
  *
+ * @description
  * Read-only display of BagFeature[] as a collection of Chip components.
+ * Delegates entirely to ChipList — this component is a thin domain adapter.
  *
- * Design decision: features are ALWAYS chips, NEVER badges.
+ * @remarks
+ * Design decision: features are ALWAYS chips, never badges.
  * They represent a multi-value collection, not a single semantic state.
- * (See decision matrix: BagFeature → Chips read-only only, no Badge.)
  *
- * Uses the existing Chip primitive in read-only mode:
- * - `selected={true}` applies the active visual style
- * - No `onClick` — no hover affordance needed (pointer-events handled at chip level)
- * - No `onRemove` — display only
+ * ChipList handles:
+ * - Read-only contract (pointer-events-none, cursor-default)
+ * - maxVisible + "+N more" overflow chip
+ * - Unknown enum value filtering (future-proof)
+ * - Accessible role="list" + aria-label group
  *
- * `maxVisible` prevents card layout overflow — default 3 chips + "+N more".
- * The overflow chip uses the same secondary styling to keep visual weight consistent.
+ * Variant is `'default'` — features are identity metadata, not warnings.
+ * (The original used `'destructive'` which implied an error state.)
  *
  * @example
- * // Card context — short labels, max 3
+ * // Card — short labels, max 3 chips + overflow
  * <BagFeatureChips features={bag.features} />
  *
- * // Detail page — full labels, show all
+ * // Detail page — full labels, all chips visible
  * <BagFeatureChips features={bag.features} display="full" maxVisible={Infinity} />
  */
 const BagFeatureChips = ({
@@ -65,7 +69,6 @@ const BagFeatureChips = ({
 	display = 'short',
 	className,
 }: BagFeatureChipsProps) => {
-	// ── Null / empty guard — renders nothing, no empty state placeholder ─────
 	if (!features || features.length === 0) return null;
 
 	return (
@@ -73,9 +76,9 @@ const BagFeatureChips = ({
 			values={features}
 			options={BAG_FEATURE_OPTIONS}
 			display={display}
-			variant="destructive"
+			variant="accent"
 			maxVisible={maxVisible}
-			groupLabel="Status reasons"
+			groupLabel="Bag features"
 			className={className}
 		/>
 	);
