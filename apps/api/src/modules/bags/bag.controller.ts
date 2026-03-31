@@ -3,7 +3,6 @@ import { type BagService, BagMapper } from '@modules/bags';
 import type { BagDTO, BagOrderByInput } from '@beggy/shared/types';
 import { apiResponseMap } from '@shared/utils';
 import { BaseController } from '@shared/core';
-import { logger } from '@shared/middlewares';
 import type { PaginationPayload } from '@shared/types';
 import { STATUS_CODE } from '@shared/constants';
 
@@ -21,12 +20,10 @@ import { STATUS_CODE } from '@shared/constants';
  */
 export class BagController extends BaseController {
 	constructor(private readonly bagService: BagService) {
-		super(
-			logger.child({
-				domain: 'bags',
-				controller: 'BagController',
-			})
-		);
+		super({
+			domain: 'bags',
+			controller: 'BagController',
+		});
 	}
 
 	/**
@@ -48,11 +45,7 @@ export class BagController extends BaseController {
 			orderBy as BagOrderByInput
 		);
 
-		const data = BagMapper.toDTOList(bags);
-
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<BagDTO[]>(data, 'BAGS_FETCHED', meta)
-		);
+		this.ok<BagDTO[]>(res, BagMapper.toDTOList(bags), 'BAGS_FETCHED', meta);
 	};
 
 	/**
@@ -63,10 +56,8 @@ export class BagController extends BaseController {
 	 * @throws If authentication context is missing or bag is not found/accessible
 	 */
 	getBagById = async (req: Request, res: Response): Promise<void> => {
-		const { id } = req.params;
-
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const userId = this.getUserId(req);
+		const id = this.getParam(req);
 
 		const bag = await this.bagService.getBagById(userId, id as string);
 
@@ -86,16 +77,11 @@ export class BagController extends BaseController {
 	 * @throws If authentication context is missing
 	 */
 	createBag = async (req: Request, res: Response): Promise<void> => {
-		const { body } = req;
+		const userId = this.getUserId(req);
 
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const bag = await this.bagService.createBag(userId, req.body);
 
-		const bag = await this.bagService.createBag(userId, body);
-
-		res.status(STATUS_CODE.CREATED).json(
-			apiResponseMap.created<BagDTO>(BagMapper.toDTO(bag), 'BAG_CREATED')
-		);
+		this.created<BagDTO>(res, BagMapper.toDTO(bag), 'BAG_CREATED');
 	};
 
 	/**
@@ -106,26 +92,16 @@ export class BagController extends BaseController {
 	 * @throws If authentication context is missing or update fails
 	 */
 	updateBag = async (req: Request, res: Response): Promise<void> => {
-		const {
-			body,
-			params: { id },
-		} = req;
-
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const userId = this.getUserId(req);
+		const id = this.getParam(req);
 
 		const updatedBag = await this.bagService.updateBag(
 			userId,
-			id as string,
-			body
+			id,
+			req.body
 		);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<BagDTO>(
-				BagMapper.toDTO(updatedBag),
-				'BAG_UPDATED'
-			)
-		);
+		this.ok<BagDTO>(res, BagMapper.toDTO(updatedBag), 'BAG_UPDATED');
 	};
 
 	/**
@@ -139,13 +115,11 @@ export class BagController extends BaseController {
 	 * @throws If authentication context is missing or deletion fails
 	 */
 	deleteBagById = async (req: Request, res: Response): Promise<void> => {
-		const { id } = req.params;
+		const userId = this.getUserId(req);
+		const id = this.getParam(req);
 
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		await this.bagService.deleteBagById(userId, id);
 
-		await this.bagService.deleteBagById(userId, id as string);
-
-		res.sendStatus(STATUS_CODE.NO_CONTENT);
+		this.noContent(res);
 	};
 }

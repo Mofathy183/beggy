@@ -138,8 +138,6 @@ describe('Users API', () => {
 			// Act
 			const response = await request(app).get('/users');
 
-			console.log(response.error);
-
 			// Assert
 			expect(response.status).toBe(STATUS_CODE.OK);
 

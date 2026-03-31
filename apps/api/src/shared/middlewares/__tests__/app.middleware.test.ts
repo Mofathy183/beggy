@@ -54,7 +54,7 @@ describe('routeNotFoundHandler', () => {
 
 	it('returns a not-found error', () => {
 		// Act
-		routeNotFoundHandler(req as Request, res as Response, next);
+		routeNotFoundHandler(req as Request, res as Response);
 
 		// Assert
 		expect(res.status).toHaveBeenCalledWith(STATUS_CODE.NOT_FOUND);
@@ -69,7 +69,7 @@ describe('routeNotFoundHandler', () => {
 
 	it('includes request path and method in the error', () => {
 		// Act
-		routeNotFoundHandler(req as Request, res as Response, next);
+		routeNotFoundHandler(req as Request, res as Response);
 
 		// Assert
 		expect(res.json).toHaveBeenCalledWith(

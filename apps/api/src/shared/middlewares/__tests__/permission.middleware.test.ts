@@ -9,17 +9,9 @@ const mockAbility = (canDo: boolean) => ({
 	cannot: vi.fn().mockReturnValue(!canDo),
 });
 
-const mockLogger = () => ({
-	warn: vi.fn(),
-	error: vi.fn(),
-	info: vi.fn(),
-	debug: vi.fn(),
-});
-
 const mockReq = (ability?: any) =>
 	({
 		ability,
-		log: mockLogger(),
 		user: { id: 'user-1' },
 	}) as any;
 

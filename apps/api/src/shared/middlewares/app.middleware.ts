@@ -246,7 +246,7 @@ export const routeNotFoundHandler = (req: Request, res: Response) => {
 	};
 
 	// Log for observability (can be replaced with structured logger)
-	console.warn('404 Route Not Found:', errorDetails);
+	logger.warn(errorDetails, '404 Route Not Found:');
 
 	return res
 		.status(STATUS_CODE.NOT_FOUND)

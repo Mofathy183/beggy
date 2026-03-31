@@ -7,10 +7,10 @@ import type {
 	ProfileDTO,
 } from '@beggy/shared/types';
 import { apiResponseMap } from '@shared/utils';
-import type { PaginationPayload } from '@shared/types';
+import { BaseController } from '@shared/core';
 import { STATUS_CODE } from '@shared/constants';
 
-export class UserController {
+export class UserController extends BaseController {
 	/**
 	 * User controller layer.
 	 *
@@ -25,7 +25,9 @@ export class UserController {
 	 * - Business rules, validation, and error handling
 	 *   are delegated to services and middleware
 	 */
-	constructor(private readonly userService: UserService) {}
+	constructor(private readonly userService: UserService) {
+		super({ domain: 'users', controller: 'UserService' });
+	}
 
 	/**
 	 * GET /users
@@ -38,23 +40,17 @@ export class UserController {
 	 * - Returns pagination metadata for client-side navigation
 	 */
 	getUsers = async (req: Request, res: Response): Promise<void> => {
-		const { pagination, orderBy, query: filter } = req;
-
 		const { users, meta } = await this.userService.listUsers(
-			pagination as PaginationPayload,
-			filter,
-			orderBy as UserOrderByInput
+			this.getPagination(req),
+			req.query,
+			this.getOrderBy<UserOrderByInput>(req)
 		);
 
-		//* Map domain models to transport-safe DTOs
-		const usersResponse = users.map((user) => UserMapper.toAdminDTO(user));
-
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<AdminUserDTO[]>(
-				usersResponse,
-				'USERS_FETCHED',
-				meta
-			)
+		this.ok<AdminUserDTO[]>(
+			res,
+			UserMapper.toAdminDTOList(users),
+			'USERS_FETCHED',
+			meta
 		);
 	};
 
@@ -68,9 +64,9 @@ export class UserController {
 	 * - Accessible only to authorized administrative roles
 	 */
 	getUserById = async (req: Request, res: Response): Promise<void> => {
-		const { id } = req.params;
+		const id = this.getParam(req);
 
-		const user = await this.userService.getById(id as string);
+		const user = await this.userService.getById(id);
 
 		res.status(STATUS_CODE.OK).json(
 			apiResponseMap.ok<AdminUserDTO>(
@@ -90,15 +86,12 @@ export class UserController {
 	 * - Returns the newly created user for immediate client use
 	 */
 	createUser = async (req: Request, res: Response): Promise<void> => {
-		const { body } = req;
+		const newUser = await this.userService.createUser(req.body);
 
-		const newUser = await this.userService.createUser(body);
-
-		res.status(STATUS_CODE.CREATED).json(
-			apiResponseMap.created<AdminUserDTO>(
-				UserMapper.toAdminDTO(newUser),
-				'USER_CREATED'
-			)
+		this.created<AdminUserDTO>(
+			res,
+			UserMapper.toAdminDTO(newUser),
+			'USER_CREATED'
 		);
 	};
 
@@ -113,21 +106,14 @@ export class UserController {
 	 * - Does NOT affect authentication, role, or status
 	 */
 	updateUserProfile = async (req: Request, res: Response): Promise<void> => {
-		const {
-			body,
-			params: { id },
-		} = req;
+		const id = this.getParam(req);
 
-		const updatedUser = await this.userService.updateProfile(
-			id as string,
-			body
-		);
+		const updatedUser = await this.userService.updateProfile(id, req.body);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<ProfileDTO>(
-				ProfileMapper.toDTO(updatedUser),
-				'PROFILE_UPDATED'
-			)
+		this.ok<ProfileDTO>(
+			res,
+			ProfileMapper.toDTO(updatedUser),
+			'PROFILE_UPDATED'
 		);
 	};
 
@@ -141,21 +127,14 @@ export class UserController {
 	 * - Controls access without deleting the account
 	 */
 	updateUserStatus = async (req: Request, res: Response): Promise<void> => {
-		const {
-			body,
-			params: { id },
-		} = req;
+		const id = this.getParam(req);
 
-		const updatedUser = await this.userService.updateStatus(
-			id as string,
-			body
-		);
+		const updatedUser = await this.userService.updateStatus(id, req.body);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<AdminUserDTO>(
-				UserMapper.toAdminDTO(updatedUser),
-				'USER_STATUS_UPDATED'
-			)
+		this.ok<AdminUserDTO>(
+			res,
+			UserMapper.toAdminDTO(updatedUser),
+			'USER_STATUS_UPDATED'
 		);
 	};
 
@@ -169,21 +148,14 @@ export class UserController {
 	 * - Role-based access control is enforced elsewhere
 	 */
 	changeUserRole = async (req: Request, res: Response): Promise<void> => {
-		const {
-			body,
-			params: { id },
-		} = req;
+		const id = this.getParam(req);
 
-		const updatedUser = await this.userService.changeRole(
-			id as string,
-			body
-		);
+		const updatedUser = await this.userService.changeRole(id, req.body);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<AdminUserDTO>(
-				UserMapper.toAdminDTO(updatedUser),
-				'USER_ROLE_UPDATED'
-			)
+		this.ok<AdminUserDTO>(
+			res,
+			UserMapper.toAdminDTO(updatedUser),
+			'USER_ROLE_UPDATED'
 		);
 	};
 
@@ -197,11 +169,11 @@ export class UserController {
 	 * - Uses no-content semantics since the resource no longer exists
 	 */
 	deleteUserById = async (req: Request, res: Response): Promise<void> => {
-		const { id } = req.params;
+		const id = this.getParam(req);
 
-		await this.userService.deleteById(id as string);
+		await this.userService.deleteById(id);
 
-		res.sendStatus(STATUS_CODE.NO_CONTENT);
+		this.noContent(res);
 	};
 
 	/**
@@ -219,6 +191,6 @@ export class UserController {
 
 		await this.userService.deleteUsers(filter);
 
-		res.sendStatus(STATUS_CODE.NO_CONTENT);
+		this.noContent(res);
 	};
 }

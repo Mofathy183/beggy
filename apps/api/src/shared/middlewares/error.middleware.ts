@@ -33,6 +33,8 @@ import {
 	apiResponseMap,
 } from '@shared/utils';
 
+import { logger } from '@shared/middlewares';
+
 const { JsonWebTokenError, TokenExpiredError } = jwt;
 
 /**
@@ -228,7 +230,7 @@ const zodErrorMap = (err: unknown): AppError | null => {
  */
 export const errorHandler = (
 	err: unknown,
-	req: Request,
+	_req: Request,
 	res: Response,
 	_next: NextFunction
 ) => {
@@ -239,7 +241,7 @@ export const errorHandler = (
 	 * without further inspection.
 	 */
 	if (err instanceof AppError) {
-		req.log.warn(
+		logger.warn(
 			{
 				domain: 'error',
 				middleware: 'errorHandler',
@@ -266,7 +268,7 @@ export const errorHandler = (
 	 */
 	const zodError = zodErrorMap(err);
 	if (zodError) {
-		req.log.warn(
+		logger.warn(
 			{
 				domain: 'validation',
 				middleware: 'errorHandler',
@@ -290,7 +292,7 @@ export const errorHandler = (
 	 */
 	const jwtError = jwtErrorMap(err);
 	if (jwtError) {
-		req.log.warn(
+		logger.warn(
 			{
 				domain: 'auth',
 				middleware: 'errorHandler',
@@ -317,7 +319,7 @@ export const errorHandler = (
 	 */
 	const prismaError = prismaErrorMap(err);
 	if (prismaError) {
-		req.log.error(
+		logger.error(
 			{
 				domain: 'database',
 				middleware: 'errorHandler',
@@ -348,7 +350,7 @@ export const errorHandler = (
 		err
 	);
 
-	req.log.error(
+	logger.error(
 		{
 			domain: 'system',
 			middleware: 'errorHandler',

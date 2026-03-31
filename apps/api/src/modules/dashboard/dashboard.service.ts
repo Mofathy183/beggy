@@ -6,7 +6,7 @@ import type {
 	ItemCategoryStatsDto,
 } from '@beggy/shared/types';
 import type { ItemCategory } from '@beggy/shared/constants';
-import { logger } from '@shared/middlewares';
+import { BaseService } from '@shared/core';
 import { toISO } from '@shared/utils';
 
 /**
@@ -23,13 +23,10 @@ import { toISO } from '@shared/utils';
  * - Does not reuse ItemService intentionally — dashboard queries are
  *   read-optimized projections, not full entity fetches.
  */
-export class DashboardService {
-	private readonly dashboardLogger = logger.child({
-		domain: 'dashboard',
-		service: 'DashboardService',
-	});
-
-	constructor(private readonly prisma: PrismaClientType) {}
+export class DashboardService extends BaseService {
+	constructor(private readonly prisma: PrismaClientType) {
+		super({ domain: 'dashboard', service: 'DashboardService' });
+	}
 
 	/**
 	 * Returns the full dashboard overview for a given user.
@@ -88,7 +85,7 @@ export class DashboardService {
 			where: { userId, isFragile: true },
 		});
 
-		this.dashboardLogger.debug({ userId }, 'Dashboard overview assembled');
+		this.log.debug({ userId }, 'Dashboard overview assembled');
 
 		return this.toOverviewDto({
 			profile,

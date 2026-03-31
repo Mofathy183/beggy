@@ -1,12 +1,7 @@
 import type { Request, Response } from 'express';
 import { type ItemService, ItemMapper } from '@modules/items';
 import type { ItemDTO, ItemOrderByInput } from '@beggy/shared/types';
-import { apiResponseMap } from '@shared/utils';
 import { BaseController } from '@shared/core';
-import { logger } from '@shared/middlewares';
-import type { PaginationPayload } from '@shared/types';
-import { STATUS_CODE } from '@shared/constants';
-
 /**
  * HTTP controller responsible for item-related endpoints.
  *
@@ -21,12 +16,10 @@ import { STATUS_CODE } from '@shared/constants';
  */
 export class ItemController extends BaseController {
 	constructor(private readonly itemService: ItemService) {
-		super(
-			logger.child({
-				domain: 'items',
-				controller: 'ItemController',
-			})
-		);
+		super({
+			domain: 'items',
+			controller: 'ItemController',
+		});
 	}
 
 	/**
@@ -38,22 +31,20 @@ export class ItemController extends BaseController {
 	 * @route GET /items
 	 */
 	getItems = async (req: Request, res: Response): Promise<void> => {
-		const { pagination, orderBy, query: filter } = req;
-
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const userId = this.getUserId(req);
 
 		const { items, meta } = await this.itemService.listItems(
 			userId,
-			pagination as PaginationPayload,
-			filter,
-			orderBy as ItemOrderByInput
+			this.getPagination(req),
+			req.query,
+			this.getOrderBy<ItemOrderByInput>(req)
 		);
 
-		const data = ItemMapper.toDTOList(items);
-
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<ItemDTO[]>(data, 'ITEMS_FETCHED', meta)
+		this.ok<ItemDTO[]>(
+			res,
+			ItemMapper.toDTOList(items),
+			'ITEMS_FETCHED',
+			meta
 		);
 	};
 
@@ -66,16 +57,12 @@ export class ItemController extends BaseController {
 	 * @route GET /items/:id
 	 */
 	getItemById = async (req: Request, res: Response): Promise<void> => {
-		const { id } = req.params;
+		const userId = this.getUserId(req);
+		const id = this.getParam(req);
 
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const item = await this.itemService.getItemById(userId, id);
 
-		const item = await this.itemService.getItemById(userId, id as string);
-
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<ItemDTO>(ItemMapper.toDTO(item), 'ITEM_FETCHED')
-		);
+		this.ok<ItemDTO>(res, ItemMapper.toDTO(item), 'ITEM_FETCHED');
 	};
 
 	/**
@@ -90,19 +77,11 @@ export class ItemController extends BaseController {
 	 * @route POST /items
 	 */
 	createItem = async (req: Request, res: Response): Promise<void> => {
-		const { body } = req;
+		const userId = this.getUserId(req);
 
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const item = await this.itemService.createItem(userId, req.body);
 
-		const item = await this.itemService.createItem(userId, body);
-
-		res.status(STATUS_CODE.CREATED).json(
-			apiResponseMap.created<ItemDTO>(
-				ItemMapper.toDTO(item),
-				'ITEM_CREATED'
-			)
-		);
+		this.created<ItemDTO>(res, ItemMapper.toDTO(item), 'ITEM_CREATED');
 	};
 
 	/**
@@ -114,26 +93,16 @@ export class ItemController extends BaseController {
 	 * @route PATCH /items/:id
 	 */
 	updateItem = async (req: Request, res: Response): Promise<void> => {
-		const {
-			body,
-			params: { id },
-		} = req;
-
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const userId = this.getUserId(req);
+		const id = this.getParam(req);
 
 		const updatedItem = await this.itemService.updateItem(
 			userId,
-			id as string,
-			body
+			id,
+			req.body
 		);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<ItemDTO>(
-				ItemMapper.toDTO(updatedItem),
-				'ITEM_UPDATED'
-			)
-		);
+		this.ok<ItemDTO>(res, ItemMapper.toDTO(updatedItem), 'ITEM_UPDATED');
 	};
 
 	/**
@@ -145,13 +114,11 @@ export class ItemController extends BaseController {
 	 * @route DELETE /items/:id
 	 */
 	deleteItemById = async (req: Request, res: Response): Promise<void> => {
-		const { id } = req.params;
+		const userId = this.getUserId(req);
+		const id = this.getParam(req);
 
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		await this.itemService.deleteItemById(userId, id);
 
-		await this.itemService.deleteItemById(userId, id as string);
-
-		res.sendStatus(STATUS_CODE.NO_CONTENT);
+		this.noContent(res);
 	};
 }

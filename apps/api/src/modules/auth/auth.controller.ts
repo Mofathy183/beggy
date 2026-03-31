@@ -4,9 +4,9 @@ import { type AuthService, AuthMapper } from '@modules/auth';
 import { type UserService } from '@modules/users';
 import { STATUS_CODE } from '@shared/constants';
 import { oauthConfig } from '@config';
-import { apiResponseMap, AuthCookies, appErrorMap } from '@shared/utils';
+import { AuthCookies, appErrorMap } from '@shared/utils';
 import { BaseController } from '@shared/core';
-import { generateCsrfToken, logger } from '@shared/middlewares';
+import { generateCsrfToken } from '@shared/middlewares';
 import { ErrorCode } from '@beggy/shared/constants';
 
 /**
@@ -21,12 +21,7 @@ export class AuthController extends BaseController {
 		private readonly authService: AuthService,
 		private readonly userService: UserService
 	) {
-		super(
-			logger.child({
-				domain: 'auth',
-				controller: 'AuthController',
-			})
-		);
+		super({ domain: 'auth', controller: 'AuthController' });
 	}
 
 	/**
@@ -41,9 +36,7 @@ export class AuthController extends BaseController {
 
 		AuthCookies.setCookies(res, id, role);
 
-		res.status(STATUS_CODE.CREATED).json(
-			apiResponseMap.created(null, 'SIGNUP_SUCCESS')
-		);
+		this.created(res, null, 'SIGNUP_SUCCESS');
 	};
 
 	/**
@@ -58,9 +51,7 @@ export class AuthController extends BaseController {
 
 		AuthCookies.setCookies(res, id, role, input.rememberMe);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok(null, 'LOGIN_SUCCESS')
-		);
+		this.ok(res, null, 'LOGIN_SUCCESS');
 	};
 
 	/**
@@ -75,7 +66,7 @@ export class AuthController extends BaseController {
 	logout = async (_req: Request, res: Response): Promise<void> => {
 		AuthCookies.clear(res);
 
-		res.sendStatus(STATUS_CODE.NO_CONTENT);
+		this.noContent(res);
 	};
 
 	/**
@@ -121,9 +112,7 @@ export class AuthController extends BaseController {
 		 */
 		AuthCookies.setAccessTokenCookie(res, user.id, user.role);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok(null, 'TOKEN_REFRESHED')
-		);
+		this.ok(res, null, 'TOKEN_REFRESHED');
 	};
 
 	/**
@@ -134,11 +123,10 @@ export class AuthController extends BaseController {
 	csrfToken = async (req: Request, res: Response): Promise<void> => {
 		const token = generateCsrfToken(req, res);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<{ csrfToken: string }>(
-				{ csrfToken: token },
-				'CSRF_TOKEN_ISSUED'
-			)
+		this.ok<{ csrfToken: string }>(
+			res,
+			{ csrfToken: token },
+			'CSRF_TOKEN_ISSUED'
 		);
 	};
 
@@ -157,11 +145,10 @@ export class AuthController extends BaseController {
 
 		const { user, permissions } = await this.authService.authUser(userId);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<AuthMeDTO>(
-				AuthMapper.toDTO(user, permissions),
-				'AUTH_USER_RETRIEVED'
-			)
+		this.ok<AuthMeDTO>(
+			res,
+			AuthMapper.toDTO(user, permissions),
+			'AUTH_USER_RETRIEVED'
 		);
 	};
 

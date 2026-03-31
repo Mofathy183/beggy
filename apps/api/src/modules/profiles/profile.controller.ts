@@ -1,10 +1,7 @@
 import type { Request, Response } from 'express';
 import { ProfileMapper, type ProfileService } from '@modules/profiles';
-import { apiResponseMap } from '@shared/utils';
-import { STATUS_CODE } from '@shared/constants';
-import type { ProfileDTO } from '@beggy/shared/types';
+import type { ProfileDTO, PublicProfileDTO } from '@beggy/shared/types';
 import { BaseController } from '@shared/core';
-import { logger } from '@shared/middlewares';
 
 /**
  * ProfileController
@@ -23,12 +20,7 @@ import { logger } from '@shared/middlewares';
  */
 export class ProfileController extends BaseController {
 	constructor(private readonly profileService: ProfileService) {
-		super(
-			logger.child({
-				domain: 'profiles',
-				controller: 'ProfileController',
-			})
-		);
+		super({ domain: 'profiles', controller: 'ProfileController' });
 	}
 
 	/**
@@ -37,14 +29,10 @@ export class ProfileController extends BaseController {
 	 * Returns the authenticated user's private profile.
 	 */
 	getPrivateProfile = async (req: Request, res: Response): Promise<void> => {
-		this.assertAuthenticated(req);
-		const profile = await this.profileService.getPrivateProfile(
-			req.user?.id
-		);
+		const userId = this.getUserId(req);
+		const profile = await this.profileService.getPrivateProfile(userId);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok(ProfileMapper.toDTO(profile), 'PROFILE_UPDATED')
-		);
+		this.ok(res, ProfileMapper.toDTO(profile), 'PROFILE_UPDATED');
 	};
 
 	/**
@@ -53,17 +41,14 @@ export class ProfileController extends BaseController {
 	 * Returns a public profile by ID.
 	 */
 	getPublicProfile = async (req: Request, res: Response): Promise<void> => {
-		const { id: profileId } = req.params;
+		const profileId = this.getParam(req);
 
-		const profile = await this.profileService.getPublicProfile(
-			profileId as string
-		);
+		const profile = await this.profileService.getPublicProfile(profileId);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok(
-				ProfileMapper.toPublicDTO(profile),
-				'PROFILE_UPDATED'
-			)
+		this.ok<PublicProfileDTO>(
+			res,
+			ProfileMapper.toPublicDTO(profile),
+			'PROFILE_FETCHED'
 		);
 	};
 
@@ -73,19 +58,17 @@ export class ProfileController extends BaseController {
 	 * Updates the authenticated user's profile.
 	 */
 	updateUserProfile = async (req: Request, res: Response): Promise<void> => {
-		this.assertAuthenticated(req);
-		const userId = req.user?.id;
+		const userId = this.getUserId(req);
 
 		const updatedProfile = await this.profileService.updateProfile(
 			userId,
 			req.body
 		);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<ProfileDTO>(
-				ProfileMapper.toDTO(updatedProfile),
-				'PROFILE_UPDATED'
-			)
+		this.ok<ProfileDTO>(
+			res,
+			ProfileMapper.toDTO(updatedProfile),
+			'PROFILE_UPDATED'
 		);
 	};
 
@@ -103,19 +86,17 @@ export class ProfileController extends BaseController {
 	 * request context populated by the authentication middleware.
 	 */
 	completeOnboarding = async (req: Request, res: Response): Promise<void> => {
-		this.assertAuthenticated(req);
-		const userId = req.user?.id;
+		const userId = this.getUserId(req);
 
 		const updatedProfile = await this.profileService.completeOnboarding(
 			userId,
 			req.body
 		);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<ProfileDTO>(
-				ProfileMapper.toDTO(updatedProfile),
-				'ONBOARDING_COMPLETED'
-			)
+		this.ok<ProfileDTO>(
+			res,
+			ProfileMapper.toDTO(updatedProfile),
+			'ONBOARDING_COMPLETED'
 		);
 	};
 }

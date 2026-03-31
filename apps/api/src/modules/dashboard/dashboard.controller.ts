@@ -1,10 +1,7 @@
 import type { Request, Response } from 'express';
 import type { DashboardService } from '@modules/dashboard';
 import type { DashboardOverviewDto } from '@beggy/shared/types';
-import { apiResponseMap } from '@shared/utils';
 import { BaseController } from '@shared/core';
-import { logger } from '@shared/middlewares';
-import { STATUS_CODE } from '@shared/constants';
 
 /**
  * HTTP controller responsible for dashboard endpoints.
@@ -20,12 +17,10 @@ import { STATUS_CODE } from '@shared/constants';
  */
 export class DashboardController extends BaseController {
 	constructor(private readonly dashboardService: DashboardService) {
-		super(
-			logger.child({
-				domain: 'dashboard',
-				controller: 'DashboardController',
-			})
-		);
+		super({
+			domain: 'dashboard',
+			controller: 'DashboardController',
+		});
 	}
 
 	/**
@@ -42,17 +37,15 @@ export class DashboardController extends BaseController {
 		req: Request,
 		res: Response
 	): Promise<void> => {
-		this.assertAuthenticated(req);
-		const userId = req.user.id;
+		const userId = this.getUserId(req);
 
 		const overview =
 			await this.dashboardService.getDashboardOverview(userId);
 
-		res.status(STATUS_CODE.OK).json(
-			apiResponseMap.ok<DashboardOverviewDto>(
-				overview,
-				'DASHBOARD_OVERVIEW_RETRIEVED'
-			)
+		this.ok<DashboardOverviewDto>(
+			res,
+			overview,
+			'DASHBOARD_OVERVIEW_RETRIEVED'
 		);
 	};
 }

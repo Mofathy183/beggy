@@ -16,14 +16,7 @@ const mockResponse = (): Response => {
 	return res;
 };
 
-const mockRequest = {
-	log: {
-		warn: vi.fn(),
-		error: vi.fn(),
-		info: vi.fn(),
-		debug: vi.fn(),
-	},
-} as unknown as Request;
+const mockRequest = {} as Request;
 const mockNext = vi.fn() as NextFunction;
 
 describe('errorHandler', () => {
@@ -53,29 +46,29 @@ describe('errorHandler', () => {
 			);
 		});
 
-		// it('returns bad request for invalid request data', () => {
-		// 	const schema = z.object({
-		// 		email: z.email(),
-		// 	});
+		it('returns bad request for invalid request data', () => {
+			const schema = z.object({
+				email: z.email(),
+			});
 
-		// 	let err: ZodError;
-		// 	try {
-		// 		schema.parse({ email: 'invalid' });
-		// 	} catch (e) {
-		// 		err = e as ZodError;
-		// 	}
+			let err: ZodError;
+			try {
+				schema.parse({ email: 'invalid' });
+			} catch (e) {
+				err = e as ZodError;
+			}
 
-		// 	const res = mockResponse();
+			const res = mockResponse();
 
-		// 	errorHandler(err!, mockRequest, res, mockNext);
+			errorHandler(err!, mockRequest, res, mockNext);
 
-		// 	expect(res.status).toHaveBeenCalledWith(STATUS_CODE.BAD_REQUEST);
-		// 	expect(res.json).toHaveBeenCalledWith(
-		// 		expect.objectContaining({
-		// 			code: ErrorCode.INVALID_REQUEST_DATA,
-		// 		})
-		// 	);
-		// });
+			expect(res.status).toHaveBeenCalledWith(STATUS_CODE.BAD_REQUEST);
+			expect(res.json).toHaveBeenCalledWith(
+				expect.objectContaining({
+					code: ErrorCode.INVALID_REQUEST_DATA,
+				})
+			);
+		});
 	});
 
 	describe('authentication errors', () => {

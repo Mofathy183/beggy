@@ -8,9 +8,9 @@ import type {
 	PaginationMeta,
 } from '@beggy/shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
-import { logger } from '@shared/middlewares';
+import { BaseService } from '@shared/core';
 import type { PaginationPayload } from '@shared/types';
-import { appErrorMap, buildBagQuery, buildMeta } from '@shared/utils';
+import { buildBagQuery, buildMeta } from '@shared/utils';
 import type { BagWithContainer } from '@modules/bags';
 
 /**
@@ -25,13 +25,10 @@ import type { BagWithContainer } from '@modules/bags';
  * - Throws domain-level errors only (no transport concerns).
  * - Bag ↔ Container is a required 1:1 relationship.
  */
-export class BagService {
-	private readonly bagLogger = logger.child({
-		domain: 'bags',
-		service: 'BagService',
-	});
-
-	constructor(private readonly prisma: PrismaClientType) {}
+export class BagService extends BaseService {
+	constructor(private readonly prisma: PrismaClientType) {
+		super({ domain: 'bags', service: 'BagService' });
+	}
 
 	/**
 	 * Prisma include fragment required for downstream DTO mapping.
@@ -90,11 +87,9 @@ export class BagService {
 			include: this.bagInclude,
 		});
 
-		this.bagLogger.debug({ userId, page, limit }, 'Bags listed');
+		this.log.debug({ userId, page, limit }, 'Bags listed');
 
-		const meta = buildMeta<Bag>(bags, limit, page);
-
-		return { bags, meta };
+		return { bags, meta: buildMeta<Bag>(bags, limit, page) };
 	}
 
 	/**
@@ -117,12 +112,14 @@ export class BagService {
 			include: this.bagInclude,
 		});
 
-		if (!bag) {
-			this.bagLogger.info({ userId, bagId: id }, 'Bag not found');
-			throw appErrorMap.notFound(ErrorCode.BAG_NOT_FOUND);
-		}
-
-		return bag;
+		return this.assertFound<BagWithContainer>(
+			bag,
+			ErrorCode.BAG_NOT_FOUND,
+			{
+				userId,
+				bagId: id,
+			}
+		);
 	}
 
 	/**
@@ -182,7 +179,7 @@ export class BagService {
 			});
 		});
 
-		this.bagLogger.info({ userId, bagId: bag.id }, 'Bag created');
+		this.log.info({ userId, bagId: bag.id }, 'Bag created');
 
 		return bag;
 	}
@@ -212,27 +209,15 @@ export class BagService {
 
 		const { maxCapacity, maxWeight, emptyWeight, ...bagFields } = input;
 
-		const cleanBagFields = Object.fromEntries(
-			Object.entries(bagFields).filter(
-				([, value]) => value !== undefined && value !== null
-			)
-		);
-
 		const updatedBag = await this.prisma.$transaction(async (tx) => {
-			if (
-				maxCapacity !== undefined ||
-				maxWeight !== undefined ||
-				emptyWeight !== undefined
-			) {
-				const containerData: Record<string, unknown> = {};
+			// Route physical constraint fields to the Container record
+			const containerData = this.stripNullish({
+				maxCapacity,
+				maxWeight,
+				emptyWeight,
+			} as Record<string, unknown>);
 
-				if (maxCapacity !== undefined)
-					containerData.maxCapacity = maxCapacity;
-				if (maxWeight !== undefined)
-					containerData.maxWeight = maxWeight;
-				if (emptyWeight !== undefined)
-					containerData.emptyWeight = emptyWeight;
-
+			if (Object.keys(containerData).length > 0) {
 				await tx.container.update({
 					where: { id: existing.containerId },
 					data: containerData,
@@ -241,12 +226,12 @@ export class BagService {
 
 			return tx.bag.update({
 				where: { id, userId },
-				data: cleanBagFields,
+				data: this.stripNullish(bagFields as Record<string, unknown>),
 				include: this.bagInclude,
 			});
 		});
 
-		this.bagLogger.info({ userId, bagId: id }, 'Bag updated');
+		this.log.info({ userId, bagId: id }, 'Bag updated');
 
 		return updatedBag;
 	}
@@ -270,6 +255,6 @@ export class BagService {
 			where: { id, userId },
 		});
 
-		this.bagLogger.info({ userId, bagId: id }, 'Bag deleted');
+		this.log.info({ userId, bagId: id }, 'Bag deleted');
 	}
 }

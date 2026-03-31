@@ -10,14 +10,9 @@ import type {
 	ChangeRoleInput,
 } from '@beggy/shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
-import { logger } from '@shared/middlewares';
+import { BaseService } from '@shared/core';
 import type { PaginationPayload } from '@shared/types';
-import {
-	appErrorMap,
-	buildMeta,
-	buildUserQuery,
-	hashPassword,
-} from '@shared/utils';
+import { buildMeta, buildUserQuery, hashPassword } from '@shared/utils';
 import { type BatchPayload as DeletePayload } from '@prisma/generated/prisma/internal/prismaNamespace';
 
 /**
@@ -36,11 +31,7 @@ import { type BatchPayload as DeletePayload } from '@prisma/generated/prisma/int
  * - Infrastructure errors (Prisma, hashing, etc.) are allowed to bubble up
  *   and are normalized by the centralized errorHandler middleware
  */
-export class UserService {
-	private readonly userLogger = logger.child({
-		domain: 'users',
-		service: 'UserService',
-	});
+export class UserService extends BaseService {
 	/**
 	 * Prisma client instance.
 	 *
@@ -48,7 +39,9 @@ export class UserService {
 	 * - Typed as PrismaClientType to allow future extensions
 	 * - Initialized once per service instance
 	 */
-	constructor(private readonly prisma: PrismaClientType) {}
+	constructor(private readonly prisma: PrismaClientType) {
+		super({ domain: 'users', service: 'UserService' });
+	}
 
 	/**
 	 * Retrieves a paginated list of users with filtering and ordering support.
@@ -89,9 +82,9 @@ export class UserService {
 			take: limit + 1,
 		});
 
-		const meta = buildMeta<User>(users, limit, page);
+		this.log.debug({ page, limit }, 'Users listed');
 
-		return { users, meta };
+		return { users, meta: buildMeta<User>(users, limit, page) };
 	}
 
 	/**
@@ -109,12 +102,9 @@ export class UserService {
 			where: { id },
 		});
 
-		if (!user) {
-			this.userLogger.warn({ userId: id }, 'User not found');
-			throw appErrorMap.notFound(ErrorCode.USER_NOT_FOUND);
-		}
-
-		return user;
+		return this.assertFound<User>(user, ErrorCode.USER_NOT_FOUND, {
+			userId: id,
+		});
 	}
 
 	/**
@@ -145,11 +135,6 @@ export class UserService {
 					create: {
 						firstName: user.firstName,
 						lastName: user.lastName,
-						avatarUrl: user.avatarUrl,
-						gender: user.gender,
-						birthDate: user.birthDate,
-						country: user.country,
-						city: user.city,
 					},
 				},
 
@@ -165,7 +150,7 @@ export class UserService {
 			},
 		});
 
-		this.userLogger.info(
+		this.log.info(
 			{ userId: newUser.id, email: newUser.email },
 			'User account created'
 		);
@@ -192,12 +177,16 @@ export class UserService {
 	): Promise<Profile> {
 		const updatedProfile = await this.prisma.profile.update({
 			where: { userId: id },
-			data: Object.fromEntries(
-				Object.entries(profile).filter(
-					([, value]) => value !== undefined && value !== null
-				)
-			),
+			data: this.stripNullish(profile as Record<string, unknown>),
 		});
+
+		this.log.info(
+			{
+				userId: id,
+				profileId: updatedProfile.id,
+			},
+			'User Profile updated'
+		);
 
 		return updatedProfile;
 	}
@@ -223,7 +212,7 @@ export class UserService {
 			},
 		});
 
-		this.userLogger.info(
+		this.log.info(
 			{
 				userId: id,
 				isActive: status.isActive,
@@ -255,10 +244,7 @@ export class UserService {
 			},
 		});
 
-		this.userLogger.warn(
-			{ userId: id, role: user.role },
-			'User role changed'
-		);
+		this.log.warn({ userId: id, role: user.role }, 'User role changed');
 
 		return updatedRole;
 	}
@@ -279,7 +265,7 @@ export class UserService {
 			where: { id },
 		});
 
-		this.userLogger.warn({ userId: id }, 'User account deleted');
+		this.log.warn({ userId: id }, 'User account deleted');
 
 		return deletedUser;
 	}
@@ -306,7 +292,7 @@ export class UserService {
 			where,
 		});
 
-		this.userLogger.warn(
+		this.log.warn(
 			{ deletedCount: deletedUsers.count, filter },
 			'Bulk user deletion executed'
 		);

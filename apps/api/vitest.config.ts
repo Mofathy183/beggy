@@ -4,7 +4,7 @@ import baseVitestConfig from '../../vitest.base.config';
 export default mergeConfig(baseVitestConfig, {
 	test: {
 		environment: 'node',
-		setupFiles: ['./vitest.setup.ts'],
+		setupFiles: ['./tests/vitest.setup.ts'],
 
 		/**
 		 * Explicitly include all test files.

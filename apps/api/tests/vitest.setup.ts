@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 // Load test env FIRST
-dotenv.config({ path: '.env.test' });
+dotenv.config({ path: '../.env.test' });
 
 // Safety guard (optional but recommended)
 if (process.env.NODE_ENV !== 'test') {

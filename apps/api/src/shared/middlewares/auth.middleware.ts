@@ -6,7 +6,7 @@ import {
 	appErrorMap,
 	verifyRefreshToken,
 } from '@shared/utils';
-import { defineAbilityFor } from '@shared/middlewares';
+import { logger, defineAbilityFor } from '@shared/middlewares';
 import { env } from '@config';
 
 /**
@@ -80,7 +80,7 @@ export const requireAuth: RequestHandler = (
 	const token = req.authTokens?.accessToken;
 
 	if (!token) {
-		req.log.warn(
+		logger.warn(
 			{
 				domain: 'auth',
 				middleware: 'requireAuth',
@@ -113,7 +113,7 @@ export const requireAuth: RequestHandler = (
 
 		next();
 	} catch (error: unknown) {
-		req.log.warn(
+		logger.warn(
 			{
 				domain: 'auth',
 				middleware: 'requireAuth',
@@ -162,7 +162,7 @@ export const requireRefreshToken: RequestHandler = (
 
 	// Refresh token is mandatory for this flow
 	if (!token) {
-		req.log.warn(
+		logger.warn(
 			{
 				domain: 'auth',
 				middleware: 'requireRefreshToken',
@@ -191,7 +191,7 @@ export const requireRefreshToken: RequestHandler = (
 
 		next();
 	} catch (error) {
-		req.log.warn(
+		logger.warn(
 			{
 				domain: 'auth',
 				middleware: 'requireRefreshToken',

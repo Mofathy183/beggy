@@ -3,8 +3,7 @@ import { type EditProfileInput } from '@beggy/shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
 import { type Profile } from '@prisma-generated/client';
 import type { PublicProfileEntity } from '@shared/types';
-import { appErrorMap } from '@shared/utils';
-import { logger } from '@shared/middlewares';
+import { BaseService } from '@shared/core';
 
 /**
  * ProfileService
@@ -21,12 +20,10 @@ import { logger } from '@shared/middlewares';
  * - DTO mapping
  * - Authorization checks
  */
-export class ProfileService {
-	private readonly profileLogger = logger.child({
-		domain: 'profiles',
-		service: 'ProfileService',
-	});
-	constructor(private readonly prisma: PrismaClientType) {}
+export class ProfileService extends BaseService {
+	constructor(private readonly prisma: PrismaClientType) {
+		super({ domain: 'profiles', service: 'ProfileService' });
+	}
 
 	/**
 	 * Retrieves the private profile for a given user.
@@ -39,12 +36,9 @@ export class ProfileService {
 			where: { userId },
 		});
 
-		if (!profile) {
-			this.profileLogger.warn({ userId }, 'Profile not found');
-			throw appErrorMap.notFound(ErrorCode.PROFILE_NOT_FOUND);
-		}
-
-		return profile;
+		return this.assertFound<Profile>(profile, ErrorCode.PROFILE_NOT_FOUND, {
+			userId,
+		});
 	}
 
 	/**
@@ -72,12 +66,13 @@ export class ProfileService {
 			},
 		});
 
-		if (!profile) {
-			this.profileLogger.warn({ profileId }, 'Profile not found');
-			throw appErrorMap.notFound(ErrorCode.PROFILE_NOT_FOUND);
-		}
-
-		return profile;
+		return this.assertFound<PublicProfileEntity>(
+			profile,
+			ErrorCode.PROFILE_NOT_FOUND,
+			{
+				profileId,
+			}
+		);
 	}
 
 	/**
@@ -97,11 +92,7 @@ export class ProfileService {
 	): Promise<Profile> {
 		const updatedProfile = await this.prisma.profile.update({
 			where: { userId },
-			data: Object.fromEntries(
-				Object.entries(profile).filter(
-					([, value]) => value !== undefined && value !== null
-				)
-			),
+			data: this.stripNullish(profile as Record<string, unknown>),
 		});
 
 		return updatedProfile;
@@ -124,16 +115,12 @@ export class ProfileService {
 		userId: string,
 		profile: EditProfileInput
 	): Promise<Profile> {
-		this.profileLogger.info({ userId }, 'User onboarding completed');
+		this.log.info({ userId }, 'User onboarding completed');
 
 		return this.prisma.profile.update({
 			where: { userId },
 			data: {
-				...Object.fromEntries(
-					Object.entries(profile).filter(
-						([, v]) => v !== undefined && v !== null
-					)
-				),
+				...this.stripNullish(profile as Record<string, unknown>),
 				onboardingCompleted: true,
 			},
 		});

@@ -8,9 +8,9 @@ import type {
 	CreateItemInput,
 } from '@beggy/shared/types';
 import { ErrorCode } from '@beggy/shared/constants';
-import { logger } from '@shared/middlewares';
 import type { PaginationPayload } from '@shared/types';
-import { appErrorMap, buildItemQuery, buildMeta } from '@shared/utils';
+import { BaseService } from '@shared/core';
+import { buildItemQuery, buildMeta } from '@shared/utils';
 
 /**
  * Domain service responsible for managing user-owned items.
@@ -25,13 +25,10 @@ import { appErrorMap, buildItemQuery, buildMeta } from '@shared/utils';
  * - Persistence concerns are delegated to Prisma.
  * - Assumes a composite unique constraint on `{ id, userId }`.
  */
-export class ItemService {
-	private readonly itemLogger = logger.child({
-		domain: 'items',
-		service: 'ItemService',
-	});
-
-	constructor(private readonly prisma: PrismaClientType) {}
+export class ItemService extends BaseService {
+	constructor(private readonly prisma: PrismaClientType) {
+		super({ domain: 'items', service: 'ItemService' });
+	}
 
 	/**
 	 * Returns paginated items belonging to a user.
@@ -70,11 +67,9 @@ export class ItemService {
 			skip: offset,
 		});
 
-		this.itemLogger.debug({ userId, page, limit }, 'Items listed');
+		this.log.debug({ userId, page, limit }, 'Items listed');
 
-		const meta = buildMeta<Item>(items, limit, page);
-
-		return { items, meta };
+		return { items, meta: buildMeta<Item>(items, limit, page) };
 	}
 
 	/**
@@ -93,12 +88,10 @@ export class ItemService {
 			where: { id, userId },
 		});
 
-		if (!item) {
-			this.itemLogger.info({ userId, itemId: id }, 'Item not found');
-			throw appErrorMap.notFound(ErrorCode.ITEM_NOT_FOUND);
-		}
-
-		return item;
+		return this.assertFound<Item>(item, ErrorCode.ITEM_NOT_FOUND, {
+			userId,
+			itemId: id,
+		});
 	}
 
 	/**
@@ -121,10 +114,7 @@ export class ItemService {
 			},
 		});
 
-		this.itemLogger.info(
-			{ userId: userId, itemId: item.id },
-			'Item created'
-		);
+		this.log.info({ userId, itemId: item.id }, 'Item created');
 
 		return item;
 	}
@@ -150,18 +140,12 @@ export class ItemService {
 		id: string,
 		input: UpdateItemInput
 	): Promise<Item> {
-		const data = Object.fromEntries(
-			Object.entries(input).filter(
-				([, value]) => value !== undefined && value !== null
-			)
-		);
-
 		const updatedItem = await this.prisma.item.update({
 			where: { id, userId },
-			data,
+			data: this.stripNullish(input as Record<string, unknown>),
 		});
 
-		this.itemLogger.info({ userId, itemId: id }, 'Item updated');
+		this.log.info({ userId, itemId: id }, 'Item updated');
 
 		return updatedItem;
 	}
@@ -182,7 +166,7 @@ export class ItemService {
 			where: { id, userId },
 		});
 
-		this.itemLogger.info({ userId, itemId: id }, 'Item deleted');
+		this.log.info({ userId, itemId: id }, 'Item deleted');
 
 		return deletedItem;
 	}
