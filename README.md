@@ -400,14 +400,6 @@ The `deploy.sh` script at the repo root handles server-side deployment:
 
 ---
 
-<p align="center">
-  <sub>
-    Built with TypeScript · Powered by Turborepo · Designed for travelers
-  </sub>
-</p>
+**Built with TypeScript · Powered by Turborepo · Designed for travelers**
 
-<p align="center">
-  <sub>
-    Part of the <a href="https://github.com/Mofathy183/Beggy-backend">Beggy monorepo</a>
-  </sub>
-</p>
+Part of the [Beggy monorepo](https://github.com/Mofathy183/Beggy-backend) · MIT License
