@@ -7,29 +7,20 @@ on:
         branches: [main]
 
 jobs:
-    test:
+    # ─────────────────────────────────────────────────────────────────────────
+    # JOB 1: Unit tests
+    # No database required. Fast. Runs on every push.
+    # ─────────────────────────────────────────────────────────────────────────
+    unit-tests:
+        name: Unit Tests
         runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:18
-                env:
-                    POSTGRES_DB: beggy_test
-                    POSTGRES_USER: soliman
-                    POSTGRES_PASSWORD: psqluser18
-
-                ports:
-                    - 5432:5432
-                options: >-
-                    --health-cmd="pg_isready -U soliman"
-                    --health-interval=10s
-                    --health-timeout=5s
-                    --health-retries=5
 
         env:
             NODE_ENV: test
 
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            # Unit tests do not hit a real DB but env.config.ts may validate
+            # these at startup. Provide safe dummy values.
+            DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
             JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
             JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
@@ -38,14 +29,12 @@ jobs:
 
             JWT_ACCESS_EXPIRES_IN: 15m
             JWT_ACCESS_TOKEN_NAME: test_access_token
-
             JWT_REFRESH_EXPIRES_IN: 7d
             JWT_REFRESH_REMEMBER_EXPIRES_IN: 30d
             JWT_REFRESH_TOKEN_NAME: test_refresh_token
 
             NEXT_PUBLIC_API_URL: http://localhost:3000
 
-            # Safe dummy values
             GOOGLE_CLIENT_ID: dummy
             GOOGLE_CLIENT_SECRET: dummy
             FACEBOOK_CLIENT_ID: dummy
@@ -65,6 +54,7 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: 20
+                  cache: pnpm
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -75,8 +65,80 @@ jobs:
             - name: Generate Prisma Client
               run: pnpm turbo run prisma:generate --filter=@beggy/api
 
-            - name: Migrate test database
-              run: pnpm --filter @beggy/api prisma:deploy
+            - name: Run unit tests
+              run: pnpm --filter @beggy/api test
 
-            - name: Run tests
-              run: pnpm turbo run test
+    # ─────────────────────────────────────────────────────────────────────────
+    # JOB 2: Integration tests
+    # Requires a real Postgres instance. Runs sequentially (singleFork).
+    # Rate limiter is skipped automatically when NODE_ENV=test.
+    # ─────────────────────────────────────────────────────────────────────────
+    integration-tests:
+        name: Integration Tests
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:16
+                env:
+                    POSTGRES_DB: beggy_test
+                    POSTGRES_USER: soliman
+                    POSTGRES_PASSWORD: psqluser18
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd="pg_isready -U soliman"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
+        env:
+            NODE_ENV: test
+
+            DATABASE_URL: postgresql://soliman:psqluser18@localhost:5432/beggy_test
+
+            JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+            JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+            SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+            CSRF_SECRET_KEY: ${{ secrets.CSRF_SECRET_KEY }}
+
+            JWT_ACCESS_EXPIRES_IN: 15m
+            JWT_ACCESS_TOKEN_NAME: test_access_token
+            JWT_REFRESH_EXPIRES_IN: 7d
+            JWT_REFRESH_REMEMBER_EXPIRES_IN: 30d
+            JWT_REFRESH_TOKEN_NAME: test_refresh_token
+
+            NEXT_PUBLIC_API_URL: http://localhost:3000
+
+            GOOGLE_CLIENT_ID: dummy
+            GOOGLE_CLIENT_SECRET: dummy
+            FACEBOOK_CLIENT_ID: dummy
+            FACEBOOK_CLIENT_SECRET: dummy
+            RESEND_API_KEY: dummy
+            AI_API_KEY: dummy
+            OPENWEATHER_API_KEY: dummy
+
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Generate Prisma Client
+              run: pnpm turbo run prisma:generate --filter=@beggy/api
+
+            - name: Apply migrations to test DB
+              run: pnpm --filter @beggy/api test:integration:setup
+
+            - name: Run integration tests
+              run: pnpm --filter @beggy/api test:integration

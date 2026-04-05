@@ -171,15 +171,17 @@ export const seedTestPermissions = async (): Promise<void> => {
  * Use in `beforeEach` when tests need a clean slate.
  */
 export const truncateAllTables = async (): Promise<void> => {
-	await prisma.containerItems.deleteMany();
-	await prisma.item.deleteMany();
-	await prisma.bag.deleteMany();
-	await prisma.suitcase.deleteMany();
-	await prisma.container.deleteMany();
-	await prisma.userToken.deleteMany();
-	await prisma.account.deleteMany();
-	await prisma.profile.deleteMany();
-	await prisma.user.deleteMany();
+	await prisma.$transaction([
+		prisma.containerItems.deleteMany(),
+		prisma.item.deleteMany(),
+		prisma.bag.deleteMany(),
+		prisma.suitcase.deleteMany(),
+		prisma.container.deleteMany(),
+		prisma.userToken.deleteMany(),
+		prisma.account.deleteMany(),
+		prisma.profile.deleteMany(),
+		prisma.user.deleteMany(),
+	]);
 	// Permissions preserved intentionally
 };
 
