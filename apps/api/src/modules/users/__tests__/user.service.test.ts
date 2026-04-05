@@ -52,8 +52,8 @@ describe('UserService', () => {
 		service = new UserService(prismaMock);
 	});
 
-	describe('getAll()', () => {
-		it('returns users with pagination meta', async () => {
+	describe('listUsers()', () => {
+		it('returns users with pagination metadata', async () => {
 			const users = buildUsers(3);
 
 			(prismaMock.user.findMany as any).mockResolvedValue(users);
@@ -70,7 +70,7 @@ describe('UserService', () => {
 			expect(result.meta.hasPreviousPage).toBe(false);
 		});
 
-		it('sets hasNextPage when extra record exists', async () => {
+		it('returns hasNextPage when more users exist', async () => {
 			const users = buildUsers(11);
 
 			(prismaMock.user.findMany as any).mockResolvedValue(users);
@@ -88,7 +88,7 @@ describe('UserService', () => {
 	});
 
 	describe('getById()', () => {
-		it('returns user when found', async () => {
+		it('returns the user when it exists', async () => {
 			const user = buildUser();
 
 			(prismaMock.user.findUnique as any).mockResolvedValue(user);
@@ -98,7 +98,7 @@ describe('UserService', () => {
 			expect(result).toEqual(user);
 		});
 
-		it('throws when user does not exist', async () => {
+		it('throws when the user does not exist', async () => {
 			(prismaMock.user.findUnique as any).mockResolvedValue(null);
 
 			await expect(service.getById('missing-id')).rejects.toMatchObject({
@@ -107,8 +107,8 @@ describe('UserService', () => {
 		});
 	});
 
-	describe('create()', () => {
-		it('creates user with profile and account', async () => {
+	describe('createUser()', () => {
+		it('creates a user with profile and account and returns the persisted record', async () => {
 			const profile = profileFactory('user-1');
 			const user = userFactory(
 				{},
@@ -135,27 +135,40 @@ describe('UserService', () => {
 	});
 
 	describe('updateProfile()', () => {
-		it('updates user profile fields', async () => {
-			const profile = buildProfile('user-id');
+		it('updates the user profile fields', async () => {
+			/* Arrange */
+			const user = buildUser();
+			const profile = buildProfile(user.id);
 
+			(prismaMock.user.findUnique as any).mockResolvedValue(user);
 			(prismaMock.profile.update as any).mockResolvedValue(profile);
 
-			const result = await service.updateProfile('user-id', {
+			/* Act */
+			const result = await service.updateProfile(user.id, {
 				firstName: 'Gon',
 			} as any);
 
-			expect(prismaMock.profile.update).toHaveBeenCalledOnce();
+			/* Assert */
+			expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+				where: { id: user.id },
+			});
+
+			expect(prismaMock.profile.update).toHaveBeenCalledWith({
+				where: { userId: user.id },
+				data: { firstName: 'Gon' },
+			});
+
 			expect(result).toEqual(profile);
 		});
 	});
 
 	describe('updateStatus()', () => {
-		it('updates user active and verification status', async () => {
-			const existingUser = {
-				...buildUser(),
+		it('updates the user active and verification status', async () => {
+			/* Arrange */
+			const existingUser = buildUser({
 				isActive: true,
 				isEmailVerified: false,
-			};
+			});
 
 			const updatedUser = {
 				...existingUser,
@@ -163,26 +176,58 @@ describe('UserService', () => {
 				isEmailVerified: true,
 			};
 
+			(prismaMock.user.findUnique as any).mockResolvedValue(existingUser);
 			(prismaMock.user.update as any).mockResolvedValue(updatedUser);
 
+			/* Act */
 			const result = await service.updateStatus(existingUser.id, {
 				isActive: false,
 				isEmailVerified: true,
 			});
 
-			expect(result.isActive).toBe(false);
-			expect(result.isEmailVerified).toBe(true);
+			/* Assert */
+			expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+				where: { id: existingUser.id },
+			});
+
+			expect(prismaMock.user.update).toHaveBeenCalledWith({
+				where: { id: existingUser.id },
+				data: {
+					isActive: false,
+					isEmailVerified: true,
+				},
+			});
+
+			expect(result).toEqual(updatedUser);
 		});
 	});
 
 	describe('changeRole()', () => {
-		it('updates user role', async () => {
-			const user = buildUser({ role: Role.ADMIN });
+		it('updates the user role', async () => {
+			/* Arrange */
+			const user = buildUser({ role: Role.USER });
 
-			(prismaMock.user.update as any).mockResolvedValue(user);
+			const updatedUser = {
+				...user,
+				role: Role.ADMIN,
+			};
 
+			(prismaMock.user.findUnique as any).mockResolvedValue(user);
+			(prismaMock.user.update as any).mockResolvedValue(updatedUser);
+
+			/* Act */
 			const result = await service.changeRole(user.id, {
 				role: Role.ADMIN,
+			});
+
+			/* Assert */
+			expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+				where: { id: user.id },
+			});
+
+			expect(prismaMock.user.update).toHaveBeenCalledWith({
+				where: { id: user.id },
+				data: { role: Role.ADMIN },
 			});
 
 			expect(result.role).toBe(Role.ADMIN);
@@ -190,19 +235,31 @@ describe('UserService', () => {
 	});
 
 	describe('deleteById()', () => {
-		it('deletes user by id', async () => {
+		it('deletes the user by id and returns the deleted record', async () => {
+			/* Arrange */
 			const user = buildUser();
 
+			(prismaMock.user.findUnique as any).mockResolvedValue(user);
 			(prismaMock.user.delete as any).mockResolvedValue(user);
 
+			/* Act */
 			const result = await service.deleteById(user.id);
+
+			/* Assert */
+			expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+				where: { id: user.id },
+			});
+
+			expect(prismaMock.user.delete).toHaveBeenCalledWith({
+				where: { id: user.id },
+			});
 
 			expect(result).toEqual(user);
 		});
 	});
 
-	describe('deleteMany()', () => {
-		it('returns delete summary', async () => {
+	describe('deleteUsers()', () => {
+		it('returns the delete summary', async () => {
 			(prismaMock.user.deleteMany as any).mockResolvedValue({ count: 3 });
 
 			const result = await service.deleteUsers();

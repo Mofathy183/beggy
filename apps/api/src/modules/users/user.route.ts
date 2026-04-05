@@ -62,7 +62,7 @@
  */
 import { Router } from 'express';
 
-import { Action, Subject } from '@beggy/shared/constants';
+import { Action, Subject, Scope } from '@beggy/shared/constants';
 import {
 	AdminSchema,
 	QuerySchema,
@@ -113,7 +113,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.get(
 		'/',
 		requireAuth,
-		requirePermission(Action.READ, Subject.USER),
+		requirePermission(Action.READ, Subject.USER, Scope.ANY),
 
 		/**
 		 * Normalize pagination and ordering metadata.
@@ -133,7 +133,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.get(
 		'/:id',
 		requireAuth,
-		requirePermission(Action.READ, Subject.USER),
+		requirePermission(Action.READ, Subject.USER, Scope.ANY),
 		validateUuidParam,
 		userController.getUserById
 	);
@@ -141,7 +141,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.post(
 		'/',
 		requireAuth,
-		requirePermission(Action.CREATE, Subject.USER),
+		requirePermission(Action.CREATE, Subject.USER, Scope.ANY),
 		validateBody(AdminSchema.createUser),
 		userController.createUser
 	);
@@ -149,7 +149,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.patch(
 		'/:id/profile',
 		requireAuth,
-		requirePermission(Action.UPDATE, Subject.USER),
+		requirePermission(Action.UPDATE, Subject.USER, Scope.ANY),
 		validateUuidParam,
 		userController.updateUserProfile
 	);
@@ -157,7 +157,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.patch(
 		'/:id/status',
 		requireAuth,
-		requirePermission(Action.UPDATE, Subject.USER),
+		requirePermission(Action.UPDATE, Subject.USER, Scope.ANY),
 		validateUuidParam,
 		userController.updateUserStatus
 	);
@@ -173,7 +173,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.delete(
 		'/',
 		requireAuth,
-		requirePermission(Action.DELETE, Subject.USER),
+		requirePermission(Action.DELETE, Subject.USER, Scope.ANY),
 		validateQuery(QuerySchema.userFilter),
 		userController.deleteUsers
 	);
@@ -181,7 +181,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.delete(
 		'/:id',
 		requireAuth,
-		requirePermission(Action.DELETE, Subject.USER),
+		requirePermission(Action.DELETE, Subject.USER, Scope.ANY),
 		validateUuidParam,
 		userController.deleteUserById
 	);

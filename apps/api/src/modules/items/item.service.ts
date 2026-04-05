@@ -13,17 +13,11 @@ import { BaseService } from '@shared/core';
 import { buildItemQuery, buildMeta } from '@shared/utils';
 
 /**
- * Domain service responsible for managing user-owned items.
- *
- * @description
- * Encapsulates business rules related to item lifecycle while enforcing
- * strict multi-tenant isolation through `userId` scoping.
+ * Service responsible for managing user-owned items.
  *
  * @remarks
- * - All operations are scoped to a specific user.
- * - Throws domain-level errors only (never HTTP errors).
- * - Persistence concerns are delegated to Prisma.
- * - Assumes a composite unique constraint on `{ id, userId }`.
+ * Enforces strict tenant isolation via `userId` scoping.
+ * All operations assume the caller is already authenticated.
  */
 export class ItemService extends BaseService {
 	constructor(private readonly prisma: PrismaClientType) {
@@ -31,18 +25,17 @@ export class ItemService extends BaseService {
 	}
 
 	/**
-	 * Returns paginated items belonging to a user.
+	 * Lists items for a given user with pagination, filtering, and sorting.
 	 *
-	 * @param userId - Owner identifier used for tenant isolation.
-	 * @param pagination - Pagination payload containing `page`, `limit`, and `offset`.
-	 * @param filter - Optional filtering criteria.
-	 * @param orderBy - Sorting configuration.
+	 * @param userId - Owner identifier
+	 * @param pagination - Offset-based pagination configuration
+	 * @param filter - Optional filtering criteria
+	 * @param orderBy - Sorting configuration
 	 *
-	 * @returns Items and computed pagination metadata.
+	 * @returns Paginated items with metadata
 	 *
 	 * @remarks
-	 * Uses offset-based pagination and relies on `buildMeta`
-	 * to determine page boundaries and next-page existence.
+	 * Fetches `limit + 1` records to determine page boundaries.
 	 */
 	async listItems(
 		userId: string,
@@ -73,15 +66,14 @@ export class ItemService extends BaseService {
 	}
 
 	/**
-	 * Retrieves a single user-owned item by its identifier.
+	 * Retrieves a user-owned item by ID.
 	 *
-	 * @param userId - Owner identifier.
-	 * @param id - Item identifier.
+	 * @param userId - Owner identifier
+	 * @param id - Item identifier
 	 *
-	 * @returns The matching item.
+	 * @returns The matching item
 	 *
-	 * @throws {AppError} ITEM_NOT_FOUND
-	 * If the item does not exist or does not belong to the user.
+	 * @throws {AppError} When item is not found or not owned by user
 	 */
 	async getItemById(userId: string, id: string): Promise<Item> {
 		const item = await this.prisma.item.findUnique({
@@ -95,16 +87,15 @@ export class ItemService extends BaseService {
 	}
 
 	/**
-	 * Creates a new item.
+	 * Creates a new item for a user.
 	 *
-	 * @param input - Validated item creation payload.
+	 * @param userId - Owner identifier
+	 * @param input - Validated creation payload
 	 *
-	 * @returns The newly created item.
+	 * @returns Newly created item
 	 *
 	 * @remarks
-	 * Assumes:
-	 * - Input validation has already been performed upstream.
-	 * - `userId` is trusted and provided by the application layer.
+	 * Assumes `userId` is derived from a trusted source (e.g. auth context).
 	 */
 	async createItem(userId: string, input: CreateItemInput): Promise<Item> {
 		const item = await this.prisma.item.create({
@@ -120,26 +111,24 @@ export class ItemService extends BaseService {
 	}
 
 	/**
-	 * Applies partial updates to a user-owned item.
+	 * Updates a user-owned item.
 	 *
-	 * @description
-	 * Removes `undefined` and `null` fields before persisting to avoid
-	 * accidental overwrites.
+	 * @param userId - Owner identifier
+	 * @param id - Item identifier
+	 * @param input - Partial update payload
 	 *
-	 * @param userId - Owner identifier.
-	 * @param id - Item identifier.
-	 * @param input - Partial update payload.
+	 * @returns Updated item
 	 *
-	 * @returns The updated item.
-	 *
-	 * @throws {Prisma.PrismaClientKnownRequestError}
-	 * If the item does not exist or does not belong to the user.
+	 * @remarks
+	 * Nullish values are stripped to prevent unintended overwrites.
 	 */
 	async updateItem(
 		userId: string,
 		id: string,
 		input: UpdateItemInput
 	): Promise<Item> {
+		await this.getItemById(userId, id);
+
 		const updatedItem = await this.prisma.item.update({
 			where: { id, userId },
 			data: this.stripNullish(input as Record<string, unknown>),
@@ -151,17 +140,19 @@ export class ItemService extends BaseService {
 	}
 
 	/**
-	 * Permanently deletes a user-owned item.
+	 * Deletes a user-owned item.
 	 *
-	 * @param userId - Owner identifier.
-	 * @param id - Item identifier.
+	 * @param userId - Owner identifier
+	 * @param id - Item identifier
 	 *
-	 * @returns The deleted item record.
+	 * @returns Deleted item
 	 *
-	 * @throws {Prisma.PrismaClientKnownRequestError}
-	 * If the item does not exist or does not belong to the user.
+	 * @remarks
+	 * Operation is scoped to the user to prevent cross-tenant deletion.
 	 */
 	async deleteItemById(userId: string, id: string): Promise<Item> {
+		await this.getItemById(userId, id);
+
 		const deletedItem = await this.prisma.item.delete({
 			where: { id, userId },
 		});

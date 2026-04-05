@@ -1,19 +1,26 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { faker } from '@faker-js/faker';
+import { Role } from '@prisma-generated/enums';
+import { prisma } from '@prisma';
+import { ErrorCode } from '@beggy/shared/constants';
 import {
+	BASE,
 	createAnonAgent,
 	createAuthenticatedAgent,
 	expectError,
 	expectPaginatedResponse,
-	withCsrf,
-	BASE,
+	seedTestPermissions,
+	stripUserId,
 	truncateAllTables,
+	withCsrf,
 } from '@tests';
-import { ErrorCode } from '@beggy/shared/constants';
 import { bagFactory } from './factories/bag.factory';
-import { prisma } from '@prisma';
 
 describe('Bags Integration', () => {
+	beforeAll(async () => {
+		await seedTestPermissions();
+	});
+
 	beforeEach(async () => {
 		await truncateAllTables();
 	});
@@ -24,9 +31,10 @@ describe('Bags Integration', () => {
 
 	describe('POST /bags', () => {
 		it('creates a bag and returns 201 with BagDTO', async () => {
-			const { agent, csrfToken } = await createAuthenticatedAgent();
+			const { agent, csrfToken, userId } =
+				await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
+			const payload = stripUserId(bagFactory('ignored'));
 
 			const res = await withCsrf(
 				agent.post(`${BASE}/bags`).send(payload),
@@ -34,7 +42,6 @@ describe('Bags Integration', () => {
 			);
 
 			expect(res.status).toBe(201);
-
 			expect(res.body.data).toMatchObject({
 				name: payload.name,
 				type: payload.type,
@@ -42,8 +49,8 @@ describe('Bags Integration', () => {
 				maxCapacity: payload.maxCapacity,
 				maxWeight: payload.maxWeight,
 				emptyWeight: payload.emptyWeight,
+				userId,
 			});
-
 			expect(res.body.data.id).toBeDefined();
 			expect(res.body.data.status).toBeDefined();
 			expect(res.body.data.status.state.status).toBe('empty');
@@ -64,21 +71,44 @@ describe('Bags Integration', () => {
 			const { agent, csrfToken } = await createAnonAgent();
 
 			const res = await withCsrf(
-				agent.post(`${BASE}/bags`).send(bagFactory('ignored')),
+				agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				csrfToken
 			);
 
 			expectError(res, 401);
 		});
+
+		it('allows moderator to create a bag', async () => {
+			const { agent, csrfToken, role } = await createAuthenticatedAgent(
+				undefined,
+				Role.MODERATOR
+			);
+
+			expect(role).toBe(Role.MODERATOR);
+
+			const res = await withCsrf(
+				agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
+				csrfToken
+			);
+
+			expect(res.status).toBe(201);
+		});
 	});
 
 	describe('GET /bags', () => {
-		it('returns a paginated list of bags', async () => {
+		it('returns a paginated list with meta', async () => {
 			const { agent, csrfToken } = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
-			await withCsrf(agent.post(`${BASE}/bags`).send(payload), csrfToken);
+			await withCsrf(
+				agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
+				csrfToken
+			);
 
 			const res = await agent.get(`${BASE}/bags`);
 
@@ -97,10 +127,10 @@ describe('Bags Integration', () => {
 			const userA = await createAuthenticatedAgent();
 			const userB = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
 			await withCsrf(
-				userA.agent.post(`${BASE}/bags`).send(payload),
+				userA.agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				userA.csrfToken
 			);
 
@@ -111,13 +141,14 @@ describe('Bags Integration', () => {
 	});
 
 	describe('GET /bags/:id', () => {
-		it('returns the bag when it belongs to the user', async () => {
-			const { agent, csrfToken } = await createAuthenticatedAgent();
-
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
+		it('returns the bag when it belongs to the authenticated user', async () => {
+			const { agent, csrfToken, userId } =
+				await createAuthenticatedAgent();
 
 			const createRes = await withCsrf(
-				agent.post(`${BASE}/bags`).send(payload),
+				agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				csrfToken
 			);
 			const bagId = createRes.body.data.id as string;
@@ -126,6 +157,7 @@ describe('Bags Integration', () => {
 
 			expect(res.status).toBe(200);
 			expect(res.body.data.id).toBe(bagId);
+			expect(res.body.data.userId).toBe(userId);
 			expect(res.body.data.status).toBeDefined();
 		});
 
@@ -139,10 +171,10 @@ describe('Bags Integration', () => {
 			const userA = await createAuthenticatedAgent();
 			const userB = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
 			const createRes = await withCsrf(
-				userA.agent.post(`${BASE}/bags`).send(payload),
+				userA.agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				userA.csrfToken
 			);
 			const bagId = createRes.body.data.id as string;
@@ -153,13 +185,13 @@ describe('Bags Integration', () => {
 	});
 
 	describe('PATCH /bags/:id', () => {
-		it('updates bag cosmetic fields and returns the updated bag', async () => {
+		it('updates cosmetic fields and returns the updated BagDTO', async () => {
 			const { agent, csrfToken } = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
 			const createRes = await withCsrf(
-				agent.post(`${BASE}/bags`).send(payload),
+				agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				csrfToken
 			);
 			const bagId = createRes.body.data.id as string;
@@ -176,13 +208,13 @@ describe('Bags Integration', () => {
 			expect(res.body.data.color).toBe('navy');
 		});
 
-		it('updates container constraints and returns the updated bag', async () => {
+		it('updates container constraints and reflects them in the DTO', async () => {
 			const { agent, csrfToken } = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
 			const createRes = await withCsrf(
-				agent.post(`${BASE}/bags`).send(payload),
+				agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				csrfToken
 			);
 			const bagId = createRes.body.data.id as string;
@@ -217,10 +249,10 @@ describe('Bags Integration', () => {
 			const userA = await createAuthenticatedAgent();
 			const userB = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
 			const createRes = await withCsrf(
-				userA.agent.post(`${BASE}/bags`).send(payload),
+				userA.agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				userA.csrfToken
 			);
 			const bagId = createRes.body.data.id as string;
@@ -240,10 +272,10 @@ describe('Bags Integration', () => {
 		it('deletes the bag and returns 204', async () => {
 			const { agent, csrfToken } = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
 			const createRes = await withCsrf(
-				agent.post(`${BASE}/bags`).send(payload),
+				agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				csrfToken
 			);
 			const bagId = createRes.body.data.id as string;
@@ -273,10 +305,10 @@ describe('Bags Integration', () => {
 			const userA = await createAuthenticatedAgent();
 			const userB = await createAuthenticatedAgent();
 
-			const { userId: _ignored, ...payload } = bagFactory('ignored');
-
 			const createRes = await withCsrf(
-				userA.agent.post(`${BASE}/bags`).send(payload),
+				userA.agent
+					.post(`${BASE}/bags`)
+					.send(stripUserId(bagFactory('ignored'))),
 				userA.csrfToken
 			);
 			const bagId = createRes.body.data.id as string;

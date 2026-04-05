@@ -16,48 +16,32 @@ import { buildMeta, buildUserQuery, hashPassword } from '@shared/utils';
 import { type BatchPayload as DeletePayload } from '@prisma/generated/prisma/internal/prismaNamespace';
 
 /**
- * UserService
- * -----------
- * Service layer responsible for managing User domain operations.
+ * Service responsible for user-related domain operations.
  *
  * @remarks
- * - Encapsulates all database access related to users
- * - Contains business-level orchestration (not HTTP concerns)
- * - Does NOT handle request validation or HTTP error responses
- * - Throws domain-specific AppErrors where appropriate
+ * Encapsulates persistence logic and domain orchestration for users.
+ * Does not handle transport concerns (e.g. HTTP, validation).
  *
- * Error handling strategy:
- * - Domain errors are thrown explicitly (e.g. USER_NOT_FOUND)
- * - Infrastructure errors (Prisma, hashing, etc.) are allowed to bubble up
- *   and are normalized by the centralized errorHandler middleware
+ * Error strategy:
+ * - Known domain failures throw AppError via BaseService helpers
+ * - Infrastructure errors are allowed to bubble up
  */
 export class UserService extends BaseService {
-	/**
-	 * Prisma client instance.
-	 *
-	 * @remarks
-	 * - Typed as PrismaClientType to allow future extensions
-	 * - Initialized once per service instance
-	 */
 	constructor(private readonly prisma: PrismaClientType) {
 		super({ domain: 'users', service: 'UserService' });
 	}
 
 	/**
-	 * Retrieves a paginated list of users with filtering and ordering support.
+	 * Retrieves paginated users with filtering and sorting.
+	 *
+	 * @param pagination - Pagination configuration (offset-based)
+	 * @param filter - Domain-level filtering criteria
+	 * @param orderBy - Sorting configuration
+	 *
+	 * @returns Paginated users with navigation metadata
 	 *
 	 * @remarks
-	 * - Uses cursor-less pagination via offset/limit
-	 * - Fetches `limit + 1` records to determine `hasNextPage`
-	 * - Filtering and ordering are delegated to `buildUserQuery`
-	 *
-	 * @param pagination - Pagination configuration (page, limit, offset)
-	 * @param filter - Optional user filtering criteria
-	 * @param orderBy - Ordering configuration
-	 *
-	 * @returns
-	 * - A list of users for the current page
-	 * - Pagination metadata describing navigation state
+	 * Fetches `limit + 1` records to infer `hasNextPage`.
 	 */
 	async listUsers(
 		pagination: PaginationPayload,
@@ -66,15 +50,11 @@ export class UserService extends BaseService {
 	): Promise<{ users: User[]; meta: PaginationMeta }> {
 		const { offset, limit, page } = pagination;
 
-		// Build Prisma-compatible query inputs from domain-level filters
 		const { where, orderBy: prismaOrderBy } = buildUserQuery(
 			filter,
 			orderBy
 		);
 
-		/**
-		 * Fetch one extra record to detect whether a next page exists.
-		 */
 		const users = await this.prisma.user.findMany({
 			where,
 			orderBy: prismaOrderBy,
@@ -88,14 +68,12 @@ export class UserService extends BaseService {
 	}
 
 	/**
-	 * Retrieves a single user by its unique identifier.
+	 * Retrieves a user by ID.
 	 *
-	 * @param id - User ID
+	 * @param id - User identifier
+	 * @returns The user entity
 	 *
-	 * @throws AppError
-	 * - USER_NOT_FOUND when the user does not exist
-	 *
-	 * @returns The matching user record
+	 * @throws {AppError} When user does not exist
 	 */
 	async getById(id: string): Promise<User> {
 		const user = await this.prisma.user.findUnique({
@@ -108,39 +86,27 @@ export class UserService extends BaseService {
 	}
 
 	/**
-	 * Creates a new user along with its related profile and account records.
+	 * Creates a user with associated profile and local account.
+	 *
+	 * @param payload - User creation data including credentials
+	 * @returns Newly created user
 	 *
 	 * @remarks
-	 * - Password hashing is performed before persistence
-	 * - Relies on database-level unique constraints (e.g. email)
-	 * - Does NOT pre-check for duplicates to avoid race conditions
-	 *
-	 * @param user - Payload containing user, profile, and credential data
-	 *
-	 * @returns The newly created user record
+	 * - Relies on DB constraints for uniqueness (e.g. email)
+	 * - Avoids pre-checks to prevent race conditions
 	 */
-	async createUser(user: CreateUserPayload): Promise<User> {
-		// Hash password before persisting credentials
-		const hashedPassword = await hashPassword(user.password);
+	async createUser(payload: CreateUserPayload): Promise<User> {
+		const hashedPassword = await hashPassword(payload.password);
 
 		const newUser = await this.prisma.user.create({
 			data: {
-				email: user.email,
-
-				/**
-				 * Profile is created as a nested relation
-				 * and contains non-authentication user data.
-				 */
+				email: payload.email,
 				profile: {
 					create: {
-						firstName: user.firstName,
-						lastName: user.lastName,
+						firstName: payload.firstName,
+						lastName: payload.lastName,
 					},
 				},
-
-				/**
-				 * Account contains authentication-related data.
-				 */
 				account: {
 					create: {
 						authProvider: 'LOCAL',
@@ -159,32 +125,28 @@ export class UserService extends BaseService {
 	}
 
 	/**
-	 * Updates a user's profile information.
+	 * Partially updates a user's profile.
+	 *
+	 * @param id - User identifier
+	 * @param profile - Partial profile fields
+	 * @returns Updated profile entity
 	 *
 	 * @remarks
-	 * - Operates strictly on the Profile domain
-	 * - Uses PATCH semantics (partial updates allowed)
-	 * - Identifies the profile via the associated userId
-	 *
-	 * @param id - User ID whose profile should be updated
-	 * @param profile - Partial profile update payload
-	 *
-	 * @returns The updated profile record
+	 * Nullish values are stripped before persistence.
 	 */
 	async updateProfile(
 		id: string,
 		profile: EditProfileInput
 	): Promise<Profile> {
+		await this.getById(id);
+
 		const updatedProfile = await this.prisma.profile.update({
 			where: { userId: id },
 			data: this.stripNullish(profile as Record<string, unknown>),
 		});
 
 		this.log.info(
-			{
-				userId: id,
-				profileId: updatedProfile.id,
-			},
+			{ userId: id, profileId: updatedProfile.id },
 			'User Profile updated'
 		);
 
@@ -192,18 +154,18 @@ export class UserService extends BaseService {
 	}
 
 	/**
-	 * Updates a user's account status and verification flags.
+	 * Updates account status flags.
+	 *
+	 * @param id - User identifier
+	 * @param status - Status update payload
+	 * @returns Updated user
 	 *
 	 * @remarks
-	 * - Intended for moderation and administrative workflows
-	 * - Does NOT affect authentication credentials or profile data
-	 *
-	 * @param id - User ID
-	 * @param status - Status and verification update payload
-	 *
-	 * @returns The updated user record
+	 * Intended for administrative or moderation workflows.
 	 */
 	async updateStatus(id: string, status: UpdateStatusInput): Promise<User> {
+		await this.getById(id);
+
 		const updatedStatus = await this.prisma.user.update({
 			where: { id },
 			data: {
@@ -225,42 +187,42 @@ export class UserService extends BaseService {
 	}
 
 	/**
-	 * Changes the role assigned to a user.
+	 * Assigns a new role to a user.
+	 *
+	 * @param id - User identifier
+	 * @param input - Role assignment payload
+	 * @returns Updated user
 	 *
 	 * @remarks
-	 * - Authorization is enforced outside the service layer
-	 * - This method assumes the caller is already authorized
-	 *
-	 * @param id - User ID
-	 * @param role - New role to assign
-	 *
-	 * @returns The updated user record
+	 * Assumes authorization is handled upstream.
 	 */
-	async changeRole(id: string, user: ChangeRoleInput): Promise<User> {
+	async changeRole(id: string, input: ChangeRoleInput): Promise<User> {
+		await this.getById(id);
+
 		const updatedRole = await this.prisma.user.update({
 			where: { id },
 			data: {
-				role: user.role,
+				role: input.role,
 			},
 		});
 
-		this.log.warn({ userId: id, role: user.role }, 'User role changed');
+		this.log.warn({ userId: id, role: input.role }, 'User role changed');
 
 		return updatedRole;
 	}
 
 	/**
-	 * Deletes a single user by ID.
+	 * Deletes a user by ID.
+	 *
+	 * @param id - User identifier
+	 * @returns Deleted user
 	 *
 	 * @remarks
-	 * - Intended for administrative use
-	 * - Cascading behavior is controlled by Prisma schema relations
-	 *
-	 * @param id - User ID
-	 *
-	 * @returns The deleted user record
+	 * Cascading behavior is defined at the schema level.
 	 */
 	async deleteById(id: string): Promise<User> {
+		await this.getById(id);
+
 		const deletedUser = await this.prisma.user.delete({
 			where: { id },
 		});
@@ -271,16 +233,13 @@ export class UserService extends BaseService {
 	}
 
 	/**
-	 * Deletes multiple users based on optional filtering criteria.
+	 * Deletes users matching filter criteria.
+	 *
+	 * @param filter - Optional filtering conditions
+	 * @returns Batch delete result
 	 *
 	 * @remarks
-	 * - Admin-only operation
-	 * - Supports safe bulk deletion using the same filtering logic
-	 *   as list queries
-	 *
-	 * @param filter - Optional user filtering criteria
-	 *
-	 * @returns Summary payload describing the delete operation
+	 * Uses same filtering logic as list queries for consistency.
 	 */
 	async deleteUsers(filter?: UserFilterInput): Promise<DeletePayload> {
 		const { where } = buildUserQuery(

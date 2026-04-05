@@ -39,7 +39,7 @@ describe('ItemService', () => {
 	});
 
 	describe('listItems()', () => {
-		it('returns paginated items for the user', async () => {
+		it('returns paginated items for the user with metadata', async () => {
 			/* Arrange */
 			const userId = 'user-1';
 
@@ -132,7 +132,7 @@ describe('ItemService', () => {
 	});
 
 	describe('createItem()', () => {
-		it('creates an item with valid input', async () => {
+		it('creates an item and returns the persisted record', async () => {
 			/* Arrange */
 			const input = itemFactory(userId);
 			const createdItem = buildItem(userId);
@@ -154,7 +154,7 @@ describe('ItemService', () => {
 	});
 
 	describe('updateItem()', () => {
-		it('updates the item with a cleaned payload', async () => {
+		it('updates the item with a cleaned payload and returns the updated record', async () => {
 			/* Arrange */
 			const item = buildItem(userId);
 
@@ -164,7 +164,11 @@ describe('ItemService', () => {
 				weight: undefined,
 			};
 
+			mockPrisma.item.findUnique.mockResolvedValue(item);
+
 			mockPrisma.item.update.mockResolvedValue(item);
+
+			const service = new ItemService(mockPrisma);
 
 			/* Act */
 			const result = await service.updateItem(
@@ -174,9 +178,13 @@ describe('ItemService', () => {
 			);
 
 			/* Assert */
+			expect(mockPrisma.item.findUnique).toHaveBeenCalledWith({
+				where: { id: item.id, userId },
+			});
+
 			expect(mockPrisma.item.update).toHaveBeenCalledWith({
 				where: { id: item.id, userId },
-				data: { name: 'Updated' },
+				data: { name: 'Updated' }, // cleaned payload
 			});
 
 			expect(result).toBe(item);
@@ -184,19 +192,28 @@ describe('ItemService', () => {
 	});
 
 	describe('deleteItemById()', () => {
-		it('deletes the item when it exists', async () => {
+		it('deletes the item and returns the deleted record', async () => {
 			/* Arrange */
 			const item = buildItem(userId);
 
+			mockPrisma.item.findUnique.mockResolvedValue(item);
+
 			mockPrisma.item.delete.mockResolvedValue(item);
+
+			const service = new ItemService(mockPrisma);
 
 			/* Act */
 			const result = await service.deleteItemById(userId, item.id);
 
 			/* Assert */
+			expect(mockPrisma.item.findUnique).toHaveBeenCalledWith({
+				where: { id: item.id, userId },
+			});
+
 			expect(mockPrisma.item.delete).toHaveBeenCalledWith({
 				where: { id: item.id, userId },
 			});
+
 			expect(result).toBe(item);
 		});
 	});
