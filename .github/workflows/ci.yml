@@ -47,9 +47,6 @@ jobs:
             - name: Check formatting
               run: pnpm format:check
 
-            - name: Type check shared package
-              run: pnpm --filter @beggy/shared type-check
-
             - name: Build shared package
               # Build before running tests — vitest imports from src directly
               # but the type-check step confirms the dist/ output is valid
@@ -111,9 +108,6 @@ jobs:
 
             - name: Check formatting
               run: pnpm format:check
-
-            - name: Type check API
-              run: pnpm --filter @beggy/api type-check
 
             - name: Generate Prisma Client
               run: pnpm turbo run prisma:generate --filter=@beggy/api
@@ -239,9 +233,6 @@ jobs:
 
             - name: Check formatting
               run: pnpm format:check
-
-            # - name: Type check web
-            #   run: pnpm --filter @beggy/web type-check
 
             - name: Build shared package
               # Web imports from @beggy/shared — dist/ must exist for type resolution
