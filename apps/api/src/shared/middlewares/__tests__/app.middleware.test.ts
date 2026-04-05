@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { NextFunction, Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { rateLimitHandler, routeNotFoundHandler } from '@shared/middlewares';
 import { STATUS_CODE } from '@shared/constants';
 import { ErrorCode } from '@beggy/shared/constants';
@@ -36,7 +36,6 @@ describe('rateLimitHandler', () => {
 describe('routeNotFoundHandler', () => {
 	let req: Partial<Request>;
 	let res: Partial<Response>;
-	let next: NextFunction;
 
 	beforeEach(() => {
 		req = {
@@ -48,8 +47,6 @@ describe('routeNotFoundHandler', () => {
 			status: vi.fn().mockReturnThis(),
 			json: vi.fn(),
 		};
-
-		next = vi.fn();
 	});
 
 	it('returns a not-found error', () => {
