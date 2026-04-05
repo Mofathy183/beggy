@@ -3,6 +3,11 @@ import baseVitestConfig from '../../vitest.base.config';
 
 export default mergeConfig(baseVitestConfig, {
 	test: {
+		pool: 'forks',
+		sequence: {
+			concurrent: false, // no parallel tests within a file
+		},
+
 		environment: 'node',
 		setupFiles: ['./tests/vitest.setup.ts'],
 

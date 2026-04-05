@@ -44,16 +44,26 @@ export const corsMiddleware = cors({
  * It ensures that rate-limit errors are returned using the same
  * standardized API error response format as the rest of the system.
  *
- * @param _req - Express request object (unused but required by the interface)
+ * @param req - Express request object (unused but required by the interface)
  * @param res - Express response object
  *
  * @returns A normalized HTTP 429 (Too Many Requests) error response
  */
-export const rateLimitHandler = (_req: Request, res: Response) => {
+export const rateLimitHandler = (req: Request, res: Response) => {
 	// Build a standardized API error response
 	const response = createResponse.error(
 		ErrorCode.RATE_LIMITED,
 		STATUS_CODE.TOO_MANY_REQUESTS
+	);
+
+	logger.warn(
+		{
+			path: req.path,
+			method: req.method,
+			userId: req.user?.id,
+			code: ErrorCode.RATE_LIMITED,
+		},
+		'Rate limit exceeded'
 	);
 
 	// Send HTTP 429 response
@@ -73,6 +83,9 @@ export const rateLimitHandler = (_req: Request, res: Response) => {
  * - Uses standard rate-limit headers
  * - Delegates error formatting to `rateLimitHandler`
  *
+ * The `skip` callback returns true in test — express-rate-limit will
+ * not count or block any requests when skip returns true.
+ *
  * Designed to be applied globally or per-router depending on use case.
  */
 export const limiter = rateLimit({
@@ -81,6 +94,10 @@ export const limiter = rateLimit({
 
 	// Maximum number of requests allowed per IP within the window
 	max: 100,
+
+	// Skip rate limiting entirely in test environment.
+	// This prevents 429 errors when many tests run in the same window.
+	skip: () => env.NODE_ENV === 'test',
 
 	// Expose rate-limit info via standardized headers
 	standardHeaders: true,

@@ -1,6 +1,6 @@
 import { type ZodType } from 'zod';
 import type { OrderDirection } from '@beggy/shared/constants';
-import type { Action, Role, Subject } from '@prisma-generated/enums';
+import type { Action, Role, Scope, Subject } from '@prisma-generated/enums';
 import { type PaginationParams } from '@beggy/shared/types';
 import { type PureAbility } from '@casl/ability';
 
@@ -104,14 +104,26 @@ export interface AuthUser {
 }
 
 /**
+ * @description
+ * Compound subject key encoding both resource and scope.
+ * CASL stores rules against these strings internally.
+ *
+ * @example
+ * Examples: "BAG:OWN" | "BAG:ANY" | "USER:ANY"
+ */
+export type ScopedSubject = `${Subject}:${Scope}`;
+
+/**
  * Application-wide CASL ability type.
  *
  * @remarks
  * - Restricts abilities to known {@link Action} and {@link Subject} unions
  * - Shared across middleware, services, and guards
  * - Prevents invalid authorization checks at compile time
+ * Application-wide CASL ability type.
+ * Uses ScopedSubject so CASL can distinguish READ BAG:OWN from READ BAG:ANY.
  */
-export type AppAbility = PureAbility<[Action, Subject]>;
+export type AppAbility = PureAbility<[Action, ScopedSubject]>;
 
 /**
  * Configuration options for the `prepareListQuery` middleware.

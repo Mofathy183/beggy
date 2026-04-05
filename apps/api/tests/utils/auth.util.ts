@@ -2,8 +2,15 @@ import request from 'supertest';
 import type { Test } from 'supertest';
 import type { SuperAgentTest } from 'supertest';
 import { faker } from '@faker-js/faker';
-import { prisma } from '@prisma';
+import { prisma, type PrismaClientType } from '@prisma';
 import app from '@app';
+import {
+	Role,
+	type Action as PrismaAction,
+	type Scope as PrismaScope,
+	type Subject as PrismaSubject,
+} from '@prisma-generated/enums';
+import { RolePermissions } from '@beggy/shared/constants';
 import type { HttpErrorResponse } from '@shared/types';
 import type { ErrorCode } from '@beggy/shared/constants';
 
@@ -11,9 +18,6 @@ import type { ErrorCode } from '@beggy/shared/constants';
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Base API prefix used across integration tests.
- */
 export const BASE = '/api/beggy';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,24 +25,23 @@ export const BASE = '/api/beggy';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Represents a fully authenticated test agent.
+ * A fully authenticated test agent.
+ *
+ * - `userId` — real DB id, use for ownership assertions
+ * - `role`   — role the user was assigned before login
  */
 export interface AuthenticatedAgent {
 	agent: SuperAgentTest;
 	csrfToken: string;
+	userId: string;
+	role: Role;
 }
 
-/**
- * Represents an anonymous agent with valid CSRF but no auth session.
- */
 export interface AnonAgent {
 	agent: SuperAgentTest;
 	csrfToken: string;
 }
 
-/**
- * Credentials used to create test users.
- */
 export interface TestUserCredentials {
 	email: string;
 	password: string;
@@ -51,84 +54,42 @@ export interface TestUserCredentials {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * A simple name→value cookie store that merges correctly.
+ * Name→value cookie store that always replaces on collision.
  *
- * @remarks
- * This is the root cause of the original bug.
+ * `agent.set('Cookie', value)` APPENDS — calling it twice with different
+ * XSRF-TOKEN values produces `XSRF-TOKEN=<old>; XSRF-TOKEN=<new>`.
+ * Express resolves to the first value, CSRF middleware compares it against
+ * the header (new value) → HMAC mismatch → 403.
  *
- * `agent.set('Cookie', value)` APPENDS to the Cookie header on each call.
- * After two CSRF fetches you end up with:
- *
- *   Cookie: XSRF-TOKEN=<old>; XSRF-TOKEN=<new>
- *
- * The server receives both values, resolves to the first (the old one), and
- * compares it against the header token (the new one) → HMAC mismatch → 403.
- *
- * The fix: parse every `Set-Cookie` response header into a name→value map.
- * When a name is seen again it REPLACES the old value. We then apply the
- * entire merged map to the agent as a single `.set('Cookie', ...)` call
- * so there is always exactly one value per cookie name.
+ * Fix: parse name=value from Set-Cookie, replace on collision, rebuild one
+ * clean header after every response.
  */
 class CookieStore {
 	private readonly store = new Map<string, string>();
 
-	/**
-	 * Parses a Set-Cookie header array and merges values into the store.
-	 *
-	 * @remarks
-	 * A Set-Cookie entry looks like:
-	 *   XSRF-TOKEN=abc123; Max-Age=86400; Path=/; SameSite=Lax
-	 *
-	 * We only care about the first `name=value` segment. Everything after
-	 * the first `;` is metadata and must NOT be included in the Cookie header
-	 * sent back to the server (doing so would break cookie-parser on Express).
-	 *
-	 * @param setCookieHeader - The `set-cookie` value from a response header.
-	 */
 	merge(setCookieHeader: unknown): void {
 		if (!setCookieHeader) return;
-
 		const entries = Array.isArray(setCookieHeader)
 			? (setCookieHeader as string[])
 			: [String(setCookieHeader)];
 
 		for (const entry of entries) {
-			// Take only the first segment: "name=value"
 			const nameValue = entry.split(';')[0]?.trim();
 			if (!nameValue) continue;
-
 			const eqIdx = nameValue.indexOf('=');
 			if (eqIdx === -1) continue;
-
 			const name = nameValue.substring(0, eqIdx).trim();
 			const value = nameValue.substring(eqIdx + 1).trim();
-
-			if (name) {
-				// Replace — not append — so duplicates never build up
-				this.store.set(name, value);
-			}
+			if (name) this.store.set(name, value);
 		}
 	}
 
-	/**
-	 * Returns a single `Cookie` header string built from all stored values.
-	 *
-	 * @example
-	 * "XSRF-TOKEN=abc; access_token=xyz; refresh_token=def"
-	 */
 	toCookieHeader(): string {
 		return Array.from(this.store.entries())
-			.map(([name, value]) => `${name}=${value}`)
+			.map(([n, v]) => `${n}=${v}`)
 			.join('; ');
 	}
 
-	/**
-	 * Applies the current store to a supertest agent as a single Cookie header.
-	 *
-	 * @remarks
-	 * Calling this after every response guarantees the agent always sends
-	 * exactly one value per cookie name on its next request.
-	 */
 	applyTo(agent: SuperAgentTest): void {
 		const header = this.toCookieHeader();
 		if (header) {
@@ -141,15 +102,91 @@ class CookieStore {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CREDENTIAL FACTORY
+// PERMISSION SEEDING
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Generates a unique set of test user credentials.
+ * Seeds all role permissions into the test database.
  *
- * - Timestamp + nanoid suffix prevents email collisions in parallel runs.
- * - Password satisfies FieldsSchema.password() rules.
+ * Call once in `beforeAll` per suite. Idempotent — safe to call multiple times.
+ * Permissions are preserved by `truncateAllTables` so re-seeding between tests
+ * is never needed.
+ *
+ * @remarks
+ * `defineAbilityFor` reads `RolePermissions` (in-memory) at runtime so CASL
+ * itself works without DB permissions. However keeping the test DB in sync with
+ * the production seed prevents divergence and supports future DB-backed
+ * permission features.
  */
+export const seedTestPermissions = async (): Promise<void> => {
+	const allPermissions = Object.values(Role).flatMap((role) =>
+		RolePermissions[role].map((perm) => ({
+			action: perm.action as PrismaAction,
+			scope: perm.scope as PrismaScope,
+			subject: perm.subject as PrismaSubject,
+		}))
+	);
+
+	await prisma.permission.createMany({
+		data: allPermissions,
+		skipDuplicates: true,
+	});
+
+	for (const role of Object.values(Role)) {
+		const found = await Promise.all(
+			RolePermissions[role].map((perm) =>
+				prisma.permission.findUnique({
+					where: {
+						action_scope_subject: {
+							action: perm.action as PrismaAction,
+							scope: perm.scope as PrismaScope,
+							subject: perm.subject as PrismaSubject,
+						},
+					},
+					select: { id: true },
+				})
+			)
+		);
+
+		await prisma.roleOnPermission.createMany({
+			data: found
+				.filter(Boolean)
+				.map((p) => ({ permissionId: p!.id, role })),
+			skipDuplicates: true,
+		});
+	}
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATABASE UTILITIES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Wipes all application data in dependency order.
+ *
+ * Permissions are intentionally preserved — they are stable and seeded once
+ * per suite. Never call `truncateAllTables` between seeding and role elevation
+ * in `createAuthenticatedAgent` — the helper handles its own flow atomically.
+ *
+ * Use in `beforeEach` when tests need a clean slate.
+ */
+export const truncateAllTables = async (): Promise<void> => {
+	await prisma.containerItems.deleteMany();
+	await prisma.item.deleteMany();
+	await prisma.bag.deleteMany();
+	await prisma.suitcase.deleteMany();
+	await prisma.container.deleteMany();
+	await prisma.userToken.deleteMany();
+	await prisma.account.deleteMany();
+	await prisma.profile.deleteMany();
+	await prisma.user.deleteMany();
+	// Permissions preserved intentionally
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CREDENTIAL FACTORY
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const makeTestCredentials = (
 	overrides: Partial<TestUserCredentials> = {}
 ): TestUserCredentials => ({
@@ -185,10 +222,6 @@ const fetchCsrfRaw = async (agent: SuperAgentTest): Promise<CsrfResult> => {
 	};
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PUBLIC — fetchCsrfToken
-// ─────────────────────────────────────────────────────────────────────────────
-
 export const fetchCsrfToken = async (
 	agent: SuperAgentTest
 ): Promise<string> => {
@@ -201,9 +234,8 @@ export const fetchCsrfToken = async (
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Creates an anonymous agent with a valid CSRF token but no auth cookies.
- *
- * Use this to test 401 responses — CSRF passes, auth middleware rejects.
+ * Agent with a valid CSRF token but no auth cookies.
+ * Use to test 401 — CSRF passes, `requireAuth` rejects.
  */
 export const createAnonAgent = async (): Promise<AnonAgent> => {
 	const agent = request.agent(app) as unknown as SuperAgentTest;
@@ -221,41 +253,96 @@ export const createAnonAgent = async (): Promise<AnonAgent> => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Creates a fully authenticated test agent by running signup → login.
+ * Elevates the role of the currently authenticated test user.
+ *
+ * @description
+ * Retrieves the authenticated user via `/auth/me` using the provided agent,
+ * then directly updates their role in the database using Prisma.
+ *
+ * Intended for integration tests where role-based access needs to be simulated
+ * without going through the full authorization flow.
+ *
+ * @param prisma - Prisma client instance used to update the user record.
+ * @param agent - Authenticated Supertest agent representing the current session.
+ * @param role - Target role to assign to the user.
+ *
+ * @throws If `/auth/me` does not return a valid user (e.g. unauthenticated session
+ * or unexpected response shape).
  *
  * @remarks
- * ### Root cause of the previous failures
- * `agent.set('Cookie', value)` appends — it does not replace. Calling it
- * twice with two different XSRF-TOKEN values produces:
+ * - Assumes the agent has already completed signup/login.
+ * - Bypasses domain/business logic by writing directly to the database.
+ * - Coupled to the `/auth/me` response structure (`body.data.user.id`).
+ */
+export const elevateRole = async (
+	prisma: PrismaClientType,
+	agent: SuperAgentTest,
+	role: Role
+): Promise<void> => {
+	const response = await agent.get(`${BASE}/auth/me`);
+
+	const userId = response.body?.data?.user?.id as string | undefined;
+
+	if (response.status !== 200 || !userId) {
+		throw new Error(
+			`[test helper] Failed to elevate role: /auth/me returned (${response.status}). ` +
+				`Body: ${JSON.stringify(response.body)}`
+		);
+	}
+
+	await prisma.user.update({
+		where: { id: userId },
+		data: { role },
+	});
+};
+
+/**
+ * Creates a fully authenticated test agent: signup → role elevation → login
+ * → post-login CSRF refresh → userId resolution.
  *
- *   Cookie: XSRF-TOKEN=<old>; XSRF-TOKEN=<new>
+ * @remarks
  *
- * Express/cookie-parser resolves to the first value. The CSRF middleware
- * compares the cookie (old) against the header (new) → HMAC mismatch → 403.
+ * ### `bagFactory` / `itemFactory` include `userId` — strip it before sending
+ * Your Zod schemas use `z.strictObject` which rejects unrecognised keys.
+ * Factories include `userId` for unit-test convenience but it must NOT be sent
+ * to the API. Always destructure it out:
+ * ```typescript
+ * const { userId: _ignored, ...payload } = bagFactory('ignored');
+ * agent.post('/bags').send(payload);
+ * ```
  *
- * The fix is `CookieStore` which parses name=value from Set-Cookie headers
- * and always replaces on collision, then applies the entire map as one header.
+ * ### Role elevation timing
+ * Signup always creates `Role.USER`. The DB update happens BEFORE login so the
+ * JWT is signed with the correct role. Do NOT call `truncateAllTables` between
+ * signup and the role update — the user must exist in the DB at that point.
  *
- * ### Why CSRF is re-fetched after login
- * `getSessionIdentifier` returns the refresh token cookie value for
- * authenticated requests. Before login that cookie does not exist, so the
- * pre-login CSRF token is HMAC'd against a different identifier. After login
- * the identifier changes. Re-fetching gives a token valid for the new session.
+ * ### Rate limiting
+ * Each call makes ~5 HTTP requests. With many parallel tests this can hit
+ * `express-rate-limit`. Fix: set `NODE_ENV=test` and skip the limiter in that
+ * environment, or raise the limit in your test config.
+ *
+ * ### userId resolution
+ * `userId` is read from `/auth/me` after login rather than from the signup
+ * response body — this avoids coupling to the auth controller's exact shape.
+ *
+ * @param credentials - Optional overrides (defaults to random values)
+ * @param role - Role to assign before login (default: `Role.USER`)
  */
 export const createAuthenticatedAgent = async (
-	credentials?: Partial<TestUserCredentials>
+	credentials?: Partial<TestUserCredentials>,
+	role: Role = Role.USER
 ): Promise<AuthenticatedAgent> => {
 	const agent = request.agent(app) as unknown as SuperAgentTest;
 	const creds = makeTestCredentials(credentials);
 	const cookies = new CookieStore();
 
-	// ── Step 1: Pre-login CSRF ────────────────────────────────────────────────
+	// ── Step 1: Pre-login CSRF ──────────────────────────────────────
 	const { csrfToken: preCsrf, setCookieHeader: csrfCookies } =
 		await fetchCsrfRaw(agent);
 	cookies.merge(csrfCookies);
 	cookies.applyTo(agent);
 
-	// ── Step 2: Sign up ───────────────────────────────────────────────────────
+	// ── Step 2: Sign up ─────────────────────────────────────────────
 	const signupRes = await agent
 		.post(`${BASE}/auth/signup`)
 		.set('x-csrf-token', preCsrf)
@@ -276,7 +363,19 @@ export const createAuthenticatedAgent = async (
 	cookies.merge(signupRes.headers['set-cookie']);
 	cookies.applyTo(agent);
 
-	// ── Step 3: Log in ────────────────────────────────────────────────────────
+	// ── Step 3: Elevate role BEFORE login ───────────────────────────
+	// This MUST happen before Step 4 (login). The JWT is signed at login
+	// time — whatever role is in the DB at that moment gets baked into
+	// the token. Elevating after login has zero effect on the JWT.
+	//
+	// We call /auth/me here using the signup session cookie to resolve
+	// the userId without touching Prisma directly. A direct DB query
+	// races against the signup transaction commit and fails intermittently.
+	if (role !== Role.USER) {
+		await elevateRole(prisma, agent, role);
+	}
+
+	// ── Step 4: Log in ──────────────────────────────────────────────
 	const loginRes = await agent
 		.post(`${BASE}/auth/login`)
 		.set('x-csrf-token', preCsrf)
@@ -292,17 +391,57 @@ export const createAuthenticatedAgent = async (
 		);
 	}
 
-	// Merge access + refresh token cookies (replaces any old values)
 	cookies.merge(loginRes.headers['set-cookie']);
 	cookies.applyTo(agent);
 
-	// ── Step 4: Re-fetch CSRF with the refresh token now present ─────────────
+	// ── Step 5: Re-fetch CSRF ───────────────────────────────────────
 	const { csrfToken, setCookieHeader: postCsrfCookies } =
 		await fetchCsrfRaw(agent);
 	cookies.merge(postCsrfCookies);
 	cookies.applyTo(agent);
 
-	return { agent, csrfToken };
+	// ── Step 6: Resolve userId + role ──────────────────────────────
+	const meRes = await agent.get(`${BASE}/auth/me`);
+	const userData = meRes.body?.data?.user;
+
+	if (meRes.status !== 200 || !userData?.id || !userData?.role) {
+		throw new Error(
+			`[test helper] /auth/me failed (${meRes.status}): ${JSON.stringify(meRes.body)}`
+		);
+	}
+
+	return {
+		agent,
+		csrfToken,
+		userId: userData.id as string,
+		role: userData.role as Role,
+	};
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FACTORY HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Strips `userId` from any factory output before sending to the API.
+ *
+ * Your schemas use `z.strictObject` — `userId` is not an accepted field on
+ * create/update endpoints and will cause a 400 "Unrecognized key" error.
+ * Factories include it for unit-test convenience only.
+ *
+ * @example
+ * ```typescript
+ * const res = await withCsrf(
+ *   agent.post(`${BASE}/bags`).send(stripUserId(bagFactory('ignored'))),
+ *   csrfToken
+ * );
+ * ```
+ */
+export const stripUserId = <T extends { userId?: unknown }>(
+	factory: T
+): Omit<T, 'userId'> => {
+	const { userId: _ignored, ...rest } = factory;
+	return rest as Omit<T, 'userId'>;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -324,9 +463,6 @@ export const withCsrf = (req: Test, csrfToken: string): Test =>
 // ASSERTION HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Asserts a standard paginated list response shape.
- */
 export const expectPaginatedResponse = (
 	body: Record<string, unknown>,
 	expectedPage = 1
@@ -337,11 +473,11 @@ export const expectPaginatedResponse = (
 };
 
 /**
- * Asserts that a response has the expected HTTP status and optional error code.
+ * Asserts HTTP status and optional domain error code.
  *
  * @example
  * ```typescript
- * expectError(res, 404, 'BAG_NOT_FOUND');
+ * expectError(res, 404, ErrorCode.BAG_NOT_FOUND);
  * expectError(res, 401);
  * ```
  */
@@ -355,36 +491,3 @@ export const expectError = (
 		expect(res.body.code).toBe(code);
 	}
 };
-
-/**
- * Completely resets the test database.
- *
- * IMPORTANT:
- * - Must be called before each integration test
- * - Order matters due to foreign key constraints
- * - Uses deleteMany (NOT truncate) for Prisma safety
- */
-export async function truncateAllTables(): Promise<void> {
-	// Deepest dependencies first
-	await prisma.containerItems.deleteMany();
-
-	// Items & containers children
-	await prisma.item.deleteMany();
-	await prisma.bag.deleteMany();
-	await prisma.suitcase.deleteMany();
-
-	// Containers (after bags/suitcases)
-	await prisma.container.deleteMany();
-
-	// Auth & profile
-	await prisma.userToken.deleteMany();
-	await prisma.account.deleteMany();
-	await prisma.profile.deleteMany();
-
-	// Permissions (if used in tests)
-	await prisma.roleOnPermission.deleteMany();
-	await prisma.permission.deleteMany();
-
-	// Root
-	await prisma.user.deleteMany();
-}
