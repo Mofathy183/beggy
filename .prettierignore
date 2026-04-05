@@ -1,9 +1,33 @@
-node_modules
-build
-dist
-generated/client
-prisma/migrations
-apps\web\src\shared\components\ui
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Turbo
+.turbo/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+storybook-static/
+
+# Caches / temp
+.cache/
+.vite/
+tmp/
+temp/
+
+# Prisma generated
+**/prisma/generated/
+**/prisma/client/
+
+# Logs
+*.log
+
+# Minified files
 *.min.js
-*.prisma
-*.yaml
+
+# TypeScript build
+*.tsbuildinfo
