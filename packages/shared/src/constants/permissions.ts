@@ -54,14 +54,29 @@ export const RolePermissions: Record<Role, Permissions> = {
 		/**
 		 * Members (e.g. paid users) have extended ownership privileges.
 		 */
+		//* Bags
 		{ action: Action.CREATE, scope: Scope.ANY, subject: Subject.BAG },
 		{ action: Action.READ, scope: Scope.ANY, subject: Subject.BAG },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.BAG },
 		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.BAG },
-		{ action: Action.MANAGE, scope: Scope.OWN, subject: Subject.ITEM },
-		{ action: Action.MANAGE, scope: Scope.OWN, subject: Subject.SUITCASE },
+		//* Items
+		{ action: Action.CREATE, scope: Scope.OWN, subject: Subject.ITEM },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.ITEM },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.ITEM },
+		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.ITEM },
+		//* Suitcases
+		{ action: Action.CREATE, scope: Scope.OWN, subject: Subject.SUITCASE },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.SUITCASE },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.SUITCASE },
+		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.SUITCASE },
+
+		//* Users
+		{ action: Action.READ, scope: Scope.ANY, subject: Subject.USER },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.USER },
+		//* Profiles
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.PROFILE },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.PROFILE },
+		//* Dashboard
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.DASHBOARD },
 	],
 
@@ -70,15 +85,28 @@ export const RolePermissions: Record<Role, Permissions> = {
 		 * Default permissions for regular users.
 		 * Access is strictly limited to owned resources.
 		 */
+		//* Bags
 		{ action: Action.CREATE, scope: Scope.OWN, subject: Subject.BAG },
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.BAG },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.BAG },
 		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.BAG },
-		{ action: Action.MANAGE, scope: Scope.OWN, subject: Subject.ITEM },
+		//* Items
+		{ action: Action.CREATE, scope: Scope.OWN, subject: Subject.ITEM },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.ITEM },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.ITEM },
+		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.ITEM },
+		//* Suitcases
+		{ action: Action.CREATE, scope: Scope.OWN, subject: Subject.SUITCASE },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.SUITCASE },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.SUITCASE },
+		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.SUITCASE },
+		//* Users
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.USER },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.USER },
+		//* Profiles
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.PROFILE },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.PROFILE },
+		//* Dashboard
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.DASHBOARD },
 	],
 };
