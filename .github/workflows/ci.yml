@@ -6,45 +6,30 @@ on:
     pull_request:
         branches: [main]
 
+# Cancel in-progress runs on the same branch so stale runs don't block PRs
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     # ─────────────────────────────────────────────────────────────────────────
-    # JOB 1: Unit tests
-    # No database required. Fast. Runs on every push.
+    # JOB 1 — Shared package tests
+    #
+    # Runs first and fast. The shared package is the contract between API and
+    # web — a broken schema or enum silently breaks both. Test it independently
+    # so failures here are immediately obvious without waiting for API or web.
+    #
+    # No database. No browser. Pure Node.
     # ─────────────────────────────────────────────────────────────────────────
-    unit-tests:
-        name: Unit Tests
+    shared-tests:
+        name: Shared Package Tests
         runs-on: ubuntu-latest
 
         env:
             NODE_ENV: test
 
-            # Unit tests do not hit a real DB but env.config.ts may validate
-            # these at startup. Provide safe dummy values.
-            DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-
-            JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
-            JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-            SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-            CSRF_SECRET_KEY: ${{ secrets.CSRF_SECRET_KEY }}
-
-            JWT_ACCESS_EXPIRES_IN: 15m
-            JWT_ACCESS_TOKEN_NAME: test_access_token
-            JWT_REFRESH_EXPIRES_IN: 7d
-            JWT_REFRESH_REMEMBER_EXPIRES_IN: 30d
-            JWT_REFRESH_TOKEN_NAME: test_refresh_token
-
-            NEXT_PUBLIC_API_URL: http://localhost:3000
-
-            GOOGLE_CLIENT_ID: dummy
-            GOOGLE_CLIENT_SECRET: dummy
-            FACEBOOK_CLIENT_ID: dummy
-            FACEBOOK_CLIENT_SECRET: dummy
-            RESEND_API_KEY: dummy
-            AI_API_KEY: dummy
-            OPENWEATHER_API_KEY: dummy
-
         steps:
-            - name: Checkout repo
+            - name: Checkout
               uses: actions/checkout@v4
 
             - name: Setup pnpm
@@ -60,22 +45,94 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Check formatting
-              run: pnpm format:check
+              run: pnpm --filter @beggy/shared format:check
+
+            - name: Type check shared package
+              run: pnpm --filter @beggy/shared type-check
+
+            - name: Build shared package
+              # Build before running tests — vitest imports from src directly
+              # but the type-check step confirms the dist/ output is valid
+              run: pnpm --filter @beggy/shared build
+
+            - name: Run shared tests
+              run: pnpm --filter @beggy/shared test
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # JOB 2 — API unit tests
+    #
+    # Runs *.test.ts only (excludes *.integration.test.ts via vitest.config.ts).
+    # No database required. Dummy env values satisfy startup validation.
+    # Depends on shared-tests so a broken shared contract fails fast here too.
+    # ─────────────────────────────────────────────────────────────────────────
+    api-unit-tests:
+        name: API Unit Tests
+        runs-on: ubuntu-latest
+        needs: [shared-tests]
+
+        env:
+            NODE_ENV: test
+            DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+            JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+            JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+            SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+            CSRF_SECRET_KEY: ${{ secrets.CSRF_SECRET_KEY }}
+
+            JWT_ACCESS_EXPIRES_IN: 15m
+            JWT_ACCESS_TOKEN_NAME: test_access_token
+            JWT_REFRESH_EXPIRES_IN: 7d
+            JWT_REFRESH_REMEMBER_EXPIRES_IN: 30d
+            JWT_REFRESH_TOKEN_NAME: test_refresh_token
+
+            GOOGLE_CLIENT_ID: dummy
+            GOOGLE_CLIENT_SECRET: dummy
+            FACEBOOK_CLIENT_ID: dummy
+            FACEBOOK_CLIENT_SECRET: dummy
+            RESEND_API_KEY: dummy
+            AI_API_KEY: dummy
+            OPENWEATHER_API_KEY: dummy
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Check formatting
+              run: pnpm --filter @beggy/api format:check
+
+            - name: Type check API
+              run: pnpm --filter @beggy/api type-check
 
             - name: Generate Prisma Client
               run: pnpm turbo run prisma:generate --filter=@beggy/api
 
-            - name: Run unit tests
+            - name: Run API unit tests
               run: pnpm --filter @beggy/api test
 
     # ─────────────────────────────────────────────────────────────────────────
-    # JOB 2: Integration tests
-    # Requires a real Postgres instance. Runs sequentially (singleFork).
-    # Rate limiter is skipped automatically when NODE_ENV=test.
+    # JOB 3 — API integration tests
+    #
+    # Runs *.integration.test.ts files against a real Postgres instance.
+    # Depends on api-unit-tests — don't waste DB time if unit tests are broken.
+    # All files run sequentially (singleFork) to prevent cross-file DB races.
+    # Rate limiter bypassed automatically when NODE_ENV=test.
     # ─────────────────────────────────────────────────────────────────────────
-    integration-tests:
-        name: Integration Tests
+    api-integration-tests:
+        name: API Integration Tests
         runs-on: ubuntu-latest
+        needs: [api-unit-tests]
 
         services:
             postgres:
@@ -94,7 +151,6 @@ jobs:
 
         env:
             NODE_ENV: test
-
             DATABASE_URL: postgresql://soliman:psqluser18@localhost:5432/beggy_test
 
             JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
@@ -108,8 +164,6 @@ jobs:
             JWT_REFRESH_REMEMBER_EXPIRES_IN: 30d
             JWT_REFRESH_TOKEN_NAME: test_refresh_token
 
-            NEXT_PUBLIC_API_URL: http://localhost:3000
-
             GOOGLE_CLIENT_ID: dummy
             GOOGLE_CLIENT_SECRET: dummy
             FACEBOOK_CLIENT_ID: dummy
@@ -119,7 +173,7 @@ jobs:
             OPENWEATHER_API_KEY: dummy
 
         steps:
-            - name: Checkout repo
+            - name: Checkout
               uses: actions/checkout@v4
 
             - name: Setup pnpm
@@ -140,5 +194,58 @@ jobs:
             - name: Apply migrations to test DB
               run: pnpm --filter @beggy/api test:integration:setup
 
-            - name: Run integration tests
+            - name: Run API integration tests
               run: pnpm --filter @beggy/api test:integration
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # JOB 4 — Web tests
+    #
+    # Runs unit + component tests: vitest + jsdom + React Testing Library.
+    # No API server needed — components and hooks are tested in isolation.
+    #
+    # Runs in parallel with api-unit-tests (both depend only on shared-tests)
+    # so the overall CI wall-clock time stays low.
+    #
+    # Storybook browser tests (Playwright) are intentionally excluded.
+    # They require a browser binary download (~300MB), take 3-5x longer,
+    # and are better run in a dedicated nightly job or via Chromatic on PR.
+    # Add a separate `storybook-tests` job when you're ready for that.
+    # ─────────────────────────────────────────────────────────────────────────
+    web-tests:
+        name: Web Tests
+        runs-on: ubuntu-latest
+        needs: [shared-tests]
+
+        env:
+            NODE_ENV: test
+            # Matches apps/web/.env.test — no real API is called during tests
+            NEXT_PUBLIC_API_URL: http://localhost:4000
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Check formatting
+              run: pnpm --filter @beggy/web format:check
+
+            - name: Type check web
+              run: pnpm --filter @beggy/web type-check
+
+            - name: Build shared package
+              # Web imports from @beggy/shared — dist/ must exist for type resolution
+              run: pnpm --filter @beggy/shared build
+
+            - name: Run web tests
+              run: pnpm --filter @beggy/web test
