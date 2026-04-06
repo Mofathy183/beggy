@@ -68,7 +68,7 @@
 		"test:integration:watch": "dotenv -e .env.test -- vitest -c vitest.integration.config.ts",
 		"test:integration:coverage": "dotenv -e .env.test -- vitest run -c vitest.integration.config.ts --coverage",
 		"test:integration:setup": "dotenv -e .env.test -- prisma migrate deploy",
-		"test:integration:reset": "dotenv -e .env.test -- prisma migrate reset --force --skip-seed",
+		"test:integration:reset": "dotenv -e .env.test -- prisma migrate reset --force",
 		"prisma:push": "pnpm prisma db push",
 		"prisma:generate": "pnpm prisma generate",
 		"prisma:migrate": "pnpm prisma migrate dev",

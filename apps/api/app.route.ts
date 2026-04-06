@@ -28,6 +28,12 @@ import {
 import { createBagRouter, BagController, BagService } from './src/modules/bags';
 
 import {
+	createContainerRouter,
+	ContainerController,
+	ContainerService,
+} from './src/modules/containers';
+
+import {
 	createDashboardRouter,
 	DashboardController,
 	DashboardService,
@@ -40,6 +46,7 @@ enum ROUTES {
 	ITEMS = '/items',
 	DASHBOARD = '/dashboard',
 	BAGS = '/bags',
+	CONTAINERS = '/containers',
 }
 
 /**
@@ -160,3 +167,25 @@ const bagController = new BagController(bagService);
  * @route /bags
  */
 rootRouter.use(ROUTES.BAGS, createBagRouter(bagController));
+
+/* -------------------------------------------------------------------------- */
+/*                             Containers Module                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Core container domain service shared across packing features.
+ *
+ * @remarks
+ * Acts as the foundational abstraction for bags and other container types.
+ */
+const containerService = new ContainerService(prisma);
+
+/**
+ * Exposes container operations (pack, unpack, move, status).
+ */
+const containerController = new ContainerController(containerService);
+
+/**
+ * @route /containers
+ */
+rootRouter.use(ROUTES.CONTAINERS, createContainerRouter(containerController));

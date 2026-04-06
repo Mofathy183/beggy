@@ -104,6 +104,7 @@ enum Subject {
     BAG
     ITEM
     SUITCASE
+    CONTAINER
     PROFILE
     DASHBOARD
     USER
