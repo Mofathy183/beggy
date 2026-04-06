@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import { setupUser } from '@tests';
 
 import ChangeRoleForm from '../ChangeRoleForm';
 
@@ -54,7 +54,7 @@ describe('ChangeRoleForm', () => {
 
 	describe('form submission', () => {
 		it('updates user role when form is submitted', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			changeRoleMock.mockReturnValue({
 				unwrap: vi.fn().mockResolvedValue({
@@ -79,7 +79,7 @@ describe('ChangeRoleForm', () => {
 		});
 
 		it('does not submit when role update is loading', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			statesMock.changeRole.isLoading = true;
 
@@ -93,7 +93,7 @@ describe('ChangeRoleForm', () => {
 
 	describe('success flow', () => {
 		it('shows success notification when role update succeeds', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			changeRoleMock.mockReturnValue({
 				unwrap: vi.fn().mockResolvedValue({
@@ -117,7 +117,7 @@ describe('ChangeRoleForm', () => {
 
 	describe('error handling', () => {
 		it('shows error notification when role update fails', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			const httpError = {
 				body: {
@@ -141,7 +141,7 @@ describe('ChangeRoleForm', () => {
 		});
 
 		it('clears server error when user changes the role', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			(statesMock.changeRole as any).error = {
 				body: {
@@ -153,7 +153,10 @@ describe('ChangeRoleForm', () => {
 			render(<ChangeRoleForm userId="user-1" currentRole={Role.USER} />);
 
 			await user.click(screen.getByRole('combobox'));
-			await user.click(screen.getByText(/admin/i));
+			const dropdown = await screen.findByRole('listbox');
+			await user.click(
+				within(dropdown).getByText(/admin/i).closest('[role="option"]')!
+			);
 
 			await waitFor(() => {
 				expect(resetMutationMock).toHaveBeenCalled();
@@ -163,7 +166,7 @@ describe('ChangeRoleForm', () => {
 
 	describe('cancel behavior', () => {
 		it('calls onCancel when cancel button is clicked', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			const onCancel = vi.fn();
 

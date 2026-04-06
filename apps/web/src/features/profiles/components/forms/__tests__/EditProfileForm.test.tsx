@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 
 import EditProfileForm from '../EditProfileForm';
 
@@ -61,7 +61,7 @@ describe('EditProfileForm', () => {
 
 	describe('form submission', () => {
 		it('submits profile update when form is submitted', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			render(<EditProfileForm defaultValues={defaultValues} />);
 
@@ -75,7 +75,7 @@ describe('EditProfileForm', () => {
 		});
 
 		it('does not submit when mutation is loading', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			useEditProfileMock.mockReturnValue({
 				submit: submitMock,
@@ -94,7 +94,7 @@ describe('EditProfileForm', () => {
 
 	describe('success flow', () => {
 		it('syncs profile and shows success notification when update succeeds', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			useEditProfileMock.mockImplementation((options) => ({
 				submit: async () => {
@@ -125,7 +125,7 @@ describe('EditProfileForm', () => {
 		});
 
 		it('calls onSuccess callback when profile update succeeds', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 			const onSuccess = vi.fn();
 
 			useEditProfileMock.mockImplementation((options) => ({
@@ -163,7 +163,7 @@ describe('EditProfileForm', () => {
 
 	describe('server error handling', () => {
 		it('clears server error when user edits a field', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			useEditProfileMock.mockReturnValue({
 				submit: submitMock,

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
-import { clearPermissions } from '@shared/store/ability';
+import { clearPermissions } from '@shared/ability';
 import { authApi } from '@features/auth/api';
 import { SuccessMessages } from '@beggy/shared/constants';
 

@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import UpdateBagForm from '../UpdateBagForm';
@@ -73,286 +73,314 @@ describe('UpdateBagForm', () => {
 		useBagActionsMock.mockReturnValue(defaultHookState());
 	});
 
-	// ── Pre-filled values ──────────────────────────────────────────────────────
-
-	it('pre-fills the name field from the bag prop', () => {
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(screen.getByLabelText(/bag name/i)).toHaveValue('Trail Pack');
-	});
-
-	it('pre-fills the color field from the bag prop', () => {
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(screen.getByLabelText(/color/i)).toHaveValue('olive');
-	});
-
-	it('pre-selects the bag type chip from the bag prop', () => {
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(
-			screen.getByRole('button', { name: /^selected backpack/i })
-		).toBeInTheDocument();
-	});
-
-	it('pre-selects the size chip from the bag prop', () => {
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(
-			screen.getByRole('button', { name: /^selected medium$/i })
-		).toBeInTheDocument();
-	});
-
-	it('pre-selects feature chips from the bag prop', () => {
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(
-			screen.getByRole('button', { name: /^selected waterproof/i })
-		).toBeInTheDocument();
-	});
-
-	// ── Rendering ──────────────────────────────────────────────────────────────
-
-	it('renders Save changes button in idle state', () => {
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(
-			screen.getByRole('button', { name: /^save changes$/i })
-		).toBeInTheDocument();
-	});
-
-	it('renders Cancel button', () => {
-		render(<UpdateBagForm bag={mockBag} onCancel={vi.fn()} />);
-		expect(
-			screen.getByRole('button', { name: /^cancel$/i })
-		).toBeInTheDocument();
-	});
-
-	// ── Loading state ──────────────────────────────────────────────────────────
-
-	it('shows "Saving…" label while submitting', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			isUpdating: true,
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('form rendering', () => {
+		it('returns Save changes button in idle state', () => {
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(
+				screen.getByRole('button', { name: /^save changes$/i })
+			).toBeInTheDocument();
 		});
 
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(
-			screen.getByRole('button', { name: /saving…/i })
-		).toBeInTheDocument();
+		it('returns Cancel button', () => {
+			render(<UpdateBagForm bag={mockBag} onCancel={vi.fn()} />);
+			expect(
+				screen.getByRole('button', { name: /^cancel$/i })
+			).toBeInTheDocument();
+		});
 	});
 
-	it('disables the submit button while saving', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			isUpdating: true,
-		});
-
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(screen.getByRole('button', { name: /saving…/i })).toBeDisabled();
-	});
-
-	// ── Successful submission ──────────────────────────────────────────────────
-
-	it('calls edit with the bag id and updated values on submission', async () => {
-		const user = userEvent.setup();
-		editMock.mockImplementation(async (_id, _values, { onSuccess }) => {
-			onSuccess('Bag updated!');
-		});
-
-		render(<UpdateBagForm bag={mockBag} />);
-
-		const nameInput = screen.getByLabelText(/bag name/i);
-		await user.clear(nameInput);
-		await user.type(nameInput, 'Updated Pack');
-		await user.click(
-			screen.getByRole('button', { name: /^save changes$/i })
-		);
-
-		await waitFor(() => {
-			expect(editMock).toHaveBeenCalledWith(
-				'bag-1',
-				expect.objectContaining({ name: 'Updated Pack' }),
-				expect.objectContaining({
-					onSuccess: expect.any(Function),
-					onError: expect.any(Function),
-				})
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('form initialization from bag data', () => {
+		it('returns the name field pre-filled from the bag prop', () => {
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(screen.getByLabelText(/bag name/i)).toHaveValue(
+				'Trail Pack'
 			);
 		});
-	});
 
-	it('shows success notification after a successful update', async () => {
-		const user = userEvent.setup();
-		editMock.mockImplementation(async (_id, _values, { onSuccess }) => {
-			onSuccess('Bag updated!');
+		it('returns the color field pre-filled from the bag prop', () => {
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(screen.getByLabelText(/color/i)).toHaveValue('olive');
 		});
 
-		render(<UpdateBagForm bag={mockBag} />);
-		await user.click(
-			screen.getByRole('button', { name: /^save changes$/i })
-		);
+		it('returns the bag type chip pre-selected from the bag prop', () => {
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(
+				screen.getByRole('button', { name: /^selected backpack/i })
+			).toBeInTheDocument();
+		});
 
-		await waitFor(() => {
-			expect(mockedNotify.success).toHaveBeenCalledWith({
-				message: 'Bag updated!',
+		it('returns the size chip pre-selected from the bag prop', () => {
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(
+				screen.getByRole('button', { name: /^selected medium$/i })
+			).toBeInTheDocument();
+		});
+
+		it('returns feature chips pre-selected from the bag prop', () => {
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(
+				screen.getByRole('button', { name: /^selected waterproof/i })
+			).toBeInTheDocument();
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('submit button loading state', () => {
+		it('returns "Saving…" label while submitting', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				isUpdating: true,
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(
+				screen.getByRole('button', { name: /saving…/i })
+			).toBeInTheDocument();
+		});
+
+		it('denies interaction by disabling the submit button while saving', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				isUpdating: true,
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(
+				screen.getByRole('button', { name: /saving…/i })
+			).toBeDisabled();
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('form submission', () => {
+		it('calls edit with the bag id and updated values on submission', async () => {
+			const user = setupUser();
+			editMock.mockImplementation(async (_id, _values, { onSuccess }) => {
+				onSuccess('Bag updated!');
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+
+			const nameInput = screen.getByLabelText(/bag name/i);
+			await user.clear(nameInput);
+			await user.type(nameInput, 'Updated Pack');
+
+			await user.click(
+				screen.getByRole('button', { name: /^save changes$/i })
+			);
+
+			await waitFor(() => {
+				expect(editMock).toHaveBeenCalledWith(
+					'bag-1',
+					expect.objectContaining({ name: 'Updated Pack' }),
+					expect.objectContaining({
+						onSuccess: expect.any(Function),
+						onError: expect.any(Function),
+					})
+				);
 			});
 		});
 	});
 
-	it('calls onCancel after a successful update', async () => {
-		const user = userEvent.setup();
-		const onCancel = vi.fn();
-		editMock.mockImplementation(async (_id, _values, { onSuccess }) => {
-			onSuccess('Bag updated!');
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('successful update flow', () => {
+		it('returns success notification after a successful update', async () => {
+			const user = setupUser();
+			editMock.mockImplementation(async (_id, _values, { onSuccess }) => {
+				onSuccess('Bag updated!');
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+			await user.click(
+				screen.getByRole('button', { name: /^save changes$/i })
+			);
+
+			await waitFor(() => {
+				expect(mockedNotify.success).toHaveBeenCalledWith({
+					message: 'Bag updated!',
+				});
+			});
 		});
 
-		render(<UpdateBagForm bag={mockBag} onCancel={onCancel} />);
-		await user.click(
-			screen.getByRole('button', { name: /^save changes$/i })
-		);
+		it('calls onCancel after a successful update', async () => {
+			const user = setupUser();
+			const onCancel = vi.fn();
 
-		await waitFor(() => {
+			editMock.mockImplementation(async (_id, _values, { onSuccess }) => {
+				onSuccess('Bag updated!');
+			});
+
+			render(<UpdateBagForm bag={mockBag} onCancel={onCancel} />);
+			await user.click(
+				screen.getByRole('button', { name: /^save changes$/i })
+			);
+
+			await waitFor(() => {
+				expect(onCancel).toHaveBeenCalled();
+			});
+		});
+
+		it('calls onSuccess after a successful update', async () => {
+			const user = setupUser();
+			const onSuccess = vi.fn();
+
+			editMock.mockImplementation(
+				async (_id, _values, { onSuccess: cb }) => {
+					cb('Bag updated!');
+				}
+			);
+
+			render(<UpdateBagForm bag={mockBag} onSuccess={onSuccess} />);
+			await user.click(
+				screen.getByRole('button', { name: /^save changes$/i })
+			);
+
+			await waitFor(() => {
+				expect(onSuccess).toHaveBeenCalled();
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('API error handling', () => {
+		it('returns error notification when update fails', async () => {
+			const user = setupUser();
+
+			editMock.mockImplementation(async (_id, _values, { onError }) => {
+				onError(apiError);
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+			await user.click(
+				screen.getByRole('button', { name: /^save changes$/i })
+			);
+
+			await waitFor(() => {
+				expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(
+					apiError
+				);
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('server error UI state', () => {
+		it('returns server error banner when the hook exposes an error', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				states: {
+					create: { error: null, reset: vi.fn() },
+					update: { error: apiError, reset: updateResetMock },
+				},
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+
+			expect(screen.getByRole('alert')).toBeInTheDocument();
+			expect(screen.getByText(apiError.body.message)).toBeInTheDocument();
+		});
+
+		it('returns the server error suggestion when provided', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				states: {
+					create: { error: null, reset: vi.fn() },
+					update: { error: apiError, reset: updateResetMock },
+				},
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+			expect(
+				screen.getByText(apiError.body.suggestion)
+			).toBeInTheDocument();
+		});
+
+		it('clears the server error when user edits a field', async () => {
+			const user = setupUser();
+
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				states: {
+					create: { error: null, reset: vi.fn() },
+					update: { error: apiError, reset: updateResetMock },
+				},
+			});
+
+			render(<UpdateBagForm bag={mockBag} />);
+			await user.type(screen.getByLabelText(/bag name/i), '!');
+
+			await waitFor(() => {
+				expect(updateResetMock).toHaveBeenCalled();
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('chip selection', () => {
+		it('allows changing the bag type chip', async () => {
+			const user = setupUser();
+			render(<UpdateBagForm bag={mockBag} />);
+
+			await user.click(
+				screen.getByRole('button', { name: /^selected backpack/i })
+			);
+			await user.click(
+				screen.getByRole('button', { name: /not selected duffel/i })
+			);
+
+			expect(
+				screen.getByRole('button', { name: /^selected duffel/i })
+			).toBeInTheDocument();
+		});
+
+		it('allows toggling a feature chip', async () => {
+			const user = setupUser();
+			render(<UpdateBagForm bag={mockBag} />);
+
+			await user.click(
+				screen.getByRole('button', { name: /^selected waterproof/i })
+			);
+
+			expect(
+				screen.getByRole('button', { name: /not selected waterproof/i })
+			).toBeInTheDocument();
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('cancel action', () => {
+		it('calls onCancel when the Cancel button is clicked', async () => {
+			const user = setupUser();
+			const onCancel = vi.fn();
+
+			render(<UpdateBagForm bag={mockBag} onCancel={onCancel} />);
+			await user.click(screen.getByRole('button', { name: /^cancel$/i }));
+
 			expect(onCancel).toHaveBeenCalled();
 		});
 	});
 
-	it('calls onSuccess after a successful update', async () => {
-		const user = userEvent.setup();
-		const onSuccess = vi.fn();
-		editMock.mockImplementation(async (_id, _values, { onSuccess: cb }) => {
-			cb('Bag updated!');
-		});
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('bag prop updates', () => {
+		it('returns updated field values when the bag prop changes', async () => {
+			const { rerender } = render(<UpdateBagForm bag={mockBag} />);
 
-		render(<UpdateBagForm bag={mockBag} onSuccess={onSuccess} />);
-		await user.click(
-			screen.getByRole('button', { name: /^save changes$/i })
-		);
+			const updatedBag: BagDTO = {
+				...mockBag,
+				name: 'New Trail Pack',
+				color: 'black',
+			};
 
-		await waitFor(() => {
-			expect(onSuccess).toHaveBeenCalled();
-		});
-	});
+			rerender(<UpdateBagForm bag={updatedBag} />);
 
-	// ── Error handling ─────────────────────────────────────────────────────────
-
-	it('shows error notification when update fails', async () => {
-		const user = userEvent.setup();
-		editMock.mockImplementation(async (_id, _values, { onError }) => {
-			onError(apiError);
-		});
-
-		render(<UpdateBagForm bag={mockBag} />);
-		await user.click(
-			screen.getByRole('button', { name: /^save changes$/i })
-		);
-
-		await waitFor(() => {
-			expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(apiError);
-		});
-	});
-
-	it('renders server error banner when the hook exposes an error', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			states: {
-				create: { error: null, reset: vi.fn() },
-				update: { error: apiError, reset: updateResetMock },
-			},
-		});
-
-		render(<UpdateBagForm bag={mockBag} />);
-
-		expect(screen.getByRole('alert')).toBeInTheDocument();
-		expect(screen.getByText(apiError.body.message)).toBeInTheDocument();
-	});
-
-	it('renders the server error suggestion when provided', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			states: {
-				create: { error: null, reset: vi.fn() },
-				update: { error: apiError, reset: updateResetMock },
-			},
-		});
-
-		render(<UpdateBagForm bag={mockBag} />);
-		expect(screen.getByText(apiError.body.suggestion)).toBeInTheDocument();
-	});
-
-	it('clears the server error when user edits a field', async () => {
-		const user = userEvent.setup();
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			states: {
-				create: { error: null, reset: vi.fn() },
-				update: { error: apiError, reset: updateResetMock },
-			},
-		});
-
-		render(<UpdateBagForm bag={mockBag} />);
-		await user.type(screen.getByLabelText(/bag name/i), '!');
-
-		await waitFor(() => {
-			expect(updateResetMock).toHaveBeenCalled();
-		});
-	});
-
-	// ── Chips interaction ──────────────────────────────────────────────────────
-
-	it('allows changing the bag type chip', async () => {
-		const user = userEvent.setup();
-		render(<UpdateBagForm bag={mockBag} />);
-
-		// Deselect current type and select a new one
-		await user.click(
-			screen.getByRole('button', { name: /^selected backpack/i })
-		);
-		await user.click(
-			screen.getByRole('button', { name: /not selected duffel/i })
-		);
-
-		expect(
-			screen.getByRole('button', { name: /^selected duffel/i })
-		).toBeInTheDocument();
-	});
-
-	it('allows toggling a feature chip', async () => {
-		const user = userEvent.setup();
-		render(<UpdateBagForm bag={mockBag} />);
-
-		// Deselect pre-selected feature
-		await user.click(
-			screen.getByRole('button', { name: /^selected waterproof/i })
-		);
-
-		expect(
-			screen.getByRole('button', { name: /not selected waterproof/i })
-		).toBeInTheDocument();
-	});
-
-	// ── Cancel ─────────────────────────────────────────────────────────────────
-
-	it('calls onCancel when the Cancel button is clicked', async () => {
-		const user = userEvent.setup();
-		const onCancel = vi.fn();
-
-		render(<UpdateBagForm bag={mockBag} onCancel={onCancel} />);
-		await user.click(screen.getByRole('button', { name: /^cancel$/i }));
-
-		expect(onCancel).toHaveBeenCalled();
-	});
-
-	// ── Re-populate on bag prop change ─────────────────────────────────────────
-
-	it('re-populates fields when the bag prop changes', async () => {
-		const { rerender } = render(<UpdateBagForm bag={mockBag} />);
-
-		const updatedBag: BagDTO = {
-			...mockBag,
-			name: 'New Trail Pack',
-			color: 'black',
-		};
-		rerender(<UpdateBagForm bag={updatedBag} />);
-
-		await waitFor(() => {
-			expect(screen.getByLabelText(/bag name/i)).toHaveValue(
-				'New Trail Pack'
-			);
-			expect(screen.getByLabelText(/color/i)).toHaveValue('black');
+			await waitFor(() => {
+				expect(screen.getByLabelText(/bag name/i)).toHaveValue(
+					'New Trail Pack'
+				);
+				expect(screen.getByLabelText(/color/i)).toHaveValue('black');
+			});
 		});
 	});
 });

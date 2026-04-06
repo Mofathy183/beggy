@@ -15,7 +15,7 @@ import { Input } from '@shadcn-ui/input';
 import { Switch } from '@shadcn-ui/switch';
 import { Label } from '@shadcn-ui/label';
 import { FormServerError } from '@shared-ui/error';
-
+import { NumberField } from '@shared-ui/fields';
 import { Chips } from '@shared-ui/chips';
 import {
 	ITEM_CATEGORY_OPTIONS,
@@ -24,7 +24,6 @@ import {
 } from '@shared-ui/mappers';
 
 import type { CreateItemInput } from '@beggy/shared/types';
-import MeasurementField from './MeasurementField';
 
 // ─── Unit options ───────────────────────────────────────────────────────────────
 
@@ -66,8 +65,8 @@ type CreateItemFormUIProps = {
  * Field layout:
  * - name            (text input, full width)
  * - category        (Chips single-select with icons)
- * - weight + unit   (joined input-group via MeasurementField)
- * - volume + unit   (joined input-group via MeasurementField)
+ * - weight + unit   (joined input-group via NumberField)
+ * - volume + unit   (joined input-group via NumberField)
  * - color           (text input, optional)
  * - isFragile       (Switch toggle row)
  */
@@ -144,7 +143,7 @@ const CreateItemFormUI = ({
 											mode="single"
 											options={ITEM_CATEGORY_OPTIONS}
 											value={field.value ?? null}
-											variant="accent"
+											variant="primary"
 											onChange={(val) =>
 												field.onChange(val ?? undefined)
 											}
@@ -163,26 +162,28 @@ const CreateItemFormUI = ({
 						/>
 
 						{/* ── Weight + unit (joined input-group) ───────────── */}
-						<MeasurementField
+						<NumberField
 							control={form.control}
 							valueName="weight"
 							unitName="weightUnit"
 							label="Weight"
 							placeholder="0.0"
 							unitOptions={WEIGHT_UNIT_OPTIONS}
+							unit
 							errors={form.formState.errors}
 							valueErrorId="create-item-weight-error"
 							unitErrorId="create-item-weight-unit-error"
 						/>
 
 						{/* ── Volume + unit (joined input-group) ───────────── */}
-						<MeasurementField
+						<NumberField
 							control={form.control}
 							valueName="volume"
 							unitName="volumeUnit"
 							label="Volume"
 							placeholder="0.0"
 							unitOptions={VOLUME_UNIT_OPTIONS}
+							unit
 							errors={form.formState.errors}
 							valueErrorId="create-item-volume-error"
 							unitErrorId="create-item-volume-unit-error"

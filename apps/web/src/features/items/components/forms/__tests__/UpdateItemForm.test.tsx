@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor } from '@testing-library/react';
+import { setupUser } from '@tests';
 
 import UpdateItemForm from '../UpdateItemForm';
-import { notify } from '@shared/utils';
 import { ItemCategory, WeightUnit, VolumeUnit } from '@beggy/shared/constants';
 import type { ItemDTO } from '@beggy/shared/types';
 
 const editMock = vi.fn();
 const resetMock = vi.fn();
-
 const useItemsActionsMock = vi.fn();
 
 vi.mock('@features/items/hooks', () => ({
@@ -19,13 +17,9 @@ vi.mock('@features/items/hooks', () => ({
 vi.mock('@shared/utils', () => ({
 	notify: {
 		success: vi.fn(),
-		error: Object.assign(vi.fn(), {
-			fromHttp: vi.fn(),
-		}),
+		error: Object.assign(vi.fn(), { fromHttp: vi.fn() }),
 	},
 }));
-
-const mockedNotify = vi.mocked(notify);
 
 const item: ItemDTO = {
 	id: 'item-1',
@@ -45,130 +39,103 @@ const item: ItemDTO = {
 describe('UpdateItemForm', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-
 		useItemsActionsMock.mockReturnValue({
 			edit: editMock,
 			isUpdating: false,
 			states: {
-				update: {
-					error: null,
-					reset: resetMock,
-				},
+				update: { error: null, reset: resetMock },
 			},
 		});
 	});
 
-	it('renders item values in form fields', () => {
+	// ── Pre-filled values (unique to Update) ──────────────────────────────────
+
+	it('pre-fills the name field from the item prop', () => {
 		render(<UpdateItemForm item={item} />);
+		expect(screen.getByLabelText(/item name/i)).toHaveValue('Passport');
+	});
 
-		expect(screen.getByDisplayValue('Passport')).toBeInTheDocument();
+	it('pre-fills the color field from the item prop', () => {
+		render(<UpdateItemForm item={item} />);
+		expect(screen.getByLabelText(/color/i)).toHaveValue('black');
+	});
 
-		expect(screen.getByDisplayValue('black')).toBeInTheDocument();
-
+	it('pre-fills the weight field from the item prop', () => {
+		render(<UpdateItemForm item={item} />);
 		expect(
-			screen.getByRole('button', { name: /save changes/i })
+			screen.getByRole('spinbutton', { name: /^weight$/i })
+		).toHaveValue(0.1);
+	});
+
+	it('pre-fills the volume field from the item prop', () => {
+		render(<UpdateItemForm item={item} />);
+		expect(
+			screen.getByRole('spinbutton', { name: /^volume$/i })
+		).toHaveValue(0.01);
+	});
+
+	it('pre-selects the category chip from the item prop', () => {
+		render(<UpdateItemForm item={item} />);
+		expect(
+			screen.getByRole('button', { name: /selected documents/i })
 		).toBeInTheDocument();
 	});
 
-	it('updates item when form is submitted with modified values', async () => {
-		const user = userEvent.setup();
+	// ── Rendering (labels unique to Update) ───────────────────────────────────
+
+	it('renders Save changes button in idle state', () => {
+		render(<UpdateItemForm item={item} />);
+		expect(
+			screen.getByRole('button', { name: /^save changes$/i })
+		).toBeInTheDocument();
+	});
+
+	it('shows "Saving…" label while submitting', () => {
+		useItemsActionsMock.mockReturnValue({
+			edit: editMock,
+			isUpdating: true,
+			states: { update: { error: null, reset: resetMock } },
+		});
+		render(<UpdateItemForm item={item} />);
+		expect(
+			screen.getByRole('button', { name: /saving…/i })
+		).toBeInTheDocument();
+	});
+
+	// ── Submission contract (unique: must pass item id) ───────────────────────
+
+	it('calls edit with the item id and updated values on submission', async () => {
+		const user = setupUser();
+		editMock.mockImplementation(async (_id, _values, { onSuccess }) =>
+			onSuccess('')
+		);
 
 		render(<UpdateItemForm item={item} />);
 
 		const nameInput = screen.getByLabelText(/item name/i);
-
 		await user.clear(nameInput);
 		await user.type(nameInput, 'Travel passport');
 
-		await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-		expect(editMock).toHaveBeenCalledWith(
-			'item-1',
-			expect.objectContaining({
-				name: 'Travel passport',
-			}),
-			expect.any(Object)
-		);
-	});
-
-	it('shows success notification when item update succeeds', async () => {
-		const user = userEvent.setup();
-
-		editMock.mockImplementation(async (_, __, { onSuccess }) => {
-			onSuccess('Item updated successfully');
-		});
-
-		const onSuccess = vi.fn();
-		const onCancel = vi.fn();
-
-		render(
-			<UpdateItemForm
-				item={item}
-				onSuccess={onSuccess}
-				onCancel={onCancel}
-			/>
+		await user.click(
+			screen.getByRole('button', { name: /^save changes$/i })
 		);
 
-		await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-		expect(mockedNotify.success).toHaveBeenCalledWith({
-			message: 'Item updated successfully',
+		await waitFor(() => {
+			expect(editMock).toHaveBeenCalledWith(
+				'item-1',
+				expect.objectContaining({ name: 'Travel passport' }),
+				expect.any(Object)
+			);
 		});
-
-		expect(onCancel).toHaveBeenCalled();
-		expect(onSuccess).toHaveBeenCalled();
 	});
 
-	it('shows error notification when item update fails', async () => {
-		const user = userEvent.setup();
-
-		const apiError = {
-			body: {
-				message: 'Update failed',
-			},
-		};
-
-		editMock.mockImplementation(async (_, __, { onError }) => {
-			onError(apiError);
-		});
-
-		render(<UpdateItemForm item={item} />);
-
-		await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-		expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(apiError);
-	});
-
-	it('clears server error when user edits a field', async () => {
-		const user = userEvent.setup();
-
-		useItemsActionsMock.mockReturnValue({
-			edit: editMock,
-			isUpdating: false,
-			states: {
-				update: {
-					error: {
-						body: { message: 'Server error' },
-					},
-					reset: resetMock,
-				},
-			},
-		});
-
-		render(<UpdateItemForm item={item} />);
-
-		await user.type(screen.getByLabelText(/item name/i), ' Updated');
-
-		expect(resetMock).toHaveBeenCalled();
-	});
+	// ── Cancel (unique: Update always shows Cancel, never Reset) ─────────────
 
 	it('calls onCancel when cancel button is clicked', async () => {
-		const user = userEvent.setup();
-
+		const user = setupUser();
 		const onCancel = vi.fn();
 
 		render(<UpdateItemForm item={item} onCancel={onCancel} />);
-
 		await user.click(screen.getByRole('button', { name: /cancel/i }));
 
 		expect(onCancel).toHaveBeenCalled();

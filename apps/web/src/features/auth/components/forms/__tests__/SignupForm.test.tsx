@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SignupForm from '../SignupForm';
@@ -38,7 +38,7 @@ describe('SignupForm', () => {
 	});
 
 	it('submits the registration data when the form is valid', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		render(<SignupForm />);
 
@@ -59,7 +59,7 @@ describe('SignupForm', () => {
 	});
 
 	it('shows validation errors when the form is empty', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		render(<SignupForm />);
 
@@ -72,7 +72,7 @@ describe('SignupForm', () => {
 	});
 
 	it('shows a success notification when signup is successful', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		signupMock.mockImplementation(async (_values, { onSuccess }) => {
 			onSuccess('Account created successfully');
@@ -99,7 +99,7 @@ describe('SignupForm', () => {
 	});
 
 	it('shows an error notification when signup fails', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		const httpError = {
 			body: {

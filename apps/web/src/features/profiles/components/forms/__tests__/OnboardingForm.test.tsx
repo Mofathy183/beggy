@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import { vi } from 'vitest';
 
 import OnboardingForm from '../OnboardingForm';
@@ -44,7 +44,7 @@ describe('OnboardingForm', () => {
 	});
 
 	it('submits onboarding data when form is submitted', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		render(<OnboardingForm />);
 
@@ -59,7 +59,7 @@ describe('OnboardingForm', () => {
 	});
 
 	it('shows success notification when onboarding succeeds', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		submitMock.mockImplementation(async (_, { onSuccess }) => {
 			onSuccess?.('Profile completed');
@@ -78,7 +78,7 @@ describe('OnboardingForm', () => {
 	});
 
 	it('skips onboarding when user chooses to complete it later', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		render(<OnboardingForm />);
 
@@ -90,7 +90,7 @@ describe('OnboardingForm', () => {
 	});
 
 	it('shows warning notification when skipping onboarding fails', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		skipMock.mockImplementation(async ({ onError }) => {
 			onError?.({
@@ -137,7 +137,7 @@ describe('OnboardingForm', () => {
 	});
 
 	it('clears server error when user edits the form', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		useOnboardingMock.mockReturnValue({
 			submit: submitMock,

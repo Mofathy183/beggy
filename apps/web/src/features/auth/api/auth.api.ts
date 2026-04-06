@@ -1,5 +1,5 @@
 import { apiSlice, TagTypes } from '@shared/api';
-import { clearPermissions, setPermissions } from '@shared/store/ability';
+import { clearPermissions, setPermissions } from '@shared/ability';
 import {
 	setAuthenticated,
 	setLoading,

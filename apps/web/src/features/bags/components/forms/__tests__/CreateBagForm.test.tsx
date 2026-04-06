@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import CreateBagForm from '../CreateBagForm';
@@ -52,7 +52,7 @@ const defaultHookState = () => ({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const fillRequiredFields = async (user: ReturnType<typeof userEvent.setup>) => {
+const fillRequiredFields = async (user: ReturnType<typeof setupUser>) => {
 	await user.type(screen.getByLabelText(/bag name/i), 'My Backpack');
 	await user.click(
 		screen.getByRole('button', { name: /not selected backpack/i })
@@ -84,289 +84,309 @@ describe('CreateBagForm', () => {
 		useBagActionsMock.mockReturnValue(defaultHookState());
 	});
 
-	// ── Rendering ──────────────────────────────────────────────────────────────
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('form rendering', () => {
+		it('returns all required fields', () => {
+			render(<CreateBagForm />);
 
-	it('renders all required fields', () => {
-		render(<CreateBagForm />);
-
-		expect(screen.getByLabelText(/bag name/i)).toBeInTheDocument();
-		expect(screen.getByText(/bag type/i)).toBeInTheDocument();
-		expect(screen.getByText(/^size$/i)).toBeInTheDocument();
-		expect(screen.getByLabelText(/max weight/i)).toBeInTheDocument();
-		expect(screen.getByLabelText(/max capacity/i)).toBeInTheDocument();
-	});
-
-	it('renders optional fields', () => {
-		render(<CreateBagForm />);
-
-		expect(screen.getByLabelText(/empty weight/i)).toBeInTheDocument();
-		expect(screen.getByLabelText(/color/i)).toBeInTheDocument();
-		expect(screen.getByText(/material/i)).toBeInTheDocument();
-		expect(screen.getByText(/features/i)).toBeInTheDocument();
-	});
-
-	it('renders Create bag button in idle state', () => {
-		render(<CreateBagForm />);
-		expect(
-			screen.getByRole('button', { name: /^create bag$/i })
-		).toBeInTheDocument();
-	});
-
-	// ── Loading state ──────────────────────────────────────────────────────────
-
-	it('disables the submit button while creating', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			isCreating: true,
+			expect(screen.getByLabelText(/bag name/i)).toBeInTheDocument();
+			expect(screen.getByText(/bag type/i)).toBeInTheDocument();
+			expect(screen.getByText(/^size$/i)).toBeInTheDocument();
+			expect(screen.getByLabelText(/max weight/i)).toBeInTheDocument();
+			expect(screen.getByLabelText(/max capacity/i)).toBeInTheDocument();
 		});
-		render(<CreateBagForm />);
-		expect(
-			screen.getByRole('button', { name: /creating…/i })
-		).toBeDisabled();
-	});
 
-	it('shows "Creating…" label while submitting', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			isCreating: true,
+		it('returns optional fields', () => {
+			render(<CreateBagForm />);
+
+			expect(screen.getByLabelText(/empty weight/i)).toBeInTheDocument();
+			expect(screen.getByLabelText(/color/i)).toBeInTheDocument();
+			expect(screen.getByText(/material/i)).toBeInTheDocument();
+			expect(screen.getByText(/features/i)).toBeInTheDocument();
 		});
-		render(<CreateBagForm />);
-		expect(
-			screen.getByRole('button', { name: /creating…/i })
-		).toBeInTheDocument();
+
+		it('returns Create bag button in idle state', () => {
+			render(<CreateBagForm />);
+			expect(
+				screen.getByRole('button', { name: /^create bag$/i })
+			).toBeInTheDocument();
+		});
 	});
 
-	// ── Validation ─────────────────────────────────────────────────────────────
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('submit button loading state', () => {
+		it('denies interaction by disabling the submit button while creating', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				isCreating: true,
+			});
+			render(<CreateBagForm />);
+			expect(
+				screen.getByRole('button', { name: /creating…/i })
+			).toBeDisabled();
+		});
 
-	it('does not submit when required fields are empty', async () => {
-		const user = userEvent.setup();
-		render(<CreateBagForm />);
-
-		// With the bypass resolver, an empty form still submits —
-		// but the real guard here is that createMock receives nothing
-		// because the form passes through with empty defaults.
-		// We assert the hook was not called with real data by checking
-		// it was not called at all (empty name + no chips = hook not expected
-		// to be triggered in real usage — this test documents the validation
-		// contract; for deeper empty-field testing see @beggy/shared schema tests).
-		await user.click(screen.getByRole('button', { name: /^create bag$/i }));
-
-		// The bypass resolver lets the form submit, so createMock may be called
-		// with empty values. What matters for this test: no real API intent.
-		// We keep this test as a smoke check for the submit button being clickable.
-		expect(
-			screen.getByRole('button', { name: /^create bag$/i })
-		).toBeInTheDocument();
+		it('returns "Creating…" label while submitting', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				isCreating: true,
+			});
+			render(<CreateBagForm />);
+			expect(
+				screen.getByRole('button', { name: /creating…/i })
+			).toBeInTheDocument();
+		});
 	});
 
-	// ── Successful submission ──────────────────────────────────────────────────
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('form submission', () => {
+		it('rejects submission when required fields are empty', async () => {
+			const user = setupUser();
+			render(<CreateBagForm />);
 
-	it('calls create with correct payload on valid submission', async () => {
-		const user = userEvent.setup();
-		createMock.mockImplementation(
-			async (_values: unknown, { onSuccess }: any) => {
-				onSuccess('Bag created!');
-			}
-		);
-
-		render(<CreateBagForm />);
-		await fillRequiredFields(user);
-		await user.click(screen.getByRole('button', { name: /^create bag$/i }));
-
-		await waitFor(() => {
-			expect(createMock).toHaveBeenCalledWith(
-				expect.objectContaining({ name: 'My Backpack' }),
-				expect.objectContaining({
-					onSuccess: expect.any(Function),
-					onError: expect.any(Function),
-				})
+			await user.click(
+				screen.getByRole('button', { name: /^create bag$/i })
 			);
+
+			expect(
+				screen.getByRole('button', { name: /^create bag$/i })
+			).toBeInTheDocument();
 		});
-	});
 
-	it('shows success notification after successful creation', async () => {
-		const user = userEvent.setup();
-		createMock.mockImplementation(
-			async (_values: unknown, { onSuccess }: any) => {
-				onSuccess('Bag created!');
-			}
-		);
+		it('calls create with correct payload on valid submission', async () => {
+			const user = setupUser();
+			createMock.mockImplementation(
+				async (_values: unknown, { onSuccess }: any) => {
+					onSuccess('Bag created!');
+				}
+			);
 
-		render(<CreateBagForm />);
-		await fillRequiredFields(user);
-		await user.click(screen.getByRole('button', { name: /^create bag$/i }));
+			render(<CreateBagForm />);
+			await fillRequiredFields(user);
+			await user.click(
+				screen.getByRole('button', { name: /^create bag$/i })
+			);
 
-		await waitFor(() => {
-			expect(mockedNotify.success).toHaveBeenCalledWith({
-				message: 'Bag created!',
+			await waitFor(() => {
+				expect(createMock).toHaveBeenCalledWith(
+					expect.objectContaining({ name: 'My Backpack' }),
+					expect.objectContaining({
+						onSuccess: expect.any(Function),
+						onError: expect.any(Function),
+					})
+				);
 			});
 		});
 	});
 
-	it('calls onCancel after successful creation', async () => {
-		const user = userEvent.setup();
-		const onCancel = vi.fn();
-		createMock.mockImplementation(
-			async (_values: unknown, { onSuccess }: any) => {
-				onSuccess('Bag created!');
-			}
-		);
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('successful creation flow', () => {
+		it('returns success notification after successful creation', async () => {
+			const user = setupUser();
+			createMock.mockImplementation(
+				async (_values: unknown, { onSuccess }: any) => {
+					onSuccess('Bag created!');
+				}
+			);
 
-		render(<CreateBagForm onCancel={onCancel} />);
-		await fillRequiredFields(user);
-		await user.click(screen.getByRole('button', { name: /^create bag$/i }));
+			render(<CreateBagForm />);
+			await fillRequiredFields(user);
+			await user.click(
+				screen.getByRole('button', { name: /^create bag$/i })
+			);
 
-		await waitFor(() => {
+			await waitFor(() => {
+				expect(mockedNotify.success).toHaveBeenCalledWith({
+					message: 'Bag created!',
+				});
+			});
+		});
+
+		it('calls onCancel after successful creation', async () => {
+			const user = setupUser();
+			const onCancel = vi.fn();
+
+			createMock.mockImplementation(
+				async (_values: unknown, { onSuccess }: any) => {
+					onSuccess('Bag created!');
+				}
+			);
+
+			render(<CreateBagForm onCancel={onCancel} />);
+			await fillRequiredFields(user);
+			await user.click(
+				screen.getByRole('button', { name: /^create bag$/i })
+			);
+
+			await waitFor(() => {
+				expect(onCancel).toHaveBeenCalled();
+			});
+		});
+
+		it('calls onSuccess after successful creation', async () => {
+			const user = setupUser();
+			const onSuccess = vi.fn();
+
+			createMock.mockImplementation(
+				async (_values: unknown, { onSuccess: cb }: any) => {
+					cb('Bag created!');
+				}
+			);
+
+			render(<CreateBagForm onSuccess={onSuccess} />);
+			await fillRequiredFields(user);
+			await user.click(
+				screen.getByRole('button', { name: /^create bag$/i })
+			);
+
+			await waitFor(() => {
+				expect(onSuccess).toHaveBeenCalled();
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('API error handling', () => {
+		it('returns error notification when creation fails', async () => {
+			const user = setupUser();
+			createMock.mockImplementation(
+				async (_values: unknown, { onError }: any) => {
+					onError(apiError);
+				}
+			);
+
+			render(<CreateBagForm />);
+			await fillRequiredFields(user);
+			await user.click(
+				screen.getByRole('button', { name: /^create bag$/i })
+			);
+
+			await waitFor(() => {
+				expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(
+					apiError
+				);
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('server error UI state', () => {
+		it('returns server error banner when hook exposes an error', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				states: {
+					create: { error: apiError, reset: createResetMock },
+					update: { error: null, reset: vi.fn() },
+				},
+			});
+
+			render(<CreateBagForm />);
+
+			expect(screen.getByRole('alert')).toBeInTheDocument();
+			expect(screen.getByText(apiError.body.message)).toBeInTheDocument();
+		});
+
+		it('returns the server error suggestion when provided', () => {
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				states: {
+					create: { error: apiError, reset: createResetMock },
+					update: { error: null, reset: vi.fn() },
+				},
+			});
+
+			render(<CreateBagForm />);
+			expect(
+				screen.getByText(apiError.body.suggestion)
+			).toBeInTheDocument();
+		});
+
+		it('clears server error when user edits a field', async () => {
+			const user = setupUser();
+
+			useBagActionsMock.mockReturnValue({
+				...defaultHookState(),
+				states: {
+					create: { error: apiError, reset: createResetMock },
+					update: { error: null, reset: vi.fn() },
+				},
+			});
+
+			render(<CreateBagForm />);
+			await user.type(screen.getByLabelText(/bag name/i), 'A');
+
+			await waitFor(() => {
+				expect(createResetMock).toHaveBeenCalled();
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('chip selection', () => {
+		it('allows selecting a bag type chip', async () => {
+			const user = setupUser();
+			render(<CreateBagForm />);
+
+			await user.click(
+				screen.getByRole('button', { name: /not selected backpack/i })
+			);
+
+			expect(
+				screen.getByRole('button', { name: /^selected backpack/i })
+			).toBeInTheDocument();
+		});
+
+		it('allows selecting a size chip', async () => {
+			const user = setupUser();
+			render(<CreateBagForm />);
+
+			await user.click(
+				screen.getByRole('button', { name: /not selected medium/i })
+			);
+
+			expect(
+				screen.getByRole('button', { name: /^selected medium$/i })
+			).toBeInTheDocument();
+		});
+
+		it('allows selecting multiple feature chips', async () => {
+			const user = setupUser();
+			render(<CreateBagForm />);
+
+			await user.click(
+				screen.getByRole('button', { name: /not selected waterproof/i })
+			);
+
+			expect(
+				screen.getByRole('button', { name: /^selected waterproof/i })
+			).toBeInTheDocument();
+		});
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	describe('cancel action', () => {
+		it('returns Reset button when no onCancel prop is provided', () => {
+			render(<CreateBagForm />);
+			expect(
+				screen.getByRole('button', { name: /^reset$/i })
+			).toBeInTheDocument();
+		});
+
+		it('returns Cancel button when onCancel prop is provided', () => {
+			render(<CreateBagForm onCancel={vi.fn()} />);
+			expect(
+				screen.getByRole('button', { name: /^cancel$/i })
+			).toBeInTheDocument();
+		});
+
+		it('calls onCancel when Cancel button is clicked', async () => {
+			const user = setupUser();
+			const onCancel = vi.fn();
+
+			render(<CreateBagForm onCancel={onCancel} />);
+			await user.click(screen.getByRole('button', { name: /^cancel$/i }));
+
 			expect(onCancel).toHaveBeenCalled();
 		});
-	});
-
-	it('calls onSuccess after successful creation', async () => {
-		const user = userEvent.setup();
-		const onSuccess = vi.fn();
-		createMock.mockImplementation(
-			async (_values: unknown, { onSuccess: cb }: any) => {
-				cb('Bag created!');
-			}
-		);
-
-		render(<CreateBagForm onSuccess={onSuccess} />);
-		await fillRequiredFields(user);
-		await user.click(screen.getByRole('button', { name: /^create bag$/i }));
-
-		await waitFor(() => {
-			expect(onSuccess).toHaveBeenCalled();
-		});
-	});
-
-	// ── Error handling ─────────────────────────────────────────────────────────
-
-	it('shows error notification when creation fails', async () => {
-		const user = userEvent.setup();
-		createMock.mockImplementation(
-			async (_values: unknown, { onError }: any) => {
-				onError(apiError);
-			}
-		);
-
-		render(<CreateBagForm />);
-		await fillRequiredFields(user);
-		await user.click(screen.getByRole('button', { name: /^create bag$/i }));
-
-		await waitFor(() => {
-			expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(apiError);
-		});
-	});
-
-	it('renders server error banner when hook exposes an error', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			states: {
-				create: { error: apiError, reset: createResetMock },
-				update: { error: null, reset: vi.fn() },
-			},
-		});
-
-		render(<CreateBagForm />);
-
-		expect(screen.getByRole('alert')).toBeInTheDocument();
-		expect(screen.getByText(apiError.body.message)).toBeInTheDocument();
-	});
-
-	it('renders server error suggestion when provided', () => {
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			states: {
-				create: { error: apiError, reset: createResetMock },
-				update: { error: null, reset: vi.fn() },
-			},
-		});
-
-		render(<CreateBagForm />);
-		expect(screen.getByText(apiError.body.suggestion)).toBeInTheDocument();
-	});
-
-	it('clears server error when user edits a field', async () => {
-		const user = userEvent.setup();
-		useBagActionsMock.mockReturnValue({
-			...defaultHookState(),
-			states: {
-				create: { error: apiError, reset: createResetMock },
-				update: { error: null, reset: vi.fn() },
-			},
-		});
-
-		render(<CreateBagForm />);
-		await user.type(screen.getByLabelText(/bag name/i), 'A');
-
-		await waitFor(() => {
-			expect(createResetMock).toHaveBeenCalled();
-		});
-	});
-
-	// ── Chips interaction ──────────────────────────────────────────────────────
-
-	it('selects a bag type chip when clicked', async () => {
-		const user = userEvent.setup();
-		render(<CreateBagForm />);
-
-		await user.click(
-			screen.getByRole('button', { name: /not selected backpack/i })
-		);
-
-		expect(
-			screen.getByRole('button', { name: /^selected backpack/i })
-		).toBeInTheDocument();
-	});
-
-	it('selects a size chip when clicked', async () => {
-		const user = userEvent.setup();
-		render(<CreateBagForm />);
-
-		await user.click(
-			screen.getByRole('button', { name: /not selected medium/i })
-		);
-
-		expect(
-			screen.getByRole('button', { name: /^selected medium$/i })
-		).toBeInTheDocument();
-	});
-
-	it('allows selecting multiple feature chips', async () => {
-		const user = userEvent.setup();
-		render(<CreateBagForm />);
-
-		await user.click(
-			screen.getByRole('button', { name: /not selected waterproof/i })
-		);
-
-		expect(
-			screen.getByRole('button', { name: /^selected waterproof/i })
-		).toBeInTheDocument();
-	});
-
-	// ── Cancel / Reset ─────────────────────────────────────────────────────────
-
-	it('renders Reset button when no onCancel prop is provided', () => {
-		render(<CreateBagForm />);
-		expect(
-			screen.getByRole('button', { name: /^reset$/i })
-		).toBeInTheDocument();
-	});
-
-	it('renders Cancel button when onCancel prop is provided', () => {
-		render(<CreateBagForm onCancel={vi.fn()} />);
-		expect(
-			screen.getByRole('button', { name: /^cancel$/i })
-		).toBeInTheDocument();
-	});
-
-	it('calls onCancel when Cancel button is clicked', async () => {
-		const user = userEvent.setup();
-		const onCancel = vi.fn();
-		render(<CreateBagForm onCancel={onCancel} />);
-
-		await user.click(screen.getByRole('button', { name: /^cancel$/i }));
-		expect(onCancel).toHaveBeenCalled();
 	});
 });

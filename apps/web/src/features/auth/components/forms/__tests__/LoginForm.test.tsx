@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+
+import { setupUser } from '@tests';
 
 import LoginForm from '../LoginForm';
 
@@ -28,7 +29,6 @@ const mockedNotify = vi.mocked(notify);
 describe('LoginForm', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-
 		useLoginMock.mockReturnValue({
 			login: loginMock,
 			reset: resetMock,
@@ -39,7 +39,6 @@ describe('LoginForm', () => {
 
 	it('renders the email and password fields', () => {
 		render(<LoginForm />);
-
 		expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
 		expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
 		expect(
@@ -48,7 +47,7 @@ describe('LoginForm', () => {
 	});
 
 	it('submits the credentials when the form is valid', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		render(<LoginForm />);
 
@@ -57,7 +56,6 @@ describe('LoginForm', () => {
 		await user.click(screen.getByRole('button', { name: /sign in/i }));
 
 		expect(loginMock).toHaveBeenCalledTimes(1);
-
 		expect((loginMock.mock as any).calls[0][0]).toEqual({
 			email: 'test@example.com',
 			password: 'Password123!',
@@ -96,14 +94,13 @@ describe('LoginForm', () => {
 		});
 
 		render(<LoginForm />);
-
 		expect(screen.getByRole('alert')).toHaveTextContent(
 			/invalid credentials/i
 		);
 	});
 
 	it('shows a success notification when login succeeds', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		loginMock.mockImplementation(async (_, { onSuccess }) => {
 			onSuccess('Welcome back!');
@@ -121,7 +118,7 @@ describe('LoginForm', () => {
 	});
 
 	it('shows an error notification when the api returns an error', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		const apiError = {
 			body: {

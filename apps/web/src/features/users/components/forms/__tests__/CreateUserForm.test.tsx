@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-
+import { setupUser } from '@tests';
 import CreateUserForm from '../CreateUserForm';
 
 import { notify } from '@shared/utils';
@@ -37,7 +36,7 @@ vi.mock('@shared/utils', () => ({
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-const fillForm = async (user: ReturnType<typeof userEvent.setup>) => {
+const fillForm = async (user: ReturnType<typeof setupUser>) => {
 	await user.type(screen.getByLabelText(/first name/i), 'Bruce');
 	await user.type(screen.getByLabelText(/last name/i), 'Wayne');
 	await user.type(screen.getByLabelText(/email/i), 'bruce@wayne.com');
@@ -79,7 +78,7 @@ describe('CreateUserForm', () => {
 
 	describe('form submission', () => {
 		it('creates user when form is submitted with valid input', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			createUserMock.mockReturnValue({
 				unwrap: vi.fn().mockResolvedValue({
@@ -107,7 +106,7 @@ describe('CreateUserForm', () => {
 		});
 
 		it('does not submit when user creation is loading', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			statesMock.create.isLoading = true;
 
@@ -121,7 +120,7 @@ describe('CreateUserForm', () => {
 
 	describe('success flow', () => {
 		it('shows success notification when user creation succeeds', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			createUserMock.mockReturnValue({
 				unwrap: vi.fn().mockResolvedValue({
@@ -147,7 +146,7 @@ describe('CreateUserForm', () => {
 
 	describe('error handling', () => {
 		it('shows error notification when user creation fails', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			const httpError = {
 				body: {
@@ -173,7 +172,7 @@ describe('CreateUserForm', () => {
 		});
 
 		it('clears server error when user edits a field', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			(statesMock.create as any).error = {
 				body: {
@@ -194,7 +193,7 @@ describe('CreateUserForm', () => {
 
 	describe('cancel behavior', () => {
 		it('calls onCancel when cancel button is clicked', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			const onCancel = vi.fn();
 
@@ -206,7 +205,7 @@ describe('CreateUserForm', () => {
 		});
 
 		it('resets form fields when reset button is clicked and no onCancel is provided', async () => {
-			const user = userEvent.setup();
+			const user = setupUser();
 
 			render(<CreateUserForm />);
 

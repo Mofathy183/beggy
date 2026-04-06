@@ -22,7 +22,7 @@ import { Input } from '@shadcn-ui/input';
 import { Switch } from '@shadcn-ui/switch';
 import { Label } from '@shadcn-ui/label';
 import { FormServerError } from '@shared-ui/error';
-
+import { NumberField } from '@shared-ui/fields';
 import { Chips } from '@shared-ui/chips';
 import {
 	ITEM_CATEGORY_OPTIONS,
@@ -31,7 +31,6 @@ import {
 } from '@shared-ui/mappers';
 
 import type { UpdateItemInput } from '@beggy/shared/types';
-import MeasurementField from './MeasurementField';
 
 // ─── Unit options ───────────────────────────────────────────────────────────────
 
@@ -150,7 +149,7 @@ const UpdateItemFormUI = ({
 											mode="single"
 											options={ITEM_CATEGORY_OPTIONS}
 											value={field.value ?? null}
-											variant="accent"
+											variant="primary"
 											onChange={(val) =>
 												field.onChange(val ?? undefined)
 											}
@@ -169,26 +168,28 @@ const UpdateItemFormUI = ({
 						/>
 
 						{/* ── Weight + unit (joined input-group) ───────────── */}
-						<MeasurementField
+						<NumberField
 							control={form.control}
 							valueName="weight"
 							unitName="weightUnit"
 							label="Weight"
 							placeholder="0.0"
 							unitOptions={WEIGHT_UNIT_OPTIONS}
+							unit
 							errors={form.formState.errors}
 							valueErrorId="update-item-weight-error"
 							unitErrorId="update-item-weight-unit-error"
 						/>
 
 						{/* ── Volume + unit (joined input-group) ───────────── */}
-						<MeasurementField
+						<NumberField
 							control={form.control}
 							valueName="volume"
 							unitName="volumeUnit"
 							label="Volume"
 							placeholder="0.0"
 							unitOptions={VOLUME_UNIT_OPTIONS}
+							unit
 							errors={form.formState.errors}
 							valueErrorId="update-item-volume-error"
 							unitErrorId="update-item-volume-unit-error"

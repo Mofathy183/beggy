@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@shared/store';
 import { useLogoutMutation, authApi } from '@features/auth/api';
-import { clearPermissions } from '@shared/store/ability';
+import { clearPermissions } from '@shared/ability';
 import { SuccessMessages } from '@beggy/shared/constants';
 import type { HttpClientError } from '@shared/types';
 

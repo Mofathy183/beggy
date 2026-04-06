@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor } from '@testing-library/react';
+import { setupUser } from '@tests';
 
 import CreateItemForm from '../CreateItemForm';
-
 import { notify } from '@shared/utils';
+
+// ─── Mocks ────────────────────────────────────────────────────────────────────
 
 const createMock = vi.fn();
 const resetMock = vi.fn();
-
 const useItemsActionsMock = vi.fn();
 
 vi.mock('@features/items/hooks', () => ({
@@ -24,113 +24,157 @@ vi.mock('@shared/utils', () => ({
 	},
 }));
 
+vi.mock('@hookform/resolvers/zod', () => ({
+	zodResolver: () => async (values: unknown) => ({ values, errors: {} }),
+}));
+
 const mockedNotify = vi.mocked(notify);
 
-const fillValidItemForm = async (user: ReturnType<typeof userEvent.setup>) => {
-	await user.type(screen.getByLabelText(/item name/i), 'Passport');
+// ─── Fixtures ─────────────────────────────────────────────────────────────────
 
-	await user.click(screen.getByRole('button', { name: /document/i }));
+const defaultHookState = () => ({
+	create: createMock,
+	isCreating: false,
+	states: {
+		create: { error: null, reset: resetMock },
+	},
+});
 
-	await user.type(screen.getByLabelText(/weight value/i), '0.1');
-
-	await user.type(screen.getByLabelText(/volume value/i), '0.01');
-};
+// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('CreateItemForm', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		useItemsActionsMock.mockReturnValue({
-			create: createMock,
-			isCreating: false,
-			states: {
-				create: {
-					error: null,
-					reset: resetMock,
-				},
-			},
-		});
+		useItemsActionsMock.mockReturnValue(defaultHookState());
 	});
 
-	it('renders item creation fields', () => {
+	// ── Rendering ──────────────────────────────────────────────────────────────
+
+	it('returns item creation fields', () => {
 		render(<CreateItemForm />);
 
 		expect(screen.getByLabelText(/item name/i)).toBeInTheDocument();
-
 		expect(
 			screen.getByRole('button', { name: /add item/i })
 		).toBeInTheDocument();
-
 		expect(
 			screen.getByLabelText(/mark item as fragile/i)
 		).toBeInTheDocument();
 	});
 
-	it('creates item when form is submitted with valid input', async () => {
-		const user = userEvent.setup();
-
+	it('returns the weight and volume number inputs', () => {
 		render(<CreateItemForm />);
 
-		await fillValidItemForm(user);
+		expect(
+			screen.getByRole('spinbutton', { name: /^weight$/i })
+		).toBeInTheDocument();
 
-		await user.click(screen.getByRole('button', { name: /add item/i }));
-
-		expect(createMock).toHaveBeenCalled();
+		expect(
+			screen.getByRole('spinbutton', { name: /^volume$/i })
+		).toBeInTheDocument();
 	});
 
-	it('shows success notification when item creation succeeds', async () => {
-		const user = userEvent.setup();
+	// ── Loading state ──────────────────────────────────────────────────────────
 
-		createMock.mockImplementation(async (_, { onSuccess }) => {
-			onSuccess('Item added successfully');
+	it('denies interaction by disabling the submit button while creating', () => {
+		useItemsActionsMock.mockReturnValue({
+			...defaultHookState(),
+			isCreating: true,
 		});
+		render(<CreateItemForm />);
+		expect(screen.getByRole('button', { name: /adding/i })).toBeDisabled();
+	});
 
+	// ── Submission ─────────────────────────────────────────────────────────────
+
+	it('calls create when the form is submitted', async () => {
+		const user = setupUser();
+		createMock.mockImplementation(async (_v, { onSuccess }) =>
+			onSuccess('')
+		);
+
+		render(<CreateItemForm />);
+		await user.click(screen.getByRole('button', { name: /add item/i }));
+
+		await waitFor(() => {
+			expect(createMock).toHaveBeenCalledWith(
+				expect.any(Object),
+				expect.objectContaining({
+					onSuccess: expect.any(Function),
+					onError: expect.any(Function),
+				})
+			);
+		});
+	});
+
+	it('calls create with the correct name when the user fills in the name field', async () => {
+		const user = setupUser();
+		createMock.mockImplementation(async (_v, { onSuccess }) =>
+			onSuccess('')
+		);
+
+		render(<CreateItemForm />);
+		await user.type(screen.getByLabelText(/item name/i), 'Passport');
+		await user.click(screen.getByRole('button', { name: /add item/i }));
+
+		await waitFor(() => {
+			expect(createMock).toHaveBeenCalledWith(
+				expect.objectContaining({ name: 'Passport' }),
+				expect.any(Object)
+			);
+		});
+	});
+
+	// ── Success flow ───────────────────────────────────────────────────────────
+
+	it('returns success notification when item creation succeeds', async () => {
+		const user = setupUser();
 		const onSuccess = vi.fn();
 		const onCancel = vi.fn();
 
+		createMock.mockImplementation(async (_v, { onSuccess: cb }) => {
+			cb('Item added successfully');
+		});
+
 		render(<CreateItemForm onSuccess={onSuccess} onCancel={onCancel} />);
-
-		await fillValidItemForm(user);
-
 		await user.click(screen.getByRole('button', { name: /add item/i }));
 
-		expect(mockedNotify.success).toHaveBeenCalled();
-		expect(onCancel).toHaveBeenCalled();
-		expect(onSuccess).toHaveBeenCalled();
+		await waitFor(() => {
+			expect(mockedNotify.success).toHaveBeenCalledWith({
+				message: 'Item added successfully',
+			});
+			expect(onCancel).toHaveBeenCalled();
+			expect(onSuccess).toHaveBeenCalled();
+		});
 	});
 
-	it('shows error notification when item creation fails', async () => {
-		const user = userEvent.setup();
+	// ── Error handling ─────────────────────────────────────────────────────────
 
-		const apiError = {
-			body: {
-				message: 'Item already exists',
-			},
-		};
+	it('returns error notification when item creation fails', async () => {
+		const user = setupUser();
+		const apiError = { body: { message: 'Item already exists' } };
 
-		createMock.mockImplementation(async (_, { onError }) => {
+		createMock.mockImplementation(async (_v, { onError }) => {
 			onError(apiError);
 		});
 
 		render(<CreateItemForm />);
-
-		await fillValidItemForm(user);
 		await user.click(screen.getByRole('button', { name: /add item/i }));
 
-		expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(apiError);
+		await waitFor(() => {
+			expect(mockedNotify.error.fromHttp).toHaveBeenCalledWith(apiError);
+		});
 	});
 
-	it('clears server error when user edits a field', async () => {
-		const user = userEvent.setup();
-
+	it('returns server error banner when the hook exposes an error', () => {
 		useItemsActionsMock.mockReturnValue({
-			create: createMock,
-			isCreating: false,
+			...defaultHookState(),
 			states: {
 				create: {
 					error: {
 						body: {
-							message: 'Server error',
+							message: 'Something went wrong',
+							suggestion: 'Try again.',
 						},
 					},
 					reset: resetMock,
@@ -140,8 +184,29 @@ describe('CreateItemForm', () => {
 
 		render(<CreateItemForm />);
 
+		expect(screen.getByRole('alert')).toBeInTheDocument();
+		expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+	});
+
+	// ── Server error reset ─────────────────────────────────────────────────────
+
+	it('clears server error when user edits a field', async () => {
+		const user = setupUser();
+		useItemsActionsMock.mockReturnValue({
+			...defaultHookState(),
+			states: {
+				create: {
+					error: { body: { message: 'Server error' } },
+					reset: resetMock,
+				},
+			},
+		});
+
+		render(<CreateItemForm />);
 		await user.type(screen.getByLabelText(/item name/i), 'Camera');
 
-		expect(resetMock).toHaveBeenCalled();
+		await waitFor(() => {
+			expect(resetMock).toHaveBeenCalled();
+		});
 	});
 });
