@@ -27,6 +27,7 @@ export const RolePermissions: Record<Role, Permissions> = {
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.BAG },
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.ITEM },
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.SUITCASE },
+		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.CONTAINER },
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.ROLE },
 		{
 			action: Action.MANAGE,
@@ -45,6 +46,7 @@ export const RolePermissions: Record<Role, Permissions> = {
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.BAG },
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.ITEM },
 		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.SUITCASE },
+		{ action: Action.MANAGE, scope: Scope.ANY, subject: Subject.CONTAINER },
 		{ action: Action.READ, scope: Scope.ANY, subject: Subject.USER },
 		{ action: Action.READ, scope: Scope.ANY, subject: Subject.PROFILE },
 		{ action: Action.READ, scope: Scope.ANY, subject: Subject.DASHBOARD },
@@ -69,6 +71,12 @@ export const RolePermissions: Record<Role, Permissions> = {
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.SUITCASE },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.SUITCASE },
 		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.SUITCASE },
+
+		//* Containers
+		{ action: Action.CREATE, scope: Scope.OWN, subject: Subject.CONTAINER },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.CONTAINER },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.CONTAINER },
+		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.CONTAINER },
 
 		//* Users
 		{ action: Action.READ, scope: Scope.ANY, subject: Subject.USER },
@@ -100,6 +108,13 @@ export const RolePermissions: Record<Role, Permissions> = {
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.SUITCASE },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.SUITCASE },
 		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.SUITCASE },
+
+		//* Containers
+		{ action: Action.CREATE, scope: Scope.OWN, subject: Subject.CONTAINER },
+		{ action: Action.READ, scope: Scope.OWN, subject: Subject.CONTAINER },
+		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.CONTAINER },
+		{ action: Action.DELETE, scope: Scope.OWN, subject: Subject.CONTAINER },
+
 		//* Users
 		{ action: Action.READ, scope: Scope.OWN, subject: Subject.USER },
 		{ action: Action.UPDATE, scope: Scope.OWN, subject: Subject.USER },

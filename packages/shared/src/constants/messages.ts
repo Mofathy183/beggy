@@ -140,8 +140,20 @@ export const SuccessMessages = {
 		'Here’s your full collection. Everything’s ready to pack, no socks left behind!',
 	ITEM_FETCHED:
 		'Found it! Your item’s right here and ready to go. Always nice knowing exactly what’s making the trip — fewer surprises at unpacking time.',
+
+	// ============================================================================
+	// CONTAINER OPERATIONS
+	// ============================================================================
 	ITEM_MOVED:
-		'Item moved! Reorganizing as you go — classic pro-traveler move.',
+		'Item moved! Little adjustments like this make a big difference — everything ends up right where you’ll need it.',
+	ITEM_PACKED:
+		'All packed! Nice and easy. A little tip — placing items with a plan now saves you from digging around later.',
+	ITEM_UNPACKED:
+		'Item unpacked! Always good to adjust as you go — plans change, and your packing can too.',
+	ITEM_TRANSFERRED:
+		'Item moved across! Shifting things between containers is a smart way to keep everything balanced and easy to carry.',
+	CONTAINER_STATE_FETCHED:
+		'Here’s the latest look inside your container — everything’s accounted for and right where you’d expect it. Makes planning the next move a whole lot simpler.',
 
 	// ============================================================================
 	// BAG-ITEMS (Items packed in bags)
@@ -406,6 +418,19 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 	// ============================================================================
 	// DOMAIN-SPECIFIC (Packing Logic)
 	// ============================================================================
+	[ErrorCode.CONTAINER_NOT_FOUND]:
+		'I couldn’t find that container — it might have been moved or removed along the way.',
+	[ErrorCode.CONTAINER_ITEM_NOT_FOUND]:
+		'That item doesn’t seem to be in this container anymore. Happens sometimes when you’ve been reorganizing.',
+	[ErrorCode.CONTAINER_OVERWEIGHT]:
+		'This container’s getting a bit heavy. It might be over the limit for what you planned.',
+	[ErrorCode.CONTAINER_OVER_CAPACITY]:
+		'Looks like this container’s pretty full already — there’s not much room left to work with.',
+	[ErrorCode.CONTAINER_ITEM_QUANTITY_INVALID]:
+		'That quantity doesn’t quite work. Let’s double-check the number so everything lines up.',
+	[ErrorCode.SAME_CONTAINER_MOVE]:
+		'You’re moving the item to the same place it’s already in — easy one to miss.',
+
 	[ErrorCode.MAX_BAGS_REACHED]:
 		'You’ve reached your current bag limit. Happens to all of us at check-in!',
 	[ErrorCode.MAX_SUITCASES_REACHED]:
@@ -674,8 +699,26 @@ export const ErrorSuggestions: Record<ErrorCode, string> = {
 		'Log in with your usual method or use a different email.',
 
 	// ============================================================================
-	// DOMAIN-SPECIFIC
+	// DOMAIN-SPECIFIC (Packing Logic)
 	// ============================================================================
+	[ErrorCode.CONTAINER_NOT_FOUND]:
+		'Want to refresh or head back to your containers list? We’ll get you back on track in a second.',
+
+	[ErrorCode.CONTAINER_ITEM_NOT_FOUND]:
+		'Try checking your other containers or refreshing — it might already be packed somewhere else.',
+
+	[ErrorCode.CONTAINER_OVERWEIGHT]:
+		'You could move a couple of heavier items to another bag — spreading the weight usually makes things easier to carry.',
+
+	[ErrorCode.CONTAINER_OVER_CAPACITY]:
+		'Maybe shift a few things to another container, or remove what you don’t really need — a little space goes a long way.',
+
+	[ErrorCode.CONTAINER_ITEM_QUANTITY_INVALID]:
+		'Try a smaller number or check what’s available — this usually sorts it out quickly.',
+
+	[ErrorCode.SAME_CONTAINER_MOVE]:
+		'Pick a different destination container and you’ll be good to go.',
+
 	[ErrorCode.MAX_BAGS_REACHED]:
 		'Archive a few old bags or upgrade for more space — happens to us all.',
 	[ErrorCode.MAX_SUITCASES_REACHED]:
