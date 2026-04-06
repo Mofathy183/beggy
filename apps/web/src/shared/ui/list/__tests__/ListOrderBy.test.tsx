@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import { describe, it, expect, vi } from 'vitest';
 import ListOrderBy from '../ListOrderBy';
 import type { UiOrderByOption } from '@shared/ui/mappers';
@@ -69,7 +69,7 @@ describe('ListOrderBy', () => {
 	});
 
 	it('calls onChange with selected sort value when option is selected', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const handleChange = vi.fn();
 
 		render(

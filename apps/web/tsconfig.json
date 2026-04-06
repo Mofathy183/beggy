@@ -31,7 +31,7 @@
 			"@features/*": ["./src/features/*"],
 			"@shadcn-ui/*": ["src/shared/components/ui/*"],
 			"@shadcn-lib": ["./src/shared/lib/utils.ts"],
-			"@tests/*": ["tests/*"]
+			"@tests": ["tests/utils/index.ts"]
 		}
 	},
 	"include": [

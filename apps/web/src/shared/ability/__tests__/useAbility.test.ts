@@ -1,6 +1,6 @@
 import { act } from '@testing-library/react';
 import useAbility from '../useAbility';
-import { renderHookWithStore } from '@tests/utils';
+import { renderHookWithStore } from '@tests';
 import { setPermissions } from '../ability.slice';
 import { Action, Subject, Scope } from '@beggy/shared/constants';
 

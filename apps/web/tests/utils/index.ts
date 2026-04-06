@@ -1,1 +1,1 @@
-export * from './renderWithStore';
+export * from './render.util';

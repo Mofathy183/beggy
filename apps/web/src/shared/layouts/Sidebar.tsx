@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAbility } from '@shared/store/ability';
+import { useAbility } from '@/shared/ability';
 import { useAppSelector } from '@shared/store/hooks';
 import { selectShowOnboardingIndicator } from '@features/dashboard/store/dashboard.slice';
 import SidebarUI, { type NavItem, NAV_ITEMS } from './SidebarUI';

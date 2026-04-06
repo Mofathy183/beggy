@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 
 import Chips from './Chips';
 
@@ -38,6 +38,7 @@ const ChipsTestWrapper = <T extends string>({
 describe('Chips / single mode', () => {
 	it('returns selected value', async () => {
 		const onChange = vi.fn();
+		const user = setupUser();
 
 		render(
 			<Chips
@@ -51,14 +52,14 @@ describe('Chips / single mode', () => {
 			/>
 		);
 
-		await userEvent.click(screen.getByText('A'));
+		await user.click(screen.getByText('A'));
 
 		expect(onChange).toHaveBeenCalledWith('a');
 	});
 
 	it('returns null when selected value is clicked again', async () => {
 		const onChange = vi.fn();
-
+		const user = setupUser();
 		render(
 			<Chips
 				mode="single"
@@ -71,7 +72,7 @@ describe('Chips / single mode', () => {
 			/>
 		);
 
-		await userEvent.click(screen.getByText('A'));
+		await user.click(screen.getByText('A'));
 
 		expect(onChange).toHaveBeenCalledWith(null);
 	});
@@ -80,6 +81,7 @@ describe('Chips / single mode', () => {
 describe('Chips / multiple mode', () => {
 	it('adds values to the selection', async () => {
 		const onChange = vi.fn();
+		const user = setupUser();
 
 		render(
 			<ChipsTestWrapper
@@ -93,14 +95,14 @@ describe('Chips / multiple mode', () => {
 			/>
 		);
 
-		await userEvent.click(screen.getByText('B'));
+		await user.click(screen.getByText('B'));
 
 		expect(onChange).toHaveBeenLastCalledWith(['a', 'b']);
 	});
 
 	it('removes values from the selection', async () => {
 		const onChange = vi.fn();
-
+		const user = setupUser();
 		render(
 			<Chips
 				mode="multiple"
@@ -113,14 +115,14 @@ describe('Chips / multiple mode', () => {
 			/>
 		);
 
-		await userEvent.click(screen.getByText('A'));
+		await user.click(screen.getByText('A'));
 
 		expect(onChange).toHaveBeenCalledWith([]);
 	});
 
 	it('rejects selections beyond maxSelected', async () => {
 		const onChange = vi.fn();
-
+		const user = setupUser();
 		render(
 			<Chips
 				mode="multiple"
@@ -134,14 +136,14 @@ describe('Chips / multiple mode', () => {
 			/>
 		);
 
-		await userEvent.click(screen.getByText('B'));
+		await user.click(screen.getByText('B'));
 
 		expect(onChange).not.toHaveBeenCalled();
 	});
 
 	it('ignores disabled options', async () => {
 		const onChange = vi.fn();
-
+		const user = setupUser();
 		render(
 			<Chips
 				mode="single"
@@ -151,14 +153,14 @@ describe('Chips / multiple mode', () => {
 			/>
 		);
 
-		await userEvent.click(screen.getByText('A'));
+		await user.click(screen.getByText('A'));
 
 		expect(onChange).not.toHaveBeenCalled();
 	});
 
 	it('ignores interaction when disabled', async () => {
 		const onChange = vi.fn();
-
+		const user = setupUser();
 		render(
 			<Chips
 				mode="single"
@@ -169,7 +171,7 @@ describe('Chips / multiple mode', () => {
 			/>
 		);
 
-		await userEvent.click(screen.getByText('A'));
+		await user.click(screen.getByText('A'));
 
 		expect(onChange).not.toHaveBeenCalled();
 	});

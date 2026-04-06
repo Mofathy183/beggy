@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useAppSelector } from '@shared/store';
-import { AppAbility, defineAbilityForUser } from '@shared/store/ability';
+import { AppAbility, defineAbilityForUser } from '@/shared/ability';
 
 /**
  * useAbility

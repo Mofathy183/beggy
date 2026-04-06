@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import { describe, it, expect, vi } from 'vitest';
 import ListPagination from '../ListPagination';
 import type { PaginationMeta } from '@beggy/shared/types';
@@ -29,7 +29,7 @@ describe('ListPagination', () => {
 	});
 
 	it('calls onPageChange with previous page when previous is clicked', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const handleChange = vi.fn();
 
 		render(<ListPagination meta={baseMeta} onPageChange={handleChange} />);
@@ -42,7 +42,7 @@ describe('ListPagination', () => {
 	});
 
 	it('calls onPageChange with next page when next is clicked', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const handleChange = vi.fn();
 
 		render(<ListPagination meta={baseMeta} onPageChange={handleChange} />);
@@ -55,7 +55,7 @@ describe('ListPagination', () => {
 	});
 
 	it('does not call onPageChange when previous page is unavailable', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const handleChange = vi.fn();
 
 		const meta: PaginationMeta = {
@@ -73,7 +73,7 @@ describe('ListPagination', () => {
 	});
 
 	it('does not call onPageChange when next page is unavailable', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const handleChange = vi.fn();
 
 		const meta: PaginationMeta = {
@@ -91,7 +91,7 @@ describe('ListPagination', () => {
 	});
 
 	it('does not call onPageChange when component is disabled', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const handleChange = vi.fn();
 
 		render(

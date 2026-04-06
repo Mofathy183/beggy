@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen, render } from '@testing-library/react';
-import * as abilityModule from '@shared/store/ability';
+import * as abilityModule from '@/shared/ability';
 
 import Can from '../Can';
 import { Action, Subject } from '@beggy/shared/constants';

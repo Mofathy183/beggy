@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import React from 'react';
 import DateRangeFilter from '../DateRangeFilter';
 
@@ -101,7 +101,7 @@ describe('DateRangeFilter', () => {
 			</button>
 		);
 
-		const user = userEvent.setup();
+		const user = setupUser();
 		const { onChange } = setup();
 
 		await user.click(screen.getByTestId('calendar-invalid'));
@@ -121,7 +121,7 @@ describe('DateRangeFilter', () => {
 			</button>
 		);
 
-		const user = userEvent.setup();
+		const user = setupUser();
 		const { onChange } = setup();
 
 		await user.click(screen.getByTestId('calendar-clear'));
@@ -153,7 +153,7 @@ describe('DateRangeFilter', () => {
 	});
 
 	it('calls onChange with selected range when calendar selects full range', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const { onChange } = setup();
 
 		await user.click(screen.getByTestId('calendar-select'));
@@ -176,7 +176,7 @@ describe('DateRangeFilter', () => {
 	});
 
 	it('calls onChange with undefined when clear button is clicked', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		const { onChange } = setup({
 			value: {

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@tests';
 import ToggleFilter from '../ToggleFilter';
 
 describe('ToggleFilter', () => {
@@ -44,7 +44,7 @@ describe('ToggleFilter', () => {
 	});
 
 	it('calls onChange with true when user selects "Yes"', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const onChange = vi.fn();
 
 		render(<ToggleFilter value={undefined} onChange={onChange} />);
@@ -55,7 +55,7 @@ describe('ToggleFilter', () => {
 	});
 
 	it('calls onChange with false when user selects "No"', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const onChange = vi.fn();
 
 		render(<ToggleFilter value={undefined} onChange={onChange} />);
@@ -66,7 +66,7 @@ describe('ToggleFilter', () => {
 	});
 
 	it('calls onChange with undefined when user selects "All"', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 		const onChange = vi.fn();
 
 		render(<ToggleFilter value={true} onChange={onChange} />);
@@ -77,7 +77,7 @@ describe('ToggleFilter', () => {
 	});
 
 	it('reflects updated value when parent changes value', async () => {
-		const user = userEvent.setup();
+		const user = setupUser();
 
 		const Wrapper = () => {
 			const [value, setValue] = useState<boolean | undefined>(undefined);

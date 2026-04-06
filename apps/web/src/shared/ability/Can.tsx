@@ -1,7 +1,7 @@
 'use client';
 
 import type { Action, Subject } from '@beggy/shared/constants';
-import { useAbility } from '@shared/store/ability';
+import { useAbility } from '@/shared/ability';
 
 type CanProps = {
 	/** Action to check (e.g. READ, UPDATE, DELETE) */

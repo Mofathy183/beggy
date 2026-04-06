@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 
 import AuthGate from '../AuthGate';
-import { renderWithStore } from '@tests/utils';
+import { renderWithStore } from '@tests';
 import { Role } from '@beggy/shared/constants';
 
 const replaceMock = vi.fn();

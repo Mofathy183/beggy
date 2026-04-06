@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { apiSlice } from '@shared/api';
-import { abilityReducer } from '@shared/store/ability';
+import { abilityReducer } from '@/shared/ability';
 import { authReducer } from '@features/auth/store';
 import { dashboardReducer } from '@features/dashboard/store';
 
