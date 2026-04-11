@@ -70,7 +70,7 @@
 		"eslint-plugin-react": "^7.37.5",
 		"eslint-plugin-react-hooks": "^7.0.1",
 		"prettier": "^3.7.3",
-		"turbo": "^2.8.20",
+		"turbo": "^2.9.6",
 		"typescript": "^5.9.3",
 		"vite-tsconfig-paths": "^6.0.4",
 		"vitest": "^4.0.18"
