@@ -24,6 +24,10 @@ import {
 import { cn } from '@shadcn-lib';
 
 import { ContainerStatusSummaryCard } from '@features/container/components/details';
+import {
+	DetailPageTabs,
+	type DetailPageTab,
+} from '@features/packing/components/tabs';
 import { BagTypeBadge } from '@features/bags/components/badges';
 import { BagFeatureChips } from '@features/bags/components/chips';
 import { UpdateBagDialog } from '@features/bags/components/dialogs';
@@ -33,7 +37,11 @@ import useBagActions from '@features/bags/hooks/useBagActions';
 
 import { notify } from '@shared/utils/notify.utils';
 
-import { BagFeature, SuccessMessages } from '@beggy/shared/constants';
+import {
+	BagFeature,
+	SuccessMessages,
+	ContainerType,
+} from '@beggy/shared/constants';
 import {
 	SIZE_OPTIONS,
 	MATERIAL_OPTIONS,
@@ -168,6 +176,11 @@ const BagDetailsPage = ({ id }: BagDetailsPageProps) => {
 
 	// ── Mutations ────────────────────────────────────────────────────────────
 	const { remove, isDeleting } = useBagActions();
+
+	// ── tab state ───────────────────────────────────────────────────────
+	// Only 'info' is a real state here — 'packing' navigates away.
+	// We track it so the Info tab can show its active style correctly.
+	const [activeTab, setActiveTab] = useState<DetailPageTab>('info');
 
 	const handleDelete = () => {
 		if (!bag) return;
@@ -464,6 +477,48 @@ const BagDetailsPage = ({ id }: BagDetailsPageProps) => {
 					/>
 				</div>
 			</div>
+
+			{/* ── Tab row — NEW ─────────────────────────────────────────────── */}
+			{/*
+			 * Requires bag.containerId to be present in BagDTO.
+			 * Add `containerId: bag.containerId` to your bag mapper on the API side.
+			 *
+			 * The Pack tab dispatches setPackingContext to Redux and navigates
+			 * to /packing/[containerId] — no search params needed.
+			 */}
+			<DetailPageTabs
+				activeTab={activeTab}
+				onTabChange={setActiveTab}
+				containerId={bag.containerId}
+				onNavigateToPacking={() =>
+					router.push(`/packing/${bag.containerId}`)
+				}
+				containerName={bag.name}
+				containerType={ContainerType.BAG}
+				sourceId={bag.id}
+				maxWeight={bag.maxWeight}
+				maxCapacity={bag.maxCapacity}
+			/>
+
+			{/* ── Content — only shown when activeTab === 'info' ────────────── */}
+			{activeTab === 'info' && (
+				<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+					{/* Left column — bag identity + features cards (unchanged) */}
+					<div className="flex flex-col gap-6 lg:col-span-2">
+						{/* ... your existing identity Card and features Card ... */}
+					</div>
+
+					{/* Right column — container status (unchanged) */}
+					<div className="flex flex-col gap-6">
+						<ContainerStatusSummaryCard
+							status={bag.status ?? null}
+							maxWeight={bag.maxWeight}
+							maxCapacity={bag.maxCapacity}
+							title="Packing status"
+						/>
+					</div>
+				</div>
+			)}
 
 			{/* ── Edit dialog ──────────────────────────────────────────────── */}
 			{/*
