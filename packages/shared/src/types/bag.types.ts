@@ -38,6 +38,14 @@ export interface BagDTO {
 	type: BagType;
 
 	/**
+	 * Parent container reference.
+	 *
+	 * @remarks
+	 * Used for grouping or cross-container operations.
+	 */
+	containerId: string;
+
+	/**
 	 * Optional bag color.
 	 */
 	color?: string | null;

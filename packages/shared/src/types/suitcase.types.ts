@@ -42,6 +42,14 @@ export interface SuitcaseDTO {
 	type: SuitcaseType;
 
 	/**
+	 * Parent container reference.
+	 *
+	 * @remarks
+	 * Used for grouping or cross-container operations.
+	 */
+	containerId: string;
+
+	/**
 	 * Optional suitcase color.
 	 */
 	color?: string | null;
