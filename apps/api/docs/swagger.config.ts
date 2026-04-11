@@ -39,6 +39,11 @@ const swaggerDefinition: SwaggerDefinition = {
 				'Bag management including creation, organization, and capacity tracking',
 		},
 		{
+			name: 'Containers',
+			description:
+				'Container state management including packing, unpacking, item movement, and constraint evaluation (weight, capacity, status)',
+		},
+		{
 			name: 'Items',
 			description:
 				'Item management including CRUD operations, categorization, and inventory tracking',

@@ -3,6 +3,7 @@ import { apiSlice } from '@shared/api';
 import { abilityReducer } from '@/shared/ability';
 import { authReducer } from '@features/auth/store';
 import { dashboardReducer } from '@features/dashboard/store';
+import { packingReducer } from '@features/packing/store';
 
 /**
  * Factory function that creates a new Redux store instance.
@@ -19,6 +20,7 @@ export const makeStore = () => {
 			ability: abilityReducer,
 			auth: authReducer,
 			dashboard: dashboardReducer,
+			packing: packingReducer,
 		},
 		// middleware, devTools, and enhancers can be configured here
 		middleware: (getDefaultMiddleware) =>

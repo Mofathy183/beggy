@@ -6,7 +6,8 @@ import { renderHook, type RenderHookResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PropsWithChildren } from 'react';
 
-import abilityReducer from '@/shared/ability/ability.slice';
+import { abilityReducer } from '@shared/ability';
+import { packingReducer } from '@features/packing/store';
 import type { RootState } from '@shared/store';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ export function renderWithStore(
 		reducer: {
 			api: mockApiReducer,
 			ability: abilityReducer,
+			packing: packingReducer,
 			dashboard: mockDashboardReducer,
 			auth: mockAuthReducer,
 		},
@@ -130,6 +132,7 @@ export function renderHookWithStore<T>(
 	const store = configureStore({
 		reducer: {
 			api: mockApiReducer,
+			packing: packingReducer,
 			ability: abilityReducer,
 			dashboard: mockDashboardReducer,
 			auth: mockAuthReducer,

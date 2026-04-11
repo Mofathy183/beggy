@@ -409,6 +409,172 @@ UsersPage
 
 ---
 
+## Packing Feature — Complete Wiring Guide
+
+### What was built
+
+A Redux-based packing context system that eliminates search params for passing
+bag/suitcase data to the packing page.
+
+---
+
+### Files to create / update
+
+#### New files
+
+| File                      | Location in your project                                          |
+| ------------------------- | ----------------------------------------------------------------- |
+| `packing.slice.ts`        | `src/features/container/store/packing.slice.ts`                   |
+| `usePackingContext.ts`    | `src/features/container/store/usePackingContext.ts`               |
+| `PackingTabButton.tsx`    | `src/features/container/components/tabs/PackingTabButton.tsx`     |
+| `DetailPageTabs.tsx`      | `src/features/container/components/tabs/DetailPageTabs.tsx`       |
+| `PackingPageClient.tsx`   | `src/features/container/components/pages/PackingPageClient.tsx`   |
+| `ContainerDetailPage.tsx` | `src/features/container/components/pages/ContainerDetailPage.tsx` |
+| `page.tsx` (route)        | `src/app/(dashboard)/packing/[containerId]/page.tsx`              |
+| `error.tsx` (route)       | `src/app/(dashboard)/packing/[containerId]/error.tsx`             |
+
+#### Updated files
+
+| File                                                   | Change                                           |
+| ------------------------------------------------------ | ------------------------------------------------ |
+| `src/shared/store/store.ts`                            | Add `packing: packingReducer` to the reducer map |
+| `src/features/bags/pages/BagDetailsPage.tsx`           | Add `DetailPageTabs` + `activeTab` state         |
+| `src/features/suitcases/pages/SuitcaseDetailsPage.tsx` | Same as BagDetailsPage                           |
+
+---
+
+### The one backend change required
+
+In your bag mapper (`apps/api/src/modules/bags/bags.mapper.ts`), add:
+
+```ts
+containerId: bag.containerId,
+```
+
+In your suitcase mapper, same thing:
+
+```ts
+containerId: suitcase.containerId,
+```
+
+This is the only backend change. The `containerId` already exists on the Prisma
+model — it's just not currently included in the DTO output.
+
+---
+
+### How it works (data flow)
+
+```txt
+BagDetailsPage / SuitcaseDetailsPage
+  └─ DetailPageTabs renders Info + Pack tabs
+       └─ Pack tab = PackingTabButton (variant="tab")
+            └─ onClick:
+                 1. dispatch(setPackingContext({ containerId, containerName,
+                                                maxWeight, maxCapacity, ... }))
+                 2. router.push('/packing/[containerId]')
+
+/packing/[containerId]/page.tsx  (Server Component)
+  └─ renders <PackingPageClient containerId={containerId} />
+
+PackingPageClient  (Client Component)
+  └─ context = usePackingContext()  ← reads from Redux store
+  └─ if context is null or stale → shows DirectNavFallback
+  └─ if context is valid → renders <ContainerDetailPage
+                                       containerId={containerId}
+                                       containerName={context.containerName}
+                                       maxWeight={context.maxWeight}
+                                       maxCapacity={context.maxCapacity}
+                                       backHref="/bags/[sourceId]"
+                                     />
+
+ContainerDetailPage
+  └─ useContainerState(containerId) → fetches /containers/:id/state
+  └─ ContainerStatusPanel(
+         status={containerDto.status}
+         maxWeight={maxWeight}       ← from props (bag DTO), NOT from metrics
+         maxCapacity={maxCapacity}   ← from props (bag DTO), NOT from metrics
+       )
+  └─ on unmount: dispatch(clearPackingContext())
+```
+
+---
+
+### The bug that was fixed
+
+**Before** (in your existing ContainerDetailPage):
+
+```tsx
+maxCapacity={containerDto.status.metrics.currentCapacity}  // WRONG
+maxWeight={containerDto.status.metrics.currentWeight}       // WRONG
+```
+
+`metrics.currentCapacity` is how much is currently USED.
+`metrics.currentWeight` is the current total weight.
+
+These are NOT the limits — passing them as `maxWeight`/`maxCapacity` meant
+the progress bars would show 100% the moment any item was added (current = max).
+
+**After** (with Redux context):
+
+```tsx
+maxCapacity = { maxCapacity }; // from BagDTO.maxCapacity via Redux context
+maxWeight = { maxWeight }; // from BagDTO.maxWeight via Redux context
+```
+
+---
+
+### DetailPageTabs usage
+
+The `DetailPageTabs` component is fully generic — use it on both detail pages:
+
+```tsx
+// BagDetailsPage
+<DetailPageTabs
+  activeTab={activeTab}
+  onTabChange={setActiveTab}
+  containerId={bag.containerId}   // ← requires backend change above
+  containerName={bag.name}
+  containerType={ContainerType.BAG}
+  sourceId={bag.id}
+  maxWeight={bag.maxWeight}
+  maxCapacity={bag.maxCapacity}
+/>
+
+// SuitcaseDetailsPage — identical, just change type and source
+<DetailPageTabs
+  activeTab={activeTab}
+  onTabChange={setActiveTab}
+  containerId={suitcase.containerId}
+  containerName={suitcase.name}
+  containerType={ContainerType.SUITCASE}
+  sourceId={suitcase.id}
+  maxWeight={suitcase.maxWeight}
+  maxCapacity={suitcase.maxCapacity}
+/>
+```
+
+---
+
+### Direct URL navigation handling
+
+If someone bookmarks `/packing/[containerId]` and opens it directly,
+the Redux store will be empty (or have a stale context from a different container).
+
+`PackingPageClient` detects this with:
+
+```ts
+const isContextValid = context !== null && context.containerId === containerId;
+```
+
+When invalid, it shows `DirectNavFallback` which routes back to `/bags`.
+This is intentional — the packing page needs limits data that only exists
+on the bag/suitcase DTO, not on ContainerStateDTO.
+
+If you want to support direct navigation properly in the future, add an endpoint
+that returns the full bag/suitcase data by containerId, then fetch it as fallback.
+
+---
+
 ## Path Aliases
 
 | Alias           | Resolves to                  |

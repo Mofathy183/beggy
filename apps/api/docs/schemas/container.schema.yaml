@@ -1,78 +1,58 @@
+# schemas/containers.schema.yaml
 components:
   schemas:
-    ContainerItem:
+    PackItemRequest:
       type: object
       additionalProperties: false
       required:
+        - itemId
         - quantity
-        - item
       properties:
+        itemId:
+          type: string
+          format: uuid
         quantity:
-          type: number
-        item:
-          type: object
-          additionalProperties: false
-          required:
-            - weight
-            - weightUnit
-            - volume
-            - volumeUnit
-          properties:
-            weight:
-              type: number
-            weightUnit:
-              $ref: "#/components/schemas/WeightUnit"
-            volume:
-              type: number
-            volumeUnit:
-              $ref: "#/components/schemas/VolumeUnit"
+          type: integer
+          minimum: 1
 
-    ContainerStatusResult:
+    UnpackItemRequest:
       type: object
       additionalProperties: false
       required:
-        - status
-        - reasons
+        - itemId
+        - quantity
       properties:
-        status:
-          $ref: "#/components/schemas/ContainerStatus"
-        reasons:
-          type: array
-          items:
-            $ref: "#/components/schemas/ContainerStatusReason"
+        itemId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
 
-    ContainerStatusParams:
+    MoveItemRequest:
       type: object
       additionalProperties: false
       required:
-        - isOverweight
-        - isOverCapacity
-        - isWeightNearLimit
-        - isCapacityNearLimit
-        - itemCount
+        - fromContainerId
+        - toContainerId
+        - itemId
+        - quantity
       properties:
-        isOverweight:
-          type: boolean
-        isOverCapacity:
-          type: boolean
-        isWeightNearLimit:
-          type: boolean
-        isCapacityNearLimit:
-          type: boolean
-        itemCount:
-          type: number
+        fromContainerId:
+          type: string
+          format: uuid
+        toContainerId:
+          type: string
+          format: uuid
+        itemId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
 
     ContainerMetrics:
       type: object
-      additionalProperties: false
-      required:
-        - currentWeight
-        - currentCapacity
-        - remainingWeight
-        - remainingCapacity
-        - weightPercentage
-        - capacityPercentage
-        - itemCount
       properties:
         currentWeight:
           type: number
@@ -87,17 +67,10 @@ components:
         capacityPercentage:
           type: number
         itemCount:
-          type: number
+          type: integer
 
     ContainerState:
       type: object
-      additionalProperties: false
-      required:
-        - isOverweight
-        - isOverCapacity
-        - isFull
-        - status
-        - reasons
       properties:
         isOverweight:
           type: boolean
@@ -114,12 +87,25 @@ components:
 
     ContainerStatusDTO:
       type: object
-      additionalProperties: false
-      required:
-        - metrics
-        - state
       properties:
         metrics:
           $ref: "#/components/schemas/ContainerMetrics"
         state:
           $ref: "#/components/schemas/ContainerState"
+
+    ContainerSummaryDTO:
+      type: object
+      properties:
+        containerId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ContainerStatusDTO"
+
+    MoveResultDTO:
+      type: object
+      properties:
+        from:
+          $ref: "#/components/schemas/ContainerSummaryDTO"
+        to:
+          $ref: "#/components/schemas/ContainerSummaryDTO"

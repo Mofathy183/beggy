@@ -36,6 +36,7 @@ export enum Subject {
 	BAG = 'BAG',
 	ITEM = 'ITEM',
 	SUITCASE = 'SUITCASE',
+	CONTAINER = 'CONTAINER',
 	ROLE = 'ROLE',
 	PERMISSION = 'PERMISSION',
 }

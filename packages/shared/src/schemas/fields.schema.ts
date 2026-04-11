@@ -16,15 +16,32 @@ import type {
 /**
  * Centralized field schema factory.
  *
+ * @description
  * This object exposes reusable, domain-agnostic Zod schema builders
  * for primitive fields (string, number, enum, date, etc.).
  *
+ * @remarks
  * Goals:
  * - Consistent validation rules across the entire application
  * - Single source of truth for constraints and transformations
  * - Backend + frontend schema parity
  */
 export const FieldsSchema = {
+	/**
+	 * Creates a strict UUID v4 validator.
+	 *
+	 * @description
+	 * Used for validating entity identifiers across the system.
+	 * Ensures all IDs conform to UUID v4 format with a consistent error message.
+	 *
+	 * @param message - User-facing validation message returned on failure
+	 * @returns Zod schema validating a UUID v4 string
+	 *
+	 * @remarks
+	 * Keep messages user-friendly since this schema is shared with the UI layer.
+	 */
+	id: (message: string) => z.uuidv4({ error: message }),
+
 	/**
 	 * Creates a validated name field.
 	 *

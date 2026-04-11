@@ -9,6 +9,9 @@ components:
           format: uuid
         name:
           type: string
+        containerId:
+          type: string
+          format: uuid
         type:
           $ref: "#/components/schemas/BagType"
         color:

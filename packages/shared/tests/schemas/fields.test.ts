@@ -2,6 +2,52 @@ import { it, describe, expect } from 'vitest';
 import { z } from 'zod';
 import { FieldsSchema } from '../../src/schemas/fields.schema';
 
+describe('FieldsSchema.id()', () => {
+	it('accepts valid uuid v4 input', () => {
+		// Arrange
+		const schema = FieldsSchema.id('Invalid ID');
+
+		const validId = crypto.randomUUID(); // always v4
+
+		// Act
+		const result = schema.parse(validId);
+
+		// Assert
+		expect(result).toBe(validId);
+	});
+
+	it('rejects invalid uuid format', () => {
+		// Arrange
+		const message = 'Invalid ID';
+		const schema = FieldsSchema.id(message);
+
+		const invalidId = '123-invalid-uuid';
+
+		// Act & Assert
+		expect(() => schema.parse(invalidId)).toThrow(message);
+	});
+
+	it('rejects non-uuid string', () => {
+		// Arrange
+		const message = 'Invalid ID';
+		const schema = FieldsSchema.id(message);
+
+		const invalidId = 'not-a-uuid';
+
+		// Act & Assert
+		expect(() => schema.parse(invalidId)).toThrow(message);
+	});
+
+	it('rejects empty string', () => {
+		// Arrange
+		const message = 'Invalid ID';
+		const schema = FieldsSchema.id(message);
+
+		// Act & Assert
+		expect(() => schema.parse('')).toThrow(message);
+	});
+});
+
 describe('FieldsSchema.name()', () => {
 	it('parses a valid name value', () => {
 		const schema = FieldsSchema.name('First name', 'person');

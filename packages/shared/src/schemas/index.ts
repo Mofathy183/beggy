@@ -3,6 +3,7 @@ export * from './fields.schema';
 export * from './api.schema';
 export * from './auth.schema';
 export * from './bag.schema';
+export * from './container.schema';
 export * from './item.schema';
 export * from './suitcase.schema';
 export * from './profile.schema';
