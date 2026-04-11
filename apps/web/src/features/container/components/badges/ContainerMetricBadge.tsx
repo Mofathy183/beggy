@@ -93,8 +93,10 @@ const ContainerMetricBadge = ({
 			className
 		)}
 	>
-		<span>{value.toFixed(1)}</span>
-		<span className="opacity-60">{unit}</span>
+		<span className="font-semibold">{value.toFixed(1)}</span>
+		<span className="text-[9px] font-medium uppercase tracking-wide opacity-50 leading-none">
+			{unit}
+		</span>
 	</Badge>
 );
 
