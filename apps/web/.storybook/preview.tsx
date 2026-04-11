@@ -47,6 +47,7 @@ const preview: Preview = {
 				<ThemeProvider
 					forcedTheme={theme}
 					attribute="class"
+					defaultTheme="light"
 					enableSystem={false}
 				>
 					<AppProvider>
