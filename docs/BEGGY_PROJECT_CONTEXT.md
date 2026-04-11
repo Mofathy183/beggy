@@ -64,7 +64,7 @@
 - `./schemas` → `./dist/schemas/index.js` (Zod schemas)
 - `./types` → `./dist/types/index.js` (TypeScript types)
 
-**Note**: Additional exports may be added for `./utils`, `./constants`, `./containers` (see comments in `src/index.ts`)
+**Note**: The root entry `@beggy/shared` re-exports `./constants`, `./containers`, `./schemas`, `./types`, and `./utils`. Published `package.json` subpaths are still `./schemas` and `./types` only; the comment block in `src/index.ts` documents optional future subpath entries.
 
 ### 3.4 Contents Structure
 
@@ -78,7 +78,7 @@
 - `auth.enums.ts` – Authentication-related enums
 - `api.enums.ts` – API-related enums
 - `constraints.ts` – Validation constraints
-- `constraints.enums.ts` – Constraint enums
+- `constraints.enums.ts` – Constraint enums (includes `ContainerStatus`, `ContainerStatusReason`, `ContainerType`, etc.)
 - `permissions.ts` – RBAC permissions
 - `messages.ts` – User-facing messages
 - `error.codes.ts` – Error code constants
@@ -97,6 +97,7 @@
 - `item.schema.ts` – Item Zod schemas
 - `suitcase.schema.ts` – Suitcase Zod schemas
 - `api.schema.ts` – API request/response schemas
+- `container.schema.ts` – Container mutations (`pack`, `unpack`, `move`) — shared validation for API routes and client payloads
 - `fields.schema.ts` – Field-level schemas
 
 **Types** (`src/types/`):
@@ -109,7 +110,7 @@
 - `suitcase.types.ts` – Suitcase TypeScript types
 - `api.types.ts` – API TypeScript types
 - `schema.types.ts` – Schema-related types
-- `constraints.types.ts` – Constraint types
+- `constraints.types.ts` – Constraint and **container** types (e.g. `ContainerStatusDTO`, `ContainerStateDTO`, `ContainerSummaryDTO`, `MoveResultDTO`, Zod-inferred `PackItemInput` / `UnpackItemInput` / `MoveItemInput`)
 
 **Utils** (`src/utils/`):
 
@@ -241,6 +242,9 @@
 - `/profiles` – Profile management (`GET/PATCH /profiles/me`, `GET /profiles/:id`)
 - `/auth` – Authentication (signup, login, logout, refresh-token, csrf-token, OAuth callbacks)
 - `/items` – Item inventory management (CRUD for user-owned items)
+- `/dashboard` – Aggregated dashboard overview for the authenticated user (`GET /dashboard`)
+- `/bags` – Bag CRUD and listing (bags are backed 1:1 by a `Container` record; responses include computed container status)
+- `/containers` – Container packing domain: `GET /:id/state`, `POST /:id/pack`, `POST /:id/unpack`, `POST /move` (CASL: `READ`/`UPDATE` on `CONTAINER`)
 
 **Module Structure** (`src/modules/`):
 
@@ -255,8 +259,8 @@ Each module follows a consistent pattern:
 
 **Modules present in codebase**:
 
-- **Mounted in router**: **auth**, **users**, **profiles**, **items** (see `app.route.ts`).
-- **Implemented but not mounted** (routes exist in code and Swagger/docs; add to `app.route.ts` when needed): **bags**, **bag-items**, **suitcases**, **suitcase-items**, **weather**, **gemini**.
+- **Mounted in router**: **auth**, **users**, **profiles**, **items**, **dashboard**, **bags**, **containers** (see `app.route.ts`).
+- **Implemented but not mounted**: **weather**, **gemini** (services and integration tests exist; not wired in `app.route.ts`).
 
 **Shared Infrastructure** (`src/shared/`):
 
@@ -312,7 +316,7 @@ Each module follows a consistent pattern:
 
 **Enums** (defined in main schema):
 
-- **Auth**: `AuthProvider` (GOOGLE, FACEBOOK, LOCAL), `Role` (ADMIN, MODERATOR, MEMBER, USER), `Action` (CREATE, READ, UPDATE, DELETE, MANAGE), `Scope` (OWN, ANY), `Subject` (BAG, ITEM, SUITCASE, USER, ROLE, PERMISSION), `TokenType` (EMAIL_VERIFICATION, PASSWORD_RESET, CHANGE_EMAIL)
+- **Auth**: `AuthProvider` (GOOGLE, FACEBOOK, LOCAL), `Role` (ADMIN, MODERATOR, MEMBER, USER), `Action` (CREATE, READ, UPDATE, DELETE, MANAGE), `Scope` (OWN, ANY), `Subject` (BAG, ITEM, SUITCASE, CONTAINER, PROFILE, DASHBOARD, USER, ROLE, PERMISSION), `TokenType` (EMAIL_VERIFICATION, PASSWORD_RESET, CHANGE_EMAIL)
 - **Domain**: `Material`, `ItemCategory`, `BagType`, `SuitcaseType`, `SuitcaseFeature`, `BagFeature`, `Size`, `WheelType`, `ContainerType`, `Gender`
 - **Measurement**: `WeightUnit`, `VolumeUnit`
 
@@ -350,7 +354,7 @@ Each module follows a consistent pattern:
 **Test Patterns**:
 
 - **Unit tests**: Next to modules and shared utilities (e.g., `auth.service.test.ts`, `users.routes.test.ts`, `password.util.test.ts`, `token.util.test.ts`, middleware tests, and items mapper/service tests)
-- **Integration tests**: Full API testing (e.g., `auth.integration.test.ts`, `users.integration.test.ts`, `profiles.integration.test.ts`, bags, bag-items, items, suitcases, suitcase-items, weather, gemini)
+- **Integration tests**: Full API testing (e.g., `auth.integration.test.ts`, `users.integration.test.ts`, `profiles.integration.test.ts`, `items`, `bags`, `containers`, `dashboard`, `weather`, `gemini`)
 - **Test utilities**: `@faker-js/faker` for test data, `supertest` for HTTP testing
 
 **Test Scripts**:
@@ -457,7 +461,11 @@ Feature-based organization. Each feature contains:
 
 - **auth** – Authentication UX + session hydration (login/signup forms, OAuth buttons, `/auth/callback`)
 - **profiles** – Profile editing + onboarding completion flow (soft-nudge onboarding)
+- **dashboard** – Dashboard home (`GET /dashboard` via RTK Query, stats, recent items, onboarding nudge; `dashboard.slice` for UI-only state such as the sidebar onboarding dot)
 - **items** – Personal item library (list, filters, order-by, create/update dialogs)
+- **bags** – Bags list/detail (`/bags`, `/bags/[id]`), create/update dialogs, bag actions — links into packing via `containerId`
+- **container** – Packing UI: `container.api.ts` (`getContainerState`, `packItem`, `unpackItem`, `moveItem`), hooks (`useContainerState`, `useContainerMutations`, `useContainerActions`), list/dialog components (`PackedItemList`, `ContainerActionDialog`, etc.), `ContainerDetailPage`
+- **packing** – Route shell and UX for `/packing/[containerId]` (`PackingPage` composes `ContainerDetailPage`; `packing.slice` / `usePackingContext` hold entry context when navigating from a bag detail)
 - **users** – User management UI (list, create, edit, filters, badges, actions)
 
 **Shared UI** (`src/shared/ui/`):
@@ -489,12 +497,12 @@ Feature-based organization. Each feature contains:
 
 - **api/** – API client layer:
     - `baseQuery.ts` – Base fetch/query setup
-    - `api.slice.ts` – Redux API slice
+    - `api.slice.ts` – Root RTK Query API slice (`createApi`); feature modules call `injectEndpoints`. Shared `TagTypes` includes `CONTAINER`, `BAG`, `DASHBOARD`, etc., for cross-feature cache invalidation
 - **layouts/** – App shell and navigation:
     - `AppShell.tsx` – Header + Sidebar wrapper for dashboard pages
     - `HeaderUI.tsx`, `Sidebar.tsx`, `SidebarUI.tsx` – Layout components
 - **store/** – Redux store:
-    - `store.ts` – Store configuration
+    - `store.ts` – Store configuration (RTK Query reducer + `ability`, `auth`, `dashboard`, `packing` feature slices)
     - `Provider.tsx` – Redux Provider component
     - `hooks.ts` – Redux hooks
     - **ability/** – CASL ability:
@@ -536,7 +544,7 @@ Feature-based organization. Each feature contains:
 
 **Test Patterns**:
 
-- Unit/component tests cover notification UX (`notify.utils.ts`), onboarding hook/form behavior, and items/users list flows (filters/pagination/dialog forms).
+- Unit/component tests cover notification UX (`notify.utils.ts`), onboarding hook/form behavior, items/users list flows (filters/pagination/dialog forms), bag forms/actions, container list/mutation flows, packing context hook, and dashboard overview hook.
 
 **Test Libraries**:
 
@@ -611,7 +619,7 @@ Feature-based organization. Each feature contains:
 
 ### 5.6 Key Screens & Flows (Current Web UI)
 
-**High-level UX**: A production-style UI that currently demonstrates auth/onboarding + dashboard shell, and complete **users** and **items** list flows, built to showcase the **design system, layout patterns, RBAC/CASL patterns, and data-fetching patterns** for future packing features.
+**High-level UX**: Auth/onboarding, dashboard shell, **dashboard** overview, **bags** list/detail, **packing** workspace (`/packing/[containerId]`), and complete **users** and **items** flows — demonstrating **design system, layout, RBAC/CASL, and RTK Query** patterns end to end.
 
 - **Public Landing (`/`)**
     - Simple marketing-style entry point rendered from `src/app/page.tsx`.
@@ -621,14 +629,10 @@ Feature-based organization. Each feature contains:
     - Includes a small in-page notification demo (click triggers) using the project `notify`/Sonner toast UX.
 
 - **Protected Area Layout (`src/app/(protected)/layout.tsx`)**
-    - Provides the dashboard chrome by rendering the `AppShell` for all routes under `(protected)`.
-    - Session enforcement is intentionally split:
-        - `AuthGate` is enforced in `src/app/(dashboard)/layout.tsx` (for dashboard pages)
-        - `/onboarding` is guarded by `src/app/onboarding/layout.tsx`
-        - OAuth callback is handled via the dedicated `/auth/callback` route
-    - Intended responsibilities:
-        - Provide a consistent dashboard chrome (header/sidebar) for admin-style pages.
-    - Future-proofed so that some authenticated pages can opt out of the dashboard shell if needed (e.g., wizards, print views).
+    - **Auth only**: wraps all `(protected)/` routes in `AuthGate` (session check, redirect to `/login` if unauthenticated). It does **not** render `AppShell`.
+    - **Dashboard chrome** lives in `src/app/(protected)/(dashboard)/layout.tsx`: `AppShell` plus onboarding redirect when `profile.onboardingCompleted` is false.
+    - `/onboarding` sits under `(protected)` but outside `(dashboard)` so it uses the wizard layout without the dashboard shell (`src/app/(protected)/onboarding/layout.tsx`).
+    - OAuth callback remains the dedicated `/auth/callback` route (public).
 
 - **Users List (`/users`)**
     - Implemented as a protected route at `src/app/(protected)/users/page.tsx` which delegates to `UsersPage` from `@features/users/pages`.
@@ -671,6 +675,17 @@ Feature-based organization. Each feature contains:
     - Mirrors the same list + dialog + form patterns used in Users.
     - Uses `notify` utilities for consistent user feedback.
 
+- **Dashboard (`/dashboard`)**
+    - Renders `DashboardPage`: aggregated stats and recent items from `GET /dashboard`, with loading/error handling and onboarding nudge when applicable.
+
+- **Bags (`/bags`, `/bags/[id]`)**
+    - `BagsPage` / `BagDetailsPage`: list + detail for user bags (same list/filter/order patterns as items/users where applicable).
+    - Bag detail is the primary entry into packing (navigates to `/packing/[containerId]` using the bag’s `containerId`).
+
+- **Packing / container workspace (`/packing/[containerId]`)**
+    - `PackingPage` loads `ContainerDetailPage` for pack/unpack/move flows against the containers API.
+    - RTK Query cache uses per-container tags (`TagTypes.CONTAINER`); `moveItem` invalidates both source and destination ids.
+
 - **Users CRUD & Role Management (Component-Level Flows)**
     - **Create User**:
         - `CreateUserForm` (container) + `CreateUserFormUI` (presentational) follow the **form pattern**:
@@ -683,7 +698,7 @@ Feature-based organization. Each feature contains:
         - `ChangeRoleDialog` wraps the form in a dialog for inline admin actions.
     - All of these flows are designed to be **copy-paste-ready blueprints** for future domain features (bags, suitcases, items, packing lists) while reusing the same shared list, filters, and badge patterns.
 
-**Takeaway**: The current web app is a **thin but fully structured frontend slice**: landing page, authenticated dashboard/onboarding guards, and complete **users + items** feature flows wired to the API. New features (bags, suitcases, packing flows) should follow the same **feature structure, list/detail patterns, forms pattern, and design system rules** documented here.
+**Takeaway**: The web app adds **dashboard**, **bags**, and **packing (containers)** on top of the existing **users + items** flows, all following the same **feature structure, list/detail patterns, forms pattern, RTK Query injection, and design system rules** documented here. Further travel domains (e.g. suitcases) should extend the same patterns.
 
 ### 5.7 Notifications & Toast UX (Sonner)
 
@@ -1106,6 +1121,11 @@ export const createUserRouter = (controller: UserController) => {
 - `useListQuery` hook for list state (filters, sort, pagination)
 - `ListFilters`, `ListOrderBy`, `ListPagination`, `ListMeta`, `ListEmptyState` components
 - Grid component (`DataGrid`) for layout
+
+**Server State (RTK Query)**:
+
+- Feature modules register endpoints with `apiSlice.injectEndpoints` (e.g. `features/container/api/container.api.ts`, `features/bags/api/bag.api.ts`)
+- Prefer shared `TagTypes` for `providesTags` / `invalidatesTags` so mutations keep related queries consistent (container pack/unpack/move invalidates affected container ids)
 
 **Authorization Pattern**:
 
@@ -1965,6 +1985,6 @@ Then verify WCAG AA (≥ 4.5:1) for both light and dark before using it anywhere
 
 ---
 
-**Last Updated**: Based on current codebase state (March 2026)
+**Last Updated**: Based on current codebase state (April 2026)
 
 **Version**: 1.0.0
