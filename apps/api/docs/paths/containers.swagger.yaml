@@ -1,0 +1,156 @@
+# paths/containers.swagger.yaml
+tags:
+  - name: Containers
+
+paths:
+  /containers/{id}/state:
+    get:
+      summary: Get container state
+      description: Retrieves the full container state including metrics and constraint status.
+      tags:
+        - Containers
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      responses:
+        "200":
+          description: Container state fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ContainerStatusDTO"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /containers/{id}/pack:
+    post:
+      summary: Pack item into container
+      description: Adds or increments an item inside a container and returns updated container summary.
+      tags:
+        - Containers
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackItemRequest"
+      responses:
+        "200":
+          description: Item packed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ContainerSummaryDTO"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /containers/{id}/unpack:
+    post:
+      summary: Unpack item from container
+      description: Removes or decreases quantity of an item from a container and returns updated summary.
+      tags:
+        - Containers
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnpackItemRequest"
+      responses:
+        "200":
+          description: Item unpacked successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ContainerSummaryDTO"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
+  /containers/move:
+    post:
+      summary: Move item between containers
+      description: Moves an item from one container to another and returns both updated container summaries.
+      tags:
+        - Containers
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveItemRequest"
+      responses:
+        "200":
+          description: Item moved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/MoveResultDTO"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"

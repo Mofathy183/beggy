@@ -10,6 +10,7 @@ describe('BagMapper', () => {
 			const dto = BagMapper.toDTO(bag);
 
 			expect(dto.id).toBe(bag.id);
+			expect(dto.containerId).toBe(bag.containerId);
 			expect(dto.name).toBe(bag.name);
 			expect(dto.type).toBe(bag.type);
 			expect(dto.color).toBe(bag.color);

@@ -93,6 +93,7 @@ export const BagMapper = {
 
 		return {
 			id: bag.id,
+			containerId: bag.containerId,
 			name: bag.name,
 			type: bag.type as BagType,
 			color: bag.color,
