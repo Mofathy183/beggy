@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Request } from 'express';
 import { z } from 'zod';
 import {
@@ -8,7 +8,21 @@ import {
 	validateUuidParam,
 } from '@shared/middlewares';
 
-const mockNext = vi.fn();
+// 🔌 Mock external dependencies
+vi.mock('@shared/utils', () => ({
+	reconstructQuery: vi.fn(),
+}));
+
+vi.mock('@beggy/shared/schemas', () => ({
+	ParamsSchema: {
+		uuid: {
+			parseAsync: vi.fn(),
+		},
+	},
+}));
+
+import { reconstructQuery } from '@shared/utils';
+import { ParamsSchema } from '@beggy/shared/schemas';
 
 const mockReq = (overrides: Partial<Request> = {}) =>
 	({
@@ -18,101 +32,214 @@ const mockReq = (overrides: Partial<Request> = {}) =>
 		...overrides,
 	}) as Request;
 
-describe('validateRequest', () => {
+describe('validateRequest()', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
 	describe('body validation', () => {
 		it('replaces request body with validated data', async () => {
+			// Arrange
+			const next = vi.fn();
+
 			const schema = z.object({
 				name: z.string(),
 			});
 
 			const req = mockReq({ body: { name: 'Beggy' } });
 
-			await validateRequest({ body: schema })(req, {} as any, mockNext);
+			// Act
+			await validateRequest({ body: schema })(req, {} as any, next);
 
+			// Assert
 			expect(req.body).toEqual({ name: 'Beggy' });
-			expect(mockNext).toHaveBeenCalledOnce();
+			expect(next).toHaveBeenCalledOnce();
 		});
 
 		it('passes body validation errors to next', async () => {
+			// Arrange
+			const next = vi.fn();
+
 			const schema = z.object({
 				name: z.string(),
 			});
 
 			const req = mockReq({ body: { name: 123 } });
 
-			await validateRequest({ body: schema })(req, {} as any, mockNext);
+			// Act
+			await validateRequest({ body: schema })(req, {} as any, next);
 
-			expect(mockNext).toHaveBeenCalledOnce();
-			expect((mockNext as any).mock.calls[0][0]).toBeInstanceOf(Error);
+			// Assert
+			expect(next).toHaveBeenCalledOnce();
+			expect(next).toHaveBeenCalledWith(expect.any(Error));
 		});
 	});
 
 	describe('query validation', () => {
-		it('replaces request query with validated data', async () => {
+		it('reconstructs and replaces request query with validated data', async () => {
+			// Arrange
+			const next = vi.fn();
+
 			const schema = z.object({
-				page: z.coerce.number(),
+				page: z.number(),
 			});
 
-			const req = mockReq({ query: { page: '2' } });
+			const originalQuery = { page: '2', extra: 'x' };
 
-			await validateRequest({ query: schema })(req, {} as any, mockNext);
+			(reconstructQuery as any).mockReturnValue({ page: 2 });
 
-			expect(req.query).toEqual({ page: 2 });
-			expect(mockNext).toHaveBeenCalledOnce();
+			const req = mockReq({ query: originalQuery });
+
+			// Act
+			await validateRequest({ query: schema })(req, {} as any, next);
+
+			// Assert
+			expect(reconstructQuery).toHaveBeenCalledWith(originalQuery);
+
+			expect(req.query).toEqual({ page: 2, extra: 'x' });
+
+			expect(next).toHaveBeenCalledOnce();
+		});
+
+		it('passes query validation errors to next', async () => {
+			// Arrange
+			const next = vi.fn();
+
+			const schema = z.object({
+				page: z.number(),
+			});
+
+			(reconstructQuery as any).mockReturnValue({ page: 'invalid' });
+
+			const req = mockReq({ query: { page: 'bad' } });
+
+			// Act
+			await validateRequest({ query: schema })(req, {} as any, next);
+
+			// Assert
+			expect(next).toHaveBeenCalledOnce();
+			expect(next).toHaveBeenCalledWith(expect.any(Error));
 		});
 	});
 
 	describe('params validation', () => {
 		it('replaces request params with validated data', async () => {
+			// Arrange
+			const next = vi.fn();
+
+			const schema = z.object({
+				id: z.string(),
+			});
+
+			const req = mockReq({
+				params: { id: '123' },
+			});
+
+			// Act
+			await validateRequest({ params: schema })(req, {} as any, next);
+
+			// Assert
+			expect(req.params).toEqual({ id: '123' });
+			expect(next).toHaveBeenCalledOnce();
+		});
+
+		it('passes params validation errors to next', async () => {
+			// Arrange
+			const next = vi.fn();
+
 			const schema = z.object({
 				id: z.string().uuid(),
 			});
 
 			const req = mockReq({
-				params: { id: '550e8400-e29b-41d4-a716-446655440000' },
+				params: { id: 'invalid' },
 			});
 
-			await validateRequest({ params: schema })(req, {} as any, mockNext);
+			// Act
+			await validateRequest({ params: schema })(req, {} as any, next);
 
-			expect(req.params).toEqual({
-				id: '550e8400-e29b-41d4-a716-446655440000',
-			});
-			expect(mockNext).toHaveBeenCalledOnce();
+			// Assert
+			expect(next).toHaveBeenCalledOnce();
+			expect(next).toHaveBeenCalledWith(expect.any(Error));
 		});
 	});
 });
 
-describe('validateBody', () => {
+describe('validateBody()', () => {
 	it('replaces request body with validated data', async () => {
+		// Arrange
+		const next = vi.fn();
+
 		const schema = z.object({ foo: z.string() });
 		const req = mockReq({ body: { foo: 'bar' } });
 
-		await validateBody(schema)(req, {} as any, mockNext);
+		// Act
+		await validateBody(schema)(req, {} as any, next);
 
+		// Assert
 		expect(req.body).toEqual({ foo: 'bar' });
+		expect(next).toHaveBeenCalledOnce();
 	});
 });
 
-describe('validateQuery', () => {
-	it('replaces request query with validated data', async () => {
-		const schema = z.object({ page: z.coerce.number() });
+describe('validateQuery()', () => {
+	it('reconstructs and replaces request query with validated data', async () => {
+		// Arrange
+		const next = vi.fn();
+
+		const schema = z.object({ page: z.number() });
+
+		(reconstructQuery as any).mockReturnValue({ page: 1 });
+
 		const req = mockReq({ query: { page: '1' } });
 
-		await validateQuery(schema)(req, {} as any, mockNext);
+		// Act
+		await validateQuery(schema)(req, {} as any, next);
 
+		// Assert
 		expect(req.query).toEqual({ page: 1 });
+		expect(next).toHaveBeenCalledOnce();
 	});
 });
 
-describe('validateUuidParam', () => {
-	it('allows requests with a valid uuid param', async () => {
-		const req = mockReq({
-			params: { id: '550e8400-e29b-41d4-a716-446655440000' },
+describe('validateUuidParam()', () => {
+	it('replaces request params when uuid is valid', async () => {
+		// Arrange
+		const next = vi.fn();
+
+		(ParamsSchema.uuid.parseAsync as any).mockResolvedValue({
+			id: 'uuid',
 		});
 
-		await validateUuidParam(req, {} as any, mockNext);
+		const req = mockReq({
+			params: { id: 'uuid' },
+		});
 
-		expect(req.params).toHaveProperty('id');
-		expect(mockNext).toHaveBeenCalledOnce();
+		// Act
+		await validateUuidParam(req, {} as any, next);
+
+		// Assert
+		expect(req.params).toEqual({ id: 'uuid' });
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it('passes uuid validation errors to next', async () => {
+		// Arrange
+		const next = vi.fn();
+
+		(ParamsSchema.uuid.parseAsync as any).mockRejectedValue(
+			new Error('invalid uuid')
+		);
+
+		const req = mockReq({
+			params: { id: 'bad' },
+		});
+
+		// Act
+		await validateUuidParam(req, {} as any, next);
+
+		// Assert
+		expect(next).toHaveBeenCalledOnce();
+		expect(next).toHaveBeenCalledWith(expect.any(Error));
 	});
 });

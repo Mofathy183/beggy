@@ -1,10 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@shared/utils', () => {
+vi.mock('@shared/utils', () => ({
+	appErrorMap: {
+		serverError: vi.fn(),
+		forbidden: vi.fn(),
+	},
+}));
+
+vi.mock('@shared/middlewares', async () => {
+	const actual = await vi.importActual<any>('@shared/middlewares');
 	return {
-		appErrorMap: {
-			serverError: vi.fn(),
-			forbidden: vi.fn(),
+		...actual,
+		logger: {
+			error: vi.fn(),
+			warn: vi.fn(),
 		},
 	};
 });
@@ -13,10 +22,6 @@ import { defineAbilityFor, requirePermission } from '@shared/middlewares';
 import { appErrorMap } from '@shared/utils';
 import { Role, Action, Subject, Scope } from '@prisma-generated/enums';
 import { ErrorCode } from '@beggy/shared/constants';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
 
 const createAbilityMock = (permissions: Record<string, boolean>) => ({
 	can: vi.fn((action: Action, subject: string) => {
@@ -30,16 +35,12 @@ const createReq = (ability?: any) =>
 		user: { id: 'user-1' },
 	}) as any;
 
-const next = vi.fn();
-
-// ─────────────────────────────────────────────────────────────────────────────
-// defineAbilityFor
-// ─────────────────────────────────────────────────────────────────────────────
-
 describe('defineAbilityFor()', () => {
-	it('allows manage action on any and own scopes for admin role', () => {
+	it('allows admin to manage any and own bag', () => {
+		// Act
 		const ability = defineAbilityFor(Role.ADMIN);
 
+		// Assert
 		expect(ability.can(Action.MANAGE, `${Subject.BAG}:${Scope.ANY}`)).toBe(
 			true
 		);
@@ -48,57 +49,58 @@ describe('defineAbilityFor()', () => {
 		);
 	});
 
-	it('allows own scope when any scope permission exists', () => {
-		// Arrange
-		const ability = defineAbilityFor(Role.MEMBER);
-
-		// Act + Assert
-		expect(ability.can(Action.READ, `${Subject.BAG}:${Scope.ANY}`)).toBe(
-			true
-		);
-
-		expect(ability.can(Action.READ, `${Subject.BAG}:${Scope.OWN}`)).toBe(
-			true
-		);
-	});
-
-	it('allows manage action on any and own scopes for admin role', () => {
+	it('allows admin to manage any and own item', () => {
+		// Act
 		const ability = defineAbilityFor(Role.ADMIN);
 
+		// Assert
 		expect(ability.can(Action.MANAGE, `${Subject.ITEM}:${Scope.ANY}`)).toBe(
 			true
 		);
-
 		expect(ability.can(Action.MANAGE, `${Subject.ITEM}:${Scope.OWN}`)).toBe(
 			true
 		);
 	});
 
-	it('denies undefined actions for the role', () => {
+	it('allows own scope when any permission exists', () => {
+		// Act
+		const ability = defineAbilityFor(Role.MEMBER);
+
+		// Assert
+		expect(ability.can(Action.READ, `${Subject.BAG}:${Scope.ANY}`)).toBe(
+			true
+		);
+		expect(ability.can(Action.READ, `${Subject.BAG}:${Scope.OWN}`)).toBe(
+			true
+		);
+	});
+
+	it('denies undefined actions', () => {
+		// Act
 		const ability = defineAbilityFor(Role.USER);
 
+		// Assert
 		expect(ability.can(Action.DELETE, `${Subject.USER}:${Scope.ANY}`)).toBe(
 			false
 		);
 	});
 
-	it('returns empty ability when role is unknown', () => {
+	it('returns empty rules for unknown role', () => {
+		// Act
 		const ability = defineAbilityFor('UNKNOWN_ROLE' as Role);
 
+		// Assert
 		expect(ability.rules.length).toBe(0);
 	});
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// requirePermission
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe('requirePermission()', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('throws when ability is not initialized', async () => {
+	it('throws when ability is missing', async () => {
+		// Arrange
 		const error = new Error() as any;
 		error.code = ErrorCode.ABILITY_NOT_INITIALIZED;
 
@@ -107,7 +109,9 @@ describe('requirePermission()', () => {
 		const middleware = requirePermission(Action.CREATE, Subject.BAG);
 
 		const req = createReq(undefined);
+		const next = vi.fn();
 
+		// Act + Assert
 		await expect(middleware(req, {} as any, next)).rejects.toBe(error);
 
 		expect(appErrorMap.serverError).toHaveBeenCalledWith(
@@ -115,7 +119,8 @@ describe('requirePermission()', () => {
 		);
 	});
 
-	it('denies access when permission is missing', async () => {
+	it('denies when permission is missing', async () => {
+		// Arrange
 		const error = new Error() as any;
 		error.code = ErrorCode.INSUFFICIENT_PERMISSIONS;
 
@@ -130,7 +135,9 @@ describe('requirePermission()', () => {
 		);
 
 		const req = createReq(ability);
+		const next = vi.fn();
 
+		// Act + Assert
 		await expect(middleware(req, {} as any, next)).rejects.toBe(error);
 
 		expect(appErrorMap.forbidden).toHaveBeenCalledWith(
@@ -138,7 +145,8 @@ describe('requirePermission()', () => {
 		);
 	});
 
-	it('allows access when direct permission exists', async () => {
+	it('allows when permission exists', async () => {
+		// Arrange
 		const ability = createAbilityMock({
 			[`${Action.CREATE}:${Subject.BAG}:${Scope.OWN}`]: true,
 		});
@@ -150,31 +158,17 @@ describe('requirePermission()', () => {
 		);
 
 		const req = createReq(ability);
+		const next = vi.fn();
 
+		// Act
 		await middleware(req, {} as any, next);
 
+		// Assert
 		expect(next).toHaveBeenCalledTimes(1);
 	});
 
-	it('allows access when manage permission exists', async () => {
-		const ability = createAbilityMock({
-			[`${Action.MANAGE}:${Subject.BAG}:${Scope.OWN}`]: true,
-		});
-
-		const middleware = requirePermission(
-			Action.CREATE,
-			Subject.BAG,
-			Scope.OWN
-		);
-
-		const req = createReq(ability);
-
-		await middleware(req, {} as any, next);
-
-		expect(next).toHaveBeenCalledTimes(1);
-	});
-
-	it('uses scoped subject when checking permission', async () => {
+	it('checks scoped subject correctly', async () => {
+		// Arrange
 		const ability = createAbilityMock({
 			[`${Action.READ}:${Subject.BAG}:${Scope.ANY}`]: true,
 		});
@@ -186,9 +180,12 @@ describe('requirePermission()', () => {
 		);
 
 		const req = createReq(ability);
+		const next = vi.fn();
 
+		// Act
 		await middleware(req, {} as any, next);
 
+		// Assert
 		expect(ability.can).toHaveBeenCalledWith(
 			Action.READ,
 			`${Subject.BAG}:${Scope.ANY}`
