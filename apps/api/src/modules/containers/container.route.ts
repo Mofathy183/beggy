@@ -11,6 +11,19 @@
  * "Where are my items, and what is the current state of each container?"
  *
  * ------------------------------------------------------------------
+ * Container Retrieval (Typed Aggregate)
+ * ------------------------------------------------------------------
+ *
+ * GET /containers/:id
+ * - Returns the container with its type-specific representation
+ *   (e.g. Bag, Suitcase)
+ * - Includes full container aggregate (items + container metadata)
+ *
+ * Use this endpoint when:
+ * - The UI needs container-type-specific data (e.g. bag vs suitcase)
+ * - Rendering depends on container subtype behavior
+ *
+ * ------------------------------------------------------------------
  * Container State (Read Model)
  * ------------------------------------------------------------------
  *
@@ -110,13 +123,11 @@ import { Action, Subject } from '@prisma-generated/enums';
  * @returns Configured Express router
  *
  * @remarks
- * This function acts as the composition root for the Containers API module.
- * It wires routes with their required middleware for:
- * - Authentication (requireAuth)
- * - Authorization (requirePermission)
- * - Input validation (Zod schemas)
- *
- * Controllers are expected to receive only validated and authorized requests.
+ * Acts as the composition root for the Containers API module.
+ * Ensures all routes are consistently wired with:
+ * - Authentication
+ * - Authorization
+ * - Validation
  */
 export const createContainerRouter = (
 	controller: ContainerController
@@ -124,14 +135,48 @@ export const createContainerRouter = (
 	const router = Router();
 
 	/**
+	 * @route POST /containers/move
+	 *
+	 * Moves an item between two containers.
+	 *
+	 * @remarks
+	 * - Atomic operation (source → destination)
+	 * - Validates request body using ContainerSchema.move
+	 */
+	router.post(
+		'/move',
+		requireAuth,
+		requirePermission(Action.UPDATE, Subject.CONTAINER),
+		validateBody(ContainerSchema.move),
+		controller.moveItem
+	);
+
+	/**
+	 * @route GET /containers/:id
+	 *
+	 * Retrieves a container with its type-specific representation.
+	 *
+	 * @remarks
+	 * - Returns Bag or Suitcase depending on container type
+	 * - Requires READ permission on CONTAINER
+	 * - Validates `:id` as UUID
+	 */
+	router.get(
+		'/:id',
+		requireAuth,
+		requirePermission(Action.READ, Subject.CONTAINER),
+		validateUuidParam,
+		controller.getContainer
+	);
+
+	/**
 	 * @route GET /containers/:id/state
 	 *
 	 * Retrieves the full container state (items, metrics, status).
 	 *
 	 * @remarks
-	 * - Requires authenticated user
+	 * - UI-focused read model
 	 * - Requires READ permission on CONTAINER
-	 * - Validates `:id` as UUID
 	 */
 	router.get(
 		'/:id/state',
@@ -147,9 +192,8 @@ export const createContainerRouter = (
 	 * Packs an item into a container.
 	 *
 	 * @remarks
-	 * - Requires UPDATE permission on CONTAINER
-	 * - Validates request body using ContainerSchema.pack
 	 * - Idempotent for same item (increments quantity)
+	 * - Requires UPDATE permission on CONTAINER
 	 */
 	router.post(
 		'/:id/pack',
@@ -166,8 +210,8 @@ export const createContainerRouter = (
 	 * Removes or reduces an item from a container.
 	 *
 	 * @remarks
-	 * - Requires UPDATE permission on CONTAINER
 	 * - Removes item entry if quantity reaches zero
+	 * - Requires UPDATE permission on CONTAINER
 	 */
 	router.post(
 		'/:id/unpack',
@@ -176,24 +220,6 @@ export const createContainerRouter = (
 		validateUuidParam,
 		validateBody(ContainerSchema.unpack),
 		controller.unpackItem
-	);
-
-	/**
-	 * @route POST /containers/move
-	 *
-	 * Moves an item between two containers.
-	 *
-	 * @remarks
-	 * - Atomic operation (source → destination)
-	 * - Validates request body using ContainerSchema.move
-	 * - Does not require `:id` as it operates on two containers
-	 */
-	router.post(
-		'/move',
-		requireAuth,
-		requirePermission(Action.UPDATE, Subject.CONTAINER),
-		validateBody(ContainerSchema.move),
-		controller.moveItem
 	);
 
 	return router;

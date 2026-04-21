@@ -1,4 +1,9 @@
-import type { WeightUnit, VolumeUnit } from '@beggy/shared/constants';
+import type {
+	WeightUnit,
+	VolumeUnit,
+	ItemCategory,
+	ContainerType,
+} from '@beggy/shared/constants';
 import {
 	buildContainerMetrics,
 	buildContainerState,
@@ -6,7 +11,9 @@ import {
 import type {
 	ContainerItem,
 	ContainerStatusDTO,
+	ContainerStateDTO,
 	ContainerSummaryDTO,
+	PackedItemDTO,
 	MoveResultDTO,
 } from '@beggy/shared/types';
 
@@ -14,6 +21,9 @@ import type { Container, ContainerItems, Item } from '@prisma-generated/client';
 
 /**
  * Prisma container entity enriched with its related items.
+ *
+ * @remarks
+ * Represents the persistence shape required for all container mapping operations.
  */
 export type ContainerWithItems = Container & {
 	containerItems: (ContainerItems & { item: Item })[];
@@ -23,20 +33,23 @@ export type ContainerWithItems = Container & {
  * Maps persistence models into container-related DTOs.
  *
  * @remarks
- * This mapper is responsible for:
- * - Normalizing database entities into domain-friendly structures
- * - Delegating metric/state calculations to shared domain utilities
- * - Producing API-safe DTOs
+ * - Normalizes Prisma entities into domain-compatible structures
+ * - Delegates all metric/state computation to shared domain utilities
+ * - Produces API-safe DTOs consumed by controllers
+ *
+ * @see buildContainerMetrics
+ * @see buildContainerState
  */
 export const ContainerMapper = {
 	/**
-	 * Builds a full container status including computed metrics and state.
+	 * Builds computed container status (metrics + state).
 	 *
-	 * @param container - Container with its items from persistence layer
-	 * @returns Aggregated container status
+	 * @param container - Container entity with loaded items
+	 * @returns Computed container status
 	 *
 	 * @remarks
-	 * Assumes item units stored in the database are compatible with domain enums.
+	 * Assumes stored unit values are valid members of domain enums.
+	 * Invalid values may result in incorrect calculations downstream.
 	 */
 	toContainerStatus(container: ContainerWithItems): ContainerStatusDTO {
 		const items: ContainerItem[] = container.containerItems.map((ci) => ({
@@ -65,13 +78,46 @@ export const ContainerMapper = {
 	},
 
 	/**
-	 * Produces a lightweight container summary used after mutations.
+	 * Builds full container state including packed items and computed status.
+	 *
+	 * @param container - Container entity with loaded items
+	 * @returns Full container state DTO
+	 *
+	 * @remarks
+	 * Used for detailed container views where both raw items and derived state are required.
+	 */
+	toContainerState(container: ContainerWithItems): ContainerStateDTO {
+		const packedItems: PackedItemDTO[] = container.containerItems.map(
+			(ci) => ({
+				itemId: ci.item.id,
+				name: ci.item.name,
+				quantity: ci.quantity,
+				weight: ci.item.weight,
+				weightUnit: ci.item.weightUnit as WeightUnit,
+				volume: ci.item.volume,
+				volumeUnit: ci.item.volumeUnit as VolumeUnit,
+				category: ci.item.category as ItemCategory,
+				isFragile: ci.item.isFragile,
+				color: ci.item.color ?? null,
+			})
+		);
+
+		return {
+			containerId: container.id,
+			type: container.type as ContainerType,
+			items: packedItems,
+			status: this.toContainerStatus(container),
+		};
+	},
+
+	/**
+	 * Produces a lightweight container summary after mutation operations.
 	 *
 	 * @param container - Updated container entity
-	 * @returns Container identifier with its computed status
+	 * @returns Container identifier with computed status
 	 */
 	toPackResult(container: ContainerWithItems): ContainerSummaryDTO {
-		const status: ContainerStatusDTO = this.toContainerStatus(container);
+		const status = this.toContainerStatus(container);
 
 		return { containerId: container.id, status };
 	},
@@ -79,9 +125,12 @@ export const ContainerMapper = {
 	/**
 	 * Maps the result of a move operation affecting two containers.
 	 *
-	 * @param from - Source container after the move
-	 * @param to - Destination container after the move
+	 * @param from - Source container after move
+	 * @param to - Destination container after move
 	 * @returns Combined move result DTO
+	 *
+	 * @remarks
+	 * Ensures both containers are normalized using the same mapping logic.
 	 */
 	toMoveResult(
 		from: ContainerWithItems,

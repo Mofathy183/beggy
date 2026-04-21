@@ -1,5 +1,8 @@
 import type { PrismaClientType } from '@prisma';
-import { ErrorCode } from '@beggy/shared/constants';
+import type { BagWithContainer } from '@modules/bags';
+import type { SuitcaseWithContainer } from '@modules/suitcases';
+import type { TypedContainerResult } from '@shared/types';
+import { ErrorCode, ContainerType } from '@beggy/shared/constants';
 import { BaseService } from '@shared/core';
 import type {
 	PackItemInput,
@@ -9,15 +12,12 @@ import type {
 import type { ContainerWithItems } from '@modules/containers';
 
 /**
- * Handles container item orchestration and persistence.
+ * Application service responsible for container item orchestration.
  *
  * @remarks
- * This service operates on container aggregates and ensures:
- * - Ownership enforcement (user-scoped access)
- * - Consistent item mutations (pack, unpack, move)
- * - Atomic operations where required (move)
- *
- * It intentionally returns fully hydrated containers for downstream mapping.
+ * - Enforces user ownership on all operations
+ * - Coordinates persistence and transactional consistency
+ * - Returns fully hydrated aggregates for downstream mapping
  */
 export class ContainerService extends BaseService {
 	constructor(private readonly prisma: PrismaClientType) {
@@ -25,10 +25,10 @@ export class ContainerService extends BaseService {
 	}
 
 	/**
-	 * Default include shape for container queries.
+	 * Shared include shape for container aggregate queries.
 	 *
 	 * @remarks
-	 * Ensures all service methods return a consistent aggregate shape.
+	 * Guarantees a consistent data structure across all service methods.
 	 */
 	private readonly containerInclude = {
 		containerItems: { include: { item: true } },
@@ -39,7 +39,11 @@ export class ContainerService extends BaseService {
 	/**
 	 * Retrieves a container owned by the given user.
 	 *
-	 * @throws {AppError} CONTAINER_NOT_FOUND if container does not exist or is not owned by user
+	 * @param userId - Owner identifier
+	 * @param containerId - Container identifier
+	 * @returns Fully hydrated container aggregate
+	 *
+	 * @throws {AppError} CONTAINER_NOT_FOUND if not found or not owned by user
 	 */
 	private async findOwnedContainer(
 		userId: string,
@@ -56,14 +60,38 @@ export class ContainerService extends BaseService {
 		});
 	}
 
+	/**
+	 * Retrieves an item owned by the given user.
+	 *
+	 * @param userId - Owner identifier
+	 * @param itemId - Item identifier
+	 * @returns Item entity
+	 *
+	 * @throws {AppError} ITEM_NOT_FOUND if not found or not owned by user
+	 */
+	private async findOwnedItem(userId: string, itemId: string) {
+		const item = await this.prisma.item.findUnique({
+			where: { id: itemId, userId },
+		});
+
+		return this.assertFound(item, ErrorCode.ITEM_NOT_FOUND, {
+			userId,
+			itemId,
+		});
+	}
+
 	// ── Public operations ─────────────────────────────────────────
 
 	/**
 	 * Adds or increments an item in a container.
 	 *
+	 * @param userId - Owner identifier
+	 * @param containerId - Target container
+	 * @param input - Pack payload
+	 * @returns Updated container aggregate
+	 *
 	 * @remarks
-	 * - Uses upsert to ensure idempotent behavior per item
-	 * - Always returns fresh container state after mutation
+	 * Uses upsert to ensure idempotent behavior per item.
 	 */
 	async packItem(
 		userId: string,
@@ -74,7 +102,8 @@ export class ContainerService extends BaseService {
 
 		const { itemId, quantity } = input;
 
-		// Upsert: increment if exists, create if new
+		await this.findOwnedItem(userId, itemId);
+
 		await this.prisma.containerItems.upsert({
 			where: { containerId_itemId: { containerId, itemId } },
 			update: { quantity: { increment: quantity } },
@@ -90,11 +119,16 @@ export class ContainerService extends BaseService {
 	/**
 	 * Removes or decrements an item from a container.
 	 *
-	 * @throws {AppError} CONTAINER_ITEM_NOT_FOUND if item does not exist in container
+	 * @param userId - Owner identifier
+	 * @param containerId - Target container
+	 * @param input - Unpack payload
+	 * @returns Updated container aggregate
+	 *
+	 * @throws {AppError} CONTAINER_ITEM_NOT_FOUND if item is not present
 	 *
 	 * @remarks
-	 * - Deletes the item entry when quantity reaches zero
-	 * - Assumes input quantity is validated upstream
+	 * Deletes the item entry when quantity reaches zero.
+	 * Assumes input quantity is validated upstream.
 	 */
 	async unpackItem(
 		userId: string,
@@ -105,25 +139,28 @@ export class ContainerService extends BaseService {
 
 		const { itemId, quantity } = input;
 
-		const existing = await this.prisma.containerItems.findUnique({
-			where: { containerId_itemId: { containerId, itemId } },
+		await this.findOwnedItem(userId, itemId);
+
+		await this.prisma.$transaction(async (tx) => {
+			const existing = await tx.containerItems.findUnique({
+				where: { containerId_itemId: { containerId, itemId } },
+			});
+
+			if (!existing) {
+				this.throwNotFound(ErrorCode.CONTAINER_ITEM_NOT_FOUND);
+			}
+
+			if (existing.quantity <= quantity) {
+				await tx.containerItems.delete({
+					where: { containerId_itemId: { containerId, itemId } },
+				});
+			} else {
+				await tx.containerItems.update({
+					where: { containerId_itemId: { containerId, itemId } },
+					data: { quantity: { decrement: quantity } },
+				});
+			}
 		});
-
-		if (!existing) {
-			this.throwNotFound(ErrorCode.CONTAINER_ITEM_NOT_FOUND);
-		}
-
-		if (existing.quantity <= quantity) {
-			// Remove entirely when requested quantity exceeds or matches existing
-			await this.prisma.containerItems.delete({
-				where: { containerId_itemId: { containerId, itemId } },
-			});
-		} else {
-			await this.prisma.containerItems.update({
-				where: { containerId_itemId: { containerId, itemId } },
-				data: { quantity: { decrement: quantity } },
-			});
-		}
 
 		const updated = await this.findOwnedContainer(userId, containerId);
 
@@ -132,16 +169,16 @@ export class ContainerService extends BaseService {
 	}
 
 	/**
-	 * Moves an item between two containers.
+	 * Moves an item between two containers atomically.
 	 *
+	 * @param userId - Owner identifier
+	 * @param input - Move payload
 	 * @returns Updated source and destination containers
 	 *
-	 * @throws {AppError} CONTAINER_ITEM_NOT_FOUND if item does not exist in source container
+	 * @throws {AppError} CONTAINER_ITEM_NOT_FOUND if item is missing in source
 	 *
 	 * @remarks
-	 * - Executed within a database transaction to ensure atomicity
-	 * - Prevents partial updates (no item duplication or loss)
-	 * - Ownership of both containers is verified before transaction
+	 * Executed within a transaction to prevent partial updates.
 	 */
 	async moveItem(
 		userId: string,
@@ -149,12 +186,12 @@ export class ContainerService extends BaseService {
 	): Promise<{ from: ContainerWithItems; to: ContainerWithItems }> {
 		const { fromContainerId, toContainerId, itemId, quantity } = input;
 
-		// Verify ownership of both containers upfront
+		await this.findOwnedItem(userId, itemId);
+
 		await this.findOwnedContainer(userId, fromContainerId);
 		await this.findOwnedContainer(userId, toContainerId);
 
 		await this.prisma.$transaction(async (tx) => {
-			// Remove from source
 			const source = await tx.containerItems.findUnique({
 				where: {
 					containerId_itemId: {
@@ -187,7 +224,6 @@ export class ContainerService extends BaseService {
 				});
 			}
 
-			// Add to destination
 			await tx.containerItems.upsert({
 				where: {
 					containerId_itemId: { containerId: toContainerId, itemId },
@@ -197,7 +233,6 @@ export class ContainerService extends BaseService {
 			});
 		});
 
-		// Fetch both fresh states after transaction
 		const [fromUpdated, toUpdated] = await Promise.all([
 			this.findOwnedContainer(userId, fromContainerId),
 			this.findOwnedContainer(userId, toContainerId),
@@ -208,17 +243,76 @@ export class ContainerService extends BaseService {
 			'Item moved'
 		);
 
-		return {
-			from: fromUpdated,
-			to: toUpdated,
-		};
+		return { from: fromUpdated, to: toUpdated };
 	}
 
 	/**
-	 * Retrieves the current container state.
+	 * Retrieves a container with its type-specific aggregate.
+	 *
+	 * @param userId - Owner identifier
+	 * @param containerId - Container identifier
+	 * @returns Typed container result
 	 *
 	 * @remarks
-	 * Acts as a read operation over the container aggregate.
+	 * The returned shape depends on {@link ContainerType}.
+	 */
+	async getTypedContainer(
+		userId: string,
+		containerId: string
+	): Promise<TypedContainerResult> {
+		const container = await this.findOwnedContainer(userId, containerId);
+
+		switch (container.type) {
+			case ContainerType.BAG: {
+				const bag = await this.prisma.bag.findUnique({
+					where: { containerId },
+					include: {
+						container: {
+							include: this.containerInclude,
+						},
+					},
+				});
+
+				return {
+					type: ContainerType.BAG,
+					data: this.assertFound<BagWithContainer>(
+						bag,
+						ErrorCode.BAG_NOT_FOUND
+					),
+				};
+			}
+
+			case ContainerType.SUITCASE: {
+				const suitcase = await this.prisma.suitcase.findUnique({
+					where: { containerId },
+					include: {
+						container: {
+							include: this.containerInclude,
+						},
+					},
+				});
+
+				return {
+					type: ContainerType.SUITCASE,
+					data: this.assertFound<SuitcaseWithContainer>(
+						suitcase,
+						ErrorCode.SUITCASE_NOT_FOUND
+					),
+				};
+			}
+
+			default: {
+				throw this.throwNotFound(ErrorCode.CONTAINER_NOT_FOUND);
+			}
+		}
+	}
+
+	/**
+	 * Retrieves the container aggregate for read operations.
+	 *
+	 * @param userId - Owner identifier
+	 * @param containerId - Container identifier
+	 * @returns Container aggregate
 	 */
 	async getContainerState(
 		userId: string,
