@@ -18,6 +18,7 @@ import {
 	doubleCsrfProtection,
 	injectCsrfToken,
 	authCookieParser,
+	healthCheck,
 } from '@shared/middlewares';
 
 const app: Express = express();
@@ -113,6 +114,8 @@ app.use(doubleCsrfProtection);
 // ============================================
 //* APPLICATION ROUTES
 // ============================================
+
+rootRouter.get('/health', healthCheck);
 
 // 15. Main API routes
 app.use('/api/beggy', rootRouter);

@@ -6,8 +6,14 @@ import { serverConfig } from '@config';
 
 // Application Listen
 app.listen(serverConfig.port, () => {
-	console.log(`Server is running on port ${serverConfig.port}`);
-	console.log(`http://localhost:${serverConfig.port}`);
+	if (serverConfig.isTesting) {
+		console.warn(
+			'Server is running in test mode. Tests will be executed...'
+		);
+	}
+	console.warn('Server is starting...');
+	console.warn(`Server is running on port ${serverConfig.port}`);
+	console.warn(`http://localhost:${serverConfig.port}`);
 });
 
 /**

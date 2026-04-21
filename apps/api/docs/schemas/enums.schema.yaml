@@ -246,3 +246,9 @@ components:
         - capacity_over_limit
         - capacity_near_limit
         - empty
+
+    ContainerType:
+      type: string
+      enum:
+        - BAG
+        - SUITCASE

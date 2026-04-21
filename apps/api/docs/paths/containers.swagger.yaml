@@ -1,8 +1,38 @@
-# paths/containers.swagger.yaml
 tags:
   - name: Containers
 
 paths:
+  /containers/{id}:
+    get:
+      summary: Get container by id
+      description: Retrieves a typed container (Bag or Suitcase) with its full domain representation.
+      tags:
+        - Containers
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      responses:
+        "200":
+          description: Container fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/TypedContainerDTO"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "500":
+          $ref: "#/components/responses/ServerErrorResponse"
+
   /containers/{id}/state:
     get:
       summary: Get container state
