@@ -14,6 +14,7 @@ type BagFactoryOverrides = Partial<
 		| 'type'
 		| 'color'
 		| 'size'
+		| 'containerId'
 		| 'maxCapacity'
 		| 'maxWeight'
 		| 'emptyWeight'
@@ -73,7 +74,7 @@ export const bagFactory = (
 	options: BagFactoryOptions = {}
 ): BagFactoryOmitFields => ({
 	userId,
-
+	containerId: overrides.containerId ?? 'container-1',
 	name: overrides.name ?? faker.commerce.productName(),
 	type: overrides.type ?? faker.helpers.arrayElement(Object.values(BagType)),
 	size: overrides.size ?? faker.helpers.arrayElement(Object.values(Size)),

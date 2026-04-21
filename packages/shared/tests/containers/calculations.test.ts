@@ -10,6 +10,7 @@ import {
 	convertToKilogram,
 	convertToLiter,
 	calculateCapacityPercentage,
+	buildContainerMetrics,
 } from '../../src/containers/calculations';
 import { WeightUnit, VolumeUnit } from '../../src/constants/item.enums';
 
@@ -352,5 +353,51 @@ describe('calculateCapacityPercentage()', () => {
 	it('rounds the result to 1 decimal place', () => {
 		expect(calculateCapacityPercentage(12.5, 50)).toBe(25);
 		expect(calculateCapacityPercentage(1, 6)).toBe(16.7);
+	});
+});
+
+describe('buildContainerMetrics()', () => {
+	it('calculates itemCount as the sum of item quantities', () => {
+		const items = [
+			buildContainerItem({ quantity: 2 }),
+			buildContainerItem({ quantity: 3 }),
+		];
+
+		const metrics = buildContainerMetrics({
+			items,
+			containerWeight: 0,
+			maxWeight: 100,
+			maxCapacity: 100,
+		});
+
+		expect(metrics.itemCount).toBe(5);
+	});
+
+	it('returns itemCount 0 when no items are provided', () => {
+		const metrics = buildContainerMetrics({
+			items: [],
+			containerWeight: 0,
+			maxWeight: 100,
+			maxCapacity: 100,
+		});
+
+		expect(metrics.itemCount).toBe(0);
+	});
+
+	it('calculates itemCount correctly for mixed quantities', () => {
+		const items = [
+			buildContainerItem({ quantity: 1 }),
+			buildContainerItem({ quantity: 5 }),
+			buildContainerItem({ quantity: 0 }),
+		];
+
+		const metrics = buildContainerMetrics({
+			items,
+			containerWeight: 0,
+			maxWeight: 100,
+			maxCapacity: 100,
+		});
+
+		expect(metrics.itemCount).toBe(6);
 	});
 });

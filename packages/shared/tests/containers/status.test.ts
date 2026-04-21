@@ -8,7 +8,7 @@ import {
 import {
 	ContainerStatus,
 	ContainerStatusReason,
-} from '../../src/constants/constraints.enums';
+} from '../../src/constants/container.enums';
 
 describe('checkIsOverweight()', () => {
 	it('returns false when max weight is missing', () => {

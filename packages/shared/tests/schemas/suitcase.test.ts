@@ -1,85 +1,165 @@
-import { it, describe, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { suitcaseFactory } from '../factories/suitcase.factory';
 import { SuitcaseSchema } from '../../src/schemas/suitcase.schema';
 import { Size } from '../../src/constants/bag.enums';
-import {
-	SuitcaseFeature,
-	SuitcaseType,
-	WheelType,
-} from '../../src/constants/suitcase.enums';
+import { SuitcaseFeature, WheelType } from '../../src/constants/suitcase.enums';
 
-describe('SuitcaseSchema.create()', () => {
-	it('parses valid input and applies default values', () => {
-		const {
-			userId: _userId,
-			suitcaseWeight: _suitcaseWeight,
-			...mockSuitcase
-		} = suitcaseFactory('user-1', {
-			type: SuitcaseType.HARD_SHELL,
-			size: Size.MEDIUM,
-		});
-		const result = SuitcaseSchema.create.parse(mockSuitcase);
+describe('SuitcaseSchema', () => {
+	describe('create', () => {
+		it('accepts valid input', () => {
+			// Arrange
+			const {
+				userId: _userId,
+				containerId: _containerId,
+				...input
+			} = suitcaseFactory('user-1');
 
-		expect(result).toEqual(mockSuitcase);
-	});
+			// Act
+			const result = SuitcaseSchema.create.parse(input);
 
-	it('parses optional descriptive fields when provided', () => {
-		const {
-			userId: _userId,
-			suitcaseWeight: _suitcaseWeight,
-			...mockSuitcase
-		} = suitcaseFactory('user-1', {
-			brand: 'Samsonite',
-			features: [SuitcaseFeature.TSA_LOCK],
-			color: 'blue',
-		});
-		const result = SuitcaseSchema.create.parse(mockSuitcase);
-
-		expect(result.brand).toBe('Samsonite');
-		expect(result.color).toBe('blue');
-		expect(result.features).toEqual([SuitcaseFeature.TSA_LOCK]);
-	});
-
-	it('throws when unknown fields are provided', () => {
-		const {
-			userId: _userId,
-			suitcaseWeight: _suitcaseWeight,
-			...mockSuitcase
-		} = suitcaseFactory('user-1');
-
-		expect(() =>
-			SuitcaseSchema.create.parse({
-				...mockSuitcase,
-				internalFlag: true,
-			})
-		).toThrow();
-	});
-});
-
-describe('SuitcaseSchema.update()', () => {
-	it('parses partial update payloads', () => {
-		const result = SuitcaseSchema.update.parse({
-			color: 'red',
-			wheels: WheelType.TWO_WHEEL,
+			// Assert
+			expect(result.name).toBe(input.name);
+			expect(result.type).toBe(input.type);
+			expect(result.size).toBe(input.size);
 		});
 
-		expect(result).toEqual({
-			color: 'red',
-			wheels: WheelType.TWO_WHEEL,
+		it('applies default values when optional fields are missing', () => {
+			// Arrange
+			const {
+				userId: _userId,
+				containerId: _containerId,
+				color: _color,
+				emptyWeight: _emptyWeight,
+				...input
+			} = suitcaseFactory('user-1', {
+				color: undefined,
+				emptyWeight: undefined,
+			});
+
+			// Act
+			const result = SuitcaseSchema.create.parse(input);
+
+			// Assert
+			expect(result.color).toBe('black');
+			expect(result.emptyWeight).toBe(0);
+		});
+
+		it('accepts optional descriptive fields', () => {
+			// Arrange
+			const {
+				userId: _userId,
+				containerId: _containerId,
+				...input
+			} = suitcaseFactory(
+				'user-1',
+				{
+					brand: 'Samsonite',
+					color: 'blue',
+					features: [SuitcaseFeature.TSA_LOCK],
+				},
+				{ withDetails: true }
+			);
+
+			// Act
+			const result = SuitcaseSchema.create.parse(input);
+
+			// Assert
+			expect(result.brand).toBe('Samsonite');
+			expect(result.color).toBe('blue');
+			expect(result.features).toEqual([SuitcaseFeature.TSA_LOCK]);
+		});
+
+		it('rejects input when required fields are missing', () => {
+			// Arrange
+			const {
+				userId: _userId,
+				containerId: _containerId,
+				name: _name,
+				...input
+			} = suitcaseFactory('user-1');
+
+			// Act & Assert
+			expect(() => SuitcaseSchema.create.parse(input)).toThrow();
+		});
+
+		it('rejects invalid enum values', () => {
+			// Arrange
+			const {
+				userId: _userId,
+				containerId: _containerId,
+				...input
+			} = suitcaseFactory('user-1', {
+				type: 'INVALID' as any,
+			});
+
+			// Act & Assert
+			expect(() => SuitcaseSchema.create.parse(input)).toThrow();
+		});
+
+		it('rejects unknown fields', () => {
+			// Arrange
+			const {
+				userId: _userId,
+				containerId: _containerId,
+				...input
+			} = suitcaseFactory('user-1');
+
+			// Act & Assert
+			expect(() =>
+				SuitcaseSchema.create.parse({
+					...input,
+					internalFlag: true,
+				})
+			).toThrow();
 		});
 	});
 
-	it('parses an empty object without applying defaults', () => {
-		const result = SuitcaseSchema.update.parse({});
-		expect(result).toEqual({});
-	});
+	describe('update', () => {
+		it('accepts partial input', () => {
+			// Arrange
+			const input = {
+				color: 'red',
+				wheels: WheelType.TWO_WHEEL,
+			};
 
-	it('throws when unknown fields are provided', () => {
-		expect(() =>
-			SuitcaseSchema.update.parse({
+			// Act
+			const result = SuitcaseSchema.update.parse(input);
+
+			// Assert
+			expect(result.color).toBe('red');
+			expect(result.wheels).toBe(WheelType.TWO_WHEEL);
+		});
+
+		it('applies default emptyWeight when not provided', () => {
+			// Arrange
+			const input = {};
+
+			// Act
+			const result = SuitcaseSchema.update.parse(input);
+
+			// Assert
+			expect(result.emptyWeight).toBe(0);
+		});
+
+		it('rejects invalid enum values', () => {
+			// Arrange
+			const input = {
+				wheels: 'INVALID' as any,
+			};
+
+			// Act & Assert
+			expect(() => SuitcaseSchema.update.parse(input)).toThrow();
+		});
+
+		it('rejects unknown fields', () => {
+			// Arrange
+			const input = {
 				size: Size.LARGE,
 				adminOverride: true,
-			})
-		).toThrow();
+			};
+
+			// Act & Assert
+			expect(() => SuitcaseSchema.update.parse(input)).toThrow();
+		});
 	});
 });

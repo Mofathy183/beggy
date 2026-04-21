@@ -15,9 +15,10 @@ type SuitcaseFactoryOverrides = Partial<
 		| 'type'
 		| 'color'
 		| 'size'
+		| 'containerId'
 		| 'maxCapacity'
 		| 'maxWeight'
-		| 'suitcaseWeight'
+		| 'emptyWeight'
 		| 'material'
 		| 'features'
 		| 'wheels'
@@ -71,6 +72,8 @@ export const suitcaseFactory = (
 ): SuitcaseFactoryOmitFields => ({
 	userId,
 
+	containerId: overrides.containerId ?? 'container-1',
+
 	name: overrides.name ?? faker.commerce.productName(),
 
 	brand:
@@ -89,8 +92,8 @@ export const suitcaseFactory = (
 		overrides.maxWeight ??
 		faker.number.float({ min: 7, max: 32, fractionDigits: 2 }),
 
-	suitcaseWeight:
-		overrides.suitcaseWeight ??
+	emptyWeight:
+		overrides.emptyWeight ??
 		faker.number.float({ min: 3, max: 7, fractionDigits: 2 }),
 
 	color:

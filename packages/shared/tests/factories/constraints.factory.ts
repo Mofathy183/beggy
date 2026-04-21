@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import type { ContainerItem } from '../../src/types/constraints.types';
+import type { ContainerItem } from '../../src/types/container.types';
 import { WeightUnit, VolumeUnit } from '../../src/constants/item.enums';
 
 /**
