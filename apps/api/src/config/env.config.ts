@@ -91,6 +91,13 @@ const optionalNumber = (key: string, defaultValue: number): number => {
 	return parsed;
 };
 
+const optionalArray = (key: string, defaultValue: string[] = []): string[] => {
+	const value = process.env[key];
+	if (!value) return defaultValue;
+
+	return value.split(',').map((item) => item.trim());
+};
+
 // ============================================
 // ENVIRONMENT VALIDATION
 // ============================================
@@ -172,7 +179,10 @@ export const env = {
 	CSRF_COOKIE_NAME: optional('CSRF_COOKIE_NAME', 'XSRF-TOKEN'),
 
 	// CORS & URLs
-	CORE_ORIGIN: optional('CORE_ORIGIN', 'http://localhost:5173'),
+	CORE_ORIGIN: optionalArray('CORE_ORIGIN', [
+		'http://localhost:5173',
+		'http://127.0.0.1:3000',
+	]),
 	BASE_URL: optional('BASE_URL', 'http://localhost:3000'),
 
 	// OAuth - Google
@@ -225,6 +235,7 @@ export const env = {
 export const serverConfig = {
 	port: env.PORT,
 	environment: env.NODE_ENV,
+	isTesting: env.NODE_ENV === 'test',
 	isProduction: env.NODE_ENV === 'production',
 	isDevelopment: env.NODE_ENV === 'development',
 } as const;
@@ -395,6 +406,7 @@ export const doubleCsrfConfig: DoubleCsrfConfig = {
 	ignoredMethods: CSRF_IGNORE_METHODS,
 
 	// Function to extract token from request
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getCsrfTokenFromRequest: (req: any): string | null | undefined => {
 		// Check multiple sources for the token in this order:
 		// 1. Body (for form submissions)

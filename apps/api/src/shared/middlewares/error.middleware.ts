@@ -354,7 +354,7 @@ export const errorHandler = (
 		{
 			domain: 'system',
 			middleware: 'errorHandler',
-			error: err,
+			error: err instanceof Error ? err.stack : err,
 		},
 		'Unhandled application error'
 	);

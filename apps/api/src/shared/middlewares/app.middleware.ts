@@ -18,6 +18,23 @@ const { csrf, core: coreConfig } = envConfig;
 export const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 /**
+ * @route GET /health
+ *
+ * Basic health check endpoint.
+ *
+ * @remarks
+ * - Used for liveness checks (e.g. load balancers, Docker, Kubernetes)
+ * - Does not verify external dependencies (DB, cache, etc.)
+ */
+export const healthCheck = (_req: Request, res: Response) => {
+	res.status(200).json({
+		status: 'ok',
+		uptime: process.uptime(),
+		timestamp: new Date().toISOString(),
+	});
+};
+
+/**
  * CORS middleware configuration.
  *
  * @remarks

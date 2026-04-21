@@ -1,36 +1,26 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { ValidationSchema } from '@shared/types';
+import { reconstructQuery } from '@shared/utils';
 import type { ZodType } from 'zod';
 import { ParamsSchema } from '@beggy/shared/schemas';
 
 /**
- * Middleware factory for validating Express request data using Zod.
+ * Middleware factory for validating and normalizing Express request data.
+ *
+ * @param schema - Zod schemas for body, query, and/or params
+ * @returns Express middleware
  *
  * @remarks
- * - Validates request parts **before** reaching controllers
- * - Replaces request values with parsed & normalized data
- * - Throws `ZodError` on validation failure (handled by global error handler)
- * - Designed to work with shared schemas (API + Web)
+ * - Validates request data before reaching controllers
+ * - Replaces request values with parsed (trusted) data
+ * - Supports shared schemas across API and frontend
  *
- * This middleware intentionally:
- * - Does NOT format errors
- * - Does NOT send responses
- * - Delegates all error handling to the global `errorHandler`
+ * Mutates:
+ * - `req.body`
+ * - `req.query`
+ * - `req.params`
  *
- * @param schema - Validation schemas for request body, query, and/or params
- * @returns Express middleware function
- *
- * @example
- * ```ts
- * router.post(
- *   '/users/:id',
- *   validateRequest({
- *     params: ParamsSchema.uuid,
- *     body: updateUserSchema
- *   }),
- *   userController.update
- * );
- * ```
+ * Errors are forwarded to the global error handler.
  */
 export const validateRequest =
 	(schema: ValidationSchema) =>
@@ -51,7 +41,13 @@ export const validateRequest =
 			 * - Express typings are structural and intentionally loose
 			 */
 			if (schema.query) {
-				const parsedQuery = await schema.query.parseAsync(req.query);
+				// Reconstruct nested objects from dot-notation keys + coerce numbers
+				const reconstructed = reconstructQuery(
+					/* eslint-disable @typescript-eslint/no-explicit-any */
+					req.query as Record<string, any>
+				);
+				const parsedQuery =
+					await schema.query.parseAsync(reconstructed);
 				Object.assign(req.query, parsedQuery);
 			}
 

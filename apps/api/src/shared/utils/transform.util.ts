@@ -6,8 +6,6 @@ import type {
 import type {
 	UserFilterInput,
 	UserOrderByInput,
-	ProfileFilterInput,
-	ProfileOrderByInput,
 	BagFilterInput,
 	BagOrderByInput,
 	ItemFilterInput,
@@ -18,17 +16,15 @@ import type {
 	FieldErrorsTree,
 	PaginationMeta,
 } from '@beggy/shared/types';
-import {
-	type UserWhereInput,
-	type UserOrderByWithAggregationInput,
-	type ProfileWhereInput,
-	type ProfileOrderByWithAggregationInput,
-	type BagWhereInput,
-	type SuitcaseWhereInput,
-	type ItemWhereInput,
-	type ContainerWhereInput,
-	type BagOrderByWithRelationInput,
-	type SuitcaseOrderByWithRelationInput,
+import type {
+	UserWhereInput,
+	UserOrderByWithAggregationInput,
+	BagWhereInput,
+	SuitcaseWhereInput,
+	ItemWhereInput,
+	ContainerWhereInput,
+	BagOrderByWithRelationInput,
+	SuitcaseOrderByWithRelationInput,
 } from '@prisma-generated/models';
 import type { ZodErrorTree } from '@shared/types';
 
@@ -121,6 +117,99 @@ export const formatValidationError = (
 	// Cast is safe: this utility operates on the known runtime structure
 	// produced by `z.treeifyError()`
 	return formatNode(tree as ZodErrorTree);
+};
+
+type QueryValue = string | number | boolean | Date | QueryObject;
+type QueryObject = { [key: string]: QueryValue };
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T[\d:.Z+-]+$/;
+
+/**
+ * Coerces a string value into a typed primitive.
+ *
+ * @param val - Raw query string value
+ * @returns Parsed primitive value
+ *
+ * @remarks
+ * Coercion order:
+ * - boolean ("true"/"false")
+ * - ISO date/datetime → Date
+ * - number
+ * - fallback → string
+ */
+const coerceLeaf = (val: string | undefined): QueryValue => {
+	if (val === undefined) return '';
+
+	const trimmed = val.trim();
+	if (trimmed === '') return trimmed;
+
+	if (trimmed === 'true') return true;
+	if (trimmed === 'false') return false;
+
+	// Convert ISO date strings into Date instances
+	if (ISO_DATE_RE.test(trimmed) || ISO_DATETIME_RE.test(trimmed)) {
+		const parsed = new Date(trimmed);
+		if (!isNaN(parsed.getTime())) return parsed;
+	}
+
+	const asNum = Number(trimmed);
+	return Number.isNaN(asNum) ? trimmed : asNum;
+};
+
+/**
+ * Reconstructs a flat query object into a nested structure
+ * and coerces values into primitives.
+ *
+ * @param query - Express query object (flat key-value pairs)
+ * @returns Nested query object with typed values
+ *
+ * @remarks
+ * - Supports dot-notation keys (e.g. "a.b.c")
+ * - Only the first value is used for array inputs
+ * - Designed to run before schema validation
+ *
+ * @example
+ * ```ts
+ * reconstructQuery({ "price.min": "10", "isActive": "true" })
+ * // → { price: { min: 10 }, isActive: true }
+ * ```
+ */
+export const reconstructQuery = (
+	query: Record<string, string | string[]>
+): QueryObject => {
+	const result: QueryObject = {};
+
+	for (const [rawKey, rawValue] of Object.entries(query)) {
+		const value = coerceLeaf(
+			Array.isArray(rawValue) ? rawValue[0] : rawValue
+		);
+
+		// Simple key (no nesting)
+		if (!rawKey.includes('.')) {
+			result[rawKey] = value;
+			continue;
+		}
+
+		const parts = rawKey.split('.');
+		let cursor = result;
+
+		for (let i = 0; i < parts.length - 1; i++) {
+			const part = parts[i] as string;
+
+			const existing = cursor[part];
+			if (existing === undefined || typeof existing !== 'object') {
+				cursor[part] = {};
+			}
+
+			cursor = cursor[part] as QueryObject;
+		}
+
+		const lastPart = parts[parts.length - 1] as string;
+		cursor[lastPart] = value;
+	}
+
+	return result;
 };
 
 //*========================================================================
@@ -408,62 +497,6 @@ export const buildUserQuery = (
 };
 
 //*========================================================================
-//*#################### Profile query builder #############################
-//*========================================================================
-
-/**
- * Applies basic profile filters that do not require ranges.
- *
- * @remarks
- * - Text search uses case-insensitive `contains`
- * - Mutates the `where` object intentionally to avoid allocations
- */
-const applyProfileBasics = (
-	where: ProfileWhereInput,
-	filter: ProfileFilterInput
-) => {
-	if (filter.city)
-		where.city = {
-			contains: filter.city,
-			mode: 'insensitive',
-		};
-	if (filter.country)
-		where.country = {
-			contains: filter.country,
-			mode: 'insensitive',
-		};
-};
-
-/**
- * Builds a complete Prisma query for profiles.
- *
- * @remarks
- * - Composes basics + date ranges + ordering
- * - Keeps resolver logic declarative and predictable
- */
-export const buildProfileQuery = (
-	filter: ProfileFilterInput,
-	orderBy: ProfileOrderByInput
-): BuildQuery<ProfileWhereInput, ProfileOrderByWithAggregationInput> => {
-	const where: ProfileWhereInput = {};
-
-	applyProfileBasics(where, filter);
-
-	where.createdAt = buildDateRange({
-		from: filter.createdAt?.from,
-		to: filter.createdAt?.to,
-	});
-
-	return {
-		where,
-		orderBy: buildOrderBy<keyof ProfileOrderByWithAggregationInput>(
-			orderBy.orderBy ?? 'createdAt',
-			orderBy.direction as SortOrder
-		),
-	};
-};
-
-//*========================================================================
 //*#################### Bag query builder #################################
 //*========================================================================
 
@@ -475,6 +508,12 @@ export const buildProfileQuery = (
  * - Color uses partial, case-insensitive search
  */
 const applyBagBasics = (where: BagWhereInput, filter: BagFilterInput) => {
+	if (filter.name)
+		where.name = {
+			contains: filter.name,
+			mode: 'insensitive',
+		};
+
 	if (filter.type) where.type = filter.type;
 
 	if (filter.size) where.size = filter.size;
@@ -527,6 +566,12 @@ export const buildBagQuery = (
  * - Color search is case-insensitive and partial
  */
 const applyItemBasics = (where: ItemWhereInput, filter: ItemFilterInput) => {
+	if (filter.name)
+		where.name = {
+			contains: filter.name,
+			mode: 'insensitive',
+		};
+
 	if (filter.category) where.category = filter.category;
 
 	if (filter.color)

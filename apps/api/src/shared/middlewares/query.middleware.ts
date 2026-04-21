@@ -1,41 +1,19 @@
 import type { Request, Response, NextFunction } from 'express';
 import { PaginationSchema } from '@beggy/shared/schemas';
-import { type ListQueryOptions, type OrderBy } from '@shared/types';
+import type { ListQueryOptions, OrderBy } from '@shared/types';
 
 /**
- * Middleware factory for preparing list-query metadata
- * (pagination and ordering).
- *
- * @remarks
- * This middleware is responsible for **normalizing list-related query
- * parameters** before they reach controllers or services.
- *
- * It:
- * - Extracts pagination parameters (`page`, `limit`) when enabled
- * - Extracts ordering parameters (`orderBy`, `direction`) when a schema is provided
- * - Validates all extracted values using Zod schemas
- * - Computes derived values (e.g. `offset`)
- * - Attaches normalized data to the request object
- *
- * This middleware intentionally:
- * - Does NOT perform business-level filtering
- * - Does NOT mutate `req.query` beyond reading from it
- * - Does NOT format or handle errors
- * - Delegates all error handling to the global error handler
+ * Middleware factory for normalizing list query parameters.
  *
  * @param options - Configuration controlling pagination and ordering behavior
+ * @returns Express middleware
  *
- * @example
- * ```ts
- * router.get(
- *   '/users',
- *   prepareListQuery({
- *     orderBySchema: OrderByQuerySchemas.userOrderBy,
- *   }),
- *   validateQuery(userFilterSchema),
- *   userController.list
- * );
- * ```
+ * @remarks
+ * - Extracts and validates pagination (`page`, `limit`)
+ * - Extracts and validates ordering (`orderBy`, `direction`)
+ * - Attaches normalized data to `req.pagination` and `req.orderBy`
+ *
+ * Does not apply business filters or handle errors.
  */
 export const prepareListQuery =
 	(options: ListQueryOptions = {}) =>
@@ -75,9 +53,13 @@ export const prepareListQuery =
 					limit: limit !== undefined ? Number(limit) : undefined,
 				});
 
+				const pageNum = parsed.page ?? 1;
+				const limitNum = parsed.limit ?? 10;
+
 				req.pagination = {
-					...parsed,
-					offset: (parsed.page - 1) * parsed.limit,
+					page: pageNum,
+					limit: limitNum,
+					offset: (pageNum - 1) * limitNum,
 				};
 			}
 
@@ -97,6 +79,11 @@ export const prepareListQuery =
 					direction,
 				})) as OrderBy;
 			}
+
+			delete req.query.page;
+			delete req.query.limit;
+			delete req.query.orderBy;
+			delete req.query.direction;
 
 			next();
 		} catch (error: unknown) {

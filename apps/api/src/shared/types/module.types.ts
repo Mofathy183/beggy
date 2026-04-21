@@ -1,5 +1,8 @@
-import { type Profile } from '@prisma-generated/client';
-import { type UserGetPayload } from '@prisma-generated/models';
+import type { Profile } from '@prisma-generated/client';
+import type { UserGetPayload } from '@prisma-generated/models';
+import type { SuitcaseWithContainer } from '@modules/suitcases';
+import type { BagWithContainer } from '@modules/bags';
+import type { ContainerType } from '@beggy/shared/constants';
 
 /**
  * Extended Profile model with optional computed fields.
@@ -30,6 +33,14 @@ export type ProfileWithComputed = Profile & {
 	age?: number | null;
 };
 
+/**
+ * Public-facing projection of a user profile.
+ *
+ * @remarks
+ * - Exposes only non-sensitive fields safe for external consumption
+ * - Includes computed properties such as `displayName` and `age`
+ * - Used in contexts where profile data is shared with other users
+ */
 export type PublicProfileEntity = Pick<
 	ProfileWithComputed,
 	| 'id'
@@ -43,6 +54,38 @@ export type PublicProfileEntity = Pick<
 	| 'age'
 >;
 
+/**
+ * Authenticated user aggregate returned by "me" endpoints.
+ *
+ * @remarks
+ * - Includes associated profile and account data
+ * - Explicitly excludes sensitive fields (e.g. `hashedPassword`)
+ * - Shape is derived directly from Prisma for consistency with persistence layer
+ */
 export type AuthMe = UserGetPayload<{
 	include: { profile: true; account: { omit: { hashedPassword: true } } };
 }>;
+
+/**
+ * Discriminated union representing a typed container aggregate.
+ *
+ * @remarks
+ * - Used to model polymorphic container types (e.g. Bag, Suitcase)
+ * - Enables exhaustive type-safe handling via `switch (type)`
+ * - Consumed by controllers for mapping into DTOs
+ *
+ * @example
+ * ```ts
+ * switch (result.type) {
+ *   case ContainerType.BAG:
+ *     // handle bag
+ *     break;
+ *   case ContainerType.SUITCASE:
+ *     // handle suitcase
+ *     break;
+ * }
+ * ```
+ */
+export type TypedContainerResult =
+	| { type: ContainerType.BAG; data: BagWithContainer }
+	| { type: ContainerType.SUITCASE; data: SuitcaseWithContainer };
