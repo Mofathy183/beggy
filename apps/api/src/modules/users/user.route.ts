@@ -165,7 +165,7 @@ export const createUserRouter = (userController: UserController): Router => {
 	router.patch(
 		'/:id/role',
 		requireAuth,
-		requirePermission(Action.UPDATE, Subject.ROLE),
+		requirePermission(Action.UPDATE, Subject.ROLE, Scope.ANY),
 		validateUuidParam,
 		userController.changeUserRole
 	);
