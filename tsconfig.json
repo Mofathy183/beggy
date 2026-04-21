@@ -47,8 +47,9 @@
 		"incremental": true,
 		"composite": false,
 
-		// Path Aliases
+		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
+		// Path Aliases
 		"paths": {
 			"@beggy/shared": ["./packages/shared/src"],
 			"@beggy/shared/*": ["./packages/shared/src/*"]
