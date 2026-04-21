@@ -17,7 +17,7 @@ export * from './constraints';
 export * from './api.enums';
 export * from './auth.enums';
 export * from './bag.enums';
-export * from './constraints.enums';
+export * from './container.enums';
 export * from './item.enums';
 export * from './profile.enums';
 export * from './suitcase.enums';

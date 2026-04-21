@@ -52,6 +52,18 @@ export const SuitcaseSchema = {
 		/** Maximum safe weight */
 		maxWeight: FieldsSchema.number('suitcase', 'weight'),
 
+		/**
+		 * Optional empty suitcase weight in kilograms.
+		 *
+		 * @remarks
+		 * - Used when calculating total carried weight
+		 * - Defaults to 0 if the user doesn't know it
+		 * - Can be updated later via PATCH
+		 */
+		emptyWeight: FieldsSchema.number('suitcase', 'weight', false).default(
+			0
+		),
+
 		/** Optional suitcase material */
 		material: FieldsSchema.enum<typeof Material>(Material, false),
 
@@ -94,6 +106,18 @@ export const SuitcaseSchema = {
 
 		/** Updated maximum weight */
 		maxWeight: FieldsSchema.number('suitcase', 'weight', false),
+
+		/**
+		 * Optional empty suitcase weight in kilograms.
+		 *
+		 * @remarks
+		 * - Used when calculating total carried weight
+		 * - Defaults to 0 if the user doesn't know it
+		 * - Can be updated later via PATCH
+		 */
+		emptyWeight: FieldsSchema.number('suitcase', 'weight', false).default(
+			0
+		),
 
 		/** Updated material */
 		material: FieldsSchema.enum<typeof Material>(Material, false),

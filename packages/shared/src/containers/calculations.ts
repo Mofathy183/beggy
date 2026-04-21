@@ -3,7 +3,7 @@ import type {
 	ConvertToLiter,
 	ContainerItem,
 	ContainerMetrics,
-} from '../types/constraints.types';
+} from '../types/container.types';
 import { type WeightUnit, type VolumeUnit } from '../constants/item.enums';
 
 //* ============================================================================
@@ -315,7 +315,6 @@ export const buildContainerMetrics = (params: {
 			params.maxCapacity
 		),
 
-		// Simple count of contained items (used for summaries and status logic)
-		itemCount: params.items.length,
+		itemCount: params.items.reduce((sum, item) => sum + item.quantity, 0),
 	};
 };

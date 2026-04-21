@@ -8,8 +8,10 @@ import type {
 	ContainerStatusReason,
 	ContainerStatus,
 	ContainerType,
-} from '../constants/constraints.enums';
-import type { ItemDTO } from '../types/item.types';
+} from '../constants/container.enums';
+import type { ItemDTO } from './item.types';
+import type { BagDTO } from './bag.types';
+import type { SuitcaseDTO } from './suitcase.types';
 import type { ContainerSchema } from '../schemas/container.schema';
 import type { Override } from './index';
 
@@ -281,6 +283,10 @@ export interface ContainerStateDTO {
 	/** Full derived status — metrics + state flags */
 	status: ContainerStatusDTO;
 }
+
+export type TypedContainerDTO =
+	| { type: ContainerType.BAG; data: BagDTO }
+	| { type: ContainerType.SUITCASE; data: SuitcaseDTO };
 
 // ─────────────────────────────────────────────
 // Schemas with identical input & output

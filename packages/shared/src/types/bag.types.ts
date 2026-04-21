@@ -3,7 +3,7 @@
  */
 
 import type * as z from 'zod';
-import type { ContainerStatusDTO } from './constraints.types';
+import type { ContainerStatusDTO } from './container.types';
 import { type BagSchema } from '../schemas/bag.schema';
 import type { Override, ISODateString } from './index';
 import type {

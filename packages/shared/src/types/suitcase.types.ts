@@ -1,7 +1,6 @@
 /**
  * API Response Types for Suitcases
  */
-
 import { type Size, type Material } from '../constants/bag.enums';
 import { type SuitcaseSchema } from '../schemas/suitcase.schema';
 import type * as z from 'zod';
@@ -84,7 +83,7 @@ export interface SuitcaseDTO {
 	 * - Represents the suitcase's own weight without contents
 	 * - Included when validating airline baggage limits
 	 */
-	suitcaseWeight: number;
+	emptyWeight: number;
 
 	/**
 	 * Suitcase material.
@@ -151,6 +150,7 @@ export type CreateSuitcaseInput = Override<
 		size: Size;
 		maxCapacity: number;
 		maxWeight: number;
+		features?: SuitcaseFeature[];
 	}
 >;
 

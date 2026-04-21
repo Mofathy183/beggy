@@ -265,6 +265,7 @@ export const QuerySchema = {
 	 */
 	itemFilter: z
 		.strictObject({
+			name: FieldsSchema.name('Item Name', 'product', false),
 			category: FieldsSchema.enum(ItemCategory, false),
 			color: z.string(),
 			isFragile: z.boolean(),

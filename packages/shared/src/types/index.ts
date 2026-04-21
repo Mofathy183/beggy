@@ -2,7 +2,7 @@ export * from './api.types';
 export * from './auth.types';
 export * from './bag.types';
 export * from './item.types';
-export * from './constraints.types';
+export * from './container.types';
 export * from './dashboard.types';
 export * from './profile.types';
 export * from './schema.types';

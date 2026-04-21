@@ -1,11 +1,11 @@
-import { type ErrorCode } from '../constants/error.codes';
-import {
-	type OrderByQuerySchemas,
-	type QuerySchema,
-	type ParamsSchema,
-	type PaginationSchema,
-} from '../schemas/api.schema';
 import type * as z from 'zod';
+import type { ErrorCode } from '../constants/error.codes';
+import type {
+	OrderByQuerySchemas,
+	QuerySchema,
+	ParamsSchema,
+	PaginationSchema,
+} from '../schemas/api.schema';
 import type { Permissions } from '../types/auth.types';
 import type { AuthProvider } from '../constants/auth.enums';
 import type { UserDTO } from '../types/user.types';
