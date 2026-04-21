@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { type Express } from 'express';
 import request from 'supertest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -17,7 +17,7 @@ vi.mock('@prisma/prisma.client', () => ({
 	},
 }));
 
-// ---- Middleware mocks ----
+// ---- Middleware mocks (pass-through + auth injection) ----
 vi.mock('@shared/middlewares', async () => {
 	const actual = await vi.importActual<any>('@shared/middlewares');
 
@@ -42,9 +42,11 @@ import {
 	ContainerController,
 	createContainerRouter,
 } from '@modules/containers';
+import { ContainerType } from '@beggy/shared/constants';
 
 // ---- Factories ----
 import { buildContainer } from './factories/container.factory';
+import { buildBag } from '../../bags/__tests__/factories/bag.factory';
 
 // ---- Types ----
 type MockedContainerService = {
@@ -52,6 +54,7 @@ type MockedContainerService = {
 	unpackItem: ReturnType<typeof vi.fn>;
 	moveItem: ReturnType<typeof vi.fn>;
 	getContainerState: ReturnType<typeof vi.fn>;
+	getTypedContainer: ReturnType<typeof vi.fn>;
 };
 
 // ---- App Setup ----
@@ -74,6 +77,7 @@ describe('Containers Routes', () => {
 			unpackItem: vi.fn(),
 			moveItem: vi.fn(),
 			getContainerState: vi.fn(),
+			getTypedContainer: vi.fn(),
 		};
 	});
 
@@ -96,10 +100,13 @@ describe('Containers Routes', () => {
 			expect(res.status).toBe(200);
 
 			expect(res.body).toMatchObject({
-				data: {
+				success: true,
+				status: 200,
+				data: expect.objectContaining({
 					containerId: container.id,
 					status: expect.any(Object),
-				},
+				}),
+				message: expect.any(String),
 			});
 
 			expect(service.packItem).toHaveBeenCalledWith(
@@ -129,10 +136,13 @@ describe('Containers Routes', () => {
 			expect(res.status).toBe(200);
 
 			expect(res.body).toMatchObject({
-				data: {
+				success: true,
+				status: 200,
+				data: expect.objectContaining({
 					containerId: container.id,
 					status: expect.any(Object),
-				},
+				}),
+				message: expect.any(String),
 			});
 
 			expect(service.unpackItem).toHaveBeenCalledWith(
@@ -169,14 +179,17 @@ describe('Containers Routes', () => {
 			expect(res.status).toBe(200);
 
 			expect(res.body).toMatchObject({
+				success: true,
+				status: 200,
 				data: {
-					from: {
+					from: expect.objectContaining({
 						containerId: from.id,
-					},
-					to: {
+					}),
+					to: expect.objectContaining({
 						containerId: to.id,
-					},
+					}),
 				},
+				message: expect.any(String),
 			});
 
 			expect(service.moveItem).toHaveBeenCalledWith('user-123', payload);
@@ -201,13 +214,60 @@ describe('Containers Routes', () => {
 			expect(res.status).toBe(200);
 
 			expect(res.body).toMatchObject({
-				data: {
-					metrics: expect.any(Object),
-					state: expect.any(Object),
-				},
+				success: true,
+				status: 200,
+				data: expect.objectContaining({
+					containerId: container.id,
+					items: expect.any(Array),
+					status: expect.any(Object),
+				}),
+				message: expect.any(String),
 			});
 
 			expect(service.getContainerState).toHaveBeenCalledWith(
+				'user-123',
+				container.id
+			);
+		});
+	});
+
+	describe('GET /containers/:id', () => {
+		it('returns 200 with typed container', async () => {
+			// Arrange
+			const container = buildContainer('user-123');
+			const bag = buildBag('user-123');
+
+			service.getTypedContainer.mockResolvedValue({
+				type: ContainerType.BAG,
+				data: {
+					...bag,
+
+					container: {
+						...container,
+						containerItems: [],
+					},
+				},
+			});
+
+			const app = setupApp(service);
+
+			// Act
+			const res = await request(app).get(`/containers/${container.id}`);
+
+			// Assert
+			expect(res.status).toBe(200);
+
+			expect(res.body).toMatchObject({
+				success: true,
+				status: 200,
+				data: {
+					type: ContainerType.BAG,
+					data: expect.any(Object),
+				},
+				message: expect.any(String),
+			});
+
+			expect(service.getTypedContainer).toHaveBeenCalledWith(
 				'user-123',
 				container.id
 			);

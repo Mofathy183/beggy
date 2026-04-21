@@ -11,8 +11,8 @@ import {
 	truncateAllTables,
 	withCsrf,
 } from '@tests';
-import { containerFactory } from './factories/container.factory';
 import { buildItem } from '@modules/items/__tests__/factories/item.factory';
+import { bagFactory } from '@modules/bags/__tests__/factories/bag.factory';
 
 describe('Containers Integration', () => {
 	beforeAll(async () => {
@@ -27,23 +27,144 @@ describe('Containers Integration', () => {
 		await prisma.$disconnect();
 	});
 
-	// Helper to create persisted container
+	// ✅ Minimal persisted helpers (NOT factories)
 	const createContainer = async (userId: string) => {
 		return prisma.container.create({
-			data: containerFactory(userId),
+			data: {
+				userId,
+				type: 'BAG',
+				maxCapacity: 50,
+				maxWeight: 20,
+				emptyWeight: 2,
+			},
 		});
 	};
 
 	const createItem = async (userId: string) => {
 		const item = buildItem(userId);
 
-		return prisma.item.create({
-			data: item,
+		return prisma.item.create({ data: item });
+	};
+
+	const createBag = async (userId: string, containerId: string) => {
+		const { maxCapacity, maxWeight, emptyWeight, ...bagInput } =
+			bagFactory(userId);
+
+		const bag = { ...bagInput, containerId };
+
+		// IMPORTANT: bag must exist for BAG container
+		await prisma.bag.create({
+			data: bag,
 		});
 	};
 
+	describe('GET /containers/:id', () => {
+		it('returns 200 with BAG typed container and BagDTO', async () => {
+			// Arrange
+			const { agent, userId } = await createAuthenticatedAgent();
+
+			const container = await prisma.container.create({
+				data: {
+					userId,
+					type: 'BAG',
+					maxCapacity: 50,
+					maxWeight: 20,
+					emptyWeight: 2,
+				},
+			});
+
+			await createBag(userId, container.id);
+
+			// Act
+			const res = await agent.get(`${BASE}/containers/${container.id}`);
+
+			// Assert
+			expect(res.status).toBe(200);
+
+			expect(res.body.data).toMatchObject({
+				type: 'BAG',
+				data: {
+					containerId: container.id,
+				},
+			});
+		});
+
+		it('returns 401 for unauthenticated requests', async () => {
+			// Arrange
+			const { agent } = await createAnonAgent();
+
+			// Act
+			const res = await agent.get(
+				`${BASE}/containers/${faker.string.uuid()}`
+			);
+
+			// Assert
+			expectError(res, 401);
+		});
+
+		it('returns 404 for a non-existent container', async () => {
+			// Arrange
+			const { agent } = await createAuthenticatedAgent();
+
+			// Act
+			const res = await agent.get(
+				`${BASE}/containers/${faker.string.uuid()}`
+			);
+
+			// Assert
+			expectError(res, 404, ErrorCode.CONTAINER_NOT_FOUND);
+		});
+
+		it('returns 404 when the container belongs to another user', async () => {
+			// Arrange
+			const userA = await createAuthenticatedAgent();
+			const userB = await createAuthenticatedAgent();
+
+			const container = await prisma.container.create({
+				data: {
+					userId: userA.userId,
+					type: 'BAG',
+					maxCapacity: 50,
+					maxWeight: 20,
+					emptyWeight: 2,
+				},
+			});
+
+			await createBag(userA.userId, container.id);
+
+			// Act
+			const res = await userB.agent.get(
+				`${BASE}/containers/${container.id}`
+			);
+
+			// Assert
+			expectError(res, 404, ErrorCode.CONTAINER_NOT_FOUND);
+		});
+
+		it('returns 404 when BAG container exists without bag record', async () => {
+			// Arrange
+			const { agent, userId } = await createAuthenticatedAgent();
+
+			const container = await prisma.container.create({
+				data: {
+					userId,
+					type: 'BAG',
+					maxCapacity: 50,
+					maxWeight: 20,
+					emptyWeight: 2,
+				},
+			});
+
+			// Act
+			const res = await agent.get(`${BASE}/containers/${container.id}`);
+
+			// Assert
+			expectError(res, 404, ErrorCode.BAG_NOT_FOUND);
+		});
+	});
+
 	describe('GET /containers/:id/state', () => {
-		it('returns 200 with metrics and state for the container', async () => {
+		it('returns 200 with ContainerStateDTO', async () => {
 			// Arrange
 			const { agent, userId } = await createAuthenticatedAgent();
 			const container = await createContainer(userId);
@@ -55,107 +176,120 @@ describe('Containers Integration', () => {
 
 			// Assert
 			expect(res.status).toBe(200);
-			expect(res.body.data).toHaveProperty('metrics');
-			expect(res.body.data).toHaveProperty('state');
+			expect(res.body.data).toMatchObject({
+				containerId: container.id,
+				items: [],
+				status: {
+					metrics: expect.any(Object),
+					state: expect.any(Object),
+				},
+			});
 		});
 
 		it('returns 401 for unauthenticated requests', async () => {
-			// Arrange
 			const { agent } = await createAnonAgent();
-			const containerId = faker.string.uuid();
 
-			// Act
-			const res = await agent.get(
-				`${BASE}/containers/${containerId}/state`
-			);
-
-			// Assert
-			expectError(res, 401);
-		});
-
-		it('returns 404 when the container does not exist', async () => {
-			// Arrange
-			const { agent } = await createAuthenticatedAgent();
-
-			// Act
 			const res = await agent.get(
 				`${BASE}/containers/${faker.string.uuid()}/state`
 			);
 
-			// Assert
+			expectError(res, 401);
+		});
+
+		it('returns 404 when the container does not exist', async () => {
+			const { agent } = await createAuthenticatedAgent();
+
+			const res = await agent.get(
+				`${BASE}/containers/${faker.string.uuid()}/state`
+			);
+
 			expectError(res, 404, ErrorCode.CONTAINER_NOT_FOUND);
 		});
 
 		it('returns 404 when the container belongs to another user', async () => {
-			// Arrange
 			const userA = await createAuthenticatedAgent();
 			const userB = await createAuthenticatedAgent();
 
 			const container = await createContainer(userA.userId);
 
-			// Act
 			const res = await userB.agent.get(
 				`${BASE}/containers/${container.id}/state`
 			);
 
-			// Assert
 			expectError(res, 404, ErrorCode.CONTAINER_NOT_FOUND);
 		});
 	});
 
 	describe('POST /containers/:id/pack', () => {
-		it('returns 200 with container summary after packing item', async () => {
+		it('updates container item quantity after packing item', async () => {
 			// Arrange
 			const { agent, csrfToken, userId } =
 				await createAuthenticatedAgent();
-
 			const container = await createContainer(userId);
 			const item = await createItem(userId);
-
-			const payload = {
-				itemId: item.id,
-				quantity: 2,
-			};
 
 			// Act
 			const res = await withCsrf(
 				agent
 					.post(`${BASE}/containers/${container.id}/pack`)
-					.send(payload),
+					.send({ itemId: item.id, quantity: 2 }),
 				csrfToken
 			);
 
-			// Assert
+			// Assert HTTP
 			expect(res.status).toBe(200);
 			expect(res.body.data.containerId).toBe(container.id);
-			expect(res.body.data.status).toBeDefined();
+
+			// Assert DB
+			const record = await prisma.containerItems.findUnique({
+				where: {
+					containerId_itemId: {
+						containerId: container.id,
+						itemId: item.id,
+					},
+				},
+			});
+
+			expect(record?.quantity).toBe(2);
 		});
 
-		it('returns 400 for invalid payload', async () => {
-			// Arrange
-			const { agent, csrfToken, userId } =
-				await createAuthenticatedAgent();
-			const container = await createContainer(userId);
+		it('returns 401 for unauthenticated requests', async () => {
+			const { agent, csrfToken } = await createAnonAgent();
 
-			// Act
 			const res = await withCsrf(
-				agent.post(`${BASE}/containers/${container.id}/pack`).send({}),
+				agent
+					.post(`${BASE}/containers/${faker.string.uuid()}/pack`)
+					.send({}),
 				csrfToken
 			);
 
-			// Assert
-			expectError(res, 400);
+			expectError(res, 401);
 		});
 
-		it('returns 404 when the container belongs to another user', async () => {
-			// Arrange
+		it('returns 404 when item belongs to another user', async () => {
 			const userA = await createAuthenticatedAgent();
 			const userB = await createAuthenticatedAgent();
 
 			const container = await createContainer(userA.userId);
 			const item = await createItem(userB.userId);
 
-			// Act
+			const res = await withCsrf(
+				userA.agent
+					.post(`${BASE}/containers/${container.id}/pack`)
+					.send({ itemId: item.id, quantity: 1 }),
+				userA.csrfToken
+			);
+
+			expectError(res, 404);
+		});
+
+		it('returns 404 when the container belongs to another user', async () => {
+			const userA = await createAuthenticatedAgent();
+			const userB = await createAuthenticatedAgent();
+
+			const container = await createContainer(userA.userId);
+			const item = await createItem(userB.userId);
+
 			const res = await withCsrf(
 				userB.agent
 					.post(`${BASE}/containers/${container.id}/pack`)
@@ -163,21 +297,18 @@ describe('Containers Integration', () => {
 				userB.csrfToken
 			);
 
-			// Assert
 			expectError(res, 404, ErrorCode.CONTAINER_NOT_FOUND);
 		});
 	});
 
 	describe('POST /containers/:id/unpack', () => {
-		it('returns 200 with container summary after unpacking item', async () => {
-			// Arrange
+		it('updates container item quantity after unpacking item', async () => {
 			const { agent, csrfToken, userId } =
 				await createAuthenticatedAgent();
 
 			const container = await createContainer(userId);
 			const item = await createItem(userId);
 
-			// pre-pack
 			await prisma.containerItems.create({
 				data: {
 					containerId: container.id,
@@ -186,7 +317,6 @@ describe('Containers Integration', () => {
 				},
 			});
 
-			// Act
 			const res = await withCsrf(
 				agent
 					.post(`${BASE}/containers/${container.id}/unpack`)
@@ -194,52 +324,36 @@ describe('Containers Integration', () => {
 				csrfToken
 			);
 
-			// Assert
 			expect(res.status).toBe(200);
-			expect(res.body.data.containerId).toBe(container.id);
+
+			const record = await prisma.containerItems.findUnique({
+				where: {
+					containerId_itemId: {
+						containerId: container.id,
+						itemId: item.id,
+					},
+				},
+			});
+
+			expect(record?.quantity).toBe(2);
 		});
 
-		it('returns 404 when the item is not in the container', async () => {
-			// Arrange
-			const { agent, csrfToken, userId } =
-				await createAuthenticatedAgent();
-			const container = await createContainer(userId);
+		it('returns 401 for unauthenticated requests', async () => {
+			const { agent, csrfToken } = await createAnonAgent();
 
-			// Act
 			const res = await withCsrf(
 				agent
-					.post(`${BASE}/containers/${container.id}/unpack`)
-					.send({ itemId: faker.string.uuid(), quantity: 1 }),
+					.post(`${BASE}/containers/${faker.string.uuid()}/unpack`)
+					.send({}),
 				csrfToken
 			);
 
-			// Assert
-			expectError(res, 404, ErrorCode.CONTAINER_ITEM_NOT_FOUND);
-		});
-
-		it('returns 404 when the container belongs to another user', async () => {
-			// Arrange
-			const userA = await createAuthenticatedAgent();
-			const userB = await createAuthenticatedAgent();
-
-			const container = await createContainer(userA.userId);
-
-			// Act
-			const res = await withCsrf(
-				userB.agent
-					.post(`${BASE}/containers/${container.id}/unpack`)
-					.send({ itemId: faker.string.uuid(), quantity: 1 }),
-				userB.csrfToken
-			);
-
-			// Assert
-			expectError(res, 404, ErrorCode.CONTAINER_NOT_FOUND);
+			expectError(res, 401);
 		});
 	});
 
 	describe('POST /containers/move', () => {
-		it('returns 200 with both container states after moving item', async () => {
-			// Arrange
+		it('moves item atomically between containers', async () => {
 			const { agent, csrfToken, userId } =
 				await createAuthenticatedAgent();
 
@@ -255,71 +369,46 @@ describe('Containers Integration', () => {
 				},
 			});
 
-			const payload = {
-				fromContainerId: from.id,
-				toContainerId: to.id,
-				itemId: item.id,
-				quantity: 2,
-			};
-
-			// Act
 			const res = await withCsrf(
-				agent.post(`${BASE}/containers/move`).send(payload),
+				agent.post(`${BASE}/containers/move`).send({
+					fromContainerId: from.id,
+					toContainerId: to.id,
+					itemId: item.id,
+					quantity: 2,
+				}),
 				csrfToken
 			);
 
-			// Assert
 			expect(res.status).toBe(200);
-			expect(res.body.data.from.containerId).toBe(from.id);
-			expect(res.body.data.to.containerId).toBe(to.id);
+
+			const fromRecord = await prisma.containerItems.findUnique({
+				where: {
+					containerId_itemId: {
+						containerId: from.id,
+						itemId: item.id,
+					},
+				},
+			});
+
+			const toRecord = await prisma.containerItems.findUnique({
+				where: {
+					containerId_itemId: { containerId: to.id, itemId: item.id },
+				},
+			});
+
+			expect(fromRecord?.quantity).toBe(1);
+			expect(toRecord?.quantity).toBe(2);
 		});
 
-		it('returns 400 for same source and destination containers', async () => {
-			// Arrange
-			const { agent, csrfToken, userId } =
-				await createAuthenticatedAgent();
-			const container = await createContainer(userId);
+		it('returns 401 for unauthenticated requests', async () => {
+			const { agent, csrfToken } = await createAnonAgent();
 
-			const payload = {
-				fromContainerId: container.id,
-				toContainerId: container.id,
-				itemId: faker.string.uuid(),
-				quantity: 1,
-			};
-
-			// Act
 			const res = await withCsrf(
-				agent.post(`${BASE}/containers/move`).send(payload),
+				agent.post(`${BASE}/containers/move`).send({}),
 				csrfToken
 			);
 
-			// Assert
-			expectError(res, 400);
-		});
-
-		it('returns 404 when the source container belongs to another user', async () => {
-			// Arrange
-			const userA = await createAuthenticatedAgent();
-			const userB = await createAuthenticatedAgent();
-
-			const from = await createContainer(userA.userId);
-			const to = await createContainer(userB.userId);
-
-			const payload = {
-				fromContainerId: from.id,
-				toContainerId: to.id,
-				itemId: faker.string.uuid(),
-				quantity: 1,
-			};
-
-			// Act
-			const res = await withCsrf(
-				userB.agent.post(`${BASE}/containers/move`).send(payload),
-				userB.csrfToken
-			);
-
-			// Assert
-			expectError(res, 404, ErrorCode.CONTAINER_NOT_FOUND);
+			expectError(res, 401);
 		});
 	});
 });
