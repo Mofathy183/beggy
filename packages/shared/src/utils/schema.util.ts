@@ -91,19 +91,16 @@ export const createNameField = (
 	const { regex, defaultMaxLength, defaultMinLength, messages } =
 		NAME_CONFIG[type];
 
-	const baseSchema = z.string().trim(); // normalize input by trimming edges
-
-	if (isRequired)
-		return baseSchema
-			.min(defaultMinLength, { error: messages.minLength(fieldName) }) // ✅ Required has .min(defaultMinLength)
-			.max(defaultMaxLength, { error: messages.maxLength(fieldName) })
-			.regex(regex, { error: messages.regex(fieldName) })
-			.transform(normalizeTrim);
-
-	return baseSchema
+	const baseSchema = z
+		.string()
+		.trim()
+		.min(defaultMinLength, { error: messages.minLength(fieldName) })
 		.max(defaultMaxLength, { error: messages.maxLength(fieldName) })
-		.nullish()
-		.transform(normalizeTrim);
+		.regex(regex, { error: messages.regex(fieldName) });
+
+	return isRequired
+		? baseSchema.transform(normalizeTrim)
+		: baseSchema.nullish().transform(normalizeTrim);
 };
 
 /**
@@ -127,13 +124,12 @@ export const createNumberField = <M extends NumericEntity>(
 
 	const baseSchema = z
 		.number({ error: messages.number })
-		.positive({ error: messages.positive });
+		.positive({ error: messages.positive })
+		.gte(gte, { error: messages.gte })
+		.lte(lte, { error: messages.lte });
 
 	return isRequired
-		? baseSchema
-				.gte(gte, { error: messages.gte }) // alias for .min()
-				.lte(lte, { error: messages.lte }) // alias for .max()
-				.transform((val) => normalizeRound(val, decimals))
+		? baseSchema.transform((val) => normalizeRound(val, decimals))
 		: baseSchema
 				.nullish()
 				.transform((val) => normalizeRound(val, decimals));
