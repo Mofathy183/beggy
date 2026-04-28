@@ -20,6 +20,7 @@
 				"name": "next"
 			}
 		],
+		"ignoreDeprecations": "",
 		"baseUrl": ".",
 		"paths": {
 			//* Global Project related Paths

@@ -3,10 +3,10 @@ import { AppProvider } from '../src/shared/store';
 import { ThemeProvider } from '../src/shared/ui/theme';
 import { TooltipProvider } from '../src/shared/components/ui/tooltip';
 import { AppToaster } from '../src/shared/ui/toast';
-import type { Preview } from '@storybook/nextjs-vite';
+import { definePreview } from '@storybook/nextjs-vite';
 import '../src/app/globals.css';
 
-const preview: Preview = {
+const preview = definePreview({
 	parameters: {
 		controls: {
 			matchers: {
@@ -60,6 +60,6 @@ const preview: Preview = {
 			);
 		},
 	],
-};
+});
 
 export default preview;
