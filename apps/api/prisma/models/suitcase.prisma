@@ -13,10 +13,10 @@ model Suitcase {
     container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
     /// Display name of the suitcase.
-    name String
+    name String @db.VarChar(100)
 
     /// Optional brand or manufacturer name.
-    brand String?
+    brand String? @db.VarChar(100)
 
     /// Suitcase type (e.g., carry-on, checked luggage).
     type SuitcaseType
@@ -24,7 +24,7 @@ model Suitcase {
     /// Primary color of the suitcase.
     ///
     /// Defaults to black if not specified.
-    color String? @default("black")
+    color String? @default("black") @db.VarChar(50)
 
     /// Size classification of the suitcase.
     size Size

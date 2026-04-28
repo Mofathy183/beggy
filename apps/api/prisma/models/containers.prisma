@@ -19,23 +19,23 @@ model Container {
     /// Maximum internal volume the container can hold.
     ///
     /// Represents total usable capacity (e.g., liters).
-    maxCapacity Float
+    maxCapacity Float @map("max_capacity")
 
     /// Maximum total weight allowed, including contents.
     ///
     /// Exceeding this value should be prevented at
     /// the application or service layer.
-    maxWeight Float
+    maxWeight Float @map("max_weight")
 
     /// Weight of the empty container itself.
     ///
     /// Used when calculating total carried weight.
-    emptyWeight Float @default(0)
+    emptyWeight Float @default(0) @map("empty_weight")
 
     /// Optional owner of the container.
     ///
     /// Nullable to allow system-created or template containers.
-    userId String?
+    userId String? @map("user_id")
     user   User?   @relation(fields: [userId], references: [id])
 
     /// Optional specialization relations.
@@ -49,10 +49,10 @@ model Container {
     containerItems ContainerItems[]
 
     /// Container creation timestamp.
-    createdAt DateTime @default(now())
+    createdAt DateTime @default(now()) @map("created_at")
 
     /// Container update timestamp.
-    updatedAt DateTime @updatedAt
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     /// Database table name.
     @@map("containers")
@@ -65,10 +65,10 @@ model Container {
 /// weight aggregation.
 model ContainerItems {
     /// Identifier of the container.
-    containerId String
+    containerId String @map("container_id")
 
     /// Identifier of the packed item.
-    itemId String
+    itemId String @map("item_id")
 
     /// Relation to the owning container.
     container Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
@@ -82,10 +82,10 @@ model ContainerItems {
     quantity Int
 
     /// Packing record creation timestamp.
-    createdAt DateTime @default(now())
+    createdAt DateTime @default(now()) @map("created_at")
 
     /// Packing record update timestamp.
-    updatedAt DateTime @updatedAt
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     /// Composite primary key ensures an item
     /// appears only once per container.

@@ -7,7 +7,7 @@ model User {
     id String @id @default(uuid())
 
     /// Unique email address.
-    email String @unique
+    email String @unique @db.VarChar(255)
 
     /// User role within the system.
     role Role @default(USER)

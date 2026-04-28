@@ -8,7 +8,7 @@ model Item {
     id String @id @default(uuid())
 
     /// Display name of the item.
-    name String
+    name String @db.VarChar(100)
 
     /// Category used to classify the item.
     category ItemCategory
@@ -28,7 +28,7 @@ model Item {
     /// Optional color of the item.
     ///
     /// Defaults to black if not specified.
-    color String? @default("black")
+    color String? @default("black") @db.VarChar(50)
 
     /// Indicates whether the item is fragile.
     isFragile Boolean @default(false) @map("is_fragile")

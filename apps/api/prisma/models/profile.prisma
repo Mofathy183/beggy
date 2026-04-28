@@ -14,13 +14,13 @@ model Profile {
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     /// User first name.
-    firstName String @map("first_name")
+    firstName String @map("first_name") @db.VarChar(50)
 
     /// User last name.
-    lastName String @map("last_name")
+    lastName String @map("last_name") @db.VarChar(50)
 
     /// Public avatar image URL (managed externally).
-    avatarUrl String?
+    avatarUrl String? @db.VarChar(2048)
 
     /// Optional gender information.
     gender Gender?
@@ -29,10 +29,10 @@ model Profile {
     birthDate DateTime?
 
     /// Optional country.
-    country String?
+    country String? @db.VarChar(100)
 
     /// Optional city.
-    city String?
+    city String? @db.VarChar(100)
 
     /// Indicates whether the user has completed or dismissed the optional onboarding flow.
     /// Used by the frontend to decide whether to show Soft Nudge onboarding hints.

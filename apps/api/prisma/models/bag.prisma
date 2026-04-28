@@ -12,7 +12,7 @@ model Bag {
     container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
     /// Display name of the bag.
-    name String
+    name String @db.VarChar(100)
 
     /// Bag type (e.g., backpack, duffel, tote).
     type BagType
@@ -20,7 +20,7 @@ model Bag {
     /// Primary color of the bag.
     ///
     /// Defaults to black if not specified.
-    color String? @default("black")
+    color String? @default("black") @db.VarChar(50)
 
     /// Size classification of the bag.
     size Size
