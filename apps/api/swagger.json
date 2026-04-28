@@ -1,0 +1,3676 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Beggy API",
+		"version": "1.0.0",
+		"description": "Beggy is an AI-powered smart travel packing assistant API."
+	},
+	"servers": [
+		{
+			"url": "http://localhost:3000/api/beggy",
+			"description": "Local development server"
+		}
+	],
+	"tags": [
+		{
+			"name": "Auth",
+			"description": "Authentication & identity management including login, registration, and session handling"
+		},
+		{
+			"name": "Users",
+			"description": "User account management including retrieval, updates, and administrative operations"
+		},
+		{
+			"name": "Profiles",
+			"description": "User profile management including personal details and onboarding state"
+		},
+		{
+			"name": "Bags",
+			"description": "Bag management including creation, organization, and capacity tracking"
+		},
+		{
+			"name": "Containers",
+			"description": "Container state management including packing, unpacking, item movement, and constraint evaluation (weight, capacity, status)"
+		},
+		{
+			"name": "Items",
+			"description": "Item management including CRUD operations, categorization, and inventory tracking"
+		},
+		{
+			"name": "Dashboard",
+			"description": "Aggregated dashboard overview combining profile state, item insights, and recent activity"
+		}
+	],
+	"components": {
+		"securitySchemes": {
+			"cookieAuth": {
+				"type": "apiKey",
+				"in": "cookie",
+				"name": "accessToken"
+			},
+			"csrfToken": {
+				"type": "apiKey",
+				"in": "header",
+				"name": "x-csrf-token"
+			}
+		},
+		"schemas": {
+			"DateRange": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"from": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Start date (inclusive)"
+					},
+					"to": {
+						"type": "string",
+						"format": "date-time",
+						"description": "End date (inclusive)"
+					}
+				}
+			},
+			"NumberRange": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"min": {
+						"type": "number",
+						"description": "Minimum value (inclusive)"
+					},
+					"max": {
+						"type": "number",
+						"description": "Maximum value (inclusive)"
+					}
+				}
+			},
+			"Pagination": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"page": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 100,
+						"default": 1,
+						"description": "Page number (1-based)"
+					},
+					"limit": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 100,
+						"default": 10,
+						"description": "Maximum number of items per page"
+					}
+				}
+			},
+			"UserOrderBy": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"orderBy": {
+						"$ref": "#/components/schemas/UserOrderByField"
+					},
+					"direction": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/OrderDirection"
+							}
+						],
+						"default": "ASC"
+					}
+				}
+			},
+			"ProfileOrderBy": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"orderBy": {
+						"$ref": "#/components/schemas/ProfileOrderByField"
+					},
+					"direction": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/OrderDirection"
+							}
+						],
+						"default": "ASC"
+					}
+				}
+			},
+			"ItemOrderBy": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"orderBy": {
+						"$ref": "#/components/schemas/ItemOrderByField"
+					},
+					"direction": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/OrderDirection"
+							}
+						],
+						"default": "ASC"
+					}
+				}
+			},
+			"BagOrderBy": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"orderBy": {
+						"$ref": "#/components/schemas/BagOrderByField"
+					},
+					"direction": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/OrderDirection"
+							}
+						],
+						"default": "ASC"
+					}
+				}
+			},
+			"SuitcaseOrderBy": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"orderBy": {
+						"$ref": "#/components/schemas/SuitcaseOrderByField"
+					},
+					"direction": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/OrderDirection"
+							}
+						],
+						"default": "ASC"
+					}
+				}
+			},
+			"UserFilter": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					},
+					"isActive": {
+						"type": "boolean"
+					},
+					"isEmailVerified": {
+						"type": "boolean"
+					},
+					"createdAt": {
+						"$ref": "#/components/schemas/DateRange"
+					}
+				}
+			},
+			"ProfileFilter": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"city": {
+						"type": "string"
+					},
+					"country": {
+						"type": "string"
+					},
+					"createdAt": {
+						"$ref": "#/components/schemas/DateRange"
+					}
+				}
+			},
+			"ItemFilter": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"category": {
+						"$ref": "#/components/schemas/ItemCategory"
+					},
+					"color": {
+						"type": "string"
+					},
+					"isFragile": {
+						"type": "boolean"
+					},
+					"weight": {
+						"$ref": "#/components/schemas/NumberRange"
+					},
+					"volume": {
+						"$ref": "#/components/schemas/NumberRange"
+					},
+					"createdAt": {
+						"$ref": "#/components/schemas/DateRange"
+					}
+				}
+			},
+			"BagFilter": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"type": {
+						"$ref": "#/components/schemas/BagType"
+					},
+					"size": {
+						"$ref": "#/components/schemas/Size"
+					},
+					"material": {
+						"$ref": "#/components/schemas/Material"
+					},
+					"color": {
+						"type": "string"
+					},
+					"maxCapacity": {
+						"$ref": "#/components/schemas/NumberRange"
+					},
+					"maxWeight": {
+						"$ref": "#/components/schemas/NumberRange"
+					},
+					"createdAt": {
+						"$ref": "#/components/schemas/DateRange"
+					}
+				}
+			},
+			"SuitcaseFilter": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"type": {
+						"$ref": "#/components/schemas/SuitcaseType"
+					},
+					"size": {
+						"$ref": "#/components/schemas/Size"
+					},
+					"wheels": {
+						"$ref": "#/components/schemas/WheelType"
+					},
+					"material": {
+						"$ref": "#/components/schemas/Material"
+					},
+					"color": {
+						"type": "string"
+					},
+					"maxCapacity": {
+						"$ref": "#/components/schemas/NumberRange"
+					},
+					"maxWeight": {
+						"$ref": "#/components/schemas/NumberRange"
+					},
+					"createdAt": {
+						"$ref": "#/components/schemas/DateRange"
+					}
+				}
+			},
+			"PaginationMeta": {
+				"type": "object",
+				"properties": {
+					"page": {
+						"type": "integer",
+						"example": 1
+					},
+					"limit": {
+						"type": "integer",
+						"example": 10
+					},
+					"count": {
+						"type": "integer",
+						"example": 10
+					},
+					"totalItems": {
+						"type": "integer",
+						"nullable": true,
+						"example": 120
+					},
+					"totalPages": {
+						"type": "integer",
+						"example": 12
+					},
+					"hasNextPage": {
+						"type": "boolean"
+					},
+					"hasPreviousPage": {
+						"type": "boolean"
+					}
+				}
+			},
+			"SignUpRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"firstName",
+					"lastName",
+					"email",
+					"password",
+					"confirmPassword"
+				],
+				"properties": {
+					"firstName": {
+						"type": "string",
+						"description": "User first name"
+					},
+					"lastName": {
+						"type": "string",
+						"description": "User last name"
+					},
+					"email": {
+						"type": "string",
+						"format": "email",
+						"description": "User email address"
+					},
+					"password": {
+						"type": "string",
+						"format": "password",
+						"description": "User password"
+					},
+					"confirmPassword": {
+						"type": "string",
+						"format": "password",
+						"description": "Confirmation password"
+					},
+					"avatarUrl": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true
+					},
+					"gender": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Gender"
+							}
+						],
+						"nullable": true
+					},
+					"birthDate": {
+						"type": "string",
+						"format": "date",
+						"nullable": true
+					},
+					"country": {
+						"type": "string",
+						"nullable": true
+					},
+					"city": {
+						"type": "string",
+						"nullable": true
+					}
+				}
+			},
+			"LoginRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["email", "password"],
+				"properties": {
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"password": {
+						"type": "string",
+						"format": "password"
+					},
+					"rememberMe": {
+						"type": "boolean",
+						"default": false
+					}
+				}
+			},
+			"ForgotPasswordRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["email"],
+				"properties": {
+					"email": {
+						"type": "string",
+						"format": "email"
+					}
+				}
+			},
+			"ResetPasswordRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["password", "confirmPassword"],
+				"properties": {
+					"password": {
+						"type": "string",
+						"format": "password"
+					},
+					"confirmPassword": {
+						"type": "string",
+						"format": "password"
+					}
+				}
+			},
+			"ChangePasswordRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"currentPassword",
+					"newPassword",
+					"confirmPassword"
+				],
+				"properties": {
+					"currentPassword": {
+						"type": "string",
+						"format": "password"
+					},
+					"newPassword": {
+						"type": "string",
+						"format": "password"
+					},
+					"confirmPassword": {
+						"type": "string",
+						"format": "password"
+					}
+				}
+			},
+			"SetPasswordRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["newPassword", "confirmPassword"],
+				"properties": {
+					"newPassword": {
+						"type": "string",
+						"format": "password"
+					},
+					"confirmPassword": {
+						"type": "string",
+						"format": "password"
+					}
+				}
+			},
+			"ChangeEmailRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["email"],
+				"properties": {
+					"email": {
+						"type": "string",
+						"format": "email"
+					}
+				}
+			},
+			"SendVerificationEmailRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["email"],
+				"properties": {
+					"email": {
+						"type": "string",
+						"format": "email"
+					}
+				}
+			},
+			"AuthMeUser": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "email", "role", "createdAt"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"AuthMeProfile": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"firstName": {
+						"type": "string"
+					},
+					"lastName": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true
+					},
+					"displayName": {
+						"type": "string"
+					},
+					"age": {
+						"type": "integer"
+					},
+					"city": {
+						"type": "string"
+					},
+					"country": {
+						"type": "string"
+					}
+				}
+			},
+			"AuthPermissions": {
+				"type": "object",
+				"additionalProperties": true,
+				"description": "Effective permissions granted to the user"
+			},
+			"AuthMeAuthContext": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["providers", "hasLocalAuth"],
+				"properties": {
+					"providers": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/AuthProvider"
+						}
+					},
+					"hasLocalAuth": {
+						"type": "boolean"
+					}
+				}
+			},
+			"AuthMeResponseData": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["user", "permissions", "auth"],
+				"properties": {
+					"user": {
+						"$ref": "#/components/schemas/AuthMeUser"
+					},
+					"profile": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/AuthMeProfile"
+							}
+						],
+						"nullable": true
+					},
+					"permissions": {
+						"$ref": "#/components/schemas/AuthPermissions"
+					},
+					"auth": {
+						"$ref": "#/components/schemas/AuthMeAuthContext"
+					}
+				}
+			},
+			"CsrfTokenResponseData": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["csrfToken"],
+				"properties": {
+					"csrfToken": {
+						"type": "string"
+					}
+				}
+			},
+			"Bag": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"name": {
+						"type": "string"
+					},
+					"containerId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"type": {
+						"$ref": "#/components/schemas/BagType"
+					},
+					"color": {
+						"type": "string",
+						"nullable": true
+					},
+					"size": {
+						"$ref": "#/components/schemas/Size"
+					},
+					"maxCapacity": {
+						"type": "number"
+					},
+					"maxWeight": {
+						"type": "number"
+					},
+					"bagWeight": {
+						"type": "number"
+					},
+					"material": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Material"
+							}
+						],
+						"nullable": true
+					},
+					"features": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/BagFeature"
+						}
+					},
+					"status": {
+						"$ref": "#/components/schemas/ContainerStatusDTO"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"userId": {
+						"type": "string",
+						"format": "uuid",
+						"nullable": true
+					}
+				}
+			},
+			"CreateBagRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"name",
+					"type",
+					"size",
+					"maxCapacity",
+					"maxWeight"
+				],
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"type": {
+						"$ref": "#/components/schemas/BagType"
+					},
+					"color": {
+						"type": "string",
+						"default": "black"
+					},
+					"size": {
+						"$ref": "#/components/schemas/Size"
+					},
+					"maxCapacity": {
+						"type": "number"
+					},
+					"maxWeight": {
+						"type": "number"
+					},
+					"emptyWeight": {
+						"type": "number",
+						"default": 0
+					},
+					"material": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Material"
+							}
+						],
+						"nullable": true
+					},
+					"features": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/BagFeature"
+						}
+					}
+				}
+			},
+			"UpdateBagRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"type": {
+						"$ref": "#/components/schemas/BagType"
+					},
+					"color": {
+						"type": "string"
+					},
+					"size": {
+						"$ref": "#/components/schemas/Size"
+					},
+					"maxCapacity": {
+						"type": "number"
+					},
+					"maxWeight": {
+						"type": "number"
+					},
+					"emptyWeight": {
+						"type": "number"
+					},
+					"material": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Material"
+							}
+						],
+						"nullable": true
+					},
+					"features": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/BagFeature"
+						}
+					}
+				}
+			},
+			"BagListResponseData": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/Bag"
+				}
+			},
+			"BagSingleResponseData": {
+				"$ref": "#/components/schemas/Bag"
+			},
+			"PackItemRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["itemId", "quantity"],
+				"properties": {
+					"itemId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"quantity": {
+						"type": "integer",
+						"minimum": 1
+					}
+				}
+			},
+			"UnpackItemRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["itemId", "quantity"],
+				"properties": {
+					"itemId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"quantity": {
+						"type": "integer",
+						"minimum": 1
+					}
+				}
+			},
+			"MoveItemRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"fromContainerId",
+					"toContainerId",
+					"itemId",
+					"quantity"
+				],
+				"properties": {
+					"fromContainerId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"toContainerId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"itemId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"quantity": {
+						"type": "integer",
+						"minimum": 1
+					}
+				}
+			},
+			"ContainerMetrics": {
+				"type": "object",
+				"properties": {
+					"currentWeight": {
+						"type": "number"
+					},
+					"currentCapacity": {
+						"type": "number"
+					},
+					"remainingWeight": {
+						"type": "number"
+					},
+					"remainingCapacity": {
+						"type": "number"
+					},
+					"weightPercentage": {
+						"type": "number"
+					},
+					"capacityPercentage": {
+						"type": "number"
+					},
+					"itemCount": {
+						"type": "integer"
+					}
+				}
+			},
+			"ContainerState": {
+				"type": "object",
+				"properties": {
+					"isOverweight": {
+						"type": "boolean"
+					},
+					"isOverCapacity": {
+						"type": "boolean"
+					},
+					"isFull": {
+						"type": "boolean"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ContainerStatus"
+					},
+					"reasons": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ContainerStatusReason"
+						}
+					}
+				}
+			},
+			"ContainerStatusDTO": {
+				"type": "object",
+				"properties": {
+					"metrics": {
+						"$ref": "#/components/schemas/ContainerMetrics"
+					},
+					"state": {
+						"$ref": "#/components/schemas/ContainerState"
+					}
+				}
+			},
+			"ContainerSummaryDTO": {
+				"type": "object",
+				"properties": {
+					"containerId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ContainerStatusDTO"
+					}
+				}
+			},
+			"MoveResultDTO": {
+				"type": "object",
+				"properties": {
+					"from": {
+						"$ref": "#/components/schemas/ContainerSummaryDTO"
+					},
+					"to": {
+						"$ref": "#/components/schemas/ContainerSummaryDTO"
+					}
+				}
+			},
+			"TypedContainerDTO": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"type": {
+								"$ref": "#/components/schemas/ContainerType"
+							},
+							"data": {
+								"$ref": "#/components/schemas/BagDTO"
+							}
+						}
+					},
+					{
+						"type": "object",
+						"properties": {
+							"type": {
+								"$ref": "#/components/schemas/ContainerType"
+							},
+							"data": {
+								"$ref": "#/components/schemas/SuitcaseDTO"
+							}
+						}
+					}
+				],
+				"discriminator": {
+					"propertyName": "type"
+				}
+			},
+			"DashboardProfile": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"onboardingCompleted": {
+						"type": "boolean"
+					}
+				},
+				"required": ["onboardingCompleted"]
+			},
+			"DashboardItemStats": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"totalItems": {
+						"type": "integer",
+						"example": 10
+					},
+					"totalFragileItems": {
+						"type": "integer",
+						"example": 3
+					}
+				},
+				"required": ["totalItems", "totalFragileItems"]
+			},
+			"DashboardRecentItem": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"name": {
+						"type": "string"
+					},
+					"category": {
+						"$ref": "#/components/schemas/ItemCategory"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"required": ["id", "name", "category", "createdAt"]
+			},
+			"DashboardItemCategoryStats": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"category": {
+						"$ref": "#/components/schemas/ItemCategory"
+					},
+					"count": {
+						"type": "integer",
+						"example": 5
+					}
+				},
+				"required": ["category", "count"]
+			},
+			"DashboardItemsSection": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"stats": {
+						"$ref": "#/components/schemas/DashboardItemStats"
+					},
+					"recent": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DashboardRecentItem"
+						}
+					},
+					"categories": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DashboardItemCategoryStats"
+						}
+					}
+				},
+				"required": ["stats", "recent"]
+			},
+			"DashboardOverviewData": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"profile": {
+						"$ref": "#/components/schemas/DashboardProfile"
+					},
+					"items": {
+						"$ref": "#/components/schemas/DashboardItemsSection"
+					}
+				},
+				"required": ["profile", "items"]
+			},
+			"OrderDirection": {
+				"type": "string",
+				"description": "Ordering direction for sortable queries.",
+				"enum": ["asc", "desc"]
+			},
+			"Role": {
+				"type": "string",
+				"description": "Application-level user roles.",
+				"enum": ["ADMIN", "MEMBER", "MODERATOR", "USER"]
+			},
+			"AuthProvider": {
+				"type": "string",
+				"description": "Authentication providers supported by the system.",
+				"enum": ["GOOGLE", "FACEBOOK", "LOCAL"]
+			},
+			"Subject": {
+				"type": "string",
+				"description": "Domain entities that can be protected by permissions.",
+				"enum": [
+					"USER",
+					"PROFILE",
+					"BAG",
+					"ITEM",
+					"SUITCASE",
+					"ROLE",
+					"PERMISSION"
+				]
+			},
+			"Scope": {
+				"type": "string",
+				"description": "Scope of a permission.",
+				"enum": ["OWN", "ANY"]
+			},
+			"Action": {
+				"type": "string",
+				"description": "Actions that can be performed on a subject.",
+				"enum": ["CREATE", "READ", "UPDATE", "DELETE", "MANAGE"]
+			},
+			"BagType": {
+				"type": "string",
+				"description": "Supported bag categories.",
+				"enum": [
+					"BACKPACK",
+					"DUFFEL",
+					"TOTE",
+					"MESSENGER",
+					"LAPTOP_BAG",
+					"TRAVEL_BAG",
+					"HANDBAG",
+					"CROSSBODY",
+					"SHOULDER_BAG"
+				]
+			},
+			"Size": {
+				"type": "string",
+				"description": "Physical size classification for bags.",
+				"enum": ["SMALL", "MEDIUM", "LARGE", "EXTRA_LARGE"]
+			},
+			"Material": {
+				"type": "string",
+				"description": "Primary material used in bag construction.",
+				"enum": [
+					"LEATHER",
+					"SYNTHETIC",
+					"FABRIC",
+					"POLYESTER",
+					"NYLON",
+					"CANVAS",
+					"HARD_SHELL",
+					"METAL"
+				]
+			},
+			"BagFeature": {
+				"type": "string",
+				"description": "Optional functional or structural features of a bag.",
+				"enum": [
+					"WATERPROOF",
+					"PADDED_LAPTOP_COMPARTMENT",
+					"USB_PORT",
+					"ANTI_THEFT",
+					"MULTIPLE_POCKETS",
+					"LIGHTWEIGHT",
+					"EXPANDABLE",
+					"REINFORCED_STRAPS",
+					"TROLLEY_SLEEVE",
+					"HIDDEN_POCKET"
+				]
+			},
+			"BagOrderByField": {
+				"type": "string",
+				"description": "Allowed order by fields for Bag queries.",
+				"enum": [
+					"createdAt",
+					"updatedAt",
+					"name",
+					"maxWeight",
+					"maxCapacity"
+				]
+			},
+			"ItemCategory": {
+				"type": "string",
+				"description": "High-level classification for items.",
+				"enum": [
+					"ELECTRONICS",
+					"ACCESSORIES",
+					"FURNITURE",
+					"MEDICINE",
+					"CLOTHING",
+					"BOOKS",
+					"FOOD",
+					"TOILETRIES",
+					"DOCUMENTS",
+					"SPORTS"
+				]
+			},
+			"VolumeUnit": {
+				"type": "string",
+				"description": "Supported volume measurement units.",
+				"enum": ["ML", "LITER", "CU_CM", "CU_IN"]
+			},
+			"WeightUnit": {
+				"type": "string",
+				"description": "Supported weight measurement units.",
+				"enum": ["GRAM", "KILOGRAM", "POUND", "OUNCE"]
+			},
+			"ItemOrderByField": {
+				"type": "string",
+				"description": "Allowed order by fields for Item queries.",
+				"enum": ["createdAt", "updatedAt", "name", "weight", "volume"]
+			},
+			"Gender": {
+				"type": "string",
+				"description": "Gender classification for user profiles.",
+				"enum": ["MALE", "FEMALE", "OTHER"]
+			},
+			"ProfileOrderByField": {
+				"type": "string",
+				"description": "Allowed order by fields for Profile queries.",
+				"enum": ["createdAt", "updatedAt", "firstName", "lastName"]
+			},
+			"SuitcaseType": {
+				"type": "string",
+				"description": "High-level suitcase classifications.",
+				"enum": [
+					"CARRY_ON",
+					"CHECKED_LUGGAGE",
+					"HARD_SHELL",
+					"SOFT_SHELL",
+					"BUSINESS",
+					"KIDS",
+					"EXPANDABLE"
+				]
+			},
+			"SuitcaseFeature": {
+				"type": "string",
+				"description": "Optional functional or structural suitcase features.",
+				"enum": [
+					"NONE",
+					"TSA_LOCK",
+					"WATERPROOF",
+					"EXPANDABLE",
+					"USB_PORT",
+					"LIGHTWEIGHT",
+					"ANTI_THEFT",
+					"SCRATCH_RESISTANT",
+					"COMPRESSION_STRAPS",
+					"TELESCOPIC_HANDLE"
+				]
+			},
+			"WheelType": {
+				"type": "string",
+				"description": "Wheel configuration for a suitcase.",
+				"enum": ["NONE", "TWO_WHEEL", "FOUR_WHEEL", "SPINNER"]
+			},
+			"SuitcaseOrderByField": {
+				"type": "string",
+				"description": "Allowed order by fields for Suitcase queries.",
+				"enum": [
+					"createdAt",
+					"updatedAt",
+					"name",
+					"maxWeight",
+					"maxCapacity"
+				]
+			},
+			"UserOrderByField": {
+				"type": "string",
+				"description": "Allowed user ordering fields.",
+				"enum": ["createdAt", "updatedAt", "email", "role"]
+			},
+			"ContainerStatus": {
+				"type": "string",
+				"enum": ["ok", "full", "empty", "overweight", "over_capacity"]
+			},
+			"ContainerStatusReason": {
+				"type": "string",
+				"enum": [
+					"weight_over_limit",
+					"weight_near_limit",
+					"capacity_over_limit",
+					"capacity_near_limit",
+					"empty"
+				]
+			},
+			"ContainerType": {
+				"type": "string",
+				"enum": ["BAG", "SUITCASE"]
+			},
+			"ItemDTO": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"name": {
+						"type": "string"
+					},
+					"category": {
+						"$ref": "#/components/schemas/ItemCategory"
+					},
+					"weight": {
+						"type": "number"
+					},
+					"weightUnit": {
+						"$ref": "#/components/schemas/WeightUnit"
+					},
+					"volume": {
+						"type": "number"
+					},
+					"volumeUnit": {
+						"$ref": "#/components/schemas/VolumeUnit"
+					},
+					"color": {
+						"type": "string",
+						"nullable": true
+					},
+					"isFragile": {
+						"type": "boolean"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"userId": {
+						"type": "string",
+						"format": "uuid",
+						"nullable": true
+					}
+				}
+			},
+			"CreateItemRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"name",
+					"category",
+					"weight",
+					"weightUnit",
+					"volume",
+					"volumeUnit"
+				],
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"category": {
+						"$ref": "#/components/schemas/ItemCategory"
+					},
+					"weight": {
+						"type": "number"
+					},
+					"weightUnit": {
+						"$ref": "#/components/schemas/WeightUnit"
+					},
+					"volume": {
+						"type": "number"
+					},
+					"volumeUnit": {
+						"$ref": "#/components/schemas/VolumeUnit"
+					},
+					"color": {
+						"type": "string",
+						"nullable": true,
+						"default": "black"
+					},
+					"isFragile": {
+						"type": "boolean",
+						"default": false
+					}
+				}
+			},
+			"UpdateItemRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"category": {
+						"$ref": "#/components/schemas/ItemCategory"
+					},
+					"weight": {
+						"type": "number"
+					},
+					"weightUnit": {
+						"$ref": "#/components/schemas/WeightUnit"
+					},
+					"volume": {
+						"type": "number"
+					},
+					"volumeUnit": {
+						"$ref": "#/components/schemas/VolumeUnit"
+					},
+					"color": {
+						"type": "string",
+						"nullable": true
+					},
+					"isFragile": {
+						"type": "boolean"
+					}
+				}
+			},
+			"ItemsListResponseData": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/ItemDTO"
+				}
+			},
+			"ItemResponseData": {
+				"$ref": "#/components/schemas/ItemDTO"
+			},
+			"ProfileDTO": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"userId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"firstName": {
+						"type": "string"
+					},
+					"lastName": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true
+					},
+					"gender": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Gender"
+							}
+						],
+						"nullable": true
+					},
+					"birthDate": {
+						"type": "string",
+						"format": "date",
+						"nullable": true
+					},
+					"country": {
+						"type": "string",
+						"nullable": true
+					},
+					"city": {
+						"type": "string",
+						"nullable": true
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true,
+						"description": "Computed display name derived from profile data"
+					},
+					"age": {
+						"type": "integer",
+						"nullable": true,
+						"description": "Computed age derived from birthDate"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"PublicProfileDTO": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"firstName": {
+						"type": "string"
+					},
+					"lastName": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true
+					},
+					"country": {
+						"type": "string",
+						"nullable": true
+					},
+					"city": {
+						"type": "string",
+						"nullable": true
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true
+					},
+					"age": {
+						"type": "integer",
+						"nullable": true
+					}
+				}
+			},
+			"EditProfileRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"firstName": {
+						"type": "string"
+					},
+					"lastName": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true
+					},
+					"gender": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Gender"
+							}
+						],
+						"nullable": true
+					},
+					"birthDate": {
+						"type": "string",
+						"format": "date",
+						"nullable": true
+					},
+					"country": {
+						"type": "string",
+						"nullable": true
+					},
+					"city": {
+						"type": "string",
+						"nullable": true
+					}
+				}
+			},
+			"PrivateProfileResponseData": {
+				"$ref": "#/components/schemas/ProfileDTO"
+			},
+			"PublicProfileResponseData": {
+				"$ref": "#/components/schemas/PublicProfileDTO"
+			},
+			"SuccessResponse": {
+				"type": "object",
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"example": true
+					},
+					"status": {
+						"type": "integer",
+						"example": 200
+					},
+					"message": {
+						"type": "string",
+						"example": "Operation completed successfully"
+					},
+					"data": {
+						"nullable": true,
+						"description": "Response payload"
+					},
+					"meta": {
+						"nullable": true,
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PaginationMeta"
+							}
+						]
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"example": "2026-03-07T18:00:00Z"
+					}
+				}
+			},
+			"ErrorResponse": {
+				"type": "object",
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"example": false
+					},
+					"status": {
+						"type": "integer",
+						"example": 404
+					},
+					"code": {
+						"type": "string",
+						"example": "RESOURCE_NOT_FOUND"
+					},
+					"message": {
+						"type": "string",
+						"example": "The requested resource could not be found"
+					},
+					"suggestion": {
+						"type": "string",
+						"example": "Please verify the resource ID"
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"ValidationErrorResponse": {
+				"type": "object",
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"example": false
+					},
+					"status": {
+						"type": "integer",
+						"example": 400
+					},
+					"code": {
+						"type": "string",
+						"example": "INVALID_REQUEST_DATA"
+					},
+					"message": {
+						"type": "string"
+					},
+					"suggestion": {
+						"type": "string"
+					},
+					"fieldErrors": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"AdminUserDTO": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					},
+					"isActive": {
+						"type": "boolean"
+					},
+					"isEmailVerified": {
+						"type": "boolean"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"CreateUserRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"firstName",
+					"lastName",
+					"email",
+					"password",
+					"confirmPassword"
+				],
+				"properties": {
+					"firstName": {
+						"type": "string"
+					},
+					"lastName": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"password": {
+						"type": "string",
+						"format": "password"
+					},
+					"confirmPassword": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true
+					},
+					"gender": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Gender"
+							}
+						],
+						"nullable": true
+					},
+					"birthDate": {
+						"type": "string",
+						"format": "date",
+						"nullable": true
+					},
+					"country": {
+						"type": "string",
+						"nullable": true
+					},
+					"city": {
+						"type": "string",
+						"nullable": true
+					}
+				}
+			},
+			"UpdateUserProfileRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"firstName": {
+						"type": "string"
+					},
+					"lastName": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string",
+						"format": "uri",
+						"nullable": true
+					},
+					"gender": {
+						"$ref": "#/components/schemas/Gender"
+					},
+					"birthDate": {
+						"type": "string",
+						"format": "date"
+					},
+					"country": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					}
+				}
+			},
+			"UpdateUserStatusRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"isActive": {
+						"type": "boolean"
+					},
+					"isEmailVerified": {
+						"type": "boolean"
+					}
+				},
+				"minProperties": 1
+			},
+			"ChangeUserRoleRequest": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["role"],
+				"properties": {
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					}
+				}
+			},
+			"UsersListResponseData": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AdminUserDTO"
+				}
+			},
+			"UserResponseData": {
+				"$ref": "#/components/schemas/AdminUserDTO"
+			},
+			"ProfileResponseData": {
+				"$ref": "#/components/schemas/ProfileDTO"
+			}
+		},
+		"parameters": {
+			"UuidParam": {
+				"name": "id",
+				"in": "path",
+				"required": true,
+				"description": "Resource unique identifier",
+				"schema": {
+					"type": "string",
+					"format": "uuid"
+				}
+			}
+		},
+		"responses": {
+			"OkResponse": {
+				"description": "Successful request",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/SuccessResponse"
+						}
+					}
+				}
+			},
+			"CreatedResponse": {
+				"description": "Resource created successfully",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/SuccessResponse"
+						}
+					}
+				}
+			},
+			"BadRequestResponse": {
+				"description": "Invalid request parameters",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ErrorResponse"
+						}
+					}
+				}
+			},
+			"ValidationErrorResponse": {
+				"description": "Request validation failed",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ValidationErrorResponse"
+						}
+					}
+				}
+			},
+			"UnauthorizedResponse": {
+				"description": "Authentication required",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ErrorResponse"
+						}
+					}
+				}
+			},
+			"ForbiddenResponse": {
+				"description": "Access denied",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ErrorResponse"
+						}
+					}
+				}
+			},
+			"NotFoundResponse": {
+				"description": "Resource not found",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ErrorResponse"
+						}
+					}
+				}
+			},
+			"ServerErrorResponse": {
+				"description": "Internal server error",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ErrorResponse"
+						}
+					}
+				}
+			}
+		}
+	},
+	"security": [
+		{
+			"cookieAuth": []
+		}
+	],
+	"paths": {
+		"/auth/signup": {
+			"post": {
+				"summary": "Register a new user",
+				"description": "Registers a new user using email and password credentials.",
+				"tags": ["Auth"],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignUpRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/CreatedResponse"
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/login": {
+			"post": {
+				"summary": "Authenticate a user",
+				"description": "Authenticates a user using email and password and issues authentication cookies.",
+				"tags": ["Auth"],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/LoginRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/OkResponse"
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/me": {
+			"get": {
+				"summary": "Get authenticated user context",
+				"description": "Returns the authenticated user's identity, profile summary, permissions, and authentication metadata.",
+				"tags": ["Auth"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Authenticated user context retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/AuthMeResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/logout": {
+			"delete": {
+				"summary": "Logout current user",
+				"description": "Invalidates the current authenticated session and clears authentication cookies.",
+				"tags": ["Auth"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "Logout successful"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/refresh-token": {
+			"post": {
+				"summary": "Refresh access token",
+				"description": "Issues a new access token using a valid refresh token.",
+				"tags": ["Auth"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/OkResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/csrf-token": {
+			"get": {
+				"summary": "Issue CSRF token",
+				"description": "Returns a CSRF token used to protect state-changing requests in cookie-based authentication flows.",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "CSRF token issued",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/CsrfTokenResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/google": {
+			"get": {
+				"summary": "Initiate Google OAuth authentication",
+				"description": "Redirects the user to Google's OAuth consent screen.",
+				"tags": ["Auth"],
+				"responses": {
+					"302": {
+						"description": "Redirect to Google OAuth consent screen"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/google/callback": {
+			"get": {
+				"summary": "Google OAuth callback",
+				"description": "Handles Google's OAuth callback, authenticates the user, and redirects to the frontend.",
+				"tags": ["Auth"],
+				"responses": {
+					"302": {
+						"description": "Redirect to frontend after successful authentication"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/facebook": {
+			"get": {
+				"summary": "Initiate Facebook OAuth authentication",
+				"description": "Redirects the user to Facebook's OAuth consent screen.",
+				"tags": ["Auth"],
+				"responses": {
+					"302": {
+						"description": "Redirect to Facebook OAuth consent screen"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/auth/facebook/callback": {
+			"get": {
+				"summary": "Facebook OAuth callback",
+				"description": "Handles Facebook's OAuth callback, authenticates the user, and redirects to the frontend.",
+				"tags": ["Auth"],
+				"responses": {
+					"302": {
+						"description": "Redirect to frontend after successful authentication"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/bags": {
+			"get": {
+				"summary": "Get user bags",
+				"description": "Returns a paginated list of bags belonging to the authenticated user with filtering, ordering, and pagination support.",
+				"tags": ["Bags"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "pagination",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/Pagination"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BagFilter"
+						}
+					},
+					{
+						"in": "query",
+						"name": "order",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BagOrderBy"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Bags fetched successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/BagListResponseData"
+												},
+												"meta": {
+													"$ref": "#/components/schemas/PaginationMeta"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"post": {
+				"summary": "Create a bag",
+				"description": "Creates a new bag along with its backing container.",
+				"tags": ["Bags"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateBagRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Bag created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/BagSingleResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/bags/{id}": {
+			"get": {
+				"summary": "Get bag by ID",
+				"description": "Returns a single bag owned by the authenticated user.",
+				"tags": ["Bags"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Bag fetched successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/BagSingleResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"patch": {
+				"summary": "Update bag",
+				"description": "Partially updates a user-owned bag and its container constraints.",
+				"tags": ["Bags"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateBagRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Bag updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/BagSingleResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"delete": {
+				"summary": "Delete bag",
+				"description": "Deletes a user-owned bag and its backing container.",
+				"tags": ["Bags"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "Bag deleted successfully"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/containers/{id}": {
+			"get": {
+				"summary": "Get container by id",
+				"description": "Retrieves a typed container (Bag or Suitcase) with its full domain representation.",
+				"tags": ["Containers"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Container fetched successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/TypedContainerDTO"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/containers/{id}/state": {
+			"get": {
+				"summary": "Get container state",
+				"description": "Retrieves the full container state including metrics and constraint status.",
+				"tags": ["Containers"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Container state fetched successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ContainerStatusDTO"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/containers/{id}/pack": {
+			"post": {
+				"summary": "Pack item into container",
+				"description": "Adds or increments an item inside a container and returns updated container summary.",
+				"tags": ["Containers"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/PackItemRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Item packed successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ContainerSummaryDTO"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/containers/{id}/unpack": {
+			"post": {
+				"summary": "Unpack item from container",
+				"description": "Removes or decreases quantity of an item from a container and returns updated summary.",
+				"tags": ["Containers"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UnpackItemRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Item unpacked successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ContainerSummaryDTO"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/containers/move": {
+			"post": {
+				"summary": "Move item between containers",
+				"description": "Moves an item from one container to another and returns both updated container summaries.",
+				"tags": ["Containers"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MoveItemRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Item moved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/MoveResultDTO"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/dashboard": {
+			"get": {
+				"summary": "Get dashboard overview",
+				"description": "Returns the full aggregated dashboard overview for the authenticated user.\n\nThis endpoint composes multiple domain datasets into a single optimized payload:\n- Profile onboarding state\n- Item statistics (total & fragile counts)\n- Recent items (latest 5)\n- Item category distribution\n\nDesigned for dashboard initial load to avoid multiple API calls.\n",
+				"tags": ["Dashboard"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Dashboard overview retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/DashboardOverviewData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/items": {
+			"get": {
+				"summary": "Retrieve the authenticated user's items",
+				"description": "Returns a paginated list of items owned by the authenticated user. Supports filtering, ordering, and pagination.",
+				"tags": ["Items"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "pagination",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/Pagination"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ItemFilter"
+						}
+					},
+					{
+						"in": "query",
+						"name": "order",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ItemOrderBy"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Items retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ItemsListResponseData"
+												},
+												"meta": {
+													"$ref": "#/components/schemas/PaginationMeta"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"post": {
+				"summary": "Create a new item",
+				"description": "Creates a new reusable item owned by the authenticated user.",
+				"tags": ["Items"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateItemRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Item created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ItemResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/items/{id}": {
+			"get": {
+				"summary": "Retrieve an item by ID",
+				"description": "Returns a single item owned by the authenticated user.",
+				"tags": ["Items"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Item retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ItemResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"patch": {
+				"summary": "Update an item",
+				"description": "Applies partial updates to a user-owned item.",
+				"tags": ["Items"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateItemRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Item updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ItemResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"delete": {
+				"summary": "Delete an item",
+				"description": "Deletes a user-owned item by ID.",
+				"tags": ["Items"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "Item deleted successfully"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/profiles/me": {
+			"get": {
+				"summary": "Retrieve the authenticated user's profile",
+				"description": "Returns the private profile of the currently authenticated user.",
+				"tags": ["Profiles"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Profile retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/PrivateProfileResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"patch": {
+				"summary": "Update the authenticated user's profile",
+				"description": "Partially updates the profile of the authenticated user. Supports PATCH semantics where only provided fields are updated.",
+				"tags": ["Profiles"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/EditProfileRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Profile updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/PrivateProfileResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/profiles/{id}": {
+			"get": {
+				"summary": "Retrieve a public user profile",
+				"description": "Returns the public-facing profile of a user by profile ID. This endpoint exposes only whitelisted public fields.",
+				"tags": ["Profiles"],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Public profile retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/PublicProfileResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/users": {
+			"get": {
+				"summary": "Retrieve a paginated list of users",
+				"description": "Returns a paginated list of user accounts with optional filtering, searching, and ordering. Intended for administrative use.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "pagination",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/Pagination"
+						}
+					},
+					{
+						"in": "query",
+						"name": "order",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/UserOrderBy"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/UserFilter"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Users retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/UsersListResponseData"
+												},
+												"meta": {
+													"$ref": "#/components/schemas/PaginationMeta"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"post": {
+				"summary": "Create a new user",
+				"description": "Creates a new user account. Intended for administrative provisioning workflows.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUserRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "User created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/UserResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"delete": {
+				"summary": "Bulk delete users",
+				"description": "Deletes multiple users based on optional filtering criteria. Intended for administrative cleanup and moderation workflows.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "filter",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/UserFilter"
+						}
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "Users deleted successfully"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/users/{id}": {
+			"get": {
+				"summary": "Retrieve a user by ID",
+				"description": "Returns a single user account by its unique identifier.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "User retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/UserResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			},
+			"delete": {
+				"summary": "Delete a user by ID",
+				"description": "Deletes a single user account using its unique identifier.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "User deleted successfully"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFoundResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/users/{id}/profile": {
+			"patch": {
+				"summary": "Update a user's profile",
+				"description": "Partially updates profile-related information for a specific user. Does not affect authentication, role, or account status.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateUserProfileRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Profile updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/ProfileResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/users/{id}/status": {
+			"patch": {
+				"summary": "Update a user's operational status",
+				"description": "Updates moderation-related status flags such as activation state and email verification status.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateUserStatusRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User status updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/UserResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		},
+		"/users/{id}/role": {
+			"patch": {
+				"summary": "Change a user's role",
+				"description": "Updates the role assigned to a specific user. Restricted to authorized administrators.",
+				"tags": ["Users"],
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/UuidParam"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChangeUserRoleRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User role updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/SuccessResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/UserResponseData"
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/BadRequestResponse"
+					},
+					"401": {
+						"$ref": "#/components/responses/UnauthorizedResponse"
+					},
+					"403": {
+						"$ref": "#/components/responses/ForbiddenResponse"
+					},
+					"422": {
+						"$ref": "#/components/responses/ValidationErrorResponse"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerErrorResponse"
+					}
+				}
+			}
+		}
+	}
+}
