@@ -1,8 +1,18 @@
-'use client';
-
+import type { Metadata } from 'next';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Luggage01Icon } from '@hugeicons/core-free-icons';
 import OnboardingForm from '@features/profiles/components/forms/OnboardingForm';
+
+export const metadata: Metadata = {
+	title: 'Let’s Get You Ready',
+	description:
+		'Set up your travel preferences in a minute. Beggy will take it from there.',
+	openGraph: {
+		title: 'Let’s Get You Ready | Beggy',
+		description:
+			'A quick setup so your packing stays simple and stress-free.',
+	},
+};
 
 /**
  * OnboardingPage

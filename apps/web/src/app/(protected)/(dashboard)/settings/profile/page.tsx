@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Separator } from '@shared/components/ui/separator';
 import { Skeleton } from '@shared/components/ui/skeleton';
@@ -5,7 +6,7 @@ import ProfileSettings from '@features/profiles/components/settings/ProfileSetti
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function ProfileSettingsPageSkeleton() {
+const ProfileSettingsPageSkeleton = () => {
 	return (
 		<div className="space-y-6">
 			{/* Tab triggers */}
@@ -38,7 +39,13 @@ function ProfileSettingsPageSkeleton() {
 			</div>
 		</div>
 	);
-}
+};
+
+export const metadata: Metadata = {
+	title: 'Your Profile',
+	description:
+		'Manage your personal details and preferences for a smoother travel experience.',
+};
 
 /**
  * ProfileSettingsPage

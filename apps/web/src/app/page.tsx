@@ -1,13 +1,19 @@
+import type { Metadata } from 'next';
 import HomePage from '@features/home/pages/HomePage';
 import HomeFooter from '@features/home/components/layout/HomeFooter';
 import Header from '@shared/layouts/Header';
 
 // ─── Route metadata ───────────────────────────────────────────────────────────
 
-export const metadata = {
-	title: 'Beggy — Your AI-powered packing assistant',
+export const metadata: Metadata = {
+	title: 'Beggy — Pack smarter, travel lighter',
 	description:
-		'Pack smarter with weather-aware AI recommendations. Beggy tells you exactly what to bring for your destination.',
+		'Get simple, weather-aware packing suggestions for your trip. Beggy helps you bring what you need — nothing more.',
+	openGraph: {
+		title: 'Beggy — Pack smarter, travel lighter',
+		description:
+			'A calmer way to prepare for your trip. Know what to pack before you go.',
+	},
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────

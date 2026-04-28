@@ -2,9 +2,12 @@ import type { Metadata } from 'next';
 import { AuthGate } from '@shared/guards';
 
 export const metadata: Metadata = {
-	title: 'Dashboard',
+	title: {
+		default: 'Beggy',
+		template: '%s | Beggy',
+	},
 	description:
-		'Your Beggy dashboard — manage trips, bags, and packing lists.',
+		'Plan your trips, pack smarter, and travel with confidence using Beggy.',
 };
 
 /**

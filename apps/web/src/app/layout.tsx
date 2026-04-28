@@ -24,8 +24,7 @@ export const metadata: Metadata = {
 		default: 'Beggy',
 		template: '%s · Beggy',
 	},
-	description:
-		'AI-powered smart travel packing assistant. Pack smarter, travel lighter.',
+	description: 'Plan your trips, pack smarter, and travel with confidence.',
 };
 
 /**
@@ -61,7 +60,7 @@ export default function RootLayout({
 		<html
 			lang="en"
 			suppressHydrationWarning
-			className={cn('font-serif', 'font-serif', lora.variable)}
+			className={cn('font-serif', lora.variable)}
 		>
 			<body className={`${geistMono.variable} antialiased`}>
 				{/*

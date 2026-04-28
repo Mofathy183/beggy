@@ -2,7 +2,9 @@ import LoginPage from '@features/auth/pages/LoginPage';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-	title: 'Login | Beggy',
+	title: 'Welcome back',
+	description:
+		'Pick up where you left off. Your bags and packing lists are waiting.',
 };
 
 type Props = {
