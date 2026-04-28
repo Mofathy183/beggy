@@ -49,6 +49,8 @@ export type SearchInputProps = {
 	 */
 	description?: string;
 
+	labelClassName?: string;
+
 	/**
 	 * Optional validation error.
 	 */
@@ -70,6 +72,20 @@ export type SearchInputProps = {
 	 * Auto-focus the input on mount.
 	 */
 	autoFocus?: boolean;
+
+	/**
+	 * When to commit the value to the parent.
+	 *
+	 * @remarks
+	 * - `"change"` — debounced, fires on every keystroke (default, existing behavior)
+	 * - `"submit"` — fires only on Enter key or blur
+	 *
+	 * Use `"submit"` inside filter panels with an Apply button
+	 * so the query only fires when the user explicitly applies.
+	 *
+	 * @defaultValue "change"
+	 */
+	commitOn?: 'change' | 'submit';
 };
 
 /**
@@ -88,44 +104,54 @@ const SearchInput = ({
 	placeholder = 'Search…',
 	description,
 	error,
+	labelClassName,
 	debounceMs = 400,
 	isLoading = false,
 	autoFocus = false,
+	commitOn = 'change',
 }: SearchInputProps) => {
 	const id = useId();
 	const [local, setLocal] = useState(value ?? '');
 
-	/**
-	 * Sync when external value changes
-	 * (e.g. filter reset)
-	 */
+	// Sync when external value changes (e.g. filter reset)
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setLocal(value ?? '');
 	}, [value]);
 
-	/**
-	 * Debounced change propagation
-	 */
+	// Debounced propagation — only active in "change" mode
 	useEffect(() => {
+		if (commitOn !== 'change') return;
+
 		const handler = setTimeout(() => {
 			const trimmed = local.trim();
 			onChange(trimmed === '' ? undefined : trimmed);
 		}, debounceMs);
 
 		return () => clearTimeout(handler);
-	}, [local, debounceMs, onChange]);
+	}, [local, debounceMs, onChange, commitOn]);
 
-	/**
-	 * Clear handler
-	 */
+	// Commit helper — used in "submit" mode
+	const commit = () => {
+		const trimmed = local.trim();
+		onChange(trimmed === '' ? undefined : trimmed);
+	};
+
 	const handleClear = () => {
 		setLocal('');
+		// In submit mode, clearing should immediately tell the parent
+		if (commitOn === 'submit') {
+			onChange(undefined);
+		}
 	};
 
 	return (
 		<div className="space-y-1">
 			{/* Accessible label */}
-			<Label htmlFor={id} className="text-sm text-foreground">
+			<Label
+				htmlFor={id}
+				className={cn(labelClassName, 'text-sm text-foreground')}
+			>
 				{label}
 			</Label>
 
@@ -150,8 +176,11 @@ const SearchInput = ({
 								: undefined
 					}
 					onChange={(e) => setLocal(e.target.value)}
+					onBlur={commitOn === 'submit' ? commit : undefined}
 					onKeyDown={(e) => {
 						if (e.key === 'Escape') handleClear();
+						if (e.key === 'Enter' && commitOn === 'submit')
+							commit();
 					}}
 					className={cn(
 						'pl-9 pr-9',
@@ -159,6 +188,7 @@ const SearchInput = ({
 							'border-destructive focus-visible:ring-destructive'
 					)}
 				/>
+
 				{/* Right-side state */}
 				{isLoading ? (
 					<div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin rounded-full border-2 border-foreground/40 border-t-transparent" />

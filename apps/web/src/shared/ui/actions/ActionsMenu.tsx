@@ -65,6 +65,7 @@ const ActionsMenu = ({ items }: ActionsMenuProps) => {
 						variant="ghost"
 						size="icon"
 						aria-label="Open actions menu"
+						onClick={(e) => e.stopPropagation()}
 					>
 						<HugeiconsIcon icon={MoreVertical} className="size-4" />
 					</Button>
@@ -78,9 +79,11 @@ const ActionsMenu = ({ items }: ActionsMenuProps) => {
 
 						<DropdownMenuItem
 							disabled={item.disabled || item.loading}
-							onSelect={(e) => {
-								e.preventDefault();
-								item.onSelect();
+							onClick={(e) => {
+								e.stopPropagation();
+								if (!item.disabled && !item.loading) {
+									item.onSelect();
+								}
 							}}
 							className={cn(
 								item.variant === 'destructive' &&

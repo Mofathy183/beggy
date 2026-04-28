@@ -150,6 +150,7 @@ const ListPagination = ({
 
 					<PaginationItem>
 						<PaginationNext
+							data-testid="pagination-next"
 							onClick={handleNext}
 							aria-disabled={isNextDisabled}
 							tabIndex={isNextDisabled ? -1 : 0}

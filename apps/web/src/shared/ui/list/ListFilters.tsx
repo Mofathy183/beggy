@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@shadcn-ui/card';
 import { Button } from '@shadcn-ui/button';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -29,7 +32,10 @@ type ListFiltersProps<Filter> = {
 	/**
 	 * Filter form controls.
 	 */
-	children: React.ReactNode;
+	children: (
+		draft: Filter,
+		setDraft: (filters: Filter) => void
+	) => React.ReactNode;
 
 	/**
 	 * Optional additional class names.
@@ -45,6 +51,22 @@ const ListFilters = <Filter,>({
 	children,
 	className,
 }: ListFiltersProps<Filter>) => {
+	// Internal draft — completely isolated from the list's filter state
+	const [draft, setDraft] = useState<Filter>(value);
+
+	// Sync draft when parent resets (e.g. onReset clears parent state)
+	useEffect(() => {
+		setDraft(value);
+	}, [value]);
+
+	const handleApply = () => {
+		onApply(draft);
+	};
+
+	const handleReset = () => {
+		onReset(); // parent resets its state → triggers useEffect above → draft syncs
+	};
+
 	return (
 		<Card className={cn(className)}>
 			<CardContent className="space-y-4 p-4">
@@ -56,10 +78,10 @@ const ListFilters = <Filter,>({
 					<span>{title}</span>
 				</div>
 
-				<div className="grid gap-4">{children}</div>
+				<div className="grid gap-4">{children(draft, setDraft)}</div>
 
 				<div className="flex justify-end gap-2 pt-2">
-					<Button variant="ghost" size="sm" onClick={onReset}>
+					<Button variant="ghost" size="sm" onClick={handleReset}>
 						<HugeiconsIcon
 							icon={RotateCcw}
 							className="mr-2 h-4 w-4"
@@ -67,7 +89,7 @@ const ListFilters = <Filter,>({
 						Reset
 					</Button>
 
-					<Button size="sm" onClick={() => onApply(value)}>
+					<Button size="sm" onClick={handleApply}>
 						Apply
 					</Button>
 				</div>

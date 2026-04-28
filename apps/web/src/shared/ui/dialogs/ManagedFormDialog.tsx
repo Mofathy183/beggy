@@ -6,7 +6,12 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
+	DialogDescription,
+	DialogClose,
 } from '@shadcn-ui/dialog';
+import { Button } from '@shadcn-ui/button';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@shadcn-lib';
 
 // ─── Shared dialog styles ─────────────────────────────────────────────────────
@@ -22,9 +27,8 @@ export const DIALOG_SIZE_CLASS = {
 } as const;
 
 export const DIALOG_BASE_CLASS = [
-	'w-full p-0 gap-0 overflow-hidden',
-	'max-h-[90vh]',
-	// Card neutralisation — flattens the Card surface inside the dialog
+	'w-full p-0 gap-0',
+	// Card neutralisation
 	'[&_[data-slot=card]]:border-0',
 	'[&_[data-slot=card]]:shadow-none',
 	'[&_[data-slot=card]]:bg-transparent',
@@ -111,6 +115,8 @@ type ManagedFormDialogProps = {
 	 * @example 'Update role'
 	 */
 	title: string;
+
+	description?: string;
 
 	/**
 	 * Max width of the dialog panel.
@@ -221,6 +227,7 @@ const ManagedFormDialog = ({
 	onOpenChange,
 	form,
 	title,
+	description,
 	size = 'sm',
 	scrollable = true,
 	className,
@@ -233,20 +240,81 @@ const ManagedFormDialog = ({
 				className={cn(
 					...DIALOG_BASE_CLASS,
 					DIALOG_SIZE_CLASS[size],
-					scrollable && DIALOG_SCROLL_CLASS,
+					'[&>button[data-slot=dialog-close]]:hidden',
+					// ── Flex column so header + form fill dialog correctly ──
+					'flex flex-col max-h-[90vh]',
+
+					'[&>form]:flex',
+					'[&>form]:flex-col',
+					'[&>form]:flex-1',
+					'[&>form]:min-h-0',
+
+					// ── Suppress the Card's own chrome — dialog owns the shell ──
+					'**:data-[slot=card-header]:hidden',
+					'**:data-[slot=card]:border-0',
+					'**:data-[slot=card]:shadow-none',
+					'**:data-[slot=card]:bg-transparent',
+					'**:data-[slot=card]:rounded-none',
+					'**:data-[slot=card]:w-full',
+					'**:data-[slot=card]:flex',
+					'**:data-[slot=card]:flex-col',
+					'**:data-[slot=card]:flex-1', // fill remaining space after DialogHeader
+					'**:data-[slot=card]:min-h-0',
+					// ── CardContent scrolls ──
+					scrollable && '**:data-[slot=card-content]:flex-1',
+					scrollable && '**:data-[slot=card-content]:min-h-0',
+					scrollable && '**:data-[slot=card-content]:overflow-y-auto',
+					scrollable &&
+						'**:data-[slot=card-content]:overscroll-contain',
+					// ── CardFooter frozen at bottom ──
+					'**:data-[slot=card-footer]:shrink-0',
+					'**:data-[slot=card-footer]:border-t',
+					'**:data-[slot=card-footer]:border-border',
 					className
 				)}
 			>
-				{/*
-				 * sr-only title — required for screen reader accessibility.
-				 * The dialog must have an accessible name even though the form's
-				 * own CardTitle is the visible heading. Without this, screen
-				 * readers announce the dialog without context.
-				 */}
-				<DialogHeader className="sr-only">
-					<DialogTitle>{title}</DialogTitle>
+				{/* ── Visible header ─────────────────────────────────── */}
+				<DialogHeader
+					className={cn(
+						'flex flex-row items-start justify-between gap-4',
+						'border-b border-border',
+						'px-6 py-4',
+						'shrink-0',
+						'text-start'
+					)}
+				>
+					<div className="flex flex-col gap-0.5 min-w-0">
+						<DialogTitle className="text-base font-semibold text-foreground leading-snug">
+							{title}
+						</DialogTitle>
+						{description && (
+							<DialogDescription className="text-sm text-muted-foreground">
+								{description}
+							</DialogDescription>
+						)}
+					</div>
+
+					{/* Close button — in the header, not floating */}
+					<DialogClose
+						render={
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								data-testid="actions-trigger"
+								className="shrink-0 h-8 w-8 text-muted-foreground hover:text-foreground"
+								aria-label="Close"
+							>
+								<HugeiconsIcon
+									icon={Cancel01Icon}
+									className="h-4 w-4"
+								/>
+							</Button>
+						}
+					/>
 				</DialogHeader>
 
+				{/* ── Form content ─────────────────────────────────────── */}
 				{form(handleCancel)}
 			</DialogContent>
 		</Dialog>

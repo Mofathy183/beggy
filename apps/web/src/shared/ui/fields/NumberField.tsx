@@ -1,6 +1,13 @@
 'use client';
 
-import { Controller, type Control, type FieldErrors } from 'react-hook-form';
+import { useState } from 'react';
+import {
+	Controller,
+	type Control,
+	type FieldErrors,
+	type FieldValues,
+	type Path,
+} from 'react-hook-form';
 
 import { Input } from '@shadcn-ui/input';
 import {
@@ -32,17 +39,15 @@ export type NumberUnitOption = {
 
 // ─── Shared base props ────────────────────────────────────────────────────────
 
-type NumberFieldBaseProps = {
+type NumberFieldBaseProps<TFieldValues extends FieldValues = FieldValues> = {
 	/**
 	 * RHF control from `useForm<T>()`.
-	 * Typed as `any` to keep this component schema-agnostic —
-	 * the caller's TypeScript enforces the correct field names.
+	 * Generic so callers retain full type safety without casting.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	control: Control<any>;
+	control: Control<TFieldValues>;
 
 	/** RHF field name for the numeric value (e.g. "maxWeight") */
-	valueName: string;
+	valueName: Path<TFieldValues>;
 
 	/** Label rendered above the input group */
 	label: string;
@@ -82,48 +87,164 @@ type NumberFieldBaseProps = {
 
 	/** Extra class names forwarded to the outer `<Field>` wrapper. */
 	className?: string;
+
+	/**
+	 * Changing this value remounts <NumberInput>, re-seeding its local
+	 * display state from the current field value.
+	 *
+	 * Pass a value that only changes on intentional external resets —
+	 * e.g. `form.formState.submitCount` — never a value derived from the
+	 * field itself, which would remount on every keystroke and lose focus.
+	 *
+	 * Defaults to 0 (stable — never remounts unless you change it).
+	 */
+	resetKey?: string | number;
 };
 
 // ─── Variant: plain numeric field (no unit) ───────────────────────────────────
 
-type NumberFieldWithoutUnit = NumberFieldBaseProps & {
-	/**
-	 * No unit selector — renders a plain `<Input>` inside the `<Field>` wrapper.
-	 * This is the default variant.
-	 */
-	unit?: never;
-	unitName?: never;
-	unitOptions?: never;
-	unitErrorId?: never;
-};
+type NumberFieldWithoutUnit<TFieldValues extends FieldValues = FieldValues> =
+	NumberFieldBaseProps<TFieldValues> & {
+		/**
+		 * No unit selector — renders a plain `<Input>` inside the `<Field>` wrapper.
+		 * This is the default variant.
+		 */
+		unit?: never;
+		unitName?: never;
+		unitOptions?: never;
+		unitErrorId?: never;
+	};
 
 // ─── Variant: with trailing unit Select ───────────────────────────────────────
 
-type NumberFieldWithUnit = NumberFieldBaseProps & {
-	/**
-	 * When `true`, a `<Select>` is attached to the trailing edge of the input.
-	 * Both controls share a single group border + focus-within ring.
-	 * Requires `unitName`, `unitOptions`, and `unitErrorId`.
-	 */
-	unit: true;
+type NumberFieldWithUnit<TFieldValues extends FieldValues = FieldValues> =
+	NumberFieldBaseProps<TFieldValues> & {
+		/**
+		 * When `true`, a `<Select>` is attached to the trailing edge of the input.
+		 * Both controls share a single group border + focus-within ring.
+		 * Requires `unitName`, `unitOptions`, and `unitErrorId`.
+		 */
+		unit: true;
 
-	/** RHF field name for the unit select (e.g. "weightUnit") */
-	unitName: string;
+		/** RHF field name for the unit select (e.g. "weightUnit") */
+		unitName: Path<TFieldValues>;
 
-	/** Options rendered inside the unit dropdown */
-	unitOptions: NumberUnitOption[];
+		/** Options rendered inside the unit dropdown */
+		unitOptions: NumberUnitOption[];
 
-	/** Stable id for the unit `<FieldError>` element */
-	unitErrorId: string;
-};
+		/** Stable id for the unit `<FieldError>` element */
+		unitErrorId: string;
+	};
 
-export type NumberFieldProps = NumberFieldWithoutUnit | NumberFieldWithUnit;
+export type NumberFieldProps<TFieldValues extends FieldValues = FieldValues> =
+	| NumberFieldWithoutUnit<TFieldValues>
+	| NumberFieldWithUnit<TFieldValues>;
 
 // ─── Type guard ───────────────────────────────────────────────────────────────
 
-function hasUnit(props: NumberFieldProps): props is NumberFieldWithUnit {
+const hasUnit = <T extends FieldValues>(
+	props: NumberFieldProps<T>
+): props is NumberFieldWithUnit<T> => {
 	return props.unit === true;
-}
+};
+
+// ─── Inner input component ────────────────────────────────────────────────────
+
+/**
+ * Controlled input that bridges the gap between HTML inputs (which need a
+ * transient empty string while typing) and RHF/Zod (which expects a number
+ * or undefined).
+ *
+ * Strategy:
+ * - `displayValue` (local string state) is what the <Input> renders.
+ *   Always controlled — Base UI never sees a switch from uncontrolled to
+ *   controlled, silencing the "changing defaultValue" warning.
+ * - `initialValue` seeds displayValue once on mount. The parent passes a
+ *   stable `key` so this component only remounts on a real external reset,
+ *   not on every keystroke — preserving focus while the user types.
+ * - `onChange` updates displayValue immediately (caret never jumps) and
+ *   forwards a parsed number — or undefined — to RHF.
+ * - `onBlur` fires Zod validation at the right UX moment rather than
+ *   mid-keystroke.
+ *
+ * useState is legal here because NumberInput is a proper React component,
+ * not a render callback. That was the root cause of the earlier hook errors.
+ */
+type NumberInputProps = {
+	initialValue: number | undefined | null;
+	onChange: (value: number | undefined) => void;
+	onBlur: () => void;
+	id: string;
+	min?: number;
+	max?: number;
+	step?: number | 'any';
+	placeholder?: string;
+	hasValueError: boolean;
+	ariaDescribedBy?: string;
+	isGrouped: boolean;
+};
+
+const NumberInput = ({
+	initialValue,
+	onChange,
+	onBlur,
+	id,
+	min,
+	max,
+	step,
+	placeholder,
+	hasValueError,
+	ariaDescribedBy,
+	isGrouped,
+}: NumberInputProps) => {
+	const [displayValue, setDisplayValue] = useState<string>(
+		initialValue !== undefined && initialValue !== null
+			? String(initialValue)
+			: ''
+	);
+
+	return (
+		<Input
+			id={id}
+			type="number"
+			min={min}
+			max={max}
+			step={step}
+			inputMode="decimal"
+			placeholder={placeholder}
+			aria-invalid={hasValueError || undefined}
+			aria-describedby={ariaDescribedBy}
+			value={displayValue}
+			onChange={(e) => {
+				const raw = e.target.value;
+				setDisplayValue(raw);
+
+				if (raw === '' || raw === '-') {
+					// Transient mid-edit — hold off Zod validation until blur
+					onChange(undefined);
+				} else {
+					const parsed = Number(raw);
+					onChange(isNaN(parsed) ? undefined : parsed);
+				}
+			}}
+			onBlur={() => {
+				onBlur();
+				if (displayValue === '' || displayValue === '-') {
+					onChange(undefined);
+				}
+			}}
+			className={cn(
+				'[appearance:textfield]',
+				'[&::-webkit-outer-spin-button]:appearance-none',
+				'[&::-webkit-inner-spin-button]:appearance-none',
+				isGrouped && [
+					'flex-1 rounded-none border-0 shadow-none',
+					'focus-visible:ring-0 focus-visible:ring-offset-0',
+				]
+			)}
+		/>
+	);
+};
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
@@ -202,7 +323,9 @@ function hasUnit(props: NumberFieldProps): props is NumberFieldWithUnit {
  * />
  * ```
  */
-const NumberField = (props: NumberFieldProps) => {
+const NumberField = <TFieldValues extends FieldValues = FieldValues>(
+	props: NumberFieldProps<TFieldValues>
+) => {
 	const {
 		control,
 		valueName,
@@ -216,68 +339,47 @@ const NumberField = (props: NumberFieldProps) => {
 		errors,
 		valueErrorId,
 		className,
+		resetKey = 0,
 	} = props;
 
 	const hasValueError = !!errors[valueName];
 	const hasUnitError = hasUnit(props) ? !!errors[props.unitName] : false;
 	const hasError = hasValueError || hasUnitError;
 
-	// IDs
 	const descriptionId = description ? `${valueName}-desc` : undefined;
-
-	// aria-describedby — join description id + error id when both exist
 	const valueAriaDescribedBy =
 		[hasValueError ? valueErrorId : null, descriptionId ?? null]
 			.filter(Boolean)
 			.join(' ') || undefined;
 
-	// ── Shared: value input rendered by Controller ────────────────────────────
 	const renderValueInput = (isGrouped: boolean) => (
 		<Controller
 			name={valueName}
 			control={control}
 			render={({ field }) => (
-				<Input
-					{...field}
+				<NumberInput
+					// key is stable during typing (resetKey doesn't change).
+					// Only changes when the parent bumps resetKey intentionally
+					// (e.g. after form.reset()), which remounts the input and
+					// re-seeds displayValue from the new field.value.
+					key={`${valueName}-${resetKey}`}
+					initialValue={field.value}
+					onChange={field.onChange}
+					onBlur={field.onBlur}
 					id={valueName}
-					type="number"
 					min={min}
 					max={max}
 					step={step}
-					inputMode="decimal"
 					placeholder={placeholder}
-					aria-invalid={hasValueError || undefined}
-					aria-describedby={valueAriaDescribedBy}
-					onChange={(e) =>
-						field.onChange(
-							e.target.value === ''
-								? undefined
-								: Number(e.target.value)
-						)
-					}
-					value={
-						field.value !== undefined && field.value !== null
-							? field.value
-							: ''
-					}
-					className={cn(
-						// Remove browser spin buttons — keyboard ↑/↓ still works
-						'[appearance:textfield]',
-						'[&::-webkit-outer-spin-button]:appearance-none',
-						'[&::-webkit-inner-spin-button]:appearance-none',
-						// When grouped, strip individual border + ring —
-						// the group wrapper owns them
-						isGrouped && [
-							'flex-1 rounded-none border-0 shadow-none',
-							'focus-visible:ring-0 focus-visible:ring-offset-0',
-						]
-					)}
+					hasValueError={hasValueError}
+					ariaDescribedBy={valueAriaDescribedBy}
+					isGrouped={isGrouped}
 				/>
 			)}
 		/>
 	);
 
-	// ── Without unit: plain field ─────────────────────────────────────────────
+	// ── Without unit ──────────────────────────────────────────────────────────
 	if (!hasUnit(props)) {
 		return (
 			<Field data-invalid={hasError || undefined} className={className}>
@@ -313,7 +415,7 @@ const NumberField = (props: NumberFieldProps) => {
 		);
 	}
 
-	// ── With unit: joined input-group ─────────────────────────────────────────
+	// ── With unit ─────────────────────────────────────────────────────────────
 	const { unitName, unitOptions, unitErrorId } = props;
 
 	return (
@@ -327,14 +429,6 @@ const NumberField = (props: NumberFieldProps) => {
 				)}
 			</FieldLabel>
 
-			{/*
-			 * Group wrapper — owns the single shared border + focus-within ring.
-			 * ┌──────────────────────────────┬──────────────────┐
-			 * │  0.0                          │  Kilogram (kg) ▾ │
-			 * └──────────────────────────────┴──────────────────┘
-			 *
-			 * border-destructive when either value or unit field has an error.
-			 */}
 			<div
 				className={cn(
 					'flex overflow-hidden rounded-md border transition-colors',
@@ -342,19 +436,13 @@ const NumberField = (props: NumberFieldProps) => {
 					hasError ? 'border-destructive' : 'border-input'
 				)}
 			>
-				{/* Numeric input — takes all available space */}
 				{renderValueInput(true)}
 
-				{/*
-				 * Vertical divider between input and Select.
-				 * border-s (logical) keeps it RTL-safe.
-				 */}
 				<div
 					aria-hidden="true"
 					className="w-px self-stretch border-s border-input"
 				/>
 
-				{/* Unit Select — fixed width, square start corners, no own border */}
 				<Controller
 					name={unitName}
 					control={control}
@@ -375,11 +463,6 @@ const NumberField = (props: NumberFieldProps) => {
 									'bg-muted/40 hover:bg-muted/60 transition-colors'
 								)}
 							>
-								{/*
-								 * Show the short symbol in the collapsed trigger
-								 * (e.g. "kg") and the full label in the dropdown
-								 * (e.g. "Kilogram (kg)").
-								 */}
 								<SelectValue placeholder="Unit">
 									{unitOptions.find(
 										(opt) => opt.value === field.value
@@ -402,14 +485,12 @@ const NumberField = (props: NumberFieldProps) => {
 				/>
 			</div>
 
-			{/* Optional description — shown below the group */}
 			{description && (
 				<p id={descriptionId} className="text-muted-foreground text-xs">
 					{description}
 				</p>
 			)}
 
-			{/* Value error */}
 			{hasValueError && (
 				<FieldError
 					id={valueErrorId}
@@ -419,7 +500,6 @@ const NumberField = (props: NumberFieldProps) => {
 				/>
 			)}
 
-			{/* Unit error — separate message below value error */}
 			{hasUnitError && (
 				<FieldError
 					id={unitErrorId}

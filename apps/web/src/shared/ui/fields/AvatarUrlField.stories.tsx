@@ -149,6 +149,7 @@ export default meta;
 
 type Story = StoryObj<typeof AvatarUrlField>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function FormWrapper(props: any) {
 	const form = useForm<FormValues>({
 		defaultValues: {

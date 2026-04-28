@@ -167,7 +167,8 @@ const NotFoundState = ({
 				</div>
 
 				<p className="mt-4 text-center text-xs text-muted-foreground/60">
-					Every great trip has a wrong turn. Let's find your way back.
+					Every great trip has a wrong turn. Let&apos;s find your way
+					back.
 				</p>
 			</div>
 		</div>

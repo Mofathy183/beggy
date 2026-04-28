@@ -155,6 +155,7 @@ type Story = StoryObj<typeof NumberField>;
 
 // ─── Shared Render Helper ─────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createForm = (defaultValues: any) => {
 	const form = useForm({
 		defaultValues,

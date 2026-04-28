@@ -151,6 +151,7 @@ const ColorFilter = ({
 	 * (e.g. "Clear all filters" clears `value` to undefined).
 	 */
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setLocal(value ?? '');
 	}, [value]);
 
@@ -290,7 +291,7 @@ const ColorFilter = ({
 							{/* Decorative swatch dot — palette color is intentional here */}
 							<span
 								className={cn(
-									'h-2.5 w-2.5 rounded-full flex-shrink-0',
+									'h-2.5 w-2.5 rounded-full shrink-0',
 									color.bg
 								)}
 								aria-hidden="true"

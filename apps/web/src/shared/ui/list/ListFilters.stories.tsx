@@ -12,6 +12,7 @@ import {
 } from '@shadcn-ui/select';
 import { Label } from '@shadcn-ui/label';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const meta: Meta<typeof ListFilters<any>> = {
 	title: 'UI/List/ListFilters',
 	component: ListFilters,
@@ -116,6 +117,7 @@ It does not own business logic.
 };
 
 export default meta;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Story = StoryObj<typeof ListFilters<any>>;
 
 /**
@@ -134,7 +136,7 @@ export const SearchAndStatus: Story = {
 		return (
 			<ListFilters
 				value={filters}
-				onApply={(f) => console.log('apply', f)}
+				onApply={(_f) => {}}
 				onReset={() => setFilters({ search: '', status: 'all' })}
 			>
 				<div className="grid gap-1">
@@ -193,7 +195,7 @@ export const NumberRange: Story = {
 		return (
 			<ListFilters
 				value={filters}
-				onApply={(f) => console.log('apply', f)}
+				onApply={(_f) => {}}
 				onReset={() => setFilters({ weight: {} })}
 			>
 				<div className="grid grid-cols-2 gap-2">

@@ -3,7 +3,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Badge } from '@shadcn-ui/badge';
 import { cn } from '@shadcn-lib';
-import { Size } from '@beggy/shared/constants';
+import type { Size } from '@beggy/shared/constants';
 import {
 	SIZE_OPTIONS,
 	getEnumShortLabel,

@@ -205,6 +205,8 @@ const Chips = <T extends string | number>(props: ChipsProps<T>) => {
 	const isAtMin =
 		props.mode === 'multiple' && min !== undefined && selectedCount <= min;
 
+	const role = props.mode === 'single' ? 'radio' : 'checkbox';
+
 	return (
 		<div className={cn('flex flex-col gap-3', className)}>
 			{/* =========================
@@ -259,6 +261,7 @@ const Chips = <T extends string | number>(props: ChipsProps<T>) => {
 
 					return (
 						<Chip
+							role={role}
 							key={option.value}
 							label={option.label}
 							icon={option.icon}

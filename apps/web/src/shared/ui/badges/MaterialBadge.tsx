@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Badge } from '@shadcn-ui/badge';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@shadcn-lib';
-import { Material } from '@beggy/shared/constants';
+import type { Material } from '@beggy/shared/constants';
 import {
 	MATERIAL_OPTIONS,
 	getEnumLabel,

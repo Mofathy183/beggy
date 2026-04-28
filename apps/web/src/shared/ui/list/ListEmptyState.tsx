@@ -43,7 +43,7 @@ const ListEmptyState = ({
 	className,
 }: ListEmptyStateProps) => {
 	return (
-		<Card className={cn('w-full', className)}>
+		<Card className={cn('w-full', className)} data-testid="empty-state">
 			<CardContent className="flex flex-col items-center gap-4 py-12 text-center">
 				<div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
 					<HugeiconsIcon

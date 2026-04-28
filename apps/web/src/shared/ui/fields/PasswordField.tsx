@@ -10,8 +10,12 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { Button } from '@shadcn-ui/button';
-import { Field, FieldDescription, FieldError } from '@shadcn-ui/field';
-import { FieldLabel } from '@shadcn-ui/field';
+import {
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldLabel,
+} from '@shadcn-ui/field';
 import { Input } from '@shadcn-ui/input';
 import { cn } from '@/shared/lib/utils';
 
@@ -116,7 +120,7 @@ const VisibilityToggle = ({
 				onToggle();
 			}}
 			className={cn(
-				'absolute end-1 top-1/2 -translate-y-1/2',
+				'absolute inset-e-1 top-1/2 -translate-y-1/2',
 				'h-7 w-7 shrink-0',
 				'text-muted-foreground hover:text-foreground hover:bg-accent'
 			)}

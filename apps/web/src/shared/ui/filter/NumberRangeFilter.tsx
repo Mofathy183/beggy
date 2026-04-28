@@ -15,8 +15,8 @@ import { ChevronDown, Check } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@shadcn-lib';
 
-import { WeightUnit, VolumeUnit } from '@beggy/shared/constants';
-import { NumericEntity, NumericMetric } from '@beggy/shared/types';
+import type { WeightUnit, VolumeUnit } from '@beggy/shared/constants';
+import type { NumericEntity, NumericMetric } from '@beggy/shared/types';
 
 import useNumberRangeFilter from './useNumberRangeFilter';
 

@@ -1,5 +1,5 @@
 import { cn } from '@shadcn-lib';
-import { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
 
@@ -94,13 +94,13 @@ const Chip = ({
 
 	return (
 		<button
+			type="button"
 			/**
 			 * Accessibility:
 			 * - aria-pressed communicates toggle state
 			 * - aria-checked improves clarity in multi-select contexts
 			 * - aria-label ensures assistive tech reads state + label
 			 */
-			aria-checked={selected}
 			disabled={disabled}
 			aria-pressed={selected}
 			aria-label={`${selected ? 'Selected' : 'Not selected'} ${label}`}
@@ -155,9 +155,7 @@ const Chip = ({
 			{...props}
 		>
 			{/* Optional leading icon for semantic reinforcement */}
-			{icon && (
-				<HugeiconsIcon icon={icon} className="size-4 flex-shrink-0" />
-			)}
+			{icon && <HugeiconsIcon icon={icon} className="size-4 shrink-0" />}
 
 			{/* Truncated label prevents layout break in dense filter rows */}
 			<span className="truncate">{label}</span>
@@ -170,7 +168,7 @@ const Chip = ({
 					aria-label={`Remove ${label}`}
 					className={cn(
 						// Small circular hit target
-						'ml-0.5 flex-shrink-0 rounded-full p-0.5 transition-colors',
+						'ml-0.5 shrink-0 rounded-full p-0.5 transition-colors',
 
 						// Subtle hover affordance
 						'hover:bg-foreground/10',

@@ -112,6 +112,7 @@ export default meta;
 
 type Story = StoryObj<typeof ColorFilter>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ControlledTemplate = (args: any) => {
 	const [value, setValue] = useState<string | undefined>(args.value);
 

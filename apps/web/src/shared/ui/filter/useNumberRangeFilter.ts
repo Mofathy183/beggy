@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { NUMBER_CONFIG, WeightUnit, VolumeUnit } from '@beggy/shared/constants';
 import {
+	NUMBER_CONFIG,
+	type WeightUnit,
+	type VolumeUnit,
+} from '@beggy/shared/constants';
+import type {
 	NumericEntity,
 	NumericMetric,
 	NumberFieldConfig,
@@ -9,7 +13,7 @@ import {
 import {
 	WEIGHT_UNIT_META,
 	VOLUME_UNIT_META,
-	UnitMeta,
+	type UnitMeta,
 } from '@shared/ui/mappers';
 
 /**
@@ -102,6 +106,7 @@ type UseNumberRangeFilterResult = {
 	hasUnit: boolean;
 
 	/** Metadata for currently selected unit */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	selectedUnitMeta?: { label: string; symbol: string; value: any };
 
 	/** Indicates if the metric allows only integer values */
@@ -220,9 +225,10 @@ const useNumberRangeFilter = <E extends NumericEntity>({
 	 * Sync internal state when parent value changes.
 	 */
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setMin(value?.min);
 		setMax(value?.max);
-	}, [value]);
+	}, [value?.min, value?.max]);
 
 	//* Precision Logic */
 

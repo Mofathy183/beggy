@@ -1,4 +1,3 @@
-import { OrderDirection } from '@beggy/shared/constants';
 import type { IconSvgElement } from '@hugeicons/react';
 
 import {
@@ -6,6 +5,7 @@ import {
 	ProfileOrderByField,
 	ItemOrderByField,
 	BagOrderByField,
+	OrderDirection,
 } from '@beggy/shared/constants';
 
 type SortValue<E extends string> = {

@@ -362,7 +362,7 @@ const AvatarUrlFieldInner = ({
 							onClick={handleClear}
 							disabled={disabled}
 							className={cn(
-								'absolute end-1 top-1/2 -translate-y-1/2',
+								'absolute inset-e-1 top-1/2 -translate-y-1/2',
 								'h-7 w-7 shrink-0',
 								'text-muted-foreground hover:text-foreground hover:bg-accent'
 							)}
@@ -383,8 +383,8 @@ const AvatarUrlFieldInner = ({
 					role="status"
 					aria-live="polite"
 				>
-					This URL couldn't be loaded as an image. Double-check the
-					link.
+					This URL couldn&apos;t be loaded as an image. Double-check
+					the link.
 				</p>
 			)}
 

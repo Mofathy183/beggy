@@ -80,7 +80,6 @@ export const Interactive: Story = {
 				options={options}
 				value={value}
 				onChange={(next) => {
-					console.log('sort change', next);
 					setValue(next);
 				}}
 			/>
@@ -133,7 +132,7 @@ export const NoValue: Story = {
 	args: {
 		options,
 		value: null,
-		onChange: (next) => console.log(next),
+		onChange: (_next) => {},
 	},
 };
 
@@ -150,7 +149,7 @@ export const DarkMode: Story = {
 			orderBy: 'createdAt',
 			direction: OrderDirection.DESC,
 		},
-		onChange: (next) => console.log(next),
+		onChange: (_next) => {},
 	},
 	render: (args) => (
 		<div className="dark bg-background p-6">
@@ -175,7 +174,7 @@ export const NarrowContainer: Story = {
 			orderBy: 'email',
 			direction: OrderDirection.ASC,
 		},
-		onChange: (next) => console.log(next),
+		onChange: (_next) => {},
 	},
 	render: (args) => (
 		<div className="w-[260px] border p-4">

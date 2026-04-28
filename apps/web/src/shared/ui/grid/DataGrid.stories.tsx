@@ -134,8 +134,9 @@ export const EmptyState: Story = {
 					No items found
 				</div>
 			}
-			children={null}
-		/>
+		>
+			{null}
+		</DataGrid>
 	),
 	parameters: {
 		docs: {
