@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import HeaderUI from './HeaderUI';
-import { AuthMeProfileDTO } from '@beggy/shared/types';
+import type { AuthMeProfileDTO } from '@beggy/shared/types';
 
 const noop = () => {};
 

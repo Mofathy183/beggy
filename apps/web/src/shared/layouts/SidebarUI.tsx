@@ -3,6 +3,10 @@ import {
 	ArrowLeft01Icon,
 	ArrowRight01Icon,
 	Luggage01Icon,
+	DashboardSquare01Icon,
+	Package01Icon,
+	Backpack01Icon,
+	UserGroupIcon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/components/ui/button';
@@ -14,14 +18,9 @@ import {
 } from '@/shared/components/ui/tooltip';
 import { Separator } from '@/shared/components/ui/separator';
 
-import {
-	DashboardSquare01Icon,
-	Package01Icon,
-	UserGroupIcon,
-} from '@hugeicons/core-free-icons';
 import type { IconSvgElement } from '@hugeicons/react';
 import type { Permission } from '@beggy/shared/types';
-import { Action, Scope, Subject } from '@beggy/shared/constants';
+import { Action, Subject, Scope } from '@beggy/shared/constants';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -76,20 +75,31 @@ export const NAV_ITEMS: NavItem[] = [
 		},
 	},
 	{
+		key: 'bags',
+		label: 'Bags',
+		href: '/bags',
+		icon: Backpack01Icon,
+		permission: {
+			action: Action.READ,
+			subject: Subject.BAG,
+			scope: Scope.OWN,
+		},
+	},
+	{
 		key: 'users',
 		label: 'Users',
 		href: '/users',
 		icon: UserGroupIcon,
 		permission: {
-			action: Action.READ,
+			action: Action.MANAGE,
 			subject: Subject.USER,
-			scope: Scope.OWN,
+			scope: Scope.ANY,
 		},
 	},
 ];
 
 export const NAV_GROUPS: Record<string, NavItem['key'][]> = {
-	main: ['dashboard', 'items'],
+	main: ['dashboard', 'items', 'bags'],
 	admin: ['users'],
 };
 
@@ -100,6 +110,10 @@ export interface SidebarUIProps {
 	currentPath: string;
 	isCollapsed: boolean;
 	onToggleCollapse: () => void;
+	/** Mobile drawer open state */
+	isMobileOpen: boolean;
+	/** Close the mobile drawer */
+	onMobileClose: () => void;
 	/** When true, renders a dot on the onboarding nav item */
 	showOnboardingDot: boolean;
 	className?: string;
@@ -163,7 +177,7 @@ const NavLink = ({ item, isActive, isCollapsed }: NavLinkProps) => {
 				{/* Dot when collapsed — anchors to top-right of icon */}
 				{item.showDot && isCollapsed && (
 					<span
-						className="bg-primary border-sidebar absolute -end-1 -top-1 h-2 w-2 rounded-full border"
+						className="bg-primary border-sidebar absolute -inset-e-1 -top-1 h-2 w-2 rounded-full border"
 						aria-label="Action required"
 					/>
 				)}
@@ -286,6 +300,148 @@ const Logo = ({ isCollapsed }: LogoProps) => (
 	</div>
 );
 
+// ─── SidebarPanel — the actual panel, shared between desktop and mobile ───────
+
+interface SidebarPanelProps {
+	navItems: NavItem[];
+	currentPath: string;
+	isCollapsed: boolean;
+	onToggleCollapse: () => void;
+	showOnboardingDot: boolean;
+	/** On mobile the panel is never "collapsed" — always full width */
+	forcedExpanded?: boolean;
+}
+
+const SidebarPanel = ({
+	navItems,
+	currentPath,
+	isCollapsed,
+	onToggleCollapse,
+	showOnboardingDot,
+	forcedExpanded = false,
+}: SidebarPanelProps) => {
+	const collapsed = forcedExpanded ? false : isCollapsed;
+
+	const itemsWithDot = navItems.map((item) =>
+		item.key === 'dashboard' && showOnboardingDot
+			? { ...item, showDot: true }
+			: item
+	);
+
+	const mainItems = itemsWithDot.filter((i) =>
+		NAV_GROUPS.main?.includes(i.key)
+	);
+	const adminItems = itemsWithDot.filter((i) =>
+		NAV_GROUPS.admin?.includes(i.key)
+	);
+
+	return (
+		<aside
+			aria-label="Main navigation"
+			data-collapsed={collapsed}
+			className={cn(
+				'bg-sidebar text-sidebar-foreground',
+				'border-e border-sidebar-border',
+				'flex h-full flex-col',
+				// Width transition applies only on desktop (forcedExpanded = mobile)
+				!forcedExpanded &&
+					'transition-[width] duration-200 ease-in-out',
+				!forcedExpanded && (collapsed ? 'w-16' : 'w-60'),
+				// On mobile the panel always fills the drawer width
+				forcedExpanded && 'w-64',
+				'overflow-hidden'
+			)}
+		>
+			<div className="border-b border-sidebar-border">
+				<Logo isCollapsed={collapsed} />
+			</div>
+
+			<nav
+				aria-label="Dashboard navigation"
+				className="flex flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-3"
+			>
+				<NavGroup
+					label="Main"
+					items={mainItems}
+					currentPath={currentPath}
+					isCollapsed={collapsed}
+				/>
+				{adminItems.length > 0 && (
+					<>
+						{!collapsed && (
+							<Separator
+								className="bg-sidebar-border"
+								aria-hidden="true"
+							/>
+						)}
+						<NavGroup
+							label="Admin"
+							items={adminItems}
+							currentPath={currentPath}
+							isCollapsed={collapsed}
+						/>
+					</>
+				)}
+			</nav>
+
+			{/* Collapse toggle — only on desktop */}
+			{!forcedExpanded && (
+				<div className="border-t border-sidebar-border p-3">
+					{collapsed ? (
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										onClick={onToggleCollapse}
+										aria-label="Expand sidebar"
+										className={cn(
+											'w-full text-sidebar-foreground',
+											'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+										)}
+									>
+										<HugeiconsIcon
+											icon={ArrowRight01Icon}
+											size={16}
+											strokeWidth={1.8}
+											aria-hidden="true"
+										/>
+									</Button>
+								}
+							/>
+							<TooltipContent side="right" sideOffset={8}>
+								Expand sidebar
+							</TooltipContent>
+						</Tooltip>
+					) : (
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={onToggleCollapse}
+							aria-label="Collapse sidebar"
+							className={cn(
+								'w-full justify-start gap-2.5 text-sm font-medium text-sidebar-foreground',
+								'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+							)}
+						>
+							<HugeiconsIcon
+								icon={ArrowLeft01Icon}
+								size={16}
+								strokeWidth={1.8}
+								className="shrink-0"
+								aria-hidden="true"
+							/>
+							<span>Collapse</span>
+						</Button>
+					)}
+				</div>
+			)}
+		</aside>
+	);
+};
+
 // ─── SidebarUI ────────────────────────────────────────────────────────────────
 
 /**
@@ -314,142 +470,58 @@ const SidebarUI = ({
 	currentPath,
 	isCollapsed,
 	onToggleCollapse,
+	isMobileOpen,
+	onMobileClose,
 	showOnboardingDot,
 	className,
 }: SidebarUIProps) => {
-	// Inject showDot onto the dashboard item (the entry point to onboarding)
-	// This keeps NavItem config clean — dot state is not hardcoded in config
-	const itemsWithDot: NavItem[] = navItems.map((item) =>
-		item.key === 'dashboard' && showOnboardingDot
-			? { ...item, showDot: true }
-			: item
-	);
-
-	const mainItems = navItems.filter((i) =>
-		[
-			'dashboard',
-			'suitcases',
-			'bags',
-			'items',
-			'weather',
-			'ai-assistant',
-		].includes(i.key)
-	);
-	const adminItems = itemsWithDot.filter((i) => ['users'].includes(i.key));
-
 	return (
 		<TooltipProvider delay={200}>
-			<aside
-				aria-label="Main navigation"
-				data-collapsed={isCollapsed}
+			{/* ── Desktop sidebar — hidden on mobile ───────────────── */}
+			<div className={cn('hidden md:block h-full', className)}>
+				<SidebarPanel
+					navItems={navItems}
+					currentPath={currentPath}
+					isCollapsed={isCollapsed}
+					onToggleCollapse={onToggleCollapse}
+					showOnboardingDot={showOnboardingDot}
+				/>
+			</div>
+
+			{/* ── Mobile drawer ─────────────────────────────────────── */}
+			{/* Backdrop */}
+			<div
+				aria-hidden="true"
+				onClick={onMobileClose}
 				className={cn(
-					// Sidebar-scoped tokens — never bg-background or bg-card here
-					'bg-sidebar text-sidebar-foreground',
-					'border-e border-sidebar-border',
-					// Full height, flex column
-					'flex h-full flex-col',
-					// Smooth width transition
-					'transition-[width] duration-200 ease-in-out',
-					isCollapsed ? 'w-16' : 'w-60',
-					'overflow-hidden',
-					className
+					'fixed inset-0 z-40 bg-black/50 md:hidden',
+					'transition-opacity duration-200',
+					isMobileOpen
+						? 'opacity-100 pointer-events-auto'
+						: 'opacity-0 pointer-events-none'
 				)}
+			/>
+
+			{/* Drawer panel */}
+			<div
+				className={cn(
+					'fixed inset-y-0 inset-s-0 z-50 md:hidden',
+					'transition-transform duration-200 ease-in-out',
+					isMobileOpen ? 'translate-x-0' : '-translate-x-full',
+					// RTL support — flip translate direction
+					'rtl:translate-x-full rtl:data-[open=true]:translate-x-0'
+				)}
+				data-open={isMobileOpen}
 			>
-				{/* ── Logo ──────────────────────────────────────────────── */}
-				<div className="border-b border-sidebar-border">
-					<Logo isCollapsed={isCollapsed} />
-				</div>
-
-				{/* ── Navigation ────────────────────────────────────────── */}
-				<nav
-					aria-label="Dashboard navigation"
-					className="flex flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-3"
-				>
-					{/* Main group — always present */}
-					<NavGroup
-						label="Main"
-						items={mainItems}
-						currentPath={currentPath}
-						isCollapsed={isCollapsed}
-					/>
-
-					{/* Admin group — only renders when adminItems is non-empty */}
-					{adminItems.length > 0 && (
-						<>
-							{!isCollapsed && (
-								<Separator
-									className="bg-sidebar-border"
-									aria-hidden="true"
-								/>
-							)}
-							<NavGroup
-								label="Admin"
-								items={adminItems}
-								currentPath={currentPath}
-								isCollapsed={isCollapsed}
-							/>
-						</>
-					)}
-				</nav>
-
-				{/* ── Collapse toggle ───────────────────────────────────── */}
-				<div className="border-t border-sidebar-border p-3">
-					{isCollapsed ? (
-						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										onClick={onToggleCollapse}
-										aria-label="Expand sidebar"
-										aria-expanded={false}
-										className={cn(
-											'w-full text-sidebar-foreground',
-											'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-											'focus-visible:outline-sidebar-ring'
-										)}
-									>
-										<HugeiconsIcon
-											icon={ArrowRight01Icon}
-											size={16}
-											strokeWidth={1.8}
-											aria-hidden="true"
-										/>
-									</Button>
-								}
-							/>
-							<TooltipContent side="right" sideOffset={8}>
-								Expand sidebar
-							</TooltipContent>
-						</Tooltip>
-					) : (
-						<Button
-							type="button"
-							variant="ghost"
-							onClick={onToggleCollapse}
-							aria-label="Collapse sidebar"
-							aria-expanded={true}
-							className={cn(
-								'w-full justify-start gap-2.5',
-								'text-sm font-medium text-sidebar-foreground',
-								'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-								'focus-visible:outline-sidebar-ring'
-							)}
-						>
-							<HugeiconsIcon
-								icon={ArrowLeft01Icon}
-								size={16}
-								strokeWidth={1.8}
-								className="shrink-0"
-								aria-hidden="true"
-							/>
-							<span>Collapse</span>
-						</Button>
-					)}
-				</div>
-			</aside>
+				<SidebarPanel
+					navItems={navItems}
+					currentPath={currentPath}
+					isCollapsed={false}
+					onToggleCollapse={onToggleCollapse}
+					showOnboardingDot={showOnboardingDot}
+					forcedExpanded
+				/>
+			</div>
 		</TooltipProvider>
 	);
 };

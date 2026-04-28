@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 import { createElement } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import {
 	CheckmarkCircle02Icon,
 	AlertTriangle,
@@ -24,7 +24,7 @@ const ICON_SIZE = 20;
  * `HugeiconsIcon` ignores width/height classes — size must be passed explicitly.
  * Dual-tone mode is disabled to ensure predictable theming via `currentColor`.
  */
-const createIcon = (icon: any, className: string) =>
+const createIcon = (icon: IconSvgElement, className: string) =>
 	createElement(HugeiconsIcon, {
 		icon,
 		size: ICON_SIZE,

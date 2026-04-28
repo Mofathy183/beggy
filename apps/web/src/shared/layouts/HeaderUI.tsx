@@ -1,9 +1,13 @@
+import Link from 'next/link';
 import {
 	Luggage01Icon,
 	UserCircle02Icon,
 	Settings02Icon,
 	Logout05Icon,
+	DashboardSquare01Icon,
 	ArrowRight01Icon,
+	Menu01Icon,
+	Cancel01Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -32,12 +36,10 @@ export interface HeaderUIProps {
 	 *
 	 * `null`  → guest mode: renders "Log in" + "Sign up" CTAs.
 	 * non-null → authenticated mode: renders user avatar dropdown.
-	 *
-	 * We use AuthMeProfileDTO — not the full ProfileDTO — because the header
-	 * only needs: firstName, lastName, avatarUrl, displayName, city, country.
-	 * Sensitive fields (birthDate, gender, timestamps) never reach this component.
 	 */
 	profile: AuthMeProfileDTO | null;
+
+	onDashboardClick?: () => void;
 
 	/** Fires when "My Profile" in the user dropdown is clicked. */
 	onProfileClick?: () => void;
@@ -54,15 +56,15 @@ export interface HeaderUIProps {
 	/** Fires when the "Sign up" CTA (guest mode only) is clicked. */
 	onSignUpClick?: () => void;
 
+	onMobileMenuToggle?: () => void;
+	isMobileMenuOpen?: boolean;
+
 	/**
 	 * ThemeToggle injected as a render slot.
 	 *
 	 * HeaderUI has zero theme awareness. The existing `<ThemeToggle />`
 	 * already owns next-themes state internally — we inject it here so
 	 * HeaderUI stays a pure, side-effect-free presentational component.
-	 *
-	 * In Header.tsx:
-	 *   <HeaderUI themeToggle={<ThemeToggle />} ... />
 	 */
 	themeToggle: React.ReactNode;
 
@@ -108,7 +110,7 @@ const getShortName = (profile: AuthMeProfileDTO): string =>
 
 interface UserMenuProps extends Pick<
 	HeaderUIProps,
-	'onProfileClick' | 'onSettingsClick' | 'onLogout'
+	'onDashboardClick' | 'onProfileClick' | 'onSettingsClick' | 'onLogout'
 > {
 	profile: AuthMeProfileDTO;
 }
@@ -116,10 +118,17 @@ interface UserMenuProps extends Pick<
 /**
  * Avatar trigger button + dropdown panel for authenticated users.
  *
- * Extracted for readability. Still purely presentational — no hooks.
+ * FIX: `DropdownMenuLabel` is a Base UI Menu.GroupLabel part — it MUST
+ * live inside a `DropdownMenuGroup` (which renders `<Menu.Group>`).
+ * Placing it directly in `DropdownMenuContent` caused:
+ *   "Base UI: MenuGroupRootContext is missing."
+ *
+ * Solution: every `DropdownMenuLabel` is now wrapped in its own
+ * `DropdownMenuGroup` with `asChild` semantics intact.
  */
 const UserMenu = ({
 	profile,
+	onDashboardClick,
 	onProfileClick,
 	onSettingsClick,
 	onLogout,
@@ -172,40 +181,67 @@ const UserMenu = ({
 			<DropdownMenuContent
 				align="end"
 				sideOffset={8}
-				className="w-60 rounded-xl border border-border bg-popover text-popover-foreground shadow-md"
+				className="w-60 rounded-xl border border-border bg-popover p-0 text-popover-foreground shadow-md"
 			>
-				{/* Identity block */}
-				<DropdownMenuLabel className="flex items-center gap-3 p-3">
-					<Avatar className="h-10 w-10 shrink-0 ring-2 ring-border">
-						{profile.avatarUrl && (
-							<AvatarImage
-								src={profile.avatarUrl}
-								alt={fullName}
-							/>
-						)}
-						<AvatarFallback className="bg-primary/12 text-sm font-semibold text-primary">
-							{fallback}
-						</AvatarFallback>
-					</Avatar>
+				{/* ── Identity block ───────────────────────────────────
+				    FIX: DropdownMenuLabel MUST be inside DropdownMenuGroup.
+				    Base UI's MenuLabel part requires the MenuGroup context
+				    provided by DropdownMenuGroup. Without it you get:
+				    "MenuGroupRootContext is missing."
+				─────────────────────────────────────────────────────── */}
+				<DropdownMenuGroup>
+					<DropdownMenuLabel className="flex items-center gap-3 p-3">
+						<Avatar className="h-10 w-10 shrink-0 ring-2 ring-border">
+							{profile.avatarUrl && (
+								<AvatarImage
+									src={profile.avatarUrl}
+									alt={fullName}
+								/>
+							)}
+							<AvatarFallback className="bg-primary/12 text-sm font-semibold text-primary">
+								{fallback}
+							</AvatarFallback>
+						</Avatar>
 
-					<div className="flex min-w-0 flex-col">
-						<span className="truncate text-sm font-semibold leading-tight text-foreground">
-							{fullName}
-						</span>
-
-						{/* City + country — only when both are present */}
-						{profile.city && profile.country && (
-							<span className="mt-0.5 truncate text-xs text-muted-foreground">
-								{profile.city}, {profile.country}
+						<div className="flex min-w-0 flex-col">
+							<span className="truncate text-sm font-semibold leading-tight text-foreground">
+								{fullName}
 							</span>
-						)}
-					</div>
-				</DropdownMenuLabel>
+
+							{/* City + country — only when both are present */}
+							{profile.city && profile.country && (
+								<span className="mt-0.5 truncate text-xs text-muted-foreground">
+									{profile.city}, {profile.country}
+								</span>
+							)}
+						</div>
+					</DropdownMenuLabel>
+				</DropdownMenuGroup>
 
 				<DropdownMenuSeparator className="bg-border" />
 
-				{/* Nav items */}
+				{/* ── Nav items ────────────────────────────────────────── */}
 				<DropdownMenuGroup className="p-1">
+					<DropdownMenuItem
+						onClick={onDashboardClick}
+						className={cn(
+							'flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm',
+							'text-foreground transition-colors',
+							'hover:bg-accent hover:text-accent-foreground',
+							'focus:bg-accent focus:text-accent-foreground'
+						)}
+					>
+						<HugeiconsIcon
+							icon={DashboardSquare01Icon}
+							className="h-4 w-4 shrink-0 text-muted-foreground"
+						/>
+						<span>Dashboard</span>
+						<HugeiconsIcon
+							icon={ArrowRight01Icon}
+							className="ms-auto h-3.5 w-3.5 shrink-0 text-muted-foreground/60"
+						/>
+					</DropdownMenuItem>
+
 					<DropdownMenuItem
 						onClick={onProfileClick}
 						className={cn(
@@ -217,16 +253,12 @@ const UserMenu = ({
 					>
 						<HugeiconsIcon
 							icon={UserCircle02Icon}
-							size={16}
-							strokeWidth={1.8}
-							className="shrink-0 text-muted-foreground"
+							className="h-4 w-4 shrink-0 text-muted-foreground"
 						/>
 						<span>My Profile</span>
 						<HugeiconsIcon
 							icon={ArrowRight01Icon}
-							size={14}
-							strokeWidth={1.8}
-							className="ml-auto shrink-0 text-muted-foreground/60"
+							className="ms-auto h-3.5 w-3.5 shrink-0 text-muted-foreground/60"
 						/>
 					</DropdownMenuItem>
 
@@ -241,23 +273,19 @@ const UserMenu = ({
 					>
 						<HugeiconsIcon
 							icon={Settings02Icon}
-							size={16}
-							strokeWidth={1.8}
-							className="shrink-0 text-muted-foreground"
+							className="h-4 w-4 shrink-0 text-muted-foreground"
 						/>
 						<span>Settings</span>
 						<HugeiconsIcon
 							icon={ArrowRight01Icon}
-							size={14}
-							strokeWidth={1.8}
-							className="ml-auto shrink-0 text-muted-foreground/60"
+							className="ms-auto h-3.5 w-3.5 shrink-0 text-muted-foreground/60"
 						/>
 					</DropdownMenuItem>
 				</DropdownMenuGroup>
 
 				<DropdownMenuSeparator className="bg-border" />
 
-				{/* Logout — soft destructive pattern (§12.7) */}
+				{/* ── Logout — soft destructive (§12.7) ────────────────── */}
 				<div className="p-1">
 					<DropdownMenuItem
 						onClick={onLogout}
@@ -270,9 +298,7 @@ const UserMenu = ({
 					>
 						<HugeiconsIcon
 							icon={Logout05Icon}
-							size={16}
-							strokeWidth={1.8}
-							className="shrink-0"
+							className="h-4 w-4 shrink-0"
 						/>
 						<span>Log out</span>
 					</DropdownMenuItem>
@@ -284,10 +310,7 @@ const UserMenu = ({
 
 // ─── GuestActions ─────────────────────────────────────────────────────────────
 
-interface GuestActionsProps extends Pick<
-	HeaderUIProps,
-	'onLoginClick' | 'onSignUpClick'
-> {}
+type GuestActionsProps = Pick<HeaderUIProps, 'onLoginClick' | 'onSignUpClick'>;
 
 /**
  * "Log in" + "Sign up" rendered when profile is null.
@@ -334,17 +357,17 @@ const GuestActions = ({ onLoginClick, onSignUpClick }: GuestActionsProps) => (
  *
  * Guest layout:
  *   [Logo]  ·····  [ThemeToggle]  │  [Log in]  [Sign up]
- *
- * The ThemeToggle is injected via `themeToggle` (render slot) so this
- * component never touches next-themes directly.
  */
 const HeaderUI = ({
 	profile,
+	onDashboardClick,
 	onProfileClick,
 	onSettingsClick,
 	onLogout,
 	onLoginClick,
 	onSignUpClick,
+	onMobileMenuToggle,
+	isMobileMenuOpen,
 	themeToggle,
 	className,
 }: HeaderUIProps) => {
@@ -366,9 +389,9 @@ const HeaderUI = ({
 			)}
 		>
 			{/* ── Logo ──────────────────────────────────────────────── */}
-			<a
-				href="/dashboard"
-				aria-label="Beggy – go to dashboard"
+			<Link
+				href="/"
+				aria-label="Beggy – go to Home"
 				className={cn(
 					'flex shrink-0 items-center gap-2.5',
 					'text-foreground no-underline',
@@ -377,7 +400,7 @@ const HeaderUI = ({
 					'focus-visible:outline-ring focus-visible:outline-offset-2'
 				)}
 			>
-				{/* Brand mark — luggage icon in primary teal chip */}
+				{/* Brand mark */}
 				<span
 					aria-hidden="true"
 					className={cn(
@@ -387,8 +410,7 @@ const HeaderUI = ({
 				>
 					<HugeiconsIcon
 						icon={Luggage01Icon}
-						size={18}
-						strokeWidth={1.8}
+						className="h-[18px] w-[18px]"
 					/>
 				</span>
 
@@ -396,23 +418,39 @@ const HeaderUI = ({
 				<span className="hidden text-lg font-semibold tracking-tight sm:block">
 					Beggy
 				</span>
-			</a>
+			</Link>
 
-			{/* Spacer — pushes everything right */}
+			{onMobileMenuToggle && (
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon"
+					onClick={onMobileMenuToggle}
+					aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+					aria-expanded={isMobileMenuOpen}
+					aria-controls="mobile-sidebar"
+					className="md:hidden h-9 w-9 text-foreground"
+				>
+					<HugeiconsIcon
+						icon={isMobileMenuOpen ? Cancel01Icon : Menu01Icon}
+						className="h-5 w-5"
+					/>
+				</Button>
+			)}
+
+			{/* Spacer */}
 			<div className="flex-1" aria-hidden="true" />
 
 			{/* ── Right-side actions ────────────────────────────────── */}
 			<div className="flex items-center gap-1">
-				{/* ThemeToggle — always visible, self-contained, injected as slot */}
 				{themeToggle}
 
-				{/* Visual separator between theme and user identity */}
 				<span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
 
-				{/* Authenticated → UserMenu | Guest → Log in + Sign up */}
 				{isAuthenticated ? (
 					<UserMenu
 						profile={profile}
+						onDashboardClick={onDashboardClick}
 						onProfileClick={onProfileClick}
 						onSettingsClick={onSettingsClick}
 						onLogout={onLogout}

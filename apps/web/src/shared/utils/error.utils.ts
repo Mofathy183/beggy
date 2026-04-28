@@ -5,7 +5,7 @@ import {
 	ErrorSuggestions,
 } from '@beggy/shared/constants';
 import type { HttpClientError } from '@shared/types';
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
+import { type FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 
 // ---------------------------------------------------------------------------
 // Type Guards

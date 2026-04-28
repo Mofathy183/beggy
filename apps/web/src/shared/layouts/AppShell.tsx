@@ -1,3 +1,7 @@
+'use client';
+
+import { useState, useCallback, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { cn } from '@shared/lib/utils';
@@ -51,32 +55,57 @@ const AppShell = ({
 	children,
 	showSidebar = true,
 	className,
-}: AppShellProps) => (
-	<div className="flex h-screen flex-col overflow-hidden bg-background">
-		{/* ── Sticky header — full width ──────────────────────────── */}
-		<Header />
+}: AppShellProps) => {
+	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+	const pathname = usePathname();
 
-		{/* ── Body: sidebar + main content ────────────────────────── */}
-		<div className="flex flex-1 overflow-hidden">
-			{/* Sidebar: fixed height, does not scroll with content */}
-			{showSidebar && <Sidebar />}
+	// Auto-close on navigation
+	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		setIsMobileSidebarOpen(false);
+	}, [pathname]);
 
-			{/* Main content area */}
-			<main
-				role="main"
-				className={cn(
-					'flex-1 overflow-y-auto',
-					// Consistent inner padding — pages can override via className
-					'p-6',
-					// // Background matches page surface
-					// 'bg-background text-foreground',
-					className
+	const handleMobileMenuToggle = useCallback(() => {
+		setIsMobileSidebarOpen((prev) => !prev);
+	}, []);
+
+	const handleMobileClose = useCallback(() => {
+		setIsMobileSidebarOpen(false);
+	}, []);
+
+	return (
+		<div className="flex h-screen flex-col overflow-hidden bg-background">
+			{/* ── Sticky header — full width ──────────────────────────── */}
+			<Header
+				onMobileMenuToggle={
+					showSidebar ? handleMobileMenuToggle : undefined
+				}
+				isMobileMenuOpen={isMobileSidebarOpen}
+			/>
+
+			{/* ── Body: sidebar + main content ────────────────────────── */}
+			<div className="flex flex-1 overflow-hidden">
+				{/* Sidebar: fixed height, does not scroll with content */}
+				{showSidebar && (
+					<Sidebar
+						isMobileOpen={isMobileSidebarOpen}
+						onMobileClose={handleMobileClose}
+					/>
 				)}
-			>
-				{children}
-			</main>
+
+				{/* Main content area */}
+				<main
+					role="main"
+					className={cn(
+						'flex-1 overflow-y-auto p-4 md:p-6',
+						className
+					)}
+				>
+					{children}
+				</main>
+			</div>
 		</div>
-	</div>
-);
+	);
+};
 
 export default AppShell;

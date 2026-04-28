@@ -13,12 +13,18 @@ import type { HttpClientError } from '@shared/types';
 // ─── Route constants ───────────────────────────────────────────────────────────
 
 const ROUTES = {
-	settings: '/dashboard/settings/profile',
+	settings: '/settings/profile',
+	dashboard: '/dashboard',
 	login: '/login',
 	signup: '/signup',
 } as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
+
+interface HeaderProps {
+	onMobileMenuToggle?: () => void;
+	isMobileMenuOpen?: boolean;
+}
 
 /**
  * Smart container for the Beggy app header.
@@ -47,7 +53,7 @@ const ROUTES = {
  * When the user is unauthenticated, `data` is undefined → `profile` is null
  * → HeaderUI renders in guest mode automatically.
  */
-const Header = () => {
+const Header = ({ onMobileMenuToggle, isMobileMenuOpen }: HeaderProps) => {
 	const router = useRouter();
 
 	// ── Profile from RTK Query cache ────────────────────────────────────
@@ -67,14 +73,10 @@ const Header = () => {
 	// resets RTK Query cache, then redirects to /login.
 	const logout = useLogout();
 
-	const onLogout = useCallback(async () => {
-		await logout({
-			onSuccess: (message) => {
-				notify.success({ message });
-			},
-			onError: (error) => {
-				notify.error.fromHttp(error as HttpClientError);
-			},
+	const onLogout = useCallback(() => {
+		void logout({
+			onSuccess: (message) => notify.success({ message }),
+			onError: (error) => notify.error.fromHttp(error as HttpClientError),
 		});
 	}, [logout]);
 
@@ -90,6 +92,10 @@ const Header = () => {
 		router.push(ROUTES.settings);
 	}, [router]);
 
+	const handleDashboardClick = useCallback(() => {
+		router.push(ROUTES.dashboard);
+	}, [router]);
+
 	const handleLoginClick = useCallback(() => {
 		router.push(ROUTES.login);
 	}, [router]);
@@ -103,11 +109,14 @@ const Header = () => {
 	return (
 		<HeaderUI
 			profile={profile}
+			onDashboardClick={handleDashboardClick}
 			onProfileClick={handleProfileClick}
 			onSettingsClick={handleSettingsClick}
 			onLogout={onLogout}
 			onLoginClick={handleLoginClick}
 			onSignUpClick={handleSignUpClick}
+			onMobileMenuToggle={onMobileMenuToggle}
+			isMobileMenuOpen={isMobileMenuOpen}
 			themeToggle={<ThemeToggle />}
 		/>
 	);

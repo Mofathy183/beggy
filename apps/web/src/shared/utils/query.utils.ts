@@ -1,38 +1,38 @@
-import { PaginationParams } from '@beggy/shared/types';
 import type { FetchArgs } from '@reduxjs/toolkit/query/react';
+import type { PaginationParams } from '@beggy/shared/types';
 
-export const serializeParams = (
-	args: string | FetchArgs
-): string | FetchArgs => {
-	if (typeof args === 'string') return args;
-	if (!args.params) return args;
+type Primitive = string | number | boolean;
+type FlatParams = Record<string, Primitive>;
+type NestedValue = Primitive | NestedObject | NestedValue[];
+type NestedObject = { [key: string]: NestedValue };
 
-	const { filters, orderBy, pagination, ...rest } = args.params as any;
+/**
+ * Flattens nested objects using dot notation.
+ * { volume: { min: 1, max: 5 } } → { 'volume.min': 1, 'volume.max': 5 }
+ */
+const flattenWithDots = (obj: NestedObject, prefix = ''): FlatParams => {
+	return Object.entries(obj).reduce<FlatParams>((acc, [key, value]) => {
+		const fullKey = prefix ? `${prefix}.${key}` : key;
 
-	return {
-		...args,
-		params: {
-			...rest,
+		if (value === null || value === undefined) return acc;
 
-			// ✅ flatten filters
-			...(filters ?? {}),
+		// Serialize Date objects to ISO strings at the network boundary
+		if (value instanceof Date) {
+			acc[fullKey] = value.toISOString();
+			return acc;
+		}
 
-			// ✅ flatten orderBy
-			...(orderBy && {
-				orderBy: orderBy.orderBy,
-				direction: orderBy.direction,
-			}),
+		if (typeof value === 'object' && !Array.isArray(value)) {
+			Object.assign(acc, flattenWithDots(value as NestedObject, fullKey));
+		} else if (!Array.isArray(value)) {
+			acc[fullKey] = value as Primitive;
+		}
 
-			// ✅ flatten pagination
-			...(pagination && {
-				page: pagination.page,
-				limit: pagination.limit,
-			}),
-		},
-	};
+		return acc;
+	}, {});
 };
 
-type FilterInput = Record<string, any>;
+type FilterInput = Record<string, NestedValue>;
 
 type ListParamsInput<F, O> = {
 	filters?: F;
@@ -45,11 +45,16 @@ export const normalizeFilters = <F extends FilterInput>(
 ): F | undefined => {
 	if (!filters) return undefined;
 
-	const cleaned = Object.entries(filters).reduce<Record<string, any>>(
+	const cleaned = Object.entries(filters).reduce<FilterInput>(
 		(acc, [key, value]) => {
 			if (value === undefined || value === null) return acc;
 
-			// strings
+			// Date at the top level — convert to ISO string
+			if (value instanceof Date) {
+				acc[key] = value.toISOString();
+				return acc;
+			}
+
 			if (typeof value === 'string') {
 				const trimmed = value.trim();
 				if (!trimmed) return acc;
@@ -57,14 +62,12 @@ export const normalizeFilters = <F extends FilterInput>(
 				return acc;
 			}
 
-			// arrays
 			if (Array.isArray(value)) {
 				if (value.length === 0) return acc;
 				acc[key] = value;
 				return acc;
 			}
 
-			// objects (dateRange, numberRange)
 			if (typeof value === 'object') {
 				if (Object.keys(value).length === 0) return acc;
 				acc[key] = value;
@@ -80,21 +83,50 @@ export const normalizeFilters = <F extends FilterInput>(
 	return Object.keys(cleaned).length ? (cleaned as F) : undefined;
 };
 
-/**
- * buildListParams
- *
- * Produces API-ready list query params using shared contracts.
- */
 export const buildListParams = <F, O>({
 	filters,
 	orderBy,
 	pagination,
 }: ListParamsInput<F, O>) => {
+	const normalizedFilters = normalizeFilters(filters as FilterInput);
+
 	return {
-		...(normalizeFilters(filters ?? {}) && {
-			filters: normalizeFilters(filters ?? {}),
-		}),
+		...(normalizedFilters && { filters: normalizedFilters }),
 		...(orderBy && { orderBy }),
-		pagination,
+
+		// ✅ CRITICAL: flatten pagination
+		page: pagination.page,
+		limit: pagination.limit,
 	};
+};
+
+export const serializeParams = (
+	args: string | FetchArgs
+): string | FetchArgs => {
+	if (typeof args === 'string') return args;
+	if (!args.params) return args;
+
+	const { filters, orderBy, pagination, ...rest } = args.params as {
+		filters?: FilterInput;
+		orderBy?: { orderBy: string; direction: string };
+		pagination?: PaginationParams;
+		[key: string]: unknown;
+	};
+
+	const normalizedFilters = normalizeFilters(filters);
+
+	const rawParams: FlatParams = {
+		...(rest as FlatParams),
+		...(normalizedFilters ? flattenWithDots(normalizedFilters) : {}),
+		...(orderBy && {
+			orderBy: orderBy.orderBy,
+			direction: orderBy.direction,
+		}),
+		...(pagination && {
+			page: pagination.page != null && pagination.page,
+			limit: pagination.limit != null && pagination.limit,
+		}),
+	};
+
+	return { ...args, params: rawParams };
 };
