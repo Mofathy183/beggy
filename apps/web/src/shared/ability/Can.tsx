@@ -1,13 +1,14 @@
 'use client';
 
-import type { Action, Subject } from '@beggy/shared/constants';
-import { useAbility } from '@/shared/ability';
+import type { Action, Subject, Scope } from '@beggy/shared/constants';
+import { useAbility, type ScopedSubject } from '@shared/ability';
 
 type CanProps = {
 	/** Action to check (e.g. READ, UPDATE, DELETE) */
 	action: Action;
 	/** Subject to check against (e.g. USER, BAG, PROFILE) */
 	subject: Subject;
+	scope: Scope;
 	/** Elements rendered only if permission is granted */
 	children: React.ReactNode;
 };
@@ -28,14 +29,15 @@ type CanProps = {
  * </Can>
  * ```
  */
-const Can = ({ action, subject, children }: CanProps) => {
+const Can = ({ action, subject, scope, children }: CanProps) => {
 	const ability = useAbility();
+	const scopedSubject: ScopedSubject = `${subject}:${scope}`;
 
 	/**
 	 * Hide content entirely when permission is missing.
 	 * Alternative patterns (disable, tooltip) should be handled by callers.
 	 */
-	if (!ability.can(action, subject)) return null;
+	if (!ability.can(action, scopedSubject)) return null;
 
 	return <>{children}</>;
 };

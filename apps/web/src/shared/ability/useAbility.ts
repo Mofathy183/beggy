@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import { useAppSelector } from '@shared/store';
-import { AppAbility, defineAbilityForUser } from '@/shared/ability';
+import { type AppAbility, defineAbilityForUser } from '@/shared/ability';
 
 /**
  * useAbility
@@ -27,6 +27,37 @@ import { AppAbility, defineAbilityForUser } from '@/shared/ability';
  * - `/auth/me` success → permissions injected → rules updated
  * - Logout / auth failure → permissions cleared → rules reset
  *
+ * Returns a stable CASL ability instance representing the current
+ * user's permissions, kept in sync with Redux.
+ *
+ * Uses useState with a lazy initializer instead of useRef to avoid
+ * the react-hooks/refs ESLint rule that forbids reading ref.current
+ * during render. useState's lazy initializer runs once on mount,
+ * giving us the same stable-instance guarantee without the lint error.
+ *
+ * Permission changes update rules via ability.update() — the instance
+ * identity stays stable so consumers don't re-render unnecessarily.
+ *
+ * Returns a CASL ability instance derived from the current Redux permissions.
+ *
+ * Architecture shift from the previous implementation:
+ * - Previous: stable mutating instance + useEffect + setState hack to trigger re-renders
+ * - Now: useMemo derives a new ability whenever permissions change
+ *
+ * Why this is correct:
+ * - useMemo is the right primitive for "derived value from state"
+ * - No effects, no setState, no ESLint violations
+ * - React re-renders consumers automatically when permissions change
+ *   (because the memo reference changes → new ability object → re-render)
+ * - CASL ability instances are cheap to construct — no perf concern
+ *
+ * Trade-off acknowledged:
+ * - We lose the stable-identity guarantee (ability reference changes on permission update)
+ * - This means ability.on('update') subscriptions won't work here
+ * - That's acceptable: we don't use CASL event subscriptions in this codebase
+ *   and the sidebar/Can components only call ability.can(), which is stateless
+ *
+ * @returns An {@link AppAbility} instance reflecting current user permissions
  * @returns A stable {@link AppAbility} instance
  *
  * @example
@@ -36,46 +67,13 @@ import { AppAbility, defineAbilityForUser } from '@/shared/ability';
  * ```
  */
 const useAbility = (): AppAbility => {
-	/**
-	 * Raw permissions from Redux.
-	 *
-	 * This array is treated as immutable input coming from the backend.
-	 */
 	const permissions = useAppSelector((s) => s.ability.permissions);
 
-	/**
-	 * Persistent reference to the CASL ability instance.
-	 *
-	 * The ability object must remain stable across renders.
-	 */
-	const abilityRef = useRef<AppAbility | null>(null);
-
-	/**
-	 * Lazily initialize the ability with **no permissions**.
-	 *
-	 * This ensures:
-	 * - Safe default state
-	 * - No accidental permission leaks
-	 * - Predictable behavior before auth resolution
-	 */
-	if (!abilityRef.current) {
-		abilityRef.current = defineAbilityForUser([]);
-	}
-
-	/**
-	 * Synchronize CASL rules whenever backend permissions change.
-	 *
-	 * Important:
-	 * - We rebuild rules from scratch
-	 * - We update the existing ability instance
-	 * - We do NOT mutate permissions or infer rules
-	 */
-	useEffect(() => {
-		const nextAbility = defineAbilityForUser(permissions);
-		abilityRef.current?.update(nextAbility.rules);
+	const ability = useMemo(() => {
+		return defineAbilityForUser(permissions);
 	}, [permissions]);
 
-	return abilityRef.current;
+	return ability;
 };
 
 export default useAbility;

@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
-import { PaginationMeta, PaginationParams } from '@beggy/shared/types';
+import type { PaginationMeta, PaginationParams } from '@beggy/shared/types';
 import { buildListParams } from '@shared/utils';
+
+type UseQueryOptions = {
+	refetchOnMountOrArgChange?: boolean;
+};
 
 /**
  * Configuration options for {@link useListQuery}.
@@ -17,7 +21,10 @@ type UseListQueryOptions<Data, Filter, OrderBy> = {
 	 * The hook must accept a flat params object and return list data
 	 * along with query lifecycle flags.
 	 */
-	useQuery: (params: Record<string, unknown>) => {
+	useQuery: (
+		params: Record<string, unknown>,
+		options?: UseQueryOptions
+	) => {
 		data?: {
 			data: Data[];
 			meta?: PaginationMeta;
@@ -150,13 +157,15 @@ const useListQuery = <Data, Filter, OrderBy>(
 	 * Changing the page size resets the current page to avoid empty views.
 	 */
 	const updatePagination = (next: Partial<PaginationParams>) => {
-		setPagination((prev) => ({
-			...prev,
-			...next,
-			page: next.limit ? 1 : prev.page,
-		}));
+		setPagination((prev) => {
+			const updated = {
+				...prev,
+				...next,
+				page: next.limit ? 1 : (next.page ?? prev.page),
+			};
+			return updated;
+		});
 	};
-
 	/**
 	 * Replace filters and reset pagination.
 	 */
@@ -184,7 +193,9 @@ const useListQuery = <Data, Filter, OrderBy>(
 		});
 	}, [pagination, filters, orderBy]);
 
-	const query = useQuery(params);
+	const query = useQuery(params, {
+		refetchOnMountOrArgChange: true,
+	});
 
 	const hasData = (query.data?.data?.length ?? 0) > 0;
 

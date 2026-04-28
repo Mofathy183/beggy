@@ -1,4 +1,8 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {
+	createSlice,
+	type PayloadAction,
+	type Reducer,
+} from '@reduxjs/toolkit';
 import type { Permissions } from '@beggy/shared/types';
 
 /**
@@ -55,5 +59,5 @@ const abilitySlice = createSlice({
 	},
 });
 
+export const abilityReducer: Reducer<AbilityState> = abilitySlice.reducer;
 export const { setPermissions, clearPermissions } = abilitySlice.actions;
-export default abilitySlice.reducer;

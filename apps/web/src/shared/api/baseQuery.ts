@@ -3,6 +3,13 @@ import type { BaseQueryFn, FetchArgs } from '@reduxjs/toolkit/query/react';
 import type { HttpClientError } from '@shared/types';
 import { normalizeError, serializeParams } from '@shared/utils';
 import { env } from '@/env';
+import { Mutex } from 'async-mutex';
+
+// ─── Mutex ───────────────────────────────────────────────────────────────────
+// Prevents multiple concurrent 401s from each triggering a separate refresh.
+// Only the first request acquires the lock and refreshes; the rest wait and
+// then retry with the new cookie already set.
+const refreshMutex = new Mutex();
 
 /**
  * Low-level fetch base query.
@@ -90,28 +97,65 @@ export const baseQuery: BaseQueryFn<
 	unknown,
 	HttpClientError
 > = async (args, api, extraOptions) => {
+	// Wait if another request is already refreshing
+	await refreshMutex.waitForUnlock();
+
 	const serializedArgs = serializeParams(args);
-	const result = await rawBaseQuery(serializedArgs, api, extraOptions);
+	let result = await rawBaseQuery(serializedArgs, api, extraOptions);
 
-	/**
-	 * If an error occurred, forward it as-is.
-	 *
-	 * RTK Query relies on this structure to:
-	 * - set `isError`
-	 * - expose `error.status`
-	 * - manage retries and caching
-	 */
-	if (result.error) {
-		const normalized = normalizeError(result.error);
-
-		return { error: normalized };
+	// Not a 401 — return immediately (success or other error)
+	if (!result.error || result.error.status !== 401) {
+		if (result.error) {
+			return { error: normalizeError(result.error) };
+		}
+		return result;
 	}
 
-	/**
-	 * Successful response.
-	 *
-	 * `result.data` will contain the parsed JSON payload
-	 * returned by the backend.
-	 */
-	return result;
+	// ── 401 received — attempt token refresh ─────────────────────────────────
+
+	if (refreshMutex.isLocked()) {
+		// Another request is already refreshing — wait for it, then retry
+		await refreshMutex.waitForUnlock();
+		result = await rawBaseQuery(serializedArgs, api, extraOptions);
+
+		if (result.error) {
+			return { error: normalizeError(result.error) };
+		}
+		return result;
+	}
+
+	// Acquire lock — we are the one refreshing
+	const release = await refreshMutex.acquire();
+
+	try {
+		const refreshResult = await rawBaseQuery(
+			{
+				url: '/auth/refresh-token',
+				method: 'POST',
+			},
+			api,
+			extraOptions
+		);
+
+		if (refreshResult.error) {
+			// Refresh failed (refresh token expired or missing)
+			// Dispatch unauthenticated so UI redirects to login
+			const { setUnauthenticated } =
+				await import('@features/auth/store/auth.slice');
+			api.dispatch(setUnauthenticated());
+			return { error: normalizeError(refreshResult.error) };
+		}
+
+		// Refresh succeeded — retry the original request
+		// The new access token cookie is now set by the server
+		result = await rawBaseQuery(serializedArgs, api, extraOptions);
+
+		if (result.error) {
+			return { error: normalizeError(result.error) };
+		}
+		return result;
+	} finally {
+		// Always release the lock
+		release();
+	}
 };

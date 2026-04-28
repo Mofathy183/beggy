@@ -1,6 +1,6 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, type EnhancedStore } from '@reduxjs/toolkit';
 import { apiSlice } from '@shared/api';
-import { abilityReducer } from '@/shared/ability';
+import { abilityReducer } from '@shared/ability';
 import { authReducer } from '@features/auth/store';
 import { dashboardReducer } from '@features/dashboard/store';
 import { packingReducer } from '@features/packing/store';
@@ -12,7 +12,7 @@ import { packingReducer } from '@features/packing/store';
  * for Next.js App Router to avoid cross-request state leakage
  * and to support streaming / concurrent rendering safely.
  */
-export const makeStore = () => {
+export const makeStore = (): EnhancedStore => {
 	return configureStore({
 		reducer: {
 			[apiSlice.reducerPath]: apiSlice.reducer,
