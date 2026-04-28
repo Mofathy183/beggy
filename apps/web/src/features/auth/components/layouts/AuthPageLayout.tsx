@@ -94,7 +94,7 @@ const BrandPanel = () => (
 		</div>
 
 		{/* ── Logo ────────────────────────────────────────────────── */}
-		<div className="relative z-10 flex items-center gap-3">
+		<Link href="/" className="relative z-10 flex items-center gap-3">
 			<span
 				className={cn(
 					'flex h-10 w-10 items-center justify-center',
@@ -112,7 +112,7 @@ const BrandPanel = () => (
 			<span className="text-xl font-semibold tracking-tight text-primary-foreground">
 				Beggy
 			</span>
-		</div>
+		</Link>
 
 		{/* ── Main brand content ──────────────────────────────────── */}
 		<div className="relative z-10 flex flex-col gap-10">
@@ -177,7 +177,7 @@ const BrandPanel = () => (
 		<div className="relative z-10 flex flex-col gap-2">
 			<Separator className="bg-primary-foreground/15" />
 			<p className="pt-2 text-xs italic leading-relaxed text-primary-foreground/50">
-				"The secret of getting ahead is getting started."
+				&quot;The secret of getting ahead is getting started.&quot;
 				<span className="not-italic font-medium text-primary-foreground/60">
 					{' '}
 					— Mark Twain

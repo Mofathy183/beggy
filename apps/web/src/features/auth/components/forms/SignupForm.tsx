@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthSchema } from '@beggy/shared/schemas';
 import type { SignUpInput } from '@beggy/shared/types';
@@ -10,8 +10,8 @@ import type { HttpClientError } from '@shared/types';
 import { notify } from '@shared/utils';
 
 const SignupForm = () => {
-	const form = useForm<SignUpInput>({
-		resolver: zodResolver(AuthSchema.signUp as any),
+	const form = useForm<SignUpInput, unknown, SignUpInput>({
+		resolver: zodResolver(AuthSchema.signUp) as Resolver<SignUpInput>,
 		defaultValues: {
 			firstName: '',
 			lastName: '',
@@ -26,12 +26,13 @@ const SignupForm = () => {
 	// Clear the server error banner when the user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => {
-			// Reset mutation state to clear the error banner
-			reset;
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			reset();
 		});
-		return () => subscription.unsubscribe();
-	}, [form, error, isLoading]);
+
+		return unsubscribe;
+	}, [form, error, isLoading, reset]);
 
 	const onSubmit: SubmitHandler<SignUpInput> = async (values) => {
 		if (isLoading) return;

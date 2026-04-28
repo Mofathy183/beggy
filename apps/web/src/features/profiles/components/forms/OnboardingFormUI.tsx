@@ -1,8 +1,8 @@
 'use client';
 
-import { Controller, UseFormReturn } from 'react-hook-form';
+import { Controller, type UseFormReturn } from 'react-hook-form';
 import type { CompleteOnboardingInput } from '@beggy/shared/types';
-import { Gender } from '@beggy/shared/constants';
+import type { Gender } from '@beggy/shared/constants';
 import { GENDER_OPTIONS } from '@shared-ui/mappers';
 
 import { Button } from '@shared/components/ui/button';

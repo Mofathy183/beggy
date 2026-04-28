@@ -34,7 +34,7 @@ describe('useRecentItemActions', () => {
 			result.current.onViewAll();
 		});
 
-		expect(pushMock).toHaveBeenCalledWith('/dashboard/items');
+		expect(pushMock).toHaveBeenCalledWith('/items');
 	});
 
 	it('navigates to items page from add item', () => {
@@ -44,7 +44,7 @@ describe('useRecentItemActions', () => {
 			result.current.onAddItem();
 		});
 
-		expect(pushMock).toHaveBeenCalledWith('/dashboard/items');
+		expect(pushMock).toHaveBeenCalledWith('/items');
 	});
 
 	it('navigates to item details page', () => {
@@ -54,7 +54,7 @@ describe('useRecentItemActions', () => {
 			result.current.onEdit('123');
 		});
 
-		expect(pushMock).toHaveBeenCalledWith('/dashboard/items/123');
+		expect(pushMock).toHaveBeenCalledWith('/items/123');
 	});
 
 	it('calls remove mutation', () => {

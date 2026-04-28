@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Badge } from '@shadcn-ui/badge';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@shadcn-lib';
-import { Gender } from '@beggy/shared/constants';
+import type { Gender } from '@beggy/shared/constants';
 import { GENDER_OPTIONS } from '@shared/ui/mappers';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ const GenderBadge = ({
 			className={cn(genderBadgeVariants({ size, gender }), className)}
 		>
 			<HugeiconsIcon
-				icon={options?.icon ?? (undefined as any)}
+				icon={options?.icon ?? undefined}
 				size={iconSize}
 				className="shrink-0"
 			/>

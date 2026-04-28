@@ -182,7 +182,7 @@ export const authApi = apiSlice.injectEndpoints({
 			query: () => '/auth/csrf-token',
 		}),
 	}),
-	overrideExisting: false,
+	overrideExisting: true,
 });
 
 /**

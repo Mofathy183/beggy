@@ -1,4 +1,4 @@
-// src/features/dashboard/hooks/useDashboardOverview.ts
+import { useCallback } from 'react';
 import { useGetDashboardOverviewQuery } from '@features/dashboard/api';
 import type { DashboardOverviewDto } from '@beggy/shared/types';
 
@@ -57,13 +57,17 @@ const useDashboardOverview = (): UseDashboardOverviewResult => {
 	 */
 	const data = response?.data;
 
+	const handleRefresh = useCallback(() => {
+		void refetch();
+	}, [refetch]);
+
 	return {
 		data,
 		isLoading,
 		isFetching,
 		isError,
 		isReady: !isLoading && !isError && data !== undefined,
-		refetch,
+		refetch: handleRefresh,
 	};
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { CompleteOnboardingInput } from '@beggy/shared/types';
@@ -54,8 +54,14 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 		reset: resetMutation,
 	} = useOnboarding({ redirectTo });
 
-	const form = useForm<CompleteOnboardingInput>({
-		resolver: zodResolver(ProfileSchema.completeOnboarding as any),
+	const form = useForm<
+		CompleteOnboardingInput,
+		unknown,
+		CompleteOnboardingInput
+	>({
+		resolver: zodResolver(
+			ProfileSchema.completeOnboarding
+		) as Resolver<CompleteOnboardingInput>,
 		defaultValues: {
 			firstName: undefined,
 			lastName: undefined,
@@ -71,8 +77,12 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 	// Clear the server error banner when the user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => resetMutation());
-		return () => subscription.unsubscribe();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			resetMutation();
+		});
+
+		return unsubscribe;
 	}, [form, error, resetMutation]);
 
 	const onSubmit: SubmitHandler<CompleteOnboardingInput> = async (values) => {
@@ -100,7 +110,7 @@ const OnboardingForm = ({ redirectTo }: OnboardingFormProps) => {
 				});
 			},
 		});
-	}, [skip, error]);
+	}, [skip]);
 
 	return (
 		<OnboardingFormUI

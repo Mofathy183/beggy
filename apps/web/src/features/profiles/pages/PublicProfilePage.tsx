@@ -11,6 +11,7 @@ import { Button } from '@shadcn-ui/button';
 import { Separator } from '@shadcn-ui/separator';
 import { cn } from '@shadcn-lib';
 import type { PublicProfileDTO } from '@beggy/shared/types';
+import type { HttpClientError } from '@shared/types';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ const PublicProfileContent = ({ profile }: { profile: PublicProfileDTO }) => {
 				)}
 			>
 				{/* Subtle tinted banner strip */}
-				<div className="h-20 bg-gradient-to-r from-primary/8 via-primary/5 to-transparent" />
+				<div className="h-20 bg-linear-to-r from-primary/8 via-primary/5 to-transparent" />
 
 				{/* Avatar — overlaps banner with negative margin */}
 				<div className="-mt-10 flex flex-col items-center px-6 pb-6">
@@ -164,7 +165,7 @@ const PublicProfilePage = ({ userId }: PublicProfilePageProps) => {
 	if (isError || !data?.data) {
 		return (
 			<ProfileErrorState
-				message={(error as any)?.body?.message}
+				message={(error as HttpClientError)?.body?.message}
 				onRetry={refetch}
 			/>
 		);

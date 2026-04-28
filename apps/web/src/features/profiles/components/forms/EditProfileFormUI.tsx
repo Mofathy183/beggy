@@ -1,8 +1,8 @@
 'use client';
 
-import { Controller, UseFormReturn } from 'react-hook-form';
+import { Controller, type UseFormReturn } from 'react-hook-form';
 import type { EditProfileInput } from '@beggy/shared/types';
-import { Gender } from '@beggy/shared/constants';
+import type { Gender } from '@beggy/shared/constants';
 import { GENDER_OPTIONS, getEnumLabel } from '@shared-ui/mappers';
 
 import { Button } from '@shared/components/ui/button';
@@ -240,7 +240,7 @@ const EditProfileFormUI = ({
 													<SelectValue placeholder="Select gender">
 														{getEnumLabel<Gender>(
 															GENDER_OPTIONS,
-															field.value as any
+															field.value as Gender
 														)}
 													</SelectValue>
 												</SelectTrigger>

@@ -158,7 +158,12 @@ const LoginFormUI = ({
 		</FieldGroup>
 
 		{/* ── Submit ────────────────────────────────────────────────── */}
-		<Button type="submit" className="w-full" disabled={isSubmitting}>
+		<Button
+			id="login-submit"
+			type="submit"
+			className="w-full"
+			disabled={isSubmitting}
+		>
 			{isSubmitting ? 'Signing in...' : 'Sign in'}
 		</Button>
 	</form>

@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import type { PayloadAction, Reducer } from '@reduxjs/toolkit';
 import type { RootState } from '@shared/store/store';
 
 export interface DashboardState {
@@ -38,4 +38,4 @@ export const selectShowOnboardingIndicator = (state: RootState) =>
 	state.dashboard.onboardingCompleted === false &&
 	!state.dashboard.nudgeDismissed;
 
-export default dashboardSlice.reducer;
+export const dashboardReducer: Reducer<DashboardState> = dashboardSlice.reducer;

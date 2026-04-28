@@ -81,7 +81,7 @@ const DashboardPage = () => {
 							Dashboard
 						</h1>
 						<p className="text-muted-foreground mt-1 text-sm">
-							Here's what's in your travel library.
+							Here&apos;s what&apos;s in your travel library.
 						</p>
 					</>
 				)}
@@ -109,7 +109,7 @@ const DashboardPage = () => {
 				onViewAll={onViewAll}
 				onAddItem={onAddItem}
 				onEdit={onEdit}
-				onDelete={handleDelete}
+				onDelete={(id) => void handleDelete(id)}
 			/>
 		</section>
 	);

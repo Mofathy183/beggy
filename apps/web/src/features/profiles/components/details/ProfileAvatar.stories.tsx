@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import ProfileAvatar from './ProfileAvatar';
-import { ProfileDTO } from '@beggy/shared/types';
+import type { ProfileDTO } from '@beggy/shared/types';
 
 const MOCK_PROFILE: ProfileDTO = {
 	id: '1',

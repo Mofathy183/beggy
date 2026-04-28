@@ -17,7 +17,7 @@ import { format, parseISO } from 'date-fns';
 import type { ProfileDTO } from '@beggy/shared/types';
 import { ProfileAvatar } from '@features/profiles/components/details';
 import { GenderBadge } from '@features/profiles/components/badges';
-import { Gender } from '@beggy/shared/constants';
+import type { Gender } from '@beggy/shared/constants';
 
 // ─── MetaRow sub-component ────────────────────────────────────────────────────
 // A single metadata line: icon chip + label + value.

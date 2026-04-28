@@ -15,8 +15,8 @@ export interface UseRecentItemActionsResult {
 // (protected)/(dashboard)/ route group in the App Router.
 
 const ROUTES = {
-	items: '/dashboard/items',
-	itemDetail: (id: string) => `/dashboard/items/${id}`,
+	items: '/items',
+	itemDetail: (id: string) => `/items/${id}`,
 } as const;
 
 /**
@@ -67,7 +67,7 @@ const useRecentItemActions = (): UseRecentItemActionsResult => {
 	 * Delegates to {@link useItemActions.remove}.
 	 * Error handling and user feedback are handled by the caller.
 	 */
-	const onDelete = useCallback((id: string) => remove(id), [remove]);
+	const onDelete = useCallback((id: string) => void remove(id), [remove]);
 
 	return {
 		onViewAll,

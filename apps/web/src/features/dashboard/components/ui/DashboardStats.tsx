@@ -1,6 +1,6 @@
 'use client';
 
-import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import {
 	Package01Icon,
 	Alert02Icon,

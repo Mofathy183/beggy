@@ -91,6 +91,7 @@ type Story = StoryObj<typeof EditProfileFormUI>;
 /* Controlled Form Wrapper                                                    */
 /* -------------------------------------------------------------------------- */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ControlledRender = (args: any) => {
 	const form = useForm<EditProfileInput>({
 		defaultValues: {

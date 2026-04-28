@@ -10,7 +10,7 @@ import { cn } from '@shadcn-lib';
 import type { ProfileDTO } from '@beggy/shared/types';
 import { ProfileAvatar } from '@features/profiles/components/details';
 import { GenderBadge } from '@features/profiles/components/badges';
-import { Gender } from '@beggy/shared/constants';
+import type { Gender } from '@beggy/shared/constants';
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 

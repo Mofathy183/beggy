@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { EditProfileInput } from '@beggy/shared/types';
@@ -66,8 +66,10 @@ const EditProfileForm = ({
 		},
 	});
 
-	const form = useForm<EditProfileInput>({
-		resolver: zodResolver(ProfileSchema.editProfile as any),
+	const form = useForm<EditProfileInput, unknown, EditProfileInput>({
+		resolver: zodResolver(
+			ProfileSchema.editProfile
+		) as Resolver<EditProfileInput>,
 		defaultValues: {
 			firstName: defaultValues.firstName ?? undefined,
 			lastName: defaultValues.lastName ?? undefined,
@@ -82,8 +84,12 @@ const EditProfileForm = ({
 	// Clear the server error banner when the user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => resetMutation());
-		return () => subscription.unsubscribe();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			resetMutation();
+		});
+
+		return unsubscribe;
 	}, [form, error, resetMutation]);
 
 	const onSubmit: SubmitHandler<EditProfileInput> = async (values) => {

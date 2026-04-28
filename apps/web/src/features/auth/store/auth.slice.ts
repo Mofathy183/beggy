@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import type { PayloadAction, Reducer } from '@reduxjs/toolkit';
+import type { RootState } from '@shared/store';
 import type {
 	AuthMeDTO,
 	AuthMeUserDTO,
@@ -135,4 +136,21 @@ export const {
 	clearAuthError,
 } = authSlice.actions;
 
-export default authSlice.reducer;
+/**
+ * Selects the authenticated user identity snapshot.
+ * Returns null when unauthenticated or during bootstrap.
+ */
+export const selectAuthUser = (state: RootState) => state.auth.user;
+
+/**
+ * Selects the current auth status.
+ */
+export const selectAuthStatus = (state: RootState) => state.auth.status;
+
+/**
+ * True only when bootstrap has completed and user is authenticated.
+ */
+export const selectIsAuthenticated = (state: RootState) =>
+	state.auth.status === 'authenticated';
+
+export const authReducer: Reducer<AuthState> = authSlice.reducer;

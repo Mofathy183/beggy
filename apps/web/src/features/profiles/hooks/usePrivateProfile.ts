@@ -27,7 +27,7 @@ export interface UsePrivateProfileResult {
 	 */
 	error: HttpClientError | null;
 	/** Re-trigger the query — wire to "Try again" buttons */
-	refetch: () => void;
+	refetch: () => Promise<void>;
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
