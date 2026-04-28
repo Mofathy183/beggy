@@ -4,133 +4,198 @@ import {
 	type Action as PrismaAction,
 	type Scope as PrismaScope,
 	type Subject as PrismaSubject,
+	ContainerType,
+	Material,
+	ItemCategory,
+	WeightUnit,
+	VolumeUnit,
+	BagType,
+	Size,
 } from '@prisma-generated/enums';
 import type { PermissionCreateManyInput } from '@prisma-generated/models';
 import { RolePermissions } from '@beggy/shared/constants';
 import type { Permissions } from '@beggy/shared/types';
-// import { faker } from '@faker-js/faker';
-// import {
-// 	ItemCategory,
-// 	BagType,
-// 	BagFeature,
-// 	Size,
-// 	Material,
-// 	SuitcaseType,
-// 	SuitcaseFeature,
-// 	WheelType,
-// 	Gender,
-// } from '../generated/client/index.js';
+import { hashPassword } from '@shared/utils';
+import { truncateAllTables } from '@tests';
 
-// async function main() {
-// 	const size = Object.values(Size);
-// 	const bagType = Object.values(BagType);
-// 	const material = Object.values(Material);
-// 	const bagFeature = Object.values(BagFeature);
-// 	const itemCategory = Object.values(ItemCategory);
-// 	const suitcaseType = Object.values(SuitcaseType);
-// 	const suitcaseFeature = Object.values(SuitcaseFeature);
-// 	const wheels = Object.values(WheelType);
-// 	const gender = Object.values(Gender);
+async function seedVideoData() {
+	console.log('🎬 Seeding video demo data...');
 
-// 	await prisma.user.createManyAndReturn({
-// 		data: Array.from({ length: 10 }, (_, index) => ({
-// 			firstName: faker.person.firstName(),
-// 			lastName: faker.person.lastName(),
-// 			email: faker.internet.email(),
-// 			password: faker.internet.password(),
-// 			gender: faker.helpers.arrayElement(gender),
-// 			birth: faker.date.past(),
-// 			country: faker.location.country(),
-// 			city: faker.location.city(),
-// 			profilePicture: index % 2 ? faker.image.avatar() : undefined,
-// 		})),
-// 	});
+	await truncateAllTables();
 
-// 	await prisma.items.createManyAndReturn({
-// 		data: Array.from({ length: 10 }, () => ({
-// 			name: faker.company.name(),
-// 			category: faker.helpers.arrayElement(itemCategory),
-// 			quantity: faker.number.int({ min: 1, max: 100 }),
-// 			volume: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			weight: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			color: faker.color.human(),
-// 			isFragile: faker.datatype.boolean(),
-// 		})),
-// 	});
+	// ── 1. User + Account + Profile ──────────────────────────────────────────
+	const user = await prisma.user.create({
+		data: {
+			email: 'demo@beggy.dev',
+			role: Role.USER,
+			isActive: true,
+			isEmailVerified: true,
 
-// 	await prisma.bags.createManyAndReturn({
-// 		data: Array.from({ length: 10 }, () => ({
-// 			name: faker.company.name(),
-// 			type: faker.helpers.arrayElement(bagType),
-// 			color: faker.color.human(),
-// 			size: faker.helpers.arrayElement(size),
-// 			capacity: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			maxWeight: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			weight: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			material: faker.helpers.arrayElement(material),
-// 			features: [faker.helpers.arrayElement(bagFeature)],
-// 		})),
-// 	});
+			account: {
+				create: {
+					authProvider: 'LOCAL',
+					hashedPassword: await hashPassword('Demo1234!'), // use your existing hash util
+				},
+			},
 
-// 	await prisma.suitcases.createManyAndReturn({
-// 		data: Array.from({ length: 10 }, () => ({
-// 			name: faker.company.name(),
-// 			brand: faker.commerce.productName(),
-// 			type: faker.helpers.arrayElement(suitcaseType),
-// 			color: faker.color.human(),
-// 			size: faker.helpers.arrayElement(size),
-// 			capacity: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			maxWeight: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			weight: Number(
-// 				parseFloat(
-// 					faker.number.float({ min: 1.5, max: 15, precision: 0.1 })
-// 				).toFixed(2)
-// 			),
-// 			material: faker.helpers.arrayElement(material),
-// 			features: [faker.helpers.arrayElement(suitcaseFeature)],
-// 			wheels: faker.helpers.arrayElement(wheels),
-// 		})),
-// 	});
+			profile: {
+				create: {
+					firstName: 'Alex',
+					lastName: 'Demo',
+					onboardingCompleted: true,
+				},
+			},
+		},
+	});
 
-// 	console.log('✅ Database seeded successfully!');
-// }
+	console.log(`✅ User created: ${user.email}`);
 
-// await main()
-// 	.catch((e) => {
-// 		console.error(e);
-// 		process.exit(1);
-// 	})
-// 	.finally(async () => {
-// 		await prisma.$disconnect();
-// 	});
+	// ── 2. Items ─────────────────────────────────────────────────────────────
+	// Use specific values so the video shows clean readable numbers
+
+	const items = await prisma.item.createManyAndReturn({
+		data: [
+			{
+				userId: user.id,
+				name: 'Laptop',
+				category: ItemCategory.ELECTRONICS,
+				weight: 1.8,
+				weightUnit: WeightUnit.KILOGRAM,
+				volume: 3.5,
+				volumeUnit: VolumeUnit.LITER,
+				isFragile: true,
+				color: 'silver',
+			},
+			{
+				userId: user.id,
+				name: 'T-Shirt',
+				category: ItemCategory.CLOTHING,
+				weight: 0.2,
+				weightUnit: WeightUnit.KILOGRAM,
+				volume: 0.5,
+				volumeUnit: VolumeUnit.LITER,
+				isFragile: false,
+				color: 'white',
+			},
+			{
+				userId: user.id,
+				name: 'Running Shoes',
+				category: ItemCategory.CLOTHING,
+				weight: 0.8,
+				weightUnit: WeightUnit.KILOGRAM,
+				volume: 2.0,
+				volumeUnit: VolumeUnit.LITER,
+				isFragile: false,
+				color: 'black',
+			},
+			{
+				userId: user.id,
+				name: 'Toiletry Kit',
+				category: ItemCategory.ACCESSORIES,
+				weight: 0.5,
+				weightUnit: WeightUnit.KILOGRAM,
+				volume: 1.0,
+				volumeUnit: VolumeUnit.LITER,
+				isFragile: false,
+				color: 'blue',
+			},
+			{
+				userId: user.id,
+				name: 'Water Bottle',
+				category: ItemCategory.FOOD,
+				weight: 0.3,
+				weightUnit: WeightUnit.KILOGRAM,
+				volume: 0.75,
+				volumeUnit: VolumeUnit.LITER,
+				isFragile: false,
+				color: 'gray',
+			},
+		],
+	});
+
+	console.log(`✅ ${items.length} items created`);
+
+	// ── 3. Bags (via service-layer shape — container created by Prisma nested write) ──
+
+	const mainBag = await prisma.$transaction(async (tx) => {
+		const container = await tx.container.create({
+			data: {
+				type: ContainerType.BAG,
+				userId: user.id,
+				maxCapacity: 30,
+				maxWeight: 15,
+				emptyWeight: 1.2,
+			},
+		});
+
+		return await tx.bag.create({
+			data: {
+				containerId: container.id,
+				userId: user.id,
+				name: 'Travel Backpack',
+				type: BagType.BACKPACK,
+				size: Size.MEDIUM,
+				color: 'black',
+				material: Material.CANVAS,
+			},
+			include: { container: true },
+		});
+	});
+
+	const destinationBag = await prisma.$transaction(async (tx) => {
+		const container = await tx.container.create({
+			data: {
+				type: ContainerType.BAG,
+				userId: user.id,
+				maxCapacity: 15,
+				maxWeight: 8,
+				emptyWeight: 0.6,
+			},
+		});
+
+		return await tx.bag.create({
+			data: {
+				containerId: container.id,
+				userId: user.id,
+				name: 'Day Pack',
+				type: BagType.BACKPACK,
+				size: Size.SMALL,
+				color: 'navy',
+				material: Material.NYLON,
+			},
+			include: { container: true },
+		});
+	});
+
+	console.log(`✅ Bags created: "${mainBag.name}", "${destinationBag.name}"`);
+
+	// ── 4. Pre-pack the main bag with 2 items so it's not empty on camera ───
+
+	await prisma.containerItems.createMany({
+		data: [
+			{
+				containerId: mainBag.containerId,
+				itemId: items[1]?.id as string, // T-Shirt
+				quantity: 3,
+			},
+			{
+				containerId: mainBag.containerId,
+				itemId: items[2]?.id as string, // Running Shoes
+				quantity: 1,
+			},
+		],
+	});
+
+	console.log('✅ Main bag pre-packed with T-Shirts and Running Shoes');
+	console.log('🎬 Demo seed complete. Login: demo@beggy.dev / Demo1234!');
+}
+
+await seedVideoData()
+	.catch((e) => {
+		console.error('❌ Seed failed:', e);
+		process.exit(1);
+	})
+	.finally(() => prisma.$disconnect());
 
 const mapPermissionsToPrisma = (permissions: Permissions) => {
 	return permissions.map((perm) => ({
