@@ -1,6 +1,6 @@
 'use client';
 
-import { Controller, UseFormReturn } from 'react-hook-form';
+import { Controller, type UseFormReturn } from 'react-hook-form';
 import type { ChangeRoleInput } from '@beggy/shared/types';
 
 import { Button } from '@shadcn-ui/button';
@@ -27,7 +27,7 @@ import {
 	SelectValue,
 } from '@shadcn-ui/select';
 import { FormServerError } from '@shared-ui/error';
-import { Role } from '@beggy/shared/constants';
+import type { Role } from '@beggy/shared/constants';
 
 import { ROLE_OPTIONS, getEnumLabel } from '@shared-ui/mappers';
 
@@ -95,7 +95,7 @@ const ChangeRoleFormUI = ({
 			<CardHeader>
 				<CardTitle>Change User Role</CardTitle>
 				<CardDescription>
-					Modify the selected user's access level.
+					Modify the selected user&apos;s access level.
 				</CardDescription>
 			</CardHeader>
 
@@ -151,7 +151,7 @@ const ChangeRoleFormUI = ({
 												<SelectValue placeholder="Select a role">
 													{getEnumLabel<Role>(
 														ROLE_OPTIONS,
-														field.value as any
+														field.value as Role
 													)}
 												</SelectValue>
 											</SelectTrigger>
@@ -179,7 +179,7 @@ const ChangeRoleFormUI = ({
 										{/* Helper text improves clarity and reduces mistakes */}
 										<FieldDescription id={descId}>
 											This will immediately update the
-											user's permissions.
+											user&apos;s permissions.
 										</FieldDescription>
 
 										{/* Field-level validation error */}

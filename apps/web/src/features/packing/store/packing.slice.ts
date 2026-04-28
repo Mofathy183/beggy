@@ -1,6 +1,10 @@
 'use client';
 
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import {
+	createSlice,
+	type PayloadAction,
+	type Reducer,
+} from '@reduxjs/toolkit';
 import type { ContainerType } from '@beggy/shared/constants';
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -56,7 +60,7 @@ const initialState: PackingState = {
 
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
-export const packingSlice = createSlice({
+const packingSlice = createSlice({
 	name: 'packing',
 	initialState,
 	reducers: {
@@ -85,5 +89,4 @@ export const packingSlice = createSlice({
 });
 
 export const { setPackingContext, clearPackingContext } = packingSlice.actions;
-
-export default packingSlice.reducer;
+export const packingReducer: Reducer<PackingState> = packingSlice.reducer;

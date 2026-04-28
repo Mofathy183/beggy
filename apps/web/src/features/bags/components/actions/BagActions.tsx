@@ -1,6 +1,10 @@
 'use client';
 
-import { PencilEdit02Icon, Delete02Icon } from '@hugeicons/core-free-icons';
+import {
+	PencilEdit02Icon,
+	Delete02Icon,
+	ArrowBigRight,
+} from '@hugeicons/core-free-icons';
 
 import ActionsMenu from '@shared-ui/actions/ActionsMenu';
 import type { BagDTO } from '@beggy/shared/types';
@@ -10,6 +14,8 @@ import type { BagDTO } from '@beggy/shared/types';
 type BagActionsProps = {
 	/** The bag this action menu belongs to. */
 	bag: BagDTO;
+
+	onSelect: () => void;
 
 	/** Called when the user selects "Edit" */
 	onEdit: () => void;
@@ -52,6 +58,7 @@ type BagActionsProps = {
  * ```
  */
 const BagActions = ({
+	onSelect,
 	onEdit,
 	onDelete,
 	isUpdating = false,
@@ -60,6 +67,13 @@ const BagActions = ({
 	return (
 		<ActionsMenu
 			items={[
+				{
+					id: 'open',
+					label: 'Open bag',
+					icon: ArrowBigRight,
+					onSelect,
+					disabled: isUpdating || isDeleting,
+				},
 				{
 					id: 'edit',
 					label: 'Edit bag',

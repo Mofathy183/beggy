@@ -3,7 +3,7 @@
 import { cn } from '@shadcn-lib';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { InformationCircleIcon } from '@hugeicons/core-free-icons';
-import { ContainerType } from '@beggy/shared/constants';
+import type { ContainerType } from '@beggy/shared/constants';
 import { PackingTabButton } from '@features/packing/components/button';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────

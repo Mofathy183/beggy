@@ -1,6 +1,6 @@
 'use client';
 
-import { BagFeature } from '@beggy/shared/constants';
+import type { BagFeature } from '@beggy/shared/constants';
 import { BAG_FEATURE_OPTIONS } from '@shared/ui/mappers';
 import { ChipList } from '@shared/ui/chips';
 

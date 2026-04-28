@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import useBagMutations from './useBagMutations';
 import type { CreateBagInput, UpdateBagInput } from '@beggy/shared/types';
 import { SuccessMessages } from '@beggy/shared/constants';
-import { HttpClientError } from '@/shared/types';
+import type { HttpClientError } from '@/shared/types';
 
 /**
  * Optional callbacks executed after a mutation attempt.

@@ -1,4 +1,12 @@
+import { useCallback } from 'react';
 import useUserMutations from './useUserMutations';
+import { notify } from '@shared/utils/notify.utils';
+import type { HttpClientError } from '@shared/types';
+
+type CallbackOptions = {
+	onSuccess?: () => void;
+	onError?: (err: unknown) => void;
+};
 
 /**
  * Domain-level user actions built on top of mutation hooks.
@@ -11,25 +19,44 @@ import useUserMutations from './useUserMutations';
 const useUserActions = () => {
 	const { updateStatus, deleteUser, states } = useUserMutations();
 
-	/**
-	 * Activates a user.
-	 * @param id - Unique user identifier.
-	 */
-	const activate = (id: string) =>
-		updateStatus(id, { isActive: true }).unwrap();
+	const activate = useCallback(
+		async (id: string, callbacks?: CallbackOptions) => {
+			try {
+				await updateStatus(id, { isActive: true }).unwrap();
+				callbacks?.onSuccess?.();
+			} catch (err) {
+				callbacks?.onError?.(err);
+				notify.error.fromHttp(err as HttpClientError);
+			}
+		},
+		[updateStatus]
+	);
 
-	/**
-	 * Deactivates a user.
-	 * @param id - Unique user identifier.
-	 */
-	const deactivate = (id: string) =>
-		updateStatus(id, { isActive: false }).unwrap();
+	const deactivate = useCallback(
+		async (id: string, callbacks?: CallbackOptions) => {
+			try {
+				await updateStatus(id, { isActive: false }).unwrap();
+				callbacks?.onSuccess?.();
+			} catch (err) {
+				callbacks?.onError?.(err);
+				notify.error.fromHttp(err as HttpClientError);
+			}
+		},
+		[updateStatus]
+	);
 
-	/**
-	 * Deletes a user permanently.
-	 * @param id - Unique user identifier.
-	 */
-	const remove = (id: string) => deleteUser(id).unwrap();
+	const remove = useCallback(
+		async (id: string, callbacks?: CallbackOptions) => {
+			try {
+				await deleteUser(id).unwrap();
+				callbacks?.onSuccess?.();
+			} catch (err) {
+				callbacks?.onError?.(err);
+				notify.error.fromHttp(err as HttpClientError);
+			}
+		},
+		[deleteUser]
+	);
 
 	return {
 		activate,
@@ -37,6 +64,9 @@ const useUserActions = () => {
 		remove,
 		isUpdatingStatus: states.updateStatus.isLoading,
 		isDeleting: states.deleteUser.isLoading,
+		isAnyLoading:
+			states.updateStatus.isLoading || states.deleteUser.isLoading,
+		states,
 	};
 };
 

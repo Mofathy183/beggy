@@ -2,7 +2,7 @@
 
 import { ListOrderBy } from '@shared-ui/list';
 import { createBaseSortOptions, ITEM_SORT_OPTIONS } from '@shared-ui/mappers';
-import { ItemOrderByField, OrderDirection } from '@beggy/shared/constants';
+import { ItemOrderByField, type OrderDirection } from '@beggy/shared/constants';
 import type { ItemOrderByInput } from '@beggy/shared/types';
 
 // ─── Options ───────────────────────────────────────────────────────────────────

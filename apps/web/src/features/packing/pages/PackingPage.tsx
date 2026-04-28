@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, Backpack01Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@shadcn-ui/button';
-import { useAppDispatch } from '@shared/store/hooks';
 import { usePackingContext } from '@features/packing/hooks';
-import { clearPackingContext } from '@features/packing/store';
-import { ContainerDetailPage } from '@features/container/pages';
+import { ContainerDetailPage } from '@features/containers/pages';
+import { useGetContainer } from '@features/containers/hooks';
 import { ContainerType } from '@beggy/shared/constants';
+import { Skeleton } from '@shadcn-ui/skeleton';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ const DirectNavFallback = ({ onBack }: { onBack: () => void }) => (
 			<h3 className="text-foreground font-semibold">
 				Open this from your bag or suitcase
 			</h3>
-			<p className="text-muted-foreground text-sm max-w-xs">
+			<p className="text-muted-foreground max-w-xs text-sm">
 				Navigate to a bag or suitcase first, then tap Pack to start
 				packing.
 			</p>
@@ -60,6 +60,28 @@ const DirectNavFallback = ({ onBack }: { onBack: () => void }) => (
 		</Button>
 	</div>
 );
+
+// Matches the skeleton in ContainerDetailPage so there's no layout shift
+const PackingPageSkeleton = () => (
+	<div className="flex flex-col gap-4 p-4">
+		<Skeleton className="h-10 w-48 rounded-lg" />
+		<Skeleton className="h-40 w-full rounded-xl" />
+		<Skeleton className="h-12 w-full rounded-lg" />
+		<Skeleton className="h-12 w-full rounded-lg" />
+	</div>
+);
+
+// ── useSyncExternalStore pattern for client-only guard ───────────────────────
+// subscribe is a no-op because this value never changes after mount.
+// getServerSnapshot always returns false — server never considers itself mounted.
+// getSnapshot returns true — once the client runs JS, it's mounted.
+// This is the React-recommended pattern for "is this running on the client?"
+// and produces zero ESLint warnings because no setState is called in an effect.
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+const useIsClient = () =>
+	useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
@@ -81,46 +103,53 @@ const DirectNavFallback = ({ onBack }: { onBack: () => void }) => (
  */
 const PackingPage = ({ containerId }: PackingPageProps) => {
 	const router = useRouter();
-	const dispatch = useAppDispatch();
 	const context = usePackingContext();
+	const isClient = useIsClient();
 
-	// ── Clear context on unmount ─────────────────────────────────────────────
-	// Prevents stale context if user uses the browser back button and
-	// then navigates to a different bag's packing page.
-	useEffect(() => {
-		return () => {
-			dispatch(clearPackingContext());
-		};
-	}, [dispatch]);
+	const skipFetch = !isClient || context?.containerId === containerId;
 
-	// ── Context mismatch guard ───────────────────────────────────────────────
-	// The URL containerId and the store context containerId must match.
-	// If they don't, the user probably navigated directly or the store
-	// was cleared — show the fallback.
-	const isContextValid =
-		context !== null && context.containerId === containerId;
+	const { container, isLoading } = useGetContainer(containerId, skipFetch);
 
-	if (!isContextValid) {
-		return <DirectNavFallback onBack={() => router.push('/bags')} />;
+	if (!isClient) return <PackingPageSkeleton />;
+
+	// Fast path — Redux context is valid
+	if (context?.containerId === containerId) {
+		const isBag = context.containerType === ContainerType.BAG;
+		return (
+			<ContainerDetailPage
+				containerId={containerId}
+				containerName={context.containerName}
+				containerType={context.containerType}
+				maxWeight={context.maxWeight}
+				maxCapacity={context.maxCapacity}
+				weightUnit={context.weightUnit}
+				capacityUnit={context.capacityUnit}
+				backHref={`/${isBag ? 'bags' : 'suitcases'}/${context.sourceId}`}
+			/>
+		);
 	}
 
-	// ── Build back href ──────────────────────────────────────────────────────
-	// We know the source because ContainerType is in the context.
-	const isBag = context.containerType === ContainerType.BAG;
-	const backHref = `/${isBag ? 'bags' : 'suitcases'}/${context.sourceId}`;
+	// Fallback path — waiting for API
+	if (isLoading) return <PackingPageSkeleton />;
 
-	return (
-		<ContainerDetailPage
-			containerId={containerId}
-			containerName={context.containerName}
-			containerType={context.containerType}
-			maxWeight={context.maxWeight}
-			maxCapacity={context.maxCapacity}
-			weightUnit={context.weightUnit}
-			capacityUnit={context.capacityUnit}
-			backHref={backHref}
-		/>
-	);
+	// Fallback path — API data ready (discriminated union)
+	if (container) {
+		const isBag = container.type === ContainerType.BAG;
+		const dto = container.data; // BagDTO | SuitcaseDTO
+		return (
+			<ContainerDetailPage
+				containerId={containerId}
+				containerName={dto.name}
+				containerType={container.type}
+				maxWeight={dto.maxWeight}
+				maxCapacity={dto.maxCapacity}
+				backHref={`/${isBag ? 'bags' : 'suitcases'}/${dto.id}`}
+			/>
+		);
+	}
+
+	// True fallback — not found
+	return <DirectNavFallback onBack={() => router.push('/bags')} />;
 };
 
 export default PackingPage;

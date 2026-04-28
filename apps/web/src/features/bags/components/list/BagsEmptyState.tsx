@@ -34,6 +34,7 @@ const BagsEmptyState = ({
 	if (hasFilters) {
 		return (
 			<ListEmptyState
+				data-testid="empty-state-filtered"
 				icon={FilterIcon}
 				title="No bags match your filters"
 				description="Try adjusting or clearing your filters to find what you're looking for."
@@ -47,6 +48,7 @@ const BagsEmptyState = ({
 
 	return (
 		<ListEmptyState
+			data-testid="empty-state-initial"
 			icon={Luggage01Icon}
 			title="No bags yet"
 			description="Start packing — add your first bag and begin building your travel kit."

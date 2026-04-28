@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { ItemSchema } from '@beggy/shared/schemas';
@@ -34,6 +34,7 @@ type CreateItemFormProps = {
  * - isFragile: false — matches ItemSchema.create default
  */
 const DEFAULT_VALUES: Partial<CreateItemInput> = {
+	name: '',
 	weightUnit: WeightUnit.KILOGRAM,
 	volumeUnit: VolumeUnit.LITER,
 	color: 'black',
@@ -64,20 +65,22 @@ const CreateItemForm = ({ onSuccess, onCancel }: CreateItemFormProps) => {
 	 */
 	const error = states.create.error as HttpClientError | undefined;
 
-	const form = useForm<CreateItemInput>({
-		resolver: zodResolver(ItemSchema.create as any),
+	const form = useForm<CreateItemInput, unknown, CreateItemInput>({
+		resolver: zodResolver(ItemSchema.create) as Resolver<CreateItemInput>,
 		defaultValues: DEFAULT_VALUES,
+		mode: 'onSubmit',
 	});
 
 	// Clear the server error banner when the user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => {
-			// Reset mutation state to clear the error banner
-			states.create.reset?.();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			states.create.reset();
 		});
-		return () => subscription.unsubscribe();
-	}, [form, error, states.create]);
+
+		return unsubscribe;
+	}, [error, states.create, form]);
 
 	const onSubmit: SubmitHandler<CreateItemInput> = async (values) => {
 		if (isCreating) return;

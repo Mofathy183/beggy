@@ -1,7 +1,7 @@
 'use client';
 
 import type { ChangeRoleInput } from '@beggy/shared/types';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useUserMutations } from '@features/users/hooks';
@@ -64,8 +64,10 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 	 * - Default role improves clarity and prevents empty select state.
 	 * - mode: 'onSubmit' avoids aggressive validation UX.
 	 */
-	const form = useForm<ChangeRoleInput>({
-		resolver: zodResolver(AdminSchema.changeRole as any),
+	const form = useForm<ChangeRoleInput, unknown, ChangeRoleInput>({
+		resolver: zodResolver(
+			AdminSchema.changeRole
+		) as Resolver<ChangeRoleInput>,
 		defaultValues: {
 			role: currentRole,
 		},
@@ -75,11 +77,12 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 	// Clear the server error banner when the user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => {
-			// Reset mutation state to clear the error banner
-			states.changeRole.reset?.();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			states.changeRole.reset();
 		});
-		return () => subscription.unsubscribe();
+
+		return unsubscribe;
 	}, [form, error, states.changeRole]);
 
 	/**
@@ -104,7 +107,7 @@ const ChangeRoleForm = ({ userId, currentRole, onCancel }: Props) => {
 			form.reset(values);
 
 			notify.success({ message });
-		} catch (error: any) {
+		} catch (error: unknown) {
 			notify.error.fromHttp(error as HttpClientError);
 		}
 	};

@@ -2,7 +2,13 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 import BagCard from './BagCard';
 import type { BagDTO } from '@beggy/shared/types';
-import { BagFeature, BagType, Size, Material } from '@beggy/shared/constants';
+import {
+	BagFeature,
+	BagType,
+	Size,
+	Material,
+	ContainerStatus,
+} from '@beggy/shared/constants';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Deterministic Mock Data
@@ -10,6 +16,7 @@ import { BagFeature, BagType, Size, Material } from '@beggy/shared/constants';
 
 const baseBag: BagDTO = {
 	id: 'bag-1',
+	containerId: 'container-1',
 	name: 'Urban Travel Backpack with Extended Storage Compartment',
 	type: BagType.BACKPACK,
 	size: Size.MEDIUM,
@@ -36,7 +43,7 @@ const baseBag: BagDTO = {
 			isOverweight: false,
 			isOverCapacity: false,
 			isFull: false,
-			status: 'HEALTHY' as any,
+			status: ContainerStatus.EMPTY,
 			reasons: [],
 		},
 	},

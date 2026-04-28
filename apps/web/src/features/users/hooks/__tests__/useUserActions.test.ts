@@ -3,8 +3,17 @@ import { renderHook } from '@testing-library/react';
 
 import useUserActions from '../useUserActions';
 import useUserMutations from '../useUserMutations';
+import { notify } from '@shared/utils/notify.utils';
 
 vi.mock('../useUserMutations');
+
+vi.mock('@shared/utils/notify.utils', () => ({
+	notify: {
+		error: Object.assign(vi.fn(), {
+			fromHttp: vi.fn(),
+		}),
+	},
+}));
 
 describe('useUserActions', () => {
 	const mockUpdateUnwrap = vi.fn();
@@ -35,68 +44,86 @@ describe('useUserActions', () => {
 	});
 
 	describe('activate', () => {
-		it('activates a user and returns the mutation result', async () => {
-			mockUpdateUnwrap.mockResolvedValueOnce('activated');
+		it('calls updateStatus with active=true and triggers success callback', async () => {
+			const onSuccess = vi.fn();
+
+			mockUpdateUnwrap.mockResolvedValueOnce(undefined);
 
 			const { result } = renderHook(() => useUserActions());
 
-			const response = await result.current.activate('user-1');
+			await result.current.activate('user-1', { onSuccess });
 
 			expect(mockUpdateStatus).toHaveBeenCalledWith('user-1', {
 				isActive: true,
 			});
 
-			expect(mockUpdateUnwrap).toHaveBeenCalled();
-			expect(response).toBe('activated');
+			expect(onSuccess).toHaveBeenCalled();
 		});
 
-		it('throws an error when user activation fails', async () => {
+		it('calls onError and shows notification when activation fails', async () => {
 			const error = new Error('mutation failed');
+			const onError = vi.fn();
 
 			mockUpdateUnwrap.mockRejectedValueOnce(error);
 
 			const { result } = renderHook(() => useUserActions());
 
-			await expect(result.current.activate('user-1')).rejects.toThrow(
-				error
-			);
+			await result.current.activate('user-1', { onError });
+
+			expect(onError).toHaveBeenCalledWith(error);
+			expect(notify.error.fromHttp).toHaveBeenCalledWith(error);
 		});
 	});
 
 	describe('deactivate', () => {
-		it('deactivates a user and returns the mutation result', async () => {
-			mockUpdateUnwrap.mockResolvedValueOnce('deactivated');
+		it('calls updateStatus with active=false and triggers success callback', async () => {
+			const onSuccess = vi.fn();
+
+			mockUpdateUnwrap.mockResolvedValueOnce(undefined);
 
 			const { result } = renderHook(() => useUserActions());
 
-			const response = await result.current.deactivate('user-1');
+			await result.current.deactivate('user-1', { onSuccess });
 
 			expect(mockUpdateStatus).toHaveBeenCalledWith('user-1', {
 				isActive: false,
 			});
 
-			expect(mockUpdateUnwrap).toHaveBeenCalled();
-			expect(response).toBe('deactivated');
+			expect(onSuccess).toHaveBeenCalled();
 		});
 	});
 
 	describe('remove', () => {
-		it('deletes a user and returns the mutation result', async () => {
-			mockDeleteUnwrap.mockResolvedValueOnce('deleted');
+		it('calls deleteUser and triggers success callback', async () => {
+			const onSuccess = vi.fn();
+
+			mockDeleteUnwrap.mockResolvedValueOnce(undefined);
 
 			const { result } = renderHook(() => useUserActions());
 
-			const response = await result.current.remove('user-1');
+			await result.current.remove('user-1', { onSuccess });
 
 			expect(mockDeleteUser).toHaveBeenCalledWith('user-1');
+			expect(onSuccess).toHaveBeenCalled();
+		});
 
-			expect(mockDeleteUnwrap).toHaveBeenCalled();
-			expect(response).toBe('deleted');
+		it('calls onError and shows notification when deletion fails', async () => {
+			const error = new Error('delete failed');
+			const onError = vi.fn();
+
+			mockDeleteUnwrap.mockRejectedValueOnce(error);
+
+			const { result } = renderHook(() => useUserActions());
+
+			await result.current.remove('user-1', { onError });
+
+			expect(onError).toHaveBeenCalledWith(error);
+			expect(notify.error.fromHttp).toHaveBeenCalledWith(error);
 		});
 	});
 
 	describe('loading state', () => {
-		it('exposes loading flags from the mutation states', () => {
+		it('exposes loading flags from mutation state', () => {
 			(useUserMutations as any).mockReturnValue({
 				updateStatus: mockUpdateStatus,
 				deleteUser: mockDeleteUser,
@@ -110,6 +137,7 @@ describe('useUserActions', () => {
 
 			expect(result.current.isUpdatingStatus).toBe(true);
 			expect(result.current.isDeleting).toBe(true);
+			expect(result.current.isAnyLoading).toBe(true);
 		});
 	});
 });

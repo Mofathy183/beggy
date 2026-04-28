@@ -23,6 +23,7 @@ import type { ItemDTO } from '@beggy/shared/types';
 
 type ItemCardProps = {
 	item: ItemDTO;
+	onSelect: () => void;
 	onEdit: () => void;
 	onDelete: () => void;
 	isUpdating?: boolean;
@@ -68,7 +69,7 @@ const MeasurementPill = ({
 				>
 					<HugeiconsIcon
 						icon={icon}
-						className="text-muted-foreground size-3.5 flex-shrink-0"
+						className="text-muted-foreground size-3.5 shrink-0"
 						aria-hidden="true"
 					/>
 					<span className="text-foreground text-xs font-medium tabular-nums">
@@ -121,6 +122,7 @@ const MeasurementPill = ({
  */
 const ItemCard = ({
 	item,
+	onSelect,
 	onEdit,
 	onDelete,
 	isUpdating = false,
@@ -152,7 +154,7 @@ const ItemCard = ({
 				<div className="flex items-center gap-2">
 					{/* Category icon in accent container */}
 					{categoryOption?.icon && (
-						<div className="bg-accent flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+						<div className="bg-accent flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
 							<HugeiconsIcon
 								icon={categoryOption.icon}
 								className="text-accent-foreground size-4"
@@ -170,6 +172,7 @@ const ItemCard = ({
 
 				<ItemActions
 					item={item}
+					onSelect={onSelect}
 					onEdit={onEdit}
 					onDelete={onDelete}
 					isUpdating={isUpdating}
@@ -189,7 +192,7 @@ const ItemCard = ({
 					<div className="flex items-center gap-1.5">
 						<HugeiconsIcon
 							icon={PaintBucketIcon}
-							className="text-muted-foreground size-3 flex-shrink-0"
+							className="text-muted-foreground size-3 shrink-0"
 							aria-hidden="true"
 						/>
 						{/*
@@ -198,7 +201,7 @@ const ItemCard = ({
 						 * No semantic token exists for arbitrary color strings.
 						 */}
 						<span
-							className="border-border/60 h-2.5 w-2.5 flex-shrink-0 rounded-full border"
+							className="border-border/60 h-2.5 w-2.5 shrink-0 rounded-full border"
 							style={{ backgroundColor: item.color }}
 							aria-hidden="true"
 						/>

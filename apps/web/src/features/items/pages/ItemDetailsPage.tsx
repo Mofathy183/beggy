@@ -4,44 +4,21 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@shadcn-ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@shadcn-ui/card';
-import { Badge } from '@shadcn-ui/badge';
-import { Separator } from '@shadcn-ui/separator';
+import { Card, CardContent, CardHeader } from '@shadcn-ui/card';
 import { Skeleton } from '@shadcn-ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@shadcn-ui/alert';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@shadcn-ui/tooltip';
-import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
 	ArrowLeft02Icon,
 	AlertCircleIcon,
 	PencilEdit02Icon,
 	Delete02Icon,
-	WeightScale01Icon,
-	CubeIcon,
-	Calendar01Icon,
-	Edit01Icon,
 } from '@hugeicons/core-free-icons';
-
+import { ItemCard } from '@features/items/components/details';
 import { UpdateItemDialog } from '@features/items/components/dialogs';
-import {
-	ItemCategoryBadge,
-	ItemFragileBadge,
-} from '@features/items/components/badges';
 
 import { useItemDetails, useItemsActions } from '@features/items/hooks';
 import { useProfileSyncWithAuth } from '@features/profiles/hooks';
-import { WEIGHT_UNIT_META, VOLUME_UNIT_META } from '@shared-ui/mappers';
-
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-const fmt = (value: number): string => parseFloat(value.toFixed(2)).toString();
-
-const formatDate = (iso: string): string =>
-	new Date(iso).toLocaleDateString(undefined, {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric',
-	});
 
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 
@@ -90,55 +67,6 @@ const ItemDetailsSkeleton = () => (
 	</div>
 );
 
-// ─── Measurement badge ─────────────────────────────────────────────────────────
-
-/**
- * A structured measurement display using shadcn Badge + Tooltip.
- * Icon identifies the type; value + symbol give the reading.
- */
-const MeasurementBadge = ({
-	icon,
-	value,
-	symbol,
-	label,
-}: {
-	icon: IconSvgElement;
-	value: string;
-	symbol: string;
-	label: string;
-}) => (
-	<Tooltip>
-		<TooltipTrigger>
-			<div
-				className="bg-muted border-border flex cursor-default items-center gap-2.5 rounded-lg border px-3 py-2.5"
-				aria-label={`${label}: ${value} ${symbol}`}
-			>
-				<HugeiconsIcon
-					icon={icon}
-					className="text-muted-foreground size-4 flex-shrink-0"
-					aria-hidden="true"
-				/>
-				<div className="flex flex-col gap-0.5">
-					<span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
-						{label}
-					</span>
-					<span className="text-foreground text-sm font-semibold tabular-nums">
-						{value}{' '}
-						<span className="text-muted-foreground font-normal">
-							{symbol}
-						</span>
-					</span>
-				</div>
-			</div>
-		</TooltipTrigger>
-		<TooltipContent side="bottom">
-			<p>
-				{label}: {value} {symbol}
-			</p>
-		</TooltipContent>
-	</Tooltip>
-);
-
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 type ItemDetailsPageProps = {
@@ -173,14 +101,6 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 	const { syncProfile } = useProfileSyncWithAuth();
 
 	const [editOpen, setEditOpen] = useState(false);
-
-	// ── Unit meta ─────────────────────────────────────────────────────────────
-	const weightMeta = item
-		? WEIGHT_UNIT_META.find((m) => m.value === item.weightUnit)
-		: null;
-	const volumeMeta = item
-		? VOLUME_UNIT_META.find((m) => m.value === item.volumeUnit)
-		: null;
 
 	const handleDelete = async () => {
 		if (!item) return;
@@ -240,9 +160,6 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 		);
 	}
 
-	// ── Loaded ────────────────────────────────────────────────────────────────
-	const wasEdited = item.updatedAt !== item.createdAt;
-
 	return (
 		<div className="flex flex-col gap-6 p-6">
 			{/* ── Back navigation ──────────────────────────────────────────── */}
@@ -281,7 +198,7 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 					<Button
 						variant="destructive"
 						size="sm"
-						onClick={handleDelete}
+						onClick={() => void handleDelete()}
 						disabled={isUpdating || isDeleting}
 					>
 						<HugeiconsIcon
@@ -294,119 +211,26 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 			</div>
 
 			{/* ── Detail card ──────────────────────────────────────────────── */}
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-base font-semibold">
-						Item details
-					</CardTitle>
-				</CardHeader>
-
-				<CardContent className="flex flex-col gap-5">
-					{/* ── Badges: category + fragile ───────────────────────── */}
-					<div className="flex flex-wrap items-center gap-2">
-						<ItemCategoryBadge category={item.category} size="md" />
-						<ItemFragileBadge
-							isFragile={item.isFragile}
-							size="md"
-						/>
-					</div>
-
-					{/* ── Color badge ──────────────────────────────────────── */}
-					{item.color && (
-						<>
-							<Separator />
-							<div className="flex flex-col gap-1.5">
-								<span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-									Color
-								</span>
-								{/*
-								 * Badge used as a color pill.
-								 * Inline style for backgroundColor is intentional —
-								 * item.color is user-defined data, not a semantic state.
-								 * No token exists for arbitrary color strings.
-								 */}
-								<Badge
-									className="w-fit gap-1.5 capitalize"
-									style={{ backgroundColor: item.color }}
-									aria-label={`Color: ${item.color}`}
-								>
-									{item.color}
-								</Badge>
-							</div>
-						</>
-					)}
-
-					<Separator />
-
-					{/* ── Measurements ─────────────────────────────────────── */}
-					<div className="flex flex-col gap-1.5">
-						<span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-							Measurements
-						</span>
-						<div className="flex flex-wrap gap-3">
-							<MeasurementBadge
-								icon={WeightScale01Icon}
-								value={fmt(item.weight)}
-								symbol={weightMeta?.symbol ?? item.weightUnit}
-								label="Weight"
-							/>
-							<MeasurementBadge
-								icon={CubeIcon}
-								value={fmt(item.volume)}
-								symbol={volumeMeta?.symbol ?? item.volumeUnit}
-								label="Volume"
-							/>
-						</div>
-					</div>
-
-					<Separator />
-
-					{/* ── Timestamps ───────────────────────────────────────── */}
-					<div className="flex flex-col gap-2">
-						<span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-							History
-						</span>
-
-						{/* Added row */}
-						<div className="flex items-center gap-2">
-							<Badge
-								variant="secondary"
-								className="gap-1.5 font-normal"
-							>
-								<HugeiconsIcon
-									icon={Calendar01Icon}
-									className="size-3"
-									aria-hidden="true"
-								/>
-								Added
-							</Badge>
-							<span className="text-foreground text-sm">
-								{formatDate(item.createdAt)}
-							</span>
-						</div>
-
-						{/* Last updated row — only when different from createdAt */}
-						{wasEdited && (
-							<div className="flex items-center gap-2">
-								<Badge
-									variant="secondary"
-									className="gap-1.5 font-normal"
-								>
-									<HugeiconsIcon
-										icon={Edit01Icon}
-										className="size-3"
-										aria-hidden="true"
-									/>
-									Updated
-								</Badge>
-								<span className="text-foreground text-sm">
-									{formatDate(item.updatedAt)}
-								</span>
-							</div>
-						)}
-					</div>
-				</CardContent>
-			</Card>
+			{/*
+			 * ItemCard replaces the hand-rolled detail Card.
+			 *
+			 * onSelect is a no-op — the user is already on this item's
+			 * detail page, navigating here again would be disorienting.
+			 * The page header already owns Edit and Delete as primary
+			 * actions, so the overflow menu is redundant here — but we
+			 * wire it anyway so the card renders consistently.
+			 *
+			 * isDeleting dims and locks the card while the mutation runs,
+			 * matching the locked state on the header buttons above.
+			 */}
+			<ItemCard
+				item={item}
+				onSelect={() => router.push(`/items/${item.id}`)}
+				onEdit={() => setEditOpen(true)}
+				onDelete={() => void handleDelete()}
+				isUpdating={isUpdating}
+				isDeleting={isDeleting}
+			/>
 
 			{/* ── Edit dialog ──────────────────────────────────────────────── */}
 			<UpdateItemDialog
@@ -415,7 +239,7 @@ const ItemDetailsPage = ({ id }: ItemDetailsPageProps) => {
 				onSuccess={() => {
 					syncProfile();
 					setEditOpen(false);
-					refetch();
+					void refetch();
 				}}
 			/>
 		</div>

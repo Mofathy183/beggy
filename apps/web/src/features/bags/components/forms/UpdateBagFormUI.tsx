@@ -1,6 +1,6 @@
 'use client';
 
-import { Controller, UseFormReturn } from 'react-hook-form';
+import { Controller, type UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@shadcn-ui/button';
 import {
@@ -24,7 +24,7 @@ import {
 	BAG_FEATURE_OPTIONS,
 } from '@shared/ui/mappers';
 import type { UpdateBagInput } from '@beggy/shared/types';
-import { BagFeature } from '@beggy/shared';
+import type { BagFeature } from '@beggy/shared/constants';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -63,8 +63,8 @@ const UpdateBagFormUI = ({
 				<CardHeader>
 					<CardTitle>Edit bag</CardTitle>
 					<CardDescription id="update-bag-description">
-						Update your bag's details. Only changed fields will be
-						saved.
+						Update your bag&apos;s details. Only changed fields will
+						be saved.
 					</CardDescription>
 				</CardHeader>
 

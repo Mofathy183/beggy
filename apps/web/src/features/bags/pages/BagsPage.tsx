@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { ListMeta, ListPagination } from '@shared-ui/list';
 
 import BagsGrid from '@features/bags/components/list/BagsGrid';
 import BagsFilters from '@features/bags/components/list/BagsFilters';
 import BagsOrderBy from '@features/bags/components/list/BagsOrderBy';
-import { CreateBagDialog } from '@features/bags/components/dialogs';
-import { UpdateBagDialog } from '@features/bags/components/dialogs';
+import {
+	CreateBagDialog,
+	UpdateBagDialog,
+} from '@features/bags/components/dialogs';
 
 import useBagsList from '@features/bags/hooks/useBagsList';
 import useBagActions from '@features/bags/hooks/useBagActions';
@@ -16,7 +18,7 @@ import useBagActions from '@features/bags/hooks/useBagActions';
 import { notify } from '@shared/utils/notify.utils';
 
 import type { BagDTO } from '@beggy/shared/types';
-import { HttpClientError } from '@shared/types';
+import type { HttpClientError } from '@shared/types';
 import { SuccessMessages } from '@beggy/shared/constants';
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -40,11 +42,11 @@ import { SuccessMessages } from '@beggy/shared/constants';
  * - `UpdateBagDialog` — controlled via nullable-bag pattern
  */
 const BagsPage = () => {
+	const router = useRouter();
 	// ── List state ───────────────────────────────────────────────────────────
 	const {
 		data: bags,
 		isLoading,
-		isFetching,
 		meta,
 		filters,
 		orderBy,
@@ -58,21 +60,31 @@ const BagsPage = () => {
 	// ── Edit dialog state ────────────────────────────────────────────────────
 	const [bagToEdit, setBagToEdit] = useState<BagDTO | null>(null);
 
+	// Track which bag is being deleted independently of edit state
+	const [deletingId, setDeletingId] = useState<string | null>(null);
+
 	// ── Mutations ────────────────────────────────────────────────────────────
-	const { remove, isDeleting } = useBagActions();
+	const { remove } = useBagActions();
 
 	// ── Handlers ─────────────────────────────────────────────────────────────
 
-	const handleDelete = (bag: BagDTO) => {
-		remove(bag.id, {
-			onSuccess: () => {
-				notify.success({ message: SuccessMessages.BAG_DELETED });
-				refetch();
-			},
-			onError: (err: unknown) =>
-				notify.error.fromHttp(err as HttpClientError),
-		});
-	};
+	const handleDelete = useCallback(
+		async (bag: BagDTO) => {
+			// Mark this specific bag as deleting before the mutation fires
+			setDeletingId(bag.id);
+			await remove(bag.id, {
+				onSuccess: () => {
+					notify.success({ message: SuccessMessages.BAG_DELETED });
+				},
+				onError: (err: unknown) => {
+					notify.error.fromHttp(err as HttpClientError);
+				},
+			});
+			// Always clear — whether success or error
+			setDeletingId(null);
+		},
+		[remove]
+	);
 
 	// ── Derived ──────────────────────────────────────────────────────────────
 
@@ -97,7 +109,7 @@ const BagsPage = () => {
 					</p>
 				</div>
 
-				<CreateBagDialog onSuccess={refetch} />
+				<CreateBagDialog />
 			</div>
 
 			{/* ── Controls bar ─────────────────────────────────────────────── */}
@@ -105,7 +117,6 @@ const BagsPage = () => {
 				<BagsFilters
 					value={filters}
 					onApply={setFilters}
-					onChange={setFilters}
 					onReset={reset}
 				/>
 
@@ -122,16 +133,19 @@ const BagsPage = () => {
 				isLoading={isLoading}
 				hasFilters={hasActiveFilters}
 				onResetFilters={reset}
+				// Navigate to detail page — receives full BagDTO now
+				onSelect={(bag) => router.push(`/bags/${bag.id}`)}
 				onEdit={(bag) => setBagToEdit(bag)}
-				onDelete={handleDelete}
-				deletingId={isDeleting ? (bagToEdit?.id ?? null) : null}
+				onDelete={(bag) => void handleDelete(bag)}
+				// Per-bag deleting state — not tied to edit dialog
+				deletingId={deletingId}
 			/>
 
 			{/* ── Pagination ───────────────────────────────────────────────── */}
 			<ListPagination
 				meta={meta}
 				onPageChange={(page) => setPagination({ page })}
-				isDisabled={isLoading || isFetching}
+				isDisabled={isLoading}
 			/>
 
 			{/* ── Update dialog ────────────────────────────────────────────── */}

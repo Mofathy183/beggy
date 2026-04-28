@@ -20,6 +20,7 @@ type ItemsGridProps = {
 	/** Called by the empty state "Clear filters" CTA */
 	onReset: () => void;
 
+	onSelect: (item: ItemDTO) => void;
 	/** Called when the user selects "Edit" from an item's action menu */
 	onEdit: (item: ItemDTO) => void;
 
@@ -85,6 +86,7 @@ const ItemsGrid = ({
 	isLoading = false,
 	hasFilters = false,
 	onReset,
+	onSelect,
 	onEdit,
 	onDelete,
 	className,
@@ -114,6 +116,7 @@ const ItemsGrid = ({
 				<div key={item.id} role="listitem">
 					<ItemCard
 						item={item}
+						onSelect={() => onSelect(item)}
 						onEdit={() => onEdit(item)}
 						onDelete={() => onDelete(item)}
 					/>

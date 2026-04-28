@@ -1,15 +1,16 @@
 import { Card, CardHeader, CardContent } from '@shadcn-ui/card';
 import { Avatar, AvatarFallback } from '@shadcn-ui/avatar';
+import { Separator } from '@shadcn-ui/separator';
 import { format } from 'date-fns';
+import { cn } from '@shared/lib/utils';
 import type { AdminUserDTO } from '@beggy/shared/types';
 
 import {
 	UserRoleBadge,
 	UserStatusBadge,
-	UserActions,
 	UserEmailVerificationBadge,
-} from '@features/users/components';
-
+} from '@features/users/components/badges';
+import { UserActions } from '@features/users/components/actions';
 /**
  * Props for `UserCard`.
  */
@@ -17,14 +18,18 @@ export type UserCardProps = {
 	/** User entity to display. */
 	user: AdminUserDTO;
 
-	/** Indicates whether the rendered user is the currently authenticated user. */
-	isCurrentUser?: boolean;
-
 	/** Optional edit handler. */
-	onEdit?: () => void;
+	onEdit: (user: AdminUserDTO) => void;
+	onSelect: (user: AdminUserDTO) => void;
+	onToggleStatus: (user: AdminUserDTO) => void;
+	onDelete: (user: AdminUserDTO) => void;
 
 	/** Controls visibility of contextual actions. */
-	showActions?: boolean;
+	/** Indicates whether the rendered user is the currently authenticated user. */
+	isCurrentUser?: boolean;
+	isUpdatingStatus?: boolean;
+	isDeleting?: boolean;
+	className?: string;
 };
 
 /**
@@ -42,46 +47,74 @@ const getInitial = (email: string) => {
  */
 const UserCard = ({
 	user,
-	isCurrentUser = false,
+	onSelect,
 	onEdit,
-	showActions = true,
+	onToggleStatus,
+	onDelete,
+	isCurrentUser = false,
+	isUpdatingStatus = false,
+	isDeleting = false,
+	className,
 }: UserCardProps) => {
 	return (
-		<Card className="transition-shadow hover:shadow-sm">
-			<CardHeader className="flex flex-row items-start justify-between pb-3">
-				<div className="flex items-start gap-3">
-					<Avatar className="h-10 w-10">
-						<AvatarFallback className="bg-muted text-muted-foreground">
+		<Card
+			className={cn(
+				'flex flex-col gap-0 transition-shadow hover:shadow-md',
+				isDeleting && 'pointer-events-none opacity-60',
+				className
+			)}
+		>
+			{/* ── Header: avatar + email + actions ─────────────────────────── */}
+			<CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
+				<div className="flex min-w-0 items-start gap-3">
+					<Avatar className="h-10 w-10 shrink-0">
+						<AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
 							{getInitial(user.email)}
 						</AvatarFallback>
 					</Avatar>
 
-					<div className="space-y-1">
-						<p className="text-sm font-semibold">{user.email}</p>
-
+					<div className="min-w-0 space-y-1">
+						{/*
+						 * truncate + title: long emails are clipped visually
+						 * but always readable on hover via the title attribute.
+						 */}
+						<p
+							className="text-foreground truncate text-sm font-semibold"
+							title={user.email}
+						>
+							{user.email}
+						</p>
 						<UserRoleBadge role={user.role} />
 					</div>
 				</div>
 
-				{showActions && (
+				<div className="shrink-0">
 					<UserActions
-						userId={user.id}
-						isActive={user.isActive}
-						isCurrentUser={isCurrentUser}
+						user={user}
+						onSelect={onSelect}
 						onEdit={onEdit}
+						onToggleStatus={onToggleStatus}
+						onDelete={onDelete}
+						isCurrentUser={isCurrentUser}
+						isUpdatingStatus={isUpdatingStatus}
+						isDeleting={isDeleting}
 					/>
-				)}
+				</div>
 			</CardHeader>
 
-			<CardContent className="space-y-3">
-				<div className="flex flex-wrap gap-2">
+			<CardContent className="flex flex-col gap-3 pt-0">
+				{/* ── Status badges ────────────────────────────────────────── */}
+				<div className="flex flex-wrap items-center gap-1.5">
 					<UserStatusBadge isActive={user.isActive} />
 					<UserEmailVerificationBadge
 						isEmailVerified={user.isEmailVerified}
 					/>
 				</div>
 
-				<p className="text-xs text-muted-foreground">
+				<Separator />
+
+				{/* ── Footer: join date ────────────────────────────────────── */}
+				<p className="text-muted-foreground/70 text-[11px]">
 					Joined {format(new Date(user.createdAt), 'MMM d, yyyy')}
 				</p>
 			</CardContent>

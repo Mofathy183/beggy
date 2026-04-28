@@ -1,6 +1,6 @@
 'use client';
 
-import { Controller, UseFormReturn } from 'react-hook-form';
+import { Controller, type UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@shadcn-ui/button';
 import {
@@ -72,7 +72,7 @@ const CreateBagFormUI = ({
 				<CardHeader>
 					<CardTitle>New bag</CardTitle>
 					<CardDescription id="create-bag-description">
-						Define your bag's type, size, and weight limits to
+						Define your bag&apos;s type, size, and weight limits to
 						enable smart packing.
 					</CardDescription>
 				</CardHeader>

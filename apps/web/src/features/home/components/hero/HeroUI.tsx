@@ -1,4 +1,4 @@
-import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import {
 	ArrowRight01Icon,
 	Luggage01Icon,
@@ -205,10 +205,10 @@ const HeroVisual = () => (
 		</div>
 
 		{/* Floating stat overlays */}
-		<div className="absolute -start-6 top-8 hidden md:block">
+		<div className="absolute -inset-s-6 top-8 hidden md:block">
 			<StatPill value="2.4 kg" label="under limit" />
 		</div>
-		<div className="absolute -end-4 bottom-10 hidden md:block">
+		<div className="absolute -inset-e-4 bottom-10 hidden md:block">
 			<StatPill value="94%" label="packed" />
 		</div>
 	</div>

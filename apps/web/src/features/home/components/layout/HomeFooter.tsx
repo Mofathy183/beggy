@@ -2,6 +2,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Luggage01Icon } from '@hugeicons/core-free-icons';
 import { Separator } from '@shadcn-ui/separator';
 import { cn } from '@shadcn-lib';
+import Link from 'next/link';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ const HomeFooter = ({ className }: { className?: string }) => (
 			<div className="grid grid-cols-2 gap-8 md:grid-cols-4">
 				{/* Brand column */}
 				<div className="col-span-2 flex flex-col gap-3 md:col-span-2">
-					<a
+					<Link
 						href="/"
 						aria-label="Beggy — home"
 						className="flex w-fit items-center gap-2.5 text-foreground no-underline transition-opacity hover:opacity-75"
@@ -57,7 +58,7 @@ const HomeFooter = ({ className }: { className?: string }) => (
 						<span className="text-base font-semibold tracking-tight">
 							Beggy
 						</span>
-					</a>
+					</Link>
 					<p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
 						Your AI-powered travel packing assistant. Pack smarter,
 						travel lighter, arrive happier.
@@ -96,7 +97,7 @@ const HomeFooter = ({ className }: { className?: string }) => (
 			{/* Bottom bar */}
 			<div className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground md:flex-row">
 				<p>© {new Date().getFullYear()} Beggy. Built for travellers.</p>
-				<p>MIT License · Mohamed Fathy. Owl inc.</p>
+				<p>MIT License · Mohamed Fathy. Sol inc.</p>
 			</div>
 		</div>
 	</footer>

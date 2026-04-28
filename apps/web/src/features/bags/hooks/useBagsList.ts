@@ -1,11 +1,8 @@
 import useListQuery from '@shared/hooks/useListQuery';
 import { useGetBagsQuery } from '@features/bags/api';
 import { BagOrderByField, OrderDirection } from '@beggy/shared/constants';
-import type {
-	BagDTO,
-	BagFilterInput,
-	BagOrderByInput,
-} from '@beggy/shared/types';
+import type { BagDTO, BagOrderByInput } from '@beggy/shared/types';
+import type { BagFilterState } from '@shared/types';
 
 /**
  * Default sorting applied to the bags list.
@@ -37,7 +34,7 @@ const DEFAULT_ORDER: BagOrderByInput = {
  * } = useBagsList();
  */
 const useBagsList = () => {
-	return useListQuery<BagDTO, BagFilterInput, BagOrderByInput>({
+	return useListQuery<BagDTO, BagFilterState, BagOrderByInput>({
 		useQuery: useGetBagsQuery,
 		initialOrderBy: DEFAULT_ORDER,
 	});

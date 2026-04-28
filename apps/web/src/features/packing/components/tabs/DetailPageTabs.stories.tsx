@@ -28,6 +28,7 @@ const baseProps = {
 // Controlled wrapper (CRITICAL)
 // ───────────────────────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TabsWrapper(args: any) {
 	const [activeTab, setActiveTab] = useState<DetailPageTab>(args.activeTab);
 

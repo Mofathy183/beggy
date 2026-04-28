@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent } from '@shadcn-ui/card';
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { ListMeta, ListPagination } from '@shared-ui/list';
+
 import {
-	UsersEmptyState,
 	UsersFilters,
 	UsersGrid,
 	UsersOrderBy,
 } from '@features/users/components/list';
 import { CreateUserDialog } from '@features/users/components/dialogs';
-import { ListMeta, ListPagination } from '@shared-ui/list';
-import { useUsersList } from '@features/users/hooks';
+import { useUsersList, useUserActions } from '@features/users/hooks';
+import { useAppSelector } from '@shared/store/hooks';
+import { selectAuthUser } from '@features/auth/store';
+import { notify } from '@shared/utils/notify.utils';
+import type { AdminUserDTO } from '@beggy/shared/types';
 
 /**
  * UsersPage
@@ -30,6 +34,9 @@ import { useUsersList } from '@features/users/hooks';
  *  - Button variant="default" for primary CTA
  */
 const UsersPage = () => {
+	const router = useRouter();
+	const currentUser = useAppSelector(selectAuthUser);
+
 	const {
 		data,
 		meta,
@@ -41,94 +48,138 @@ const UsersPage = () => {
 		setFilters,
 		setOrderBy,
 		reset,
+		refetch,
 	} = useUsersList();
 
-	// Draft filters let users build up a filter state before applying it
-	const [draftFilters, setDraftFilters] = useState(filters);
+	// ── Per-user mutation state — mirrors BagsPage.deletingId pattern ────────
+	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(
+		null
+	);
+
+	const { activate, deactivate, remove } = useUserActions();
+
+	// ── Handlers ─────────────────────────────────────────────────────────────
+
+	const handleToggleStatus = useCallback(
+		async (user: AdminUserDTO) => {
+			setUpdatingStatusId(user.id);
+			if (user.isActive) {
+				await deactivate(user.id, {
+					onSuccess: () => {
+						notify.success({ message: 'User deactivated' });
+						refetch();
+					},
+				});
+			} else {
+				await activate(user.id, {
+					onSuccess: () => {
+						notify.success({ message: 'User activated' });
+						refetch();
+					},
+				});
+			}
+			setUpdatingStatusId(null);
+		},
+		[activate, deactivate, refetch]
+	);
+
+	const handleDelete = useCallback(
+		async (user: AdminUserDTO) => {
+			setDeletingId(user.id);
+			await remove(user.id, {
+				onSuccess: () => {
+					notify.success({ message: 'User deleted' });
+					refetch();
+				},
+			});
+			setDeletingId(null);
+		},
+		[remove, refetch]
+	);
+
+	// ── Derived ──────────────────────────────────────────────────────────────
+
+	const hasActiveFilters = Object.values(filters ?? {}).some(
+		(v) =>
+			v !== undefined &&
+			v !== null &&
+			v !== '' &&
+			!(Array.isArray(v) && v.length === 0)
+	);
 
 	return (
-		<section className="flex flex-col gap-8">
-			{/* ── 1. Page header ──────────────────────────────────────── */}
-			<header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<div className="flex flex-col gap-1">
-					<h1 className="text-2xl font-semibold tracking-tight text-foreground">
+		<div className="flex flex-col gap-6">
+			{/* ── Header ───────────────────────────────────────────────────── */}
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="text-foreground text-2xl font-semibold">
 						Users
 					</h1>
-					<p className="text-sm text-muted-foreground">
+					<p className="text-muted-foreground text-sm">
 						Manage system users, roles, and account status.
 					</p>
 				</div>
 
 				<CreateUserDialog />
-			</header>
+			</div>
 
-			{/* ── 2. Control surface ──────────────────────────────────── */}
 			{/*
-			 * shadcn Card already applies bg-card + border + border-border + rounded-xl.
-			 * We use CardContent for correct internal padding — never override Card's
-			 * bg or border via className (that would fight the design system token).
+			 * ── Controls bar ─────────────────────────────────────────────────
+			 *
+			 * Mirrors BagsPage exactly:
+			 * [Filters trigger] [Sort] ··· [Showing X–Y of Z users]
+			 *
+			 * UsersFilters renders as a popover trigger button — not an
+			 * expanded card. If your current UsersFilters renders as a card,
+			 * that's a component-level issue to fix there, not here.
+			 * The layout wrapper here is correct regardless.
 			 */}
-			<Card>
-				<CardContent className="p-5">
-					<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-						<UsersFilters
-							value={draftFilters}
-							onChange={setDraftFilters}
-							onApply={(applied) => setFilters(applied)}
-							onReset={() => {
-								setDraftFilters({});
-								reset();
-							}}
-						/>
+			{/* ── Filters (FULL WIDTH CARD) ── */}
+			<UsersFilters
+				value={filters}
+				onApply={setFilters}
+				onReset={reset}
+			/>
 
-						<UsersOrderBy
-							value={orderBy}
-							onChange={(next) => setOrderBy(next)}
-						/>
-					</div>
-				</CardContent>
-			</Card>
+			{/* ── Controls bar (Sort + Meta) ── */}
+			<div className="flex flex-wrap items-center gap-3">
+				<UsersOrderBy value={orderBy} onChange={setOrderBy} />
 
-			{/* ── 3. Content surface ──────────────────────────────────── */}
-			{/*
-			 * No Card wrapper here — the grid itself provides the visual surface.
-			 * Adding a Card around a grid would create unnecessary nesting and
-			 * a "double border" effect that clutters the layout.
-			 */}
+				<div className="ms-auto">
+					<ListMeta meta={meta} isLoading={isLoading} label="users" />
+				</div>
+			</div>
+
+			{/* ── Grid ─────────────────────────────────────────────────────── */}
 			<UsersGrid
 				users={data}
 				isLoading={isLoading}
-				empty={
-					<UsersEmptyState
-						hasFilters={!!Object.keys(filters ?? {}).length}
-						onReset={reset}
-					/>
-				}
+				hasFilters={hasActiveFilters}
+				onResetFilters={reset}
+				onSelect={(user) => router.push(`/users/${user.id}`)}
+				onEdit={(user) => router.push(`/users/${user.id}`)}
+				onToggleStatus={(user) => void handleToggleStatus(user)}
+				onDelete={(user) => void handleDelete(user)}
+				currentUserId={currentUser?.id}
+				updatingStatusId={updatingStatusId}
+				deletingId={deletingId}
 			/>
 
-			{/* ── 4. Footer bar — conditional on meta ─────────────────── */}
 			{/*
-			 * Only renders when meta is available (i.e. after the first successful fetch).
-			 * Uses Card for surface consistency with the control surface above.
+			 * ── Pagination ───────────────────────────────────────────────────
+			 *
+			 * Flat — no Card wrapper. Matches BagsPage exactly.
+			 * The card + "Page 1 of" text in the screenshot came from
+			 * the old UsersPage wrapping ListPagination in a Card with
+			 * CardContent. Removed here.
 			 */}
-			{meta && (
-				<Card>
-					<CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
-						{/*
-						 * text-muted-foreground is the correct token for list metadata
-						 * (record count, page info) — secondary content, not headings
-						 */}
-						<ListMeta meta={meta} isLoading={isLoading} />
-
-						<ListPagination
-							meta={meta}
-							onPageChange={(page) => setPagination({ page })}
-							isDisabled={isFetching}
-						/>
-					</CardContent>
-				</Card>
-			)}
-		</section>
+			<ListPagination
+				meta={meta}
+				onPageChange={(page) => setPagination({ page })}
+				isDisabled={isLoading || isFetching}
+			/>
+		</div>
 	);
 };
 

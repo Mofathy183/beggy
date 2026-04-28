@@ -77,7 +77,7 @@ describe('UpdateItemForm', () => {
 	it('pre-selects the category chip from the item prop', () => {
 		render(<UpdateItemForm item={item} />);
 		expect(
-			screen.getByRole('button', { name: /selected documents/i })
+			screen.getByRole('radio', { name: /selected documents/i })
 		).toBeInTheDocument();
 	});
 

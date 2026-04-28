@@ -1,11 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
+import type { AdminUserDTO } from '@beggy/shared/types';
+import { Role } from '@beggy/shared/constants';
 
-vi.mock('@features/users/hooks/useUserActions', () => ({
-	default: vi.fn(),
-}));
-
-// 👇 mock ActionsMenu properly
 const mockActionsMenu = vi.fn();
 
 vi.mock('@shared/ui/actions', () => ({
@@ -15,130 +12,167 @@ vi.mock('@shared/ui/actions', () => ({
 	},
 }));
 
-import useUserActions from '@features/users/hooks/useUserActions';
 import UserActions from './UserActions';
 
+const mockUser = (override: Partial<AdminUserDTO> = {}): AdminUserDTO => ({
+	id: 'user-1',
+	email: 'user@email.com',
+	role: Role.USER,
+	isActive: true,
+	isEmailVerified: true,
+	createdAt: new Date().toISOString(),
+	updatedAt: new Date().toISOString(),
+	...override,
+});
+
 describe('UserActions', () => {
-	const activate = vi.fn();
-	const deactivate = vi.fn();
-	const remove = vi.fn();
+	const onSelect = vi.fn();
+	const onToggleStatus = vi.fn();
+	const onDelete = vi.fn();
+
+	const renderComponent = (
+		props?: Partial<React.ComponentProps<typeof UserActions>>
+	) => {
+		const user = mockUser(props?.user);
+
+		render(
+			<UserActions
+				user={user}
+				onSelect={onSelect}
+				onToggleStatus={onToggleStatus}
+				onDelete={onDelete}
+				isCurrentUser={false}
+				isUpdatingStatus={false}
+				isDeleting={false}
+				{...props}
+			/>
+		);
+
+		return (mockActionsMenu.mock as any).calls.at(-1)[0];
+	};
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		(useUserActions as any).mockReturnValue({
-			activate,
-			deactivate,
-			remove,
-			isUpdatingStatus: false,
-			isDeleting: false,
-		});
 	});
 
-	it('renders edit action when onEdit is provided', () => {
-		render(<UserActions userId="user-1" isActive onEdit={vi.fn()} />);
+	it('renders the correct menu items', () => {
+		const { items } = renderComponent();
 
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
-
-		const editItem = items.find((i: any) => i.id === 'edit');
-
-		expect(editItem).toBeDefined();
-		expect(editItem.label).toBe('Edit');
+		expect(items.map((i: any) => i.id)).toEqual([
+			'open',
+			'toggle-status',
+			'delete',
+		]);
 	});
 
-	it('does not render edit action when onEdit is not provided', () => {
-		render(<UserActions userId="user-1" isActive />);
+	it('calls onSelect when open action is triggered', async () => {
+		const user = mockUser();
+		const { items } = renderComponent({ user });
 
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
+		const openItem = items.find((i: any) => i.id === 'open');
 
-		const editItem = items.find((i: any) => i.id === 'edit');
+		await openItem.onSelect();
 
-		expect(editItem).toBeUndefined();
+		expect(onSelect).toHaveBeenCalledWith(user);
 	});
 
-	it('renders deactivate when user is active', () => {
-		render(<UserActions userId="user-1" isActive />);
+	it('calls onToggleStatus when toggling active user', async () => {
+		const user = mockUser({ isActive: true });
 
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
-
-		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
-
-		expect(toggleItem.label).toBe('Deactivate');
-	});
-
-	it('renders activate when user is inactive', () => {
-		render(<UserActions userId="user-1" isActive={false} />);
-
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
-
-		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
-
-		expect(toggleItem.label).toBe('Activate');
-	});
-
-	it('calls deactivate when toggling active user', async () => {
-		render(<UserActions userId="user-1" isActive />);
-
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
+		const { items } = renderComponent({ user });
 
 		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
 
 		await toggleItem.onSelect();
 
-		expect(deactivate).toHaveBeenCalledWith('user-1');
+		expect(onToggleStatus).toHaveBeenCalledWith(user);
 	});
 
-	it('calls activate when toggling inactive user', async () => {
-		render(<UserActions userId="user-1" isActive={false} />);
+	it('calls onToggleStatus when toggling inactive user', async () => {
+		const user = mockUser({ isActive: false });
 
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
+		const { items } = renderComponent({ user });
 
 		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
 
 		await toggleItem.onSelect();
 
-		expect(activate).toHaveBeenCalledWith('user-1');
+		expect(onToggleStatus).toHaveBeenCalledWith(user);
 	});
 
-	it('calls remove when delete action is selected', async () => {
-		render(<UserActions userId="user-1" isActive />);
+	it('calls onDelete when delete action is selected', async () => {
+		const user = mockUser();
 
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
+		const { items } = renderComponent({ user });
 
 		const deleteItem = items.find((i: any) => i.id === 'delete');
 
 		await deleteItem.onSelect();
 
-		expect(remove).toHaveBeenCalledWith('user-1');
+		expect(onDelete).toHaveBeenCalledWith(user);
+	});
+
+	it('renders deactivate label when user is active', () => {
+		const { items } = renderComponent({
+			user: mockUser({ isActive: true }),
+		});
+
+		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
+
+		expect(toggleItem.label).toBe('Deactivate user');
+	});
+
+	it('renders activate label when user is inactive', () => {
+		const { items } = renderComponent({
+			user: mockUser({ isActive: false }),
+		});
+
+		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
+
+		expect(toggleItem.label).toBe('Activate user');
 	});
 
 	it('disables delete when user is current user', () => {
-		render(<UserActions userId="user-1" isActive isCurrentUser />);
-
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
+		const { items } = renderComponent({ isCurrentUser: true });
 
 		const deleteItem = items.find((i: any) => i.id === 'delete');
 
 		expect(deleteItem.disabled).toBe(true);
 	});
 
-	it('passes loading state to toggle and delete actions', () => {
-		(useUserActions as any).mockReturnValue({
-			activate,
-			deactivate,
-			remove,
+	it('disables toggle when user is current user', () => {
+		const { items } = renderComponent({ isCurrentUser: true });
+
+		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
+
+		expect(toggleItem.disabled).toBe(true);
+	});
+
+	it('applies loading states correctly', () => {
+		const { items } = renderComponent({
 			isUpdatingStatus: true,
 			isDeleting: true,
 		});
-
-		render(<UserActions userId="user-1" isActive />);
-
-		const { items } = (mockActionsMenu as any).mock.calls[0][0];
 
 		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
 		const deleteItem = items.find((i: any) => i.id === 'delete');
 
 		expect(toggleItem.loading).toBe(true);
 		expect(deleteItem.loading).toBe(true);
+	});
+
+	it('disables actions correctly during loading states', () => {
+		const { items } = renderComponent({
+			isUpdatingStatus: true,
+			isDeleting: true,
+		});
+
+		const openItem = items.find((i: any) => i.id === 'open');
+		const toggleItem = items.find((i: any) => i.id === 'toggle-status');
+		const deleteItem = items.find((i: any) => i.id === 'delete');
+
+		expect(openItem.disabled).toBe(true);
+		expect(toggleItem.disabled).toBe(true);
+		expect(deleteItem.disabled).toBe(true);
 	});
 });

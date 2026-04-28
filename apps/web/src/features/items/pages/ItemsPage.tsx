@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-
+import { useRouter } from 'next/navigation';
 import { ListMeta, ListPagination } from '@shared-ui/list';
 
 import {
@@ -13,11 +13,12 @@ import {
 	CreateItemDialog,
 	UpdateItemDialog,
 } from '@features/items/components/dialogs';
-import { notify } from '@shared/utils';
 import { useItemsList, useItemsActions } from '@features/items/hooks';
 import { useProfileSyncWithAuth } from '@features/profiles/hooks';
 
 import type { ItemDTO } from '@beggy/shared/types';
+import { notify } from '@/shared/utils';
+import { SuccessMessages } from '@beggy/shared';
 
 /**
  * ItemsPage
@@ -40,6 +41,7 @@ import type { ItemDTO } from '@beggy/shared/types';
  *   to the empty state so it shows the correct copy and CTA.
  */
 const ItemsPage = () => {
+	const router = useRouter();
 	// ── List state ────────────────────────────────────────────────────────────
 	const {
 		data: items,
@@ -62,7 +64,6 @@ const ItemsPage = () => {
 
 	// ── Dialog state ──────────────────────────────────────────────────────────
 	const [itemToEdit, setItemToEdit] = useState<ItemDTO | null>(null);
-	const [editOpen, setEditOpen] = useState(false);
 
 	// ── Derived ───────────────────────────────────────────────────────────────
 	const hasFilters =
@@ -76,7 +77,12 @@ const ItemsPage = () => {
 	// ── Handlers ──────────────────────────────────────────────────────────────
 
 	const handleDelete = async (item: ItemDTO) => {
-		await remove(item.id, { onSuccess: refetch });
+		await remove(item.id, {
+			onSuccess: () => {
+				notify.success({ message: SuccessMessages['ITEM_DELETED'] });
+				refetch();
+			},
+		});
 	};
 
 	// ── Render ────────────────────────────────────────────────────────────────
@@ -99,20 +105,19 @@ const ItemsPage = () => {
 			</div>
 
 			{/* ── Toolbar: filters + order-by ──────────────────────────────── */}
-			<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+			<div className="flex flex-wrap items-center gap-3">
 				<ItemsFilters
 					value={filters}
-					onChange={setFilters}
 					onApply={setFilters}
 					onReset={reset}
 				/>
 				<ItemsOrderBy value={orderBy} onChange={setOrderBy} />
-			</div>
 
-			{/* ── List meta: "Showing X of Y" ──────────────────────────────── */}
-			{meta && (
-				<ListMeta label="Items" meta={meta} isLoading={isLoading} />
-			)}
+				{/* ── List meta: "Showing X of Y" ──────────────────────────────── */}
+				<div className="ms-auto">
+					<ListMeta label="Items" meta={meta} isLoading={isLoading} />
+				</div>
+			</div>
 
 			{/* ── Grid ─────────────────────────────────────────────────────── */}
 			<ItemsGrid
@@ -120,8 +125,9 @@ const ItemsPage = () => {
 				isLoading={isLoading}
 				hasFilters={hasFilters}
 				onReset={reset}
+				onSelect={(item) => router.push(`/items/${item.id}`)}
 				onEdit={(item) => setItemToEdit(item)}
-				onDelete={handleDelete}
+				onDelete={(item) => void handleDelete(item)}
 			/>
 
 			{/* ── Pagination ───────────────────────────────────────────────── */}
@@ -135,12 +141,11 @@ const ItemsPage = () => {
 
 			{/* ── Edit dialog ──────────────────────────────────────────────── */}
 			<UpdateItemDialog
-				item={editOpen ? itemToEdit : null}
-				onClose={() => setEditOpen(false)}
-				onSuccess={(message) => {
+				item={itemToEdit}
+				onClose={() => setItemToEdit(null)}
+				onSuccess={() => {
 					syncProfile();
-					notify.success({ message });
-					setEditOpen(false);
+					setItemToEdit(null);
 					refetch();
 				}}
 			/>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { BagSchema } from '@beggy/shared/schemas';
@@ -44,8 +44,8 @@ const UpdateBagForm = ({ bag, onSuccess, onCancel }: UpdateBagFormProps) => {
 
 	const error = states.update.error as HttpClientError | undefined;
 
-	const form = useForm<UpdateBagInput>({
-		resolver: zodResolver(BagSchema.update as any),
+	const form = useForm<UpdateBagInput, unknown, UpdateBagInput>({
+		resolver: zodResolver(BagSchema.update) as Resolver<UpdateBagInput>,
 		defaultValues: {
 			name: bag.name,
 			type: bag.type,
@@ -57,7 +57,7 @@ const UpdateBagForm = ({ bag, onSuccess, onCancel }: UpdateBagFormProps) => {
 			material: bag.material ?? undefined,
 			features: bag.features ?? [],
 		},
-		mode: 'onTouched',
+		mode: 'onSubmit',
 	});
 
 	// Re-populate when bag prop changes (e.g. after refetch resolves)
@@ -78,11 +78,13 @@ const UpdateBagForm = ({ bag, onSuccess, onCancel }: UpdateBagFormProps) => {
 	// Clear server error banner when user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => {
-			states.update.reset?.();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			states.update.reset();
 		});
-		return () => subscription.unsubscribe();
-	}, [form, error, states.update]);
+
+		return unsubscribe;
+	}, [error, states.update, form]);
 
 	const onSubmit: SubmitHandler<UpdateBagInput> = async (values) => {
 		if (isUpdating) return;

@@ -13,12 +13,13 @@ export type UseUserDetailsResult = {
 
 	/** Indicates background refetching state. */
 	isFetching: boolean;
+	isError: boolean;
 
 	/** Error returned from the query, if any. */
 	error: unknown;
 
 	/** Manually triggers a refetch. */
-	refetch: () => void;
+	refetch: () => Promise<unknown>;
 };
 
 /**
@@ -32,17 +33,21 @@ export type UseUserDetailsResult = {
  * @param id - User identifier.
  */
 const useUserDetails = (id?: string): UseUserDetailsResult => {
-	const query = useGetUserByIdQuery(id ?? '', {
-		skip: !id,
-	});
+	const { data, isLoading, isFetching, isError, error, refetch } =
+		useGetUserByIdQuery(id ?? '', {
+			skip: !id,
+		});
+
+	const user: AdminUserDTO | undefined = data?.data;
 
 	return {
-		user: query.data?.data,
-		isLoading: query.isLoading,
-		isFetching: query.isFetching,
-		error: query.error,
-		refetch: query.refetch,
-	};
+		user,
+		isLoading,
+		isFetching,
+		isError, // ✅ added — matches BagDetailsPage usage
+		error,
+		refetch,
+	} as const;
 };
 
 export default useUserDetails;

@@ -37,6 +37,7 @@ const mockedNotify = vi.mocked(notify);
 const mockBag: BagDTO = {
 	id: 'bag-1',
 	name: 'Trail Pack',
+	containerId: 'container-1',
 	type: BagType.BACKPACK,
 	size: Size.MEDIUM,
 	maxWeight: 15,
@@ -107,21 +108,21 @@ describe('UpdateBagForm', () => {
 		it('returns the bag type chip pre-selected from the bag prop', () => {
 			render(<UpdateBagForm bag={mockBag} />);
 			expect(
-				screen.getByRole('button', { name: /^selected backpack/i })
+				screen.getByRole('radio', { name: /^selected backpack/i })
 			).toBeInTheDocument();
 		});
 
 		it('returns the size chip pre-selected from the bag prop', () => {
 			render(<UpdateBagForm bag={mockBag} />);
 			expect(
-				screen.getByRole('button', { name: /^selected medium$/i })
+				screen.getByRole('radio', { name: /^selected medium$/i })
 			).toBeInTheDocument();
 		});
 
 		it('returns feature chips pre-selected from the bag prop', () => {
 			render(<UpdateBagForm bag={mockBag} />);
 			expect(
-				screen.getByRole('button', { name: /^selected waterproof/i })
+				screen.getByRole('checkbox', { name: /^selected waterproof/i })
 			).toBeInTheDocument();
 		});
 	});
@@ -324,14 +325,14 @@ describe('UpdateBagForm', () => {
 			render(<UpdateBagForm bag={mockBag} />);
 
 			await user.click(
-				screen.getByRole('button', { name: /^selected backpack/i })
+				screen.getByRole('radio', { name: /^selected backpack/i })
 			);
 			await user.click(
-				screen.getByRole('button', { name: /not selected duffel/i })
+				screen.getByRole('radio', { name: /not selected duffel/i })
 			);
 
 			expect(
-				screen.getByRole('button', { name: /^selected duffel/i })
+				screen.getByRole('radio', { name: /^selected duffel/i })
 			).toBeInTheDocument();
 		});
 
@@ -340,11 +341,13 @@ describe('UpdateBagForm', () => {
 			render(<UpdateBagForm bag={mockBag} />);
 
 			await user.click(
-				screen.getByRole('button', { name: /^selected waterproof/i })
+				screen.getByRole('checkbox', { name: /^selected waterproof/i })
 			);
 
 			expect(
-				screen.getByRole('button', { name: /not selected waterproof/i })
+				screen.getByRole('checkbox', {
+					name: /not selected waterproof/i,
+				})
 			).toBeInTheDocument();
 		});
 	});

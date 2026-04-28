@@ -1,6 +1,6 @@
 'use client';
 
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 
@@ -55,8 +55,10 @@ const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 	 * - Default values ensure controlled inputs and predictable UX.
 	 * - mode: 'onSubmit' keeps validation calm until user submits.
 	 */
-	const form = useForm<CreateUserInput>({
-		resolver: zodResolver(AdminSchema.createUser as any),
+	const form = useForm<CreateUserInput, unknown, CreateUserInput>({
+		resolver: zodResolver(
+			AdminSchema.createUser
+		) as Resolver<CreateUserInput>,
 		defaultValues: {
 			firstName: '',
 			lastName: '',
@@ -70,11 +72,12 @@ const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 	// Clear the server error banner when the user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => {
-			// Reset mutation state to clear the error banner
-			states.create.reset?.();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			states.create.reset();
 		});
-		return () => subscription.unsubscribe();
+
+		return unsubscribe;
 	}, [form, error, states.create]);
 
 	/**
@@ -98,7 +101,7 @@ const CreateUserForm = ({ onCancel }: CreateUserFormProps) => {
 			// Reset form to initial state after successful creation
 			form.reset();
 			notify.success({ message });
-		} catch (error: any) {
+		} catch (error: unknown) {
 			notify.error.fromHttp(error as HttpClientError);
 		}
 	};

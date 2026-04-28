@@ -1,6 +1,6 @@
 'use client';
 
-import { Controller, UseFormReturn } from 'react-hook-form';
+import { Controller, type UseFormReturn } from 'react-hook-form';
 import type { CreateUserInput } from '@beggy/shared/types';
 
 import { Button } from '@shadcn-ui/button';

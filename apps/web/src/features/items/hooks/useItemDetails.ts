@@ -29,7 +29,7 @@ export type UseItemDetailsResult = {
 	error: unknown;
 
 	/** Manually re-trigger the request. */
-	refetch: () => void;
+	refetch: () => Promise<unknown>;
 };
 
 /**

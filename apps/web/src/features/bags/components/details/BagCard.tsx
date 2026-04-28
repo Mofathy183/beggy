@@ -16,7 +16,7 @@ import { BagTypeBadge } from '@features/bags/components/badges';
 import { BagFeatureChips } from '@features/bags/components/chips';
 import { MaterialBadge, SizeBadge } from '@shared-ui/badges';
 import { BagActions } from '@features/bags/components/actions';
-import { ContainerStatusPanel } from '@features/container/components/visualization';
+import { ContainerStatusPanel } from '@features/containers/components/visualization';
 
 import { BagFeature } from '@beggy/shared/constants';
 import type { BagDTO } from '@beggy/shared/types';
@@ -25,6 +25,7 @@ import type { BagDTO } from '@beggy/shared/types';
 
 type BagCardProps = {
 	bag: BagDTO;
+	onSelect: (bag: BagDTO) => void;
 	onEdit: (bag: BagDTO) => void;
 	onDelete: (bag: BagDTO) => void;
 	isUpdating?: boolean;
@@ -57,6 +58,7 @@ type BagCardProps = {
  */
 const BagCard = ({
 	bag,
+	onSelect,
 	onEdit,
 	onDelete,
 	isUpdating = false,
@@ -86,6 +88,7 @@ const BagCard = ({
 
 				<BagActions
 					bag={bag}
+					onSelect={() => onSelect(bag)}
 					onEdit={() => onEdit(bag)}
 					onDelete={() => onDelete(bag)}
 					isUpdating={isUpdating}

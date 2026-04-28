@@ -1,4 +1,8 @@
-import { PencilEdit02Icon, Delete02Icon } from '@hugeicons/core-free-icons';
+import {
+	PencilEdit02Icon,
+	Delete02Icon,
+	ArrowBigRight,
+} from '@hugeicons/core-free-icons';
 
 import ActionsMenu from '@shared-ui/actions/ActionsMenu';
 import type { ItemDTO } from '@beggy/shared/types';
@@ -7,6 +11,7 @@ import type { ItemDTO } from '@beggy/shared/types';
 
 type ItemActionsProps = {
 	item: ItemDTO;
+	onSelect: () => void;
 	/** Called when the user selects "Edit" */
 	onEdit: () => void;
 	/** Called when the user selects "Delete" */
@@ -46,6 +51,7 @@ type ItemActionsProps = {
  * ```
  */
 const ItemActions = ({
+	onSelect,
 	onEdit,
 	onDelete,
 	isUpdating = false,
@@ -54,6 +60,13 @@ const ItemActions = ({
 	return (
 		<ActionsMenu
 			items={[
+				{
+					id: 'open',
+					label: 'Open Item',
+					icon: ArrowBigRight,
+					onSelect,
+					disabled: isUpdating || isDeleting,
+				},
 				{
 					id: 'edit',
 					label: 'Edit item',

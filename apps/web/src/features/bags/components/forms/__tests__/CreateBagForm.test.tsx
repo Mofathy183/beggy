@@ -55,10 +55,10 @@ const defaultHookState = () => ({
 const fillRequiredFields = async (user: ReturnType<typeof setupUser>) => {
 	await user.type(screen.getByLabelText(/bag name/i), 'My Backpack');
 	await user.click(
-		screen.getByRole('button', { name: /not selected backpack/i })
+		screen.getByRole('radio', { name: /not selected backpack/i })
 	);
 	await user.click(
-		screen.getByRole('button', { name: /not selected medium/i })
+		screen.getByRole('radio', { name: /not selected medium/i })
 	);
 
 	const maxWeightInput = screen.getByRole('spinbutton', {
@@ -328,11 +328,11 @@ describe('CreateBagForm', () => {
 			render(<CreateBagForm />);
 
 			await user.click(
-				screen.getByRole('button', { name: /not selected backpack/i })
+				screen.getByRole('radio', { name: /not selected backpack/i })
 			);
 
 			expect(
-				screen.getByRole('button', { name: /^selected backpack/i })
+				screen.getByRole('radio', { name: /^selected backpack/i })
 			).toBeInTheDocument();
 		});
 
@@ -341,11 +341,11 @@ describe('CreateBagForm', () => {
 			render(<CreateBagForm />);
 
 			await user.click(
-				screen.getByRole('button', { name: /not selected medium/i })
+				screen.getByRole('radio', { name: /not selected medium/i })
 			);
 
 			expect(
-				screen.getByRole('button', { name: /^selected medium$/i })
+				screen.getByRole('radio', { name: /^selected medium$/i })
 			).toBeInTheDocument();
 		});
 
@@ -354,11 +354,13 @@ describe('CreateBagForm', () => {
 			render(<CreateBagForm />);
 
 			await user.click(
-				screen.getByRole('button', { name: /not selected waterproof/i })
+				screen.getByRole('checkbox', {
+					name: /not selected waterproof/i,
+				})
 			);
 
 			expect(
-				screen.getByRole('button', { name: /^selected waterproof/i })
+				screen.getByRole('checkbox', { name: /^selected waterproof/i })
 			).toBeInTheDocument();
 		});
 	});

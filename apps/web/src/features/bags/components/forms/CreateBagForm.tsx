@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { BagSchema } from '@beggy/shared/schemas';
@@ -61,20 +61,22 @@ const CreateBagForm = ({ onSuccess, onCancel }: CreateBagFormProps) => {
 
 	const error = states.create.error as HttpClientError | undefined;
 
-	const form = useForm<CreateBagInput>({
-		resolver: zodResolver(BagSchema.create as any),
+	const form = useForm<CreateBagInput, unknown, CreateBagInput>({
+		resolver: zodResolver(BagSchema.create) as Resolver<CreateBagInput>,
 		defaultValues: DEFAULT_VALUES,
-		mode: 'onTouched',
+		mode: 'onSubmit',
 	});
 
 	// Clear server error banner when user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => {
-			states.create.reset?.();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			states.create.reset();
 		});
-		return () => subscription.unsubscribe();
-	}, [form, error, states.create]);
+
+		return unsubscribe;
+	}, [error, states.create, form]);
 
 	const onSubmit: SubmitHandler<CreateBagInput> = async (values) => {
 		if (isCreating) return;

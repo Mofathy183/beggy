@@ -133,7 +133,7 @@ export const WithValidationError: Story = {
 	render: () => {
 		const form = useForm<ChangeRoleInput>({
 			defaultValues: {
-				role: undefined as any,
+				role: undefined,
 			},
 		});
 

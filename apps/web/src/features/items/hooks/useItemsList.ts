@@ -1,12 +1,8 @@
 import { useListQuery } from '@shared/hooks';
 import { useGetItemsQuery } from '@features/items/api';
 
-import type {
-	ItemDTO,
-	ItemFilterInput,
-	ItemOrderByInput,
-} from '@beggy/shared/types';
-
+import type { ItemDTO, ItemOrderByInput } from '@beggy/shared/types';
+import type { ItemFilterState } from '@shared/types';
 import { ItemOrderByField, OrderDirection } from '@beggy/shared/constants';
 
 /**
@@ -37,7 +33,7 @@ const DEFAULT_ORDER: ItemOrderByInput = {
  * configuration in a single reusable place.
  */
 const useItemsList = () => {
-	return useListQuery<ItemDTO, ItemFilterInput, ItemOrderByInput>({
+	return useListQuery<ItemDTO, ItemFilterState, ItemOrderByInput>({
 		useQuery: useGetItemsQuery,
 		initialOrderBy: DEFAULT_ORDER,
 		initialPagination: { page: 1, limit: 12 },

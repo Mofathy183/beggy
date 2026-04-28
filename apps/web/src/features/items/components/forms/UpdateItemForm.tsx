@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, type Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { ItemSchema } from '@beggy/shared/schemas';
@@ -51,8 +51,8 @@ const UpdateItemForm = ({ item, onSuccess, onCancel }: UpdateItemFormProps) => {
 	 */
 	const error = states.update.error as HttpClientError | undefined;
 
-	const form = useForm<UpdateItemInput>({
-		resolver: zodResolver(ItemSchema.update as any),
+	const form = useForm<UpdateItemInput, unknown, UpdateItemInput>({
+		resolver: zodResolver(ItemSchema.update) as Resolver<UpdateItemInput>,
 		/**
 		 * Pre-populate from the ItemDTO.
 		 * null fields are coerced to undefined — correct for PATCH semantics.
@@ -68,8 +68,7 @@ const UpdateItemForm = ({ item, onSuccess, onCancel }: UpdateItemFormProps) => {
 			color: item.color ?? undefined,
 			isFragile: item.isFragile,
 		},
-		// onTouched: validate on blur — faster feedback without keystroke jitter
-		mode: 'onTouched',
+		mode: 'onSubmit',
 	});
 
 	/**
@@ -93,11 +92,13 @@ const UpdateItemForm = ({ item, onSuccess, onCancel }: UpdateItemFormProps) => {
 	// Clear server error banner when user edits any field
 	useEffect(() => {
 		if (!error) return;
-		const subscription = form.watch(() => {
-			states.update.reset?.();
+		// eslint-disable-next-line react-hooks/incompatible-library
+		const { unsubscribe } = form.watch(() => {
+			states.update.reset();
 		});
-		return () => subscription.unsubscribe();
-	}, [form, error, states.update]);
+
+		return unsubscribe;
+	}, [error, states.update, form]);
 
 	const onSubmit: SubmitHandler<UpdateItemInput> = async (values) => {
 		if (isUpdating) return;

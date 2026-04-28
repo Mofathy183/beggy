@@ -25,7 +25,10 @@ import type { BagDTO } from '@beggy/shared/types';
  * by `BagsGrid` via the `isLoading` prop.
  */
 const BagCardSkeleton = () => (
-	<Card className="flex flex-col gap-3 p-4">
+	<Card
+		className="flex flex-col gap-3 p-4"
+		data-testid="bag-grid-card-skeleton"
+	>
 		{/* Header — name + action button */}
 		<div className="flex items-start justify-between gap-2">
 			<Skeleton className="h-4 w-2/3 rounded" />
@@ -94,17 +97,13 @@ type BagsGridProps = {
 	/** Called from `BagsEmptyState` → "Clear filters" CTA */
 	onResetFilters: () => void;
 
+	onSelect: (bag: BagDTO) => void;
+
 	/** Called when the user triggers edit on a card */
 	onEdit: (bag: BagDTO) => void;
 
 	/** Called when the user triggers delete on a card */
 	onDelete: (bag: BagDTO) => void;
-
-	/**
-	 * The id of the bag currently being updated.
-	 * The matching card will show its loading state.
-	 */
-	updatingId?: string | null;
 
 	/**
 	 * The id of the bag currently being deleted.
@@ -149,9 +148,9 @@ const BagsGrid = ({
 	isLoading = false,
 	hasFilters = false,
 	onResetFilters,
+	onSelect,
 	onEdit,
 	onDelete,
-	updatingId,
 	deletingId,
 }: BagsGridProps) => {
 	// ── Loading state — render fixed number of skeletons ─────────────────────
@@ -178,9 +177,9 @@ const BagsGrid = ({
 				<BagCard
 					key={bag.id}
 					bag={bag}
+					onSelect={onSelect}
 					onEdit={onEdit}
 					onDelete={onDelete}
-					isUpdating={updatingId === bag.id}
 					isDeleting={deletingId === bag.id}
 				/>
 			))}
