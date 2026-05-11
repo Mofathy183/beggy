@@ -18,6 +18,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-≥18-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-workspaces-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io/)
 [![Turborepo](https://img.shields.io/badge/Turborepo-2.6-EF4444?style=flat-square&logo=turborepo&logoColor=white)](https://turbo.build/)
+[![CI](https://github.com/Mofathy183/Beggy-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Mofathy183/Beggy-backend/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=flat-square)](LICENSE)
 
 </div>

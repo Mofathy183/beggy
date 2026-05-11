@@ -1,5 +1,5 @@
 #!/bin/bash
-# deploy.sh — run this ON YOUR SERVER to deploy
+# run this ON YOUR SERVER to deploy
 
 set -e  # exit on any error
 
