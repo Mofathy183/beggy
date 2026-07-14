@@ -94,7 +94,7 @@ export const suitcaseFactory = (
 
 	emptyWeight:
 		overrides.emptyWeight ??
-		faker.number.float({ min: 3, max: 7, fractionDigits: 2 }),
+		faker.number.float({ min: 5, max: 7, fractionDigits: 2 }),
 
 	color:
 		overrides.color ??
