@@ -27,7 +27,7 @@
 		"isolatedModules": true,
 
 		// Testing
-		"types": ["vitest/globals"], // Enables global Vitest APIs (describe, it, expect)
+		"types": ["vitest/globals"],
 
 		// Emit
 		"declaration": true,
@@ -48,7 +48,6 @@
 		"composite": false,
 
 		"ignoreDeprecations": "6.0",
-		"baseUrl": ".",
 		// Path Aliases
 		"paths": {
 			"@beggy/shared": ["./packages/shared/src"],
