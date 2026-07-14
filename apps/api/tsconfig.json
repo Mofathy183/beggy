@@ -12,29 +12,29 @@
 			"@beggy/shared/*": ["../../packages/shared/src/*"],
 
 			//* ========== API ROOT IMPORTS ==========
-			"@/*": ["src/*"],
-			"@prisma/*": ["prisma/*"],
-			"@prisma": ["prisma"],
+			"@/*": ["./src/*"],
+			"@prisma/*": ["./prisma/*"],
+			"@prisma": ["./prisma"],
 			"@app": ["./app.ts"],
 			"@tests": ["./tests/utils/index.ts"],
-			"@route": ["app.route.ts"],
-			"@doc": ["docs/swaggerDef.doc"],
+			"@route": ["./app.route.ts"],
+			"@doc/*": ["./docs/*"],
 
 			//* ========== SPECIFIC SRC PATHS ==========
 			// Direct access to commonly used folders
-			"@config": ["src/config/index.ts"],
-			"@shared": ["src/shared/index.ts"],
-			"@modules": ["src/modules/index.ts"],
-			"@emails": ["src/emails/index.ts"],
+			"@config": ["./src/config/index.ts"],
+			"@shared": ["./src/shared/index.ts"],
+			"@modules": ["./src/modules/index.ts"],
+			"@emails": ["./src/emails/index.ts"],
 
 			// Deep imports with wildcards
-			"@config/*": ["src/config/*"],
-			"@shared/*": ["src/shared/*"],
-			"@modules/*": ["src/modules/*"],
-			"@emails/*": ["src/emails/*"],
+			"@config/*": ["./src/config/*"],
+			"@shared/*": ["./src/shared/*"],
+			"@modules/*": ["./src/modules/*"],
+			"@emails/*": ["./src/emails/*"],
 
 			//* ========== PRISMA SPECIFIC ==========
-			"@prisma-generated/*": ["prisma/generated/prisma/*"]
+			"@prisma-generated/*": ["./prisma/generated/prisma/*"]
 		}
 	},
 	"include": [
@@ -45,7 +45,6 @@
 		"app.ts",
 		"server.ts",
 		"*.config.ts",
-		"*.config.mjs"
 	],
 	"exclude": ["node_modules", "dist"]
 }
